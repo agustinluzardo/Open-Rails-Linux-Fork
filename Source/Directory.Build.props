@@ -1,4 +1,20 @@
-<Project>
+﻿<Project>
+	<!--
+	  Open Rails Linux Fork - cross platform selection.
+
+	  FtsPlatform          windows | linux   (host OS by default, override with -p:FtsPlatform=...)
+	  FtsGraphicsBackend   WindowsDX | DesktopGL
+	                       WindowsDX  = Direct3D 11 (Windows only, upstream default)
+	                       DesktopGL  = OpenGL 4.x over SDL2 (Linux/macOS native)
+	  See docs/linux/ARCHITECTURE.md for the rationale and the Vulkan roadmap.
+	-->
+	<PropertyGroup>
+		<FtsPlatform Condition="'$(FtsPlatform)' == '' AND $([MSBuild]::IsOSPlatform('Windows'))">windows</FtsPlatform>
+		<FtsPlatform Condition="'$(FtsPlatform)' == ''">linux</FtsPlatform>
+		<FtsGraphicsBackend Condition="'$(FtsGraphicsBackend)' == '' AND '$(FtsPlatform)' == 'windows'">WindowsDX</FtsGraphicsBackend>
+		<FtsGraphicsBackend Condition="'$(FtsGraphicsBackend)' == ''">DesktopGL</FtsGraphicsBackend>
+		<MonoGameVersion>3.8.5.1</MonoGameVersion>
+	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Nerdbank.GitVersioning" Version="3.10.91">
 			<PrivateAssets>all</PrivateAssets>
@@ -54,7 +70,8 @@
 		<NoWin32Manifest>true</NoWin32Manifest>
 		<TieredCompilation>true</TieredCompilation>
 		<NeutralLanguage>en</NeutralLanguage>
-		<TargetFramework>net10.0-windows</TargetFramework>
+		<TargetFramework Condition="'$(FtsPlatform)' == 'windows'">net10.0-windows</TargetFramework>
+		<TargetFramework Condition="'$(FtsPlatform)' != 'windows'">net10.0</TargetFramework>
 		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 		<ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
 	</PropertyGroup>

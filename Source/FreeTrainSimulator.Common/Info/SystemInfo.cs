@@ -1,41 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using FreeTrainSimulator.Common.Native;
-
-using Microsoft.Xna.Framework.Graphics;
-
 namespace FreeTrainSimulator.Common.Info
 {
-    public static class SystemInfo
+    /// <summary>
+    /// Hardware and environment details written to the log, plus the shell helpers used to open
+    /// files, folders and links. The inventory itself is platform specific and lives in
+    /// SystemInfo.Windows.cs and SystemInfo.Unix.cs.
+    /// </summary>
+    public static partial class SystemInfo
     {
-        public static string GraphicAdapterMemoryInformation { get; private set; }
-        public static string CpuInformation { get; private set; }
-
-        public static string SetGraphicAdapterInformation(string adapterName)
-        {
-            if (GraphicAdapterMemoryInformation == null)
-                try
-                {
-                    using (ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher($"Select DeviceID, Description, AdapterRAM, AdapterDACType from Win32_VideoController where description=\"{adapterName}\""))
-                        foreach (ManagementBaseObject display in objectSearcher.Get())
-                        {
-                            GraphicAdapterMemoryInformation = $"{((uint?)display["AdapterRAM"] / 1024f / 1024 ?? double.NaN):F0} MB {display["AdapterDACType"]} RAM";
-                            break;
-                        }
-                }
-                catch (Exception ex) when (ex is TypeInitializationException || ex is System.ComponentModel.Win32Exception)
-                {
-                    GraphicAdapterMemoryInformation = "n/a";
-                }
-            return GraphicAdapterMemoryInformation;
-        }
-
         public static void WriteSystemDetails()
         {
             StringBuilder builder = new StringBuilder();
@@ -50,99 +27,10 @@ namespace FreeTrainSimulator.Common.Info
             Trace.Write(builder.ToString());
         }
 
-        private static void WriteEnvironment(StringBuilder output)
-        {
-            NativeStructs.MemoryStatusExtended buffer = new NativeStructs.MemoryStatusExtended { Size = 64 };
-            NativeMethods.GlobalMemoryStatusEx(buffer);
-            try
-            {
-                using (ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher("Select Description, Manufacturer from Win32_BIOS"))
-                    foreach (ManagementBaseObject bios in objectSearcher.Get())
-                        output.AppendLine(CultureInfo.InvariantCulture, $"{"BIOS",-12}= {bios["Description"]} ({bios["Manufacturer"]})");
-            }
-            catch (ManagementException error)
-            {
-                Trace.WriteLine(error.Message);
-            }
-            try
-            {
-                using (ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher("Select DeviceID, Name, NumberOfLogicalProcessors, NumberOfCores, MaxClockSpeed, L2CacheSize, L3CacheSize from Win32_Processor"))
-                    foreach (ManagementBaseObject processor in objectSearcher.Get())
-                    {
-                        CpuInformation = $"{"Processor",-12}= {processor["Name"]} ({(uint?)processor["NumberOfLogicalProcessors"]} threads, {processor["NumberOfCores"]} cores, {(uint?)processor["MaxClockSpeed"] / 1000f:F1} GHz, L2 Cache {processor["L2CacheSize"]:F0} KB, L3 Cache {processor["L3CacheSize"]:F0} KB)";
-                        output.AppendLine(CpuInformation);
-                    }
-            }
-            catch (ManagementException error)
-            {
-                Trace.WriteLine(error.Message);
-            }
-            output.AppendLine(CultureInfo.InvariantCulture, $"{"Memory",-12}= {buffer.TotalPhysical / 1024f / 1024 / 1024:F1} GB");
-            try
-            {
-                using (ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher("Select DeviceID, Description, AdapterRAM, AdapterDACType from Win32_VideoController"))
-                    foreach (ManagementBaseObject display in objectSearcher.Get())
-                        output.AppendLine(CultureInfo.InvariantCulture, $"{"Video",-12}= {display["Description"]} ({((uint?)display["AdapterRAM"] / 1024f / 1024 / 1024 ?? double.NaN):F1} GB {display["AdapterDACType"]} RAM){GetPnPDeviceDrivers(display as ManagementObject)}");
-            }
-            catch (ManagementException error)
-            {
-                Trace.WriteLine(error.Message);
-            }
-
-            foreach (GraphicsAdapter adapter in GraphicsAdapter.Adapters)
-            {
-                output.AppendLine(CultureInfo.InvariantCulture, $"{"Display",-12}= {adapter.DeviceName} (resolution {adapter.CurrentDisplayMode.Width} x {adapter.CurrentDisplayMode.Height}{(adapter.IsDefaultAdapter ? ", primary" : "")} on {adapter.Description})");
-                GraphicsAdapter.UseDebugLayers = true;
-            }
-
-            try
-            {
-                using (ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher("Select DeviceID, Description from Win32_SoundDevice"))
-                    foreach (ManagementBaseObject sound in objectSearcher.Get())
-                        output.AppendLine(CultureInfo.InvariantCulture, $"{"Sound",-12}= {sound["Description"]}{GetPnPDeviceDrivers(sound as ManagementObject)}");
-            }
-            catch (ManagementException error)
-            {
-                Trace.WriteLine(error.Message);
-            }
-            try
-            {
-                using (ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher("Select Name, Description, FileSystem, Size, FreeSpace from Win32_LogicalDisk"))
-                    foreach (ManagementBaseObject disk in objectSearcher.Get())
-                        if (disk["Size"] != null)
-                            output.AppendLine(CultureInfo.InvariantCulture, $"{"Disk",-12}= {disk["Name"]} ({disk["Description"]}, {disk["FileSystem"]}, {(ulong)(disk["Size"] ?? 0ul) / 1024f / 1024 / 1024:F1} GB, {(ulong)(disk["FreeSpace"] ?? 0ul) / 1024f / 1024 / 1024:F1} GB free)");
-                        else
-                            output.AppendLine(CultureInfo.InvariantCulture, $"{"Disk",-12}= {disk["Name"]} ({disk["Description"]})");
-            }
-            catch (ManagementException error)
-            {
-                Trace.WriteLine(error.Message);
-            }
-            try
-            {
-                using (ManagementObjectSearcher objectSearcher = new ManagementObjectSearcher("Select Caption, OSArchitecture, Version from Win32_OperatingSystem"))
-                    foreach (ManagementBaseObject os in objectSearcher.Get())
-                        output.AppendLine(CultureInfo.InvariantCulture, $"{"OS",-12}= {os["Caption"]} {os["OSArchitecture"]} ({os["Version"]})");
-            }
-            catch (ManagementException error)
-            {
-                Trace.WriteLine(error.Message);
-            }
-        }
-
-        private static string GetPnPDeviceDrivers(ManagementObject device)
-        {
-            StringBuilder output = new StringBuilder();
-            foreach (ManagementObject pnpDevice in device.GetRelated("Win32_PnPEntity"))
-                foreach (ManagementObject dataFile in pnpDevice.GetRelated("CIM_DataFile"))
-                    output.Append(CultureInfo.InvariantCulture, $" ({dataFile["FileName"]} {dataFile["Version"]})");
-            return output.ToString();
-        }
-
         public static void OpenFolder(string path)
         {
             if (Directory.Exists(path))
-                Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true, Verb = "explore" });
+                OpenShellTarget(path, "explore");
         }
 
         public static void OpenApplication(string path)
@@ -153,13 +41,39 @@ namespace FreeTrainSimulator.Common.Info
 
         public static void OpenFile(string fileName)
         {
-            //https://stackoverflow.com/questions/4580263/how-to-open-in-default-browser-in-c-sharp
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                Process.Start(new ProcessStartInfo { FileName = fileName, UseShellExecute = true, Verb = "open" });
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                Process.Start(new ProcessStartInfo { FileName = fileName, Verb = "xdg-open" });
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                Process.Start(new ProcessStartInfo { FileName = fileName, Verb = "open" });
+            OpenShellTarget(fileName, "open");
+        }
+
+        /// <summary>
+        /// Hands a file, folder or URL to the desktop environment.
+        /// </summary>
+        /// <remarks>
+        /// Windows takes a shell verb; the free desktops have no such concept and instead expect
+        /// the target as an argument to xdg-open, and macOS to open. Passing the target as the
+        /// process to execute - as this did before - asks the kernel to run the document itself,
+        /// which fails for everything that is not an executable.
+        /// </remarks>
+        private static void OpenShellTarget(string target, string verb)
+        {
+            if (string.IsNullOrEmpty(target))
+                return;
+
+            try
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    Process.Start(new ProcessStartInfo { FileName = target, UseShellExecute = true, Verb = verb });
+                else
+                    Process.Start(new ProcessStartInfo(RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "open" : "xdg-open")
+                    {
+                        ArgumentList = { target },
+                        UseShellExecute = false,
+                    });
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception || ex is InvalidOperationException)
+            {
+                // A desktop without xdg-utils installed is not a reason to take the game down.
+                Trace.WriteLine($"Unable to open '{target}': {ex.Message}");
+            }
         }
 
 #pragma warning disable CA1054 // URI-like parameters should not be strings
