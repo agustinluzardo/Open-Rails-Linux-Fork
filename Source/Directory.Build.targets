@@ -9,12 +9,12 @@
 	-->
 
 	<!-- Graphics backend: replace the Direct3D 11 package with the OpenGL one. -->
-	<ItemGroup Condition="'$(FtsGraphicsBackend)' != 'WindowsDX'">
-		<FtsUsesMonoGame Include="@(PackageReference->WithMetadataValue('Identity','MonoGame.Framework.WindowsDX'))" />
+	<ItemGroup Condition="'$(RielGraphicsBackend)' != 'WindowsDX'">
+		<RielUsesMonoGame Include="@(PackageReference->WithMetadataValue('Identity','MonoGame.Framework.WindowsDX'))" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(FtsGraphicsBackend)' != 'WindowsDX' AND '@(FtsUsesMonoGame)' != ''">
+	<ItemGroup Condition="'$(RielGraphicsBackend)' != 'WindowsDX' AND '@(RielUsesMonoGame)' != ''">
 		<PackageReference Remove="MonoGame.Framework.WindowsDX" />
-		<PackageReference Include="MonoGame.Framework.$(FtsGraphicsBackend)" Version="$(MonoGameVersion)" />
+		<PackageReference Include="MonoGame.Framework.$(RielGraphicsBackend)" Version="$(MonoGameVersion)" />
 	</ItemGroup>
 
 	<!--
@@ -26,7 +26,7 @@
 	                            reader in Common/Input/Linux.
 	  OpenAL-Soft               ships soft_oal.dll; on Linux we bind the distro's libopenal.so.1.
 	-->
-	<ItemGroup Condition="'$(FtsPlatform)' != 'windows'">
+	<ItemGroup Condition="'$(RielPlatform)' != 'windows'">
 		<PackageReference Remove="GetText.NET.WindowsForms" />
 		<PackageReference Remove="GetText.NET.Wpf" />
 		<PackageReference Remove="System.Management" />
@@ -35,7 +35,7 @@
 	</ItemGroup>
 
 	<!-- Win32 resources (icon, manifest) cannot be embedded when not targeting Windows. -->
-	<PropertyGroup Condition="'$(FtsPlatform)' != 'windows'">
+	<PropertyGroup Condition="'$(RielPlatform)' != 'windows'">
 		<ApplicationIcon />
 		<ApplicationManifest />
 		<OutputType Condition="'$(OutputType)' == 'WinExe'">Exe</OutputType>
@@ -46,11 +46,11 @@
 	  Windows build and *.Unix.cs only for the Linux/macOS build, so the two
 	  implementations of a partial class can live side by side.
 	-->
-	<ItemGroup Condition="'$(FtsPlatform)' == 'windows'">
+	<ItemGroup Condition="'$(RielPlatform)' == 'windows'">
 		<Compile Remove="**/*.Unix.cs" />
 		<None Include="**/*.Unix.cs" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(FtsPlatform)' != 'windows'">
+	<ItemGroup Condition="'$(RielPlatform)' != 'windows'">
 		<Compile Remove="**/*.Windows.cs" />
 		<None Include="**/*.Windows.cs" />
 	</ItemGroup>
@@ -66,25 +66,25 @@
 	  They are declared as content of the simulator rather than copied in a target, so that both
 	  a build and a publish pick them up.
 	-->
-	<PropertyGroup Condition="'$(FtsPlatform)' != 'windows'">
-		<FtsPrebuiltShaderDirectory Condition="'$(FtsPrebuiltShaderDirectory)' == ''">$(MSBuildThisFileDirectory)Shaders/prebuilt/$(FtsGraphicsBackend.Replace('DesktopGL','OpenGL'))</FtsPrebuiltShaderDirectory>
+	<PropertyGroup Condition="'$(RielPlatform)' != 'windows'">
+		<RielPrebuiltShaderDirectory Condition="'$(RielPrebuiltShaderDirectory)' == ''">$(MSBuildThisFileDirectory)Shaders/prebuilt/$(RielGraphicsBackend.Replace('DesktopGL','OpenGL'))</RielPrebuiltShaderDirectory>
 	</PropertyGroup>
-	<ItemGroup Condition="'$(FtsPlatform)' != 'windows' AND '$(MSBuildProjectName)' == 'ActivityRunner'">
-		<Content Include="$(FtsPrebuiltShaderDirectory)/*.mgfx"
+	<ItemGroup Condition="'$(RielPlatform)' != 'windows' AND '$(MSBuildProjectName)' == 'ActivityRunner'">
+		<Content Include="$(RielPrebuiltShaderDirectory)/*.mgfx"
 		         Link="Content/%(Filename)%(Extension)"
 		         CopyToOutputDirectory="PreserveNewest"
 		         CopyToPublishDirectory="PreserveNewest" />
 	</ItemGroup>
-	<Target Name="FtsWarnOnMissingShaders" BeforeTargets="Build"
-	        Condition="'$(FtsPlatform)' != 'windows' AND '$(MSBuildProjectName)' == 'ActivityRunner'">
-		<Warning Condition="!Exists('$(FtsPrebuiltShaderDirectory)')"
-		         Text="No prebuilt shaders in $(FtsPrebuiltShaderDirectory). Run scripts/build-shaders.sh; the simulator cannot render without them." />
+	<Target Name="RielWarnOnMissingShaders" BeforeTargets="Build"
+	        Condition="'$(RielPlatform)' != 'windows' AND '$(MSBuildProjectName)' == 'ActivityRunner'">
+		<Warning Condition="!Exists('$(RielPrebuiltShaderDirectory)')"
+		         Text="No prebuilt shaders in $(RielPrebuiltShaderDirectory). Run scripts/build-shaders.sh; the simulator cannot render without them." />
 	</Target>
 
 	<!-- Compilation symbols so shared sources can branch on the target platform. -->
 	<PropertyGroup>
-		<DefineConstants Condition="'$(FtsPlatform)' != 'windows'">$(DefineConstants);FTS_UNIX</DefineConstants>
-		<DefineConstants Condition="'$(FtsGraphicsBackend)' == 'DesktopGL'">$(DefineConstants);FTS_DESKTOPGL</DefineConstants>
+		<DefineConstants Condition="'$(RielPlatform)' != 'windows'">$(DefineConstants);RIEL_UNIX</DefineConstants>
+		<DefineConstants Condition="'$(RielGraphicsBackend)' == 'DesktopGL'">$(DefineConstants);RIEL_DESKTOPGL</DefineConstants>
 	</PropertyGroup>
 
 </Project>

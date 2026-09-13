@@ -1,4 +1,4 @@
-# Installing and running
+# Installing and running Riel
 
 ## What you need
 
@@ -8,7 +8,7 @@
 - Microsoft Train Simulator content: routes, rolling stock and activities. Copying the MSTS folder
   from a Windows machine is enough; nothing needs installing.
 
-The game is native. Wine is not involved at runtime, and MSTS itself does not have to be installed.
+Riel is native. Wine is not involved at runtime, and MSTS itself does not have to be installed.
 
 ## Arch Linux
 
@@ -31,16 +31,17 @@ sudo apt install dotnet-sdk-10.0 libsdl2-2.0-0 libopenal1 fontconfig  # Debian, 
 
 git clone https://github.com/agustinluzardo/Open-Rails-Linux-Fork.git
 cd Open-Rails-Linux-Fork/Source
-dotnet build FreeTrainSimulator.Linux.slnx -c Release
+dotnet build Riel.slnx -c Release
 ```
 
-The binaries land in `Program/net10.0/`: `ActivityRunner` is the simulator, `fts` the launcher.
+The binaries land in `Program/net10.0/`: `ActivityRunner` is the simulator and `riel` the command
+that drives it. Run `./riel` from there; it finds the simulator beside itself.
 
 ### Shaders
 
 All twelve compiled effects are committed, so a normal build needs no shader toolchain and
-`fts doctor` should report twelve of them. Regenerating them - after changing a `.fx` file - needs
-Wine and the .NET SDK:
+`riel doctor` should report twelve of them. Regenerating them - after changing a `.fx` file -
+needs Wine and the .NET SDK:
 
 ```sh
 sudo pacman -S --needed wine
@@ -53,57 +54,58 @@ bridge so the Wine prefix needs nothing else. See the shaders section of
 
 ## First run
 
-Point the launcher at your content. The folder is the one holding `ROUTES` and `GLOBAL`:
+Point Riel at your content. The folder is the one holding `ROUTES` and `GLOBAL`:
 
 ```sh
-fts content add "MSTS" ~/games/train-simulator
+riel content add "MSTS" ~/games/train-simulator
 ```
 
 That scans the routes, which takes a while the first time and is cached afterwards. Then:
 
 ```sh
-fts routes                                  # what is installed
-fts activities "Marias Pass"                # what there is to drive
-fts play "Marias Pass" "Coal Train"         # drive it
+riel routes                                  # what is installed
+riel activities "Marias Pass"                # what there is to drive
+riel play "Marias Pass" "Coal Train"         # drive it
 ```
 
-Names are matched case insensitively, and a unique prefix is enough - `fts play marias coal` works.
+Names are matched case insensitively, and a unique prefix is enough: `riel play marias coal`
+works.
 
 To drive without an activity, pick a path and a consist:
 
 ```sh
-fts paths "Marias Pass"
-fts consists
-fts explore "Marias Pass" "Shelby-Essex" "Freight" --time 08:30 --season autumn --weather rain
+riel paths "Marias Pass"
+riel consists
+riel explore "Marias Pass" "Shelby-Essex" "Freight" --time 08:30 --season autumn --weather rain
 ```
 
-`fts resume` continues the last save, and `fts --help` lists everything.
+`riel resume` continues the last save, and `riel help` lists everything.
 
 ## When something is wrong
 
 ```sh
-fts doctor
+riel doctor
 ```
 
 checks the simulator binary, the shaders, OpenAL, SDL, the display session, the configured content
 and the RailDriver, and names the fix for each.
 
-Logs are in `~/.local/state/open-rails-linux/Logs`. Attach one to a bug report.
+Logs are in `~/.local/state/riel/Logs`. Attach one to a bug report.
 
 ### A route loads with things missing
 
 That used to be the characteristic Linux failure: MSTS content refers to its own files with
-inconsistent capitalisation, which Linux file systems do not forgive. The simulator resolves those
-references case insensitively, so it should not happen. If it still does, the log names the file it
-could not find - that is worth reporting, with the route.
+inconsistent capitalisation, which Linux file systems do not forgive. Riel resolves those
+references case insensitively, so it should not happen. If it still does, the log names the file
+it could not find - that is worth reporting, with the route.
 
 ### The MSTS installation is not found
 
-The launcher looks in the XDG data directory, the home directory, and any Wine or Proton prefix.
-If your content is elsewhere, either add it as a content folder - which is the normal way - or:
+Riel looks in the XDG data directory, the home directory, and any Wine or Proton prefix. If your
+content is elsewhere, either add it as a content folder - which is the normal way - or:
 
 ```sh
-export FTS_MSTS_PATH=/mnt/games/MSTS
+export RIEL_MSTS_PATH=/mnt/games/MSTS
 ```
 
 ### The RailDriver desk is not detected
@@ -115,7 +117,7 @@ It needs read access to its hidraw device. The package installs a udev rule gran
 sudo usermod -aG input "$USER"
 ```
 
-Then log out and back in. `fts doctor` says which of the two is missing.
+Then log out and back in. `riel doctor` says which of the two is missing.
 
 Building from source rather than installing the package? Install the rule by hand:
 
@@ -127,12 +129,19 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 ### Running the renderer on Vulkan
 
 ```sh
-OPEN_RAILS_VULKAN=1 open-rails
+RIEL_VULKAN=1 riel start
 ```
 
 This runs the same OpenGL renderer on top of Vulkan through Mesa's zink driver. Worth trying on
 recent AMD and Intel hardware. It is not a Vulkan renderer - see
 [ARCHITECTURE.md](ARCHITECTURE.md#graphics-backends) for what that would take.
+
+### Antialiasing looks turned off
+
+It may be. The setting is honoured only when the display can actually provide it: on OpenGL the
+sample count has to exist as a visual, and virtual displays, remote sessions and some drivers
+have none. Riel halves the count until it finds one it can use, and turns antialiasing off rather
+than failing to start.
 
 ### Poor performance
 
@@ -140,16 +149,16 @@ recent AMD and Intel hardware. It is not a Vulkan renderer - see
   your card, not `llvmpipe`.
 - The viewing distance and the shadow map count cost the most.
 - The first run of a route is slow because it is being scanned; later runs read the cache in
-  `~/.cache/open-rails-linux`.
+  `~/.cache/riel`.
 
 ## Where things are kept
 
 | | |
 | --- | --- |
-| `~/.config/open-rails-linux` | settings and profiles |
-| `~/.local/share/open-rails-linux` | saves |
-| `~/.local/state/open-rails-linux/Logs` | logs |
-| `~/.cache/open-rails-linux` | scanned content, safe to delete |
+| `~/.config/riel` | settings and profiles |
+| `~/.local/share/riel` | saves |
+| `~/.local/state/riel/Logs` | logs |
+| `~/.cache/riel` | scanned content, safe to delete |
 
 These follow the XDG base directory specification and move with the corresponding `XDG_*_HOME`
 variables.
@@ -157,9 +166,9 @@ variables.
 ## Uninstalling
 
 ```sh
-sudo pacman -R open-rails-linux
-rm -rf ~/.config/open-rails-linux ~/.local/share/open-rails-linux \
-       ~/.local/state/open-rails-linux ~/.cache/open-rails-linux
+sudo pacman -R riel
+rm -rf ~/.config/riel ~/.local/share/riel \
+       ~/.local/state/riel ~/.cache/riel
 ```
 
-Your MSTS content is untouched - the simulator only ever reads it.
+Your MSTS content is untouched - Riel only ever reads it.

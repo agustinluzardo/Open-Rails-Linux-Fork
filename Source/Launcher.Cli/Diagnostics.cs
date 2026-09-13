@@ -1,19 +1,19 @@
-// COPYRIGHT 2026 by the Open Rails Linux Fork project.
+// COPYRIGHT 2026 by the Riel project.
 //
-// This file is part of Open Rails.
+// This file is part of Riel, a fork of Open Rails.
 //
-// Open Rails is free software: you can redistribute it and/or modify
+// Riel is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Open Rails is distributed in the hope that it will be useful,
+// Riel is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
+// along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
@@ -28,7 +28,7 @@ using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Shim;
 
-namespace FreeTrainSimulator.Launcher
+namespace Riel.Launcher
 {
     /// <summary>
     /// Checks the things that stop the simulator starting, so a first run that fails says why.
@@ -65,10 +65,10 @@ namespace FreeTrainSimulator.Launcher
         private static (bool, string) LocateSimulator()
         {
             string beside = Path.Combine(AppContext.BaseDirectory, "ActivityRunner");
-            string configured = Environment.GetEnvironmentVariable("FTS_ACTIVITYRUNNER");
+            string configured = Environment.GetEnvironmentVariable("RIEL_SIMULATOR");
 
             if (!string.IsNullOrEmpty(configured))
-                return (File.Exists(configured), $"{configured} (from FTS_ACTIVITYRUNNER)");
+                return (File.Exists(configured), $"{configured} (from RIEL_SIMULATOR)");
             return File.Exists(beside)
                 ? (true, beside)
                 : (false, $"not found at {beside}");
@@ -165,7 +165,7 @@ namespace FreeTrainSimulator.Launcher
                 {
                     string detected = MstsInstallationHint();
                     return (false, detected == null
-                        ? "no folders configured; add one with 'fts content add'"
+                        ? "no folders configured; add one with 'riel content add'"
                         : $"no folders configured, but content looks present at {detected}");
                 }
 
@@ -175,7 +175,7 @@ namespace FreeTrainSimulator.Launcher
 
                 return routes > 0
                     ? (true, $"{content.ContentFolders.Length} folder(s), {routes} route(s)")
-                    : (false, $"{content.ContentFolders.Length} folder(s) but no routes; check the paths and run 'fts content refresh'");
+                    : (false, $"{content.ContentFolders.Length} folder(s) but no routes; check the paths and run 'riel content refresh'");
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is InvalidOperationException)
             {

@@ -180,13 +180,14 @@ namespace Orts.ActivityRunner.Processes
         }
 
         /// <summary>
-        /// Reduces the requested antialiasing to what the adapter will actually give us.
+        /// Reduces the requested antialiasing to what this machine will actually give us.
         /// </summary>
         /// <remarks>
-        /// Asking for a sample count the driver cannot provide does not degrade gracefully: the
-        /// device is never created and the game dies before it draws anything. That happens on
-        /// software rendering, and on drivers whose multisample support depends on the format, so
-        /// the count is halved until the adapter accepts it.
+        /// Asking for a sample count that cannot be provided does not degrade gracefully: the
+        /// device is never created and the game dies before it draws anything, reporting neither
+        /// antialiasing nor the setting that caused it. Two separate things have to agree - the
+        /// adapter, for the render targets, and the window system, for the back buffer - so both
+        /// are asked and the count is halved until they do.
         /// </remarks>
         private static int SupportedMultiSampleCount(GraphicsDeviceInformation information, int requested)
         {
@@ -197,12 +198,20 @@ namespace Orts.ActivityRunner.Processes
                     information.PresentationParameters.DepthStencilFormat,
                     samples, out _, out _, out int selected) || selected >= samples)
                 {
-                    return samples;
+                    int usable = GraphicsCapabilities.SupportedMultiSampleCount(samples);
+                    if (usable >= samples)
+                        return samples;
+                    if (usable > 1)
+                    {
+                        Trace.TraceWarning($"This display cannot show {requested}x antialiasing; {usable}x is being used instead.");
+                        return usable;
+                    }
+                    break;
                 }
             }
 
             if (requested > 1)
-                Trace.TraceWarning($"The graphics adapter does not support {requested}x antialiasing; it has been turned off.");
+                Trace.TraceWarning($"{requested}x antialiasing is not available on this machine; it has been turned off.");
             return 0;
         }
 

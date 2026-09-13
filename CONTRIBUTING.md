@@ -1,12 +1,53 @@
-# Contributing
-If you are interested in more information, documentation and news regarding recent updates, please check the [Wiki](https://github.com/perpetualKid/ORTS-MG/wiki).
-The wiki also welcomes updates and submissions of new pages.
+# Contributing to Riel
 
-## Discussions
-If you have bright ideas, questions or other topics to discuss, please share them in the [Discussions](https://github.com/perpetualKid/ORTS-MG/discussions) section.
+Riel is the Linux platform layer over [Free Train Simulator][fts], which is a fork of
+[Open Rails][or]. That split decides where a change belongs.
 
-## Issues
-To report bugs or other issues, use the [Issue Tracker](https://github.com/perpetualKid/ORTS-MG/issues). Please provide as much input possible, ideally attaching log files or other relevant and supporting information.
+## Where does this change go?
 
-## Areas for contribution
-Anyone is welcome to contribute, and this is not limited to programmers writing code. There are many areas which would benefit from a wide range of skills, experience or purely passion, such as improvements to visual designs, documentation and translations, support with project management and feature planning, software architecture and design, or research for new technologies and frameworks. Check the contribution guidelines for further details, submit change proposals through [pull requests](https://github.com/perpetualKid/ORTS-MG/pulls), or introduce your thoughts for contribution in a [Discussion](https://github.com/perpetualKid/ORTS-MG/discussions).
+**Here**, if it is about running on Linux: path resolution, the drawing and interop replacements,
+the shader pipeline, the `riel` command, packaging, or anything under `docs/linux/`.
+
+**Upstream**, if it is about the simulation: physics, signalling, timetables, content formats, the
+in-game interface. Those fixes help every user of both projects, not only the ones on Linux, and
+sending them upstream is also how this fork stays cheap to merge. Where Open Rails and Free Train
+Simulator disagree about how a piece of MSTS content should behave, Open Rails is the reference.
+
+If you are not sure, open an issue and say what you found; sorting that out is easy.
+
+## Reporting a problem
+
+Open an [issue](https://github.com/agustinluzardo/Open-Rails-Linux-Fork/issues) with:
+
+- the output of `riel doctor`,
+- the log from `~/.local/state/riel/Logs`,
+- and, for a route that will not load, which route and where it came from.
+
+A route that loads with pieces missing is worth reporting even if it mostly works: the log names
+the file that could not be found, and that name is usually the whole bug.
+
+## Working on the code
+
+`docs/linux/ARCHITECTURE.md` explains how the port is put together and, in its last section, what
+to keep in mind so upstream merges stay cheap. The short version:
+
+- Platform-specific code goes in `*.Unix.cs` and `*.Windows.cs` files, not in `#if` blocks
+  scattered through shared code.
+- Build switches belong in `Source/Directory.Build.props` and `Source/Directory.Build.targets`,
+  not in individual project files.
+- Content reading goes through `ContentIO`, never `File.Open` directly.
+- The Windows build must keep working: `dotnet build Source/FreeTrainSimulator.slnx -p:RielPlatform=windows`.
+
+Before opening a pull request, run both test suites:
+
+```sh
+cd Source
+dotnet test Test/Tests.Orts/Tests.Orts.csproj
+dotnet test Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj
+```
+
+Riel is GPL-3.0-or-later, as Open Rails and Free Train Simulator are; contributions are under the
+same licence.
+
+[fts]: https://github.com/perpetualKid/FreeTrainSimulator
+[or]: https://github.com/openrails/openrails

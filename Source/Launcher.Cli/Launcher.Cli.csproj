@@ -8,10 +8,10 @@
 	-->
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<AssemblyTitle>Free Train Simulator Launcher</AssemblyTitle>
-		<Description>Command line launcher for the Linux build</Description>
-		<RootNamespace>FreeTrainSimulator.Launcher</RootNamespace>
-		<AssemblyName>fts</AssemblyName>
+		<AssemblyTitle>Riel Launcher</AssemblyTitle>
+		<Description>Riel launcher</Description>
+		<RootNamespace>Riel.Launcher</RootNamespace>
+		<AssemblyName>riel</AssemblyName>
 		<OutputPath>..\..\Program</OutputPath>
 		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 	</PropertyGroup>

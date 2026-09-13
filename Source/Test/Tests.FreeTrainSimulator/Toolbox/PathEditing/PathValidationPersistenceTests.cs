@@ -343,7 +343,7 @@ namespace Tests.FreeTrainSimulator.Toolbox.PathEditing
         {
             string uniqueSuffix = Guid.NewGuid().ToString("N");
             ContentModel contentModel = new ContentModel();
-            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"fts-content-{uniqueSuffix}"), contentModel);
+            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"riel-content-{uniqueSuffix}"), contentModel);
             contentModel = contentModel with { ContentFolders = ImmutableArray.Create(folderModel) };
             contentModel.Initialize(null);
 

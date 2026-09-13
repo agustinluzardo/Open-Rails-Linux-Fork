@@ -18,7 +18,7 @@ namespace Tests.FreeTrainSimulator.Common.Info
         public void ProductNameTest()
         {
             string expected = RuntimeInfo.ProductName;
-            Assert.AreEqual("Free Train Simulator", expected);
+            Assert.AreEqual("Riel", expected);
         }
     }
 }

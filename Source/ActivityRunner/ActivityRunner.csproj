@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<Description>Free Train Simulator Activity Runner</Description>
-		<UseWindowsForms Condition="'$(FtsPlatform)' == 'windows'">true</UseWindowsForms>
-		<AssemblyTitle>Free Train Simulator Activity Runner</AssemblyTitle>
+		<Description>Riel simulator</Description>
+		<UseWindowsForms Condition="'$(RielPlatform)' == 'windows'">true</UseWindowsForms>
+		<AssemblyTitle>Riel Simulator</AssemblyTitle>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 		<OutputPath>..\..\Program</OutputPath>
 		<ApplicationIcon>..\FTS.ico</ApplicationIcon>
@@ -35,7 +35,7 @@
 	  SoundDebugView.Unix.cs for it. Its designer resources hold images, which would otherwise
 	  drag in System.Resources.Extensions for a form that is never built.
 	-->
-	<ItemGroup Condition="'$(FtsPlatform)' != 'windows'">
+	<ItemGroup Condition="'$(RielPlatform)' != 'windows'">
 		<Compile Remove="Viewer3D\Debugging\SoundDebugForm.cs" />
 		<Compile Remove="Viewer3D\Debugging\SoundDebugForm.Designer.cs" />
 		<EmbeddedResource Remove="Viewer3D\Debugging\SoundDebugForm.resx" />
@@ -82,7 +82,7 @@
 		<ProjectReference Include="..\Orts.Simulation\Orts.Simulation.csproj" />
 		<ProjectReference Include="..\FreeTrainSimulator.Graphics\FreeTrainSimulator.Graphics.csproj" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(FtsPlatform)' == 'windows'">
+	<ItemGroup Condition="'$(RielPlatform)' == 'windows'">
 		<Content Include="$(PkgOpenAL-Soft)\bin\Win64\soft_oal.dll">
 			<Link>Native\x64\soft_oal.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -100,7 +100,7 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
-	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(FtsPlatform)' == 'windows'">
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(RielPlatform)' == 'windows'">
 		<Exec Command="if not exist $(TargetDir)Content (md $(TargetDir)Content)&#xD;&#xA;FOR %25%25i IN ($(ProjectDir)Content\Shaders\*.fx) DO (&#xD;&#xA;	echo Shader $(ProjectDir)Content\Shaders\%25%25~nxi&#xD;&#xA;	if not exist $(TargetDir)Content\%25%25~ni.mgfx (&#xD;&#xA;		echo Compiling $(TargetDir)Content\%25%25~ni.mgfx&#xD;&#xA;		dotnet tool run mgfxc $(ProjectDir)Content\Shaders\%25%25~nxi $(TargetDir)Content\%25%25~ni.mgfx /Profile:DirectX_11))" />
 	</Target>
 </Project>

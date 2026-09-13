@@ -10,7 +10,7 @@ namespace Tests.FreeTrainSimulator
     /// <summary>
     /// Assembly-wide test setup. Redirects model persistence to an isolated temporary directory so
     /// tests never read from or write to the real user content store
-    /// (<c>%AppData%\Free Train Simulator\Content</c>).
+    /// (<c>~/.local/share/riel/Content</c>, or <c>%AppData%\Riel\Content</c> on Windows).
     /// </summary>
     [TestClass]
     public sealed class TestEnvironment

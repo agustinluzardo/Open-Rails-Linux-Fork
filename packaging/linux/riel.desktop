@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
 Version=1.5
-Name=Open Rails
+Name=Riel
 GenericName=Train Simulator
-Comment=Drive trains on Microsoft Train Simulator routes
-Exec=open-rails
-Icon=open-rails
+Comment=Drive Microsoft Train Simulator routes natively on Linux
+Exec=riel start
+Icon=riel
 Terminal=false
 Categories=Game;Simulation;
 Keywords=train;railway;railroad;simulator;MSTS;

@@ -1,4 +1,10 @@
-# ![Logo](./Source/FTS_64.png) Free Train Simulator
+> Kept here unchanged: this is the README of [Free Train Simulator][fts], the project Riel forks.
+> It describes that project, not this one, and its links, badges and build instructions are theirs.
+> For Riel, see the [README](../README.md).
+>
+> [fts]: https://github.com/perpetualKid/FreeTrainSimulator
+
+# Free Train Simulator
 
 [![Join the chat at https://gitter.im/ORTS-MG/community](https://badges.gitter.im/ORTS-MG/community.svg)](https://gitter.im/ORTS-MG/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 

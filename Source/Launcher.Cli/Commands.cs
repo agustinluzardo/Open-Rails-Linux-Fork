@@ -1,19 +1,19 @@
-// COPYRIGHT 2026 by the Open Rails Linux Fork project.
+// COPYRIGHT 2026 by the Riel project.
 //
-// This file is part of Open Rails.
+// This file is part of Riel, a fork of Open Rails.
 //
-// Open Rails is free software: you can redistribute it and/or modify
+// Riel is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Open Rails is distributed in the hope that it will be useful,
+// Riel is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
+// along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
@@ -28,7 +28,7 @@ using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Shim;
 
-namespace FreeTrainSimulator.Launcher
+namespace Riel.Launcher
 {
     /// <summary>The launcher's commands.</summary>
     internal static class Commands
@@ -47,7 +47,7 @@ namespace FreeTrainSimulator.Launcher
                     if (content.ContentFolders.Length == 0)
                     {
                         Console.WriteLine("No content folders configured. Add one with:");
-                        Console.WriteLine("  fts content add \"My routes\" /path/to/train/simulator");
+                        Console.WriteLine("  riel content add \"My routes\" /path/to/train/simulator");
                         return 0;
                     }
                     foreach (FolderModel folder in content.ContentFolders.OrderBy(f => f.Name, StringComparer.CurrentCulture))
@@ -58,7 +58,7 @@ namespace FreeTrainSimulator.Launcher
                 case "add":
                 {
                     if (arguments.Count < 3)
-                        throw new LauncherException("usage: fts content add <name> <path>");
+                        throw new LauncherException("usage: riel content add <name> <path>");
                     await ContentStore.AddFolder(arguments[1], arguments[2], cancellationToken).ConfigureAwait(false);
                     return 0;
                 }
@@ -66,7 +66,7 @@ namespace FreeTrainSimulator.Launcher
                 case "remove":
                 {
                     if (arguments.Count < 2)
-                        throw new LauncherException("usage: fts content remove <name>");
+                        throw new LauncherException("usage: riel content remove <name>");
                     await ContentStore.RemoveFolder(arguments[1], cancellationToken).ConfigureAwait(false);
                     return 0;
                 }
@@ -102,7 +102,7 @@ namespace FreeTrainSimulator.Launcher
         internal static async Task<int> Activities(List<string> arguments, CancellationToken cancellationToken)
         {
             if (arguments.Count < 1)
-                throw new LauncherException("usage: fts activities <route>");
+                throw new LauncherException("usage: riel activities <route>");
 
             (_, RouteModelHeader route) = await ContentStore.MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
             ImmutableArray<ActivityModelHeader> activities = await route.GetActivities(cancellationToken).ConfigureAwait(false);
@@ -120,7 +120,7 @@ namespace FreeTrainSimulator.Launcher
         internal static async Task<int> Paths(List<string> arguments, CancellationToken cancellationToken)
         {
             if (arguments.Count < 1)
-                throw new LauncherException("usage: fts paths <route>");
+                throw new LauncherException("usage: riel paths <route>");
 
             (_, RouteModelHeader route) = await ContentStore.MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
             ImmutableArray<PathModelHeader> paths = await route.GetPaths(cancellationToken).ConfigureAwait(false);
@@ -151,7 +151,7 @@ namespace FreeTrainSimulator.Launcher
         internal static async Task<int> Play(List<string> arguments, CancellationToken cancellationToken)
         {
             if (arguments.Count < 2)
-                throw new LauncherException("usage: fts play <route> <activity>");
+                throw new LauncherException("usage: riel play <route> <activity>");
 
             (FolderModel folder, RouteModelHeader route) = await ContentStore.MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
             ImmutableArray<ActivityModelHeader> activities = await route.GetActivities(cancellationToken).ConfigureAwait(false);
@@ -186,7 +186,7 @@ namespace FreeTrainSimulator.Launcher
             }
 
             if (positional.Count < 3)
-                throw new LauncherException("usage: fts explore <route> <path> <consist> [--time HH:MM] [--season summer] [--weather clear]");
+                throw new LauncherException("usage: riel explore <route> <path> <consist> [--time HH:MM] [--season summer] [--weather clear]");
 
             if (!TimeOnly.TryParse(time, CultureInfo.CurrentCulture, out TimeOnly startTime))
                 throw new LauncherException($"'{time}' is not a time of day");
@@ -215,6 +215,16 @@ namespace FreeTrainSimulator.Launcher
                 season,
                 weather,
             });
+        }
+
+        /// <summary>
+        /// Starts the simulator with no arguments, which reopens whatever the profile was left
+        /// on. This is what the desktop entry runs, so a double click behaves like the Windows
+        /// menu's "start" button rather than dropping the user at a prompt.
+        /// </summary>
+        internal static int Start()
+        {
+            return Simulator.Start(Array.Empty<string>());
         }
 
         internal static int Resume()

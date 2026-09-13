@@ -1,7 +1,8 @@
-# How the Linux port works
+# How Riel works
 
-This is a native Linux fork of [Free Train Simulator][fts], which is itself a modernized fork of
-[Open Rails][or]. It runs Microsoft Train Simulator content without Wine.
+Riel runs Microsoft Train Simulator content as a native Linux program. It is a fork of
+[Free Train Simulator][fts], which is itself a modernized fork of [Open Rails][or]: the simulation
+is theirs, and what Riel adds is the platform layer described here.
 
 [fts]: https://github.com/perpetualKid/FreeTrainSimulator
 [or]: https://github.com/openrails/openrails
@@ -21,10 +22,9 @@ window system that draws its own interface rather than hosting Windows Forms, an
 already separated from the game logic. The simulation - the part that took fifteen years - is the
 same code, kept in sync with Open Rails.
 
-The port is based on Free Train Simulator because the modernization it has already done is exactly
+Riel is based on Free Train Simulator because the modernization it has already done is exactly
 what a Linux port needs. Starting from Open Rails would have meant doing that work first and then
-porting. What this fork adds is the platform layer: everything below is the difference between the
-two.
+porting. What Riel adds is the platform layer: everything below is the difference between the two.
 
 Open Rails remains the reference for content behaviour. Where the two engines differ on how a
 piece of MSTS content should behave, Open Rails is right by definition - it is what content authors
@@ -70,11 +70,18 @@ The engine used Windows Forms for four things, each replaced by something both p
 | Display layout and window placement | `Screen`, `Form` | `Common/Display/DisplayDevices` - SDL here, the Win32 monitor functions there |
 | Fatal error and missing content dialogs | `MessageBox` | `Common/Display/MessageDialog` - SDL here, `MessageBoxW` there |
 | Mouse cursors | `Cursors` | MonoGame's own `MouseCursor` |
-| The launcher | the `Menu` project | `Source/Launcher.Cli`, see [The launcher](#the-launcher) |
+| The launcher | the `Menu` project | `Source/Launcher.Cli`, see [The riel command](#the-riel-command) |
 
 `RenderProcess` now drives the MonoGame `GameWindow` directly - `IsBorderless` and `Position`
 instead of a form's border style and size. MonoGame reports window resizes but not moves, so the
 window's placement is also read once per frame.
+
+Antialiasing needs asking twice here. On Direct3D the adapter decides, and the engine asks it; on
+OpenGL the back buffer is the window, so the sample count also has to exist as a GLX or EGL visual,
+and where it does not - a virtual display, a remote session, an unusual driver - the window cannot
+be created and the graphics device fails with an error naming neither antialiasing nor the window.
+`Common/Display/GraphicsCapabilities` asks the window system directly, by trying to create a hidden
+window, and the count is halved until both answers agree.
 
 Under Wayland a client cannot read or set its own absolute position. The saved window position is
 therefore advisory there and the compositor decides; everything else - the display list, sizes,
@@ -112,10 +119,10 @@ separation:
 
 | | |
 | --- | --- |
-| `~/.config/open-rails-linux` | settings and profiles |
-| `~/.local/share/open-rails-linux` | saves |
-| `~/.local/state/open-rails-linux/Logs` | logs |
-| `~/.cache/open-rails-linux` | scanned content indexes, safe to delete |
+| `~/.config/riel` | settings and profiles |
+| `~/.local/share/riel` | saves |
+| `~/.local/state/riel/Logs` | logs |
+| `~/.cache/riel` | scanned content indexes, safe to delete |
 
 ## Loading MSTS content
 
@@ -149,7 +156,7 @@ existence check in the content projects.
 `Orts.Formats/Msts/MstsInstallation.Unix.cs` replaces the registry lookup. It searches where an
 installation actually turns up on Linux: the XDG data directory, the home directory, and the
 `Program Files` folder of any Wine prefix it can find, Steam's Proton prefixes included. A folder
-counts when it holds both `ROUTES` and `GLOBAL`. `FTS_MSTS_PATH` overrides the search.
+counts when it holds both `ROUTES` and `GLOBAL`. `RIEL_MSTS_PATH` overrides the search.
 
 Separately, if Open Rails was previously run under Wine, its configured content folders are read
 out of the prefix's `user.reg` - Wine stores that hive as plain text - so they carry over instead
@@ -173,10 +180,10 @@ mechanical change, and it is what unblocks a fully native, Wine-free shader tool
 limits it hits are CPU-side content loading and single-threaded update work, not the graphics API.
 
 **Vulkan is available today anyway, without a new renderer.** Mesa's zink driver runs OpenGL on top
-of Vulkan. `OPEN_RAILS_VULKAN=1 open-rails` sets `MESA_LOADER_DRIVER_OVERRIDE=zink`, and on modern
+of Vulkan. `RIEL_VULKAN=1 riel start` sets `MESA_LOADER_DRIVER_OVERRIDE=zink`, and on modern
 AMD and Intel hardware the result is competitive.
 
-The backend is a build-time switch - `-p:FtsGraphicsBackend=DesktopGL` - so adding one later means
+The backend is a build-time switch - `-p:RielGraphicsBackend=DesktopGL` - so adding one later means
 a new value and a shader profile, not a rewrite.
 
 ## Shaders
@@ -244,7 +251,7 @@ What does conflict, and where to look when it does:
 - The content projects, where `File.Exists` became `ContentIO.FileExists`. A merge that brings in
   new content reading code should route it through `ContentIO` too.
 
-The Windows build is kept working - `-p:FtsPlatform=windows` - so a merge can be verified against
+The Windows build is kept working - `-p:RielPlatform=windows` - so a merge can be verified against
 both, and so fixes that belong upstream can be offered back.
 
 ## Layout
@@ -253,7 +260,7 @@ both, and so fixes that belong upstream can be offered back.
 Source/
   Directory.Build.props        platform and backend selection
   Directory.Build.targets      package swaps, per-platform sources, shaders
-  FreeTrainSimulator.Linux.slnx
+  Riel.slnx                    the Linux solution
   FreeTrainSimulator.Common/
     Compatibility/             GDI+ over SkiaSharp
     Display/                   displays, dialogs, SDL
@@ -262,7 +269,7 @@ Source/
     Native/ContentIO.cs        case insensitive content paths
     Native/IniFile.cs          GetPrivateProfileString
     Native/ScanCodeMap.*.cs    scan codes to keys
-  Launcher.Cli/                the launcher
+  Launcher.Cli/                the riel command
   Shaders/prebuilt/            compiled effects
   Tools/FxcBridge/             shader compilation under Wine
 packaging/
@@ -271,15 +278,18 @@ packaging/
 scripts/build-shaders.sh
 ```
 
-## The launcher
+## The riel command
 
-`fts` manages content folders, lists routes, activities, paths and consists, and starts a run. It
+`riel` manages content folders, lists routes, activities, paths and consists, and starts a run. It
 works on the same content model the Windows menu does, so a profile configured with one works with
 the other. Names are matched case insensitively on a unique prefix.
 
-`fts doctor` answers the first question a failed first run raises: it checks the simulator binary,
+`riel start` is what the desktop entry runs: it opens the simulator on whatever the profile was
+last left on, so a double click behaves the way the Windows menu's start button does.
+
+`riel doctor` answers the first question a failed first run raises: it checks the simulator binary,
 the compiled shaders, OpenAL, SDL, the display session, the configured content and the RailDriver,
 and names the fix for each.
 
 A graphical launcher would be the natural next step; the content model it would sit on is the same
-one `fts` already uses.
+one `riel` already uses.

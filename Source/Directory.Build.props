@@ -2,17 +2,17 @@
 	<!--
 	  Open Rails Linux Fork - cross platform selection.
 
-	  FtsPlatform          windows | linux   (host OS by default, override with -p:FtsPlatform=...)
-	  FtsGraphicsBackend   WindowsDX | DesktopGL
+	  RielPlatform          windows | linux   (host OS by default, override with -p:RielPlatform=...)
+	  RielGraphicsBackend   WindowsDX | DesktopGL
 	                       WindowsDX  = Direct3D 11 (Windows only, upstream default)
 	                       DesktopGL  = OpenGL 4.x over SDL2 (Linux/macOS native)
 	  See docs/linux/ARCHITECTURE.md for the rationale and the Vulkan roadmap.
 	-->
 	<PropertyGroup>
-		<FtsPlatform Condition="'$(FtsPlatform)' == '' AND $([MSBuild]::IsOSPlatform('Windows'))">windows</FtsPlatform>
-		<FtsPlatform Condition="'$(FtsPlatform)' == ''">linux</FtsPlatform>
-		<FtsGraphicsBackend Condition="'$(FtsGraphicsBackend)' == '' AND '$(FtsPlatform)' == 'windows'">WindowsDX</FtsGraphicsBackend>
-		<FtsGraphicsBackend Condition="'$(FtsGraphicsBackend)' == ''">DesktopGL</FtsGraphicsBackend>
+		<RielPlatform Condition="'$(RielPlatform)' == '' AND $([MSBuild]::IsOSPlatform('Windows'))">windows</RielPlatform>
+		<RielPlatform Condition="'$(RielPlatform)' == ''">linux</RielPlatform>
+		<RielGraphicsBackend Condition="'$(RielGraphicsBackend)' == '' AND '$(RielPlatform)' == 'windows'">WindowsDX</RielGraphicsBackend>
+		<RielGraphicsBackend Condition="'$(RielGraphicsBackend)' == ''">DesktopGL</RielGraphicsBackend>
 		<MonoGameVersion>3.8.5.1</MonoGameVersion>
 	</PropertyGroup>
 	<ItemGroup>
@@ -63,15 +63,15 @@
 		<Nullable>disable</Nullable>
 	</PropertyGroup>
 	<PropertyGroup>
-		<Product>Free Train Simulator</Product>
-		<Company>Free Train Simulator Team</Company>
-		<Description>Free Train Simulator</Description>
+		<Product>Riel</Product>
+		<Company>Riel</Company>
+		<Description>Drive Microsoft Train Simulator routes natively on Linux</Description>
 		<Copyright>Copyright © 2026</Copyright>
 		<NoWin32Manifest>true</NoWin32Manifest>
 		<TieredCompilation>true</TieredCompilation>
 		<NeutralLanguage>en</NeutralLanguage>
-		<TargetFramework Condition="'$(FtsPlatform)' == 'windows'">net10.0-windows</TargetFramework>
-		<TargetFramework Condition="'$(FtsPlatform)' != 'windows'">net10.0</TargetFramework>
+		<TargetFramework Condition="'$(RielPlatform)' == 'windows'">net10.0-windows</TargetFramework>
+		<TargetFramework Condition="'$(RielPlatform)' != 'windows'">net10.0</TargetFramework>
 		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 		<ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
 	</PropertyGroup>

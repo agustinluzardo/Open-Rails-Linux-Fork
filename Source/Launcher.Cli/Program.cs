@@ -1,26 +1,26 @@
-// COPYRIGHT 2026 by the Open Rails Linux Fork project.
+// COPYRIGHT 2026 by the Riel project.
 //
-// This file is part of Open Rails.
+// This file is part of Riel, a fork of Open Rails.
 //
-// Open Rails is free software: you can redistribute it and/or modify
+// Riel is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Open Rails is distributed in the hope that it will be useful,
+// Riel is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
+// along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FreeTrainSimulator.Launcher
+namespace Riel.Launcher
 {
     /// <summary>
     /// The launcher for the Linux build.
@@ -53,7 +53,7 @@ namespace FreeTrainSimulator.Launcher
             }
             catch (LauncherException ex)
             {
-                Console.Error.WriteLine($"fts: {ex.Message}");
+                Console.Error.WriteLine($"riel: {ex.Message}");
                 return 1;
             }
         }
@@ -72,6 +72,7 @@ namespace FreeTrainSimulator.Launcher
                 "activities" => await Commands.Activities(arguments, cancellationToken).ConfigureAwait(false),
                 "paths" => await Commands.Paths(arguments, cancellationToken).ConfigureAwait(false),
                 "consists" => await Commands.Consists(arguments, cancellationToken).ConfigureAwait(false),
+                "start" => Commands.Start(),
                 "play" => await Commands.Play(arguments, cancellationToken).ConfigureAwait(false),
                 "explore" => await Commands.Explore(arguments, cancellationToken).ConfigureAwait(false),
                 "resume" => Commands.Resume(),
@@ -85,33 +86,34 @@ namespace FreeTrainSimulator.Launcher
 
         private static int UnknownCommand(string command)
         {
-            Console.Error.WriteLine($"fts: unknown command '{command}'");
+            Console.Error.WriteLine($"riel: unknown command '{command}'");
             return Usage(2);
         }
 
         private static int Usage(int exitCode)
         {
             (exitCode == 0 ? Console.Out : Console.Error).Write(
-@"fts - Free Train Simulator launcher
+@"riel - drive Microsoft Train Simulator routes natively on Linux
 
-  fts content                       list the content folders
-  fts content add <name> <path>     add a folder of MSTS content
-  fts content remove <name>         remove a folder
-  fts content refresh               rescan every folder
+  riel content                       list the content folders
+  riel content add <name> <path>     add a folder of MSTS content
+  riel content remove <name>         remove a folder
+  riel content refresh               rescan every folder
 
-  fts routes [folder]               list routes
-  fts activities <route>            list a route's activities
-  fts paths <route>                 list a route's player paths
-  fts consists [folder]             list consists
+  riel routes [folder]               list routes
+  riel activities <route>            list a route's activities
+  riel paths <route>                 list a route's player paths
+  riel consists [folder]             list consists
 
-  fts play <route> <activity>       start an activity
-  fts explore <route> <path> <consist> [--time HH:MM] [--season summer]
+  riel start                         start with the last selections
+  riel play <route> <activity>       start an activity
+  riel explore <route> <path> <consist> [--time HH:MM] [--season summer]
                                     [--weather clear]
-  fts resume                        continue the last save
-  fts run -- <arguments>            start the simulator with raw arguments
+  riel resume                        continue the last save
+  riel run -- <arguments>            start the simulator with raw arguments
 
-  fts doctor                        check that this machine can run the simulator
-  fts version                       print the version
+  riel doctor                        check that this machine can run the simulator
+  riel version                       print the version
 
 Routes, activities, paths and consists are matched on their name, case
 insensitively; a unique prefix is enough. Quote names containing spaces.

@@ -137,7 +137,8 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
             e.GraphicsDeviceInformation.GraphicsProfile = GraphicsProfile.HiDef;
             e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage = RenderTargetUsage.DiscardContents;
             e.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
-            e.GraphicsDeviceInformation.PresentationParameters.MultiSampleCount = userSettings.MultiSamplingCount;
+            // Same clamp as the main window: a sample count this machine cannot give kills the device.
+            e.GraphicsDeviceInformation.PresentationParameters.MultiSampleCount = GraphicsCapabilities.SupportedMultiSampleCount(userSettings.MultiSamplingCount);
         }
 
         protected override void Initialize()

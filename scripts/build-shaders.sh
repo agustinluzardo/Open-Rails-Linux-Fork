@@ -114,9 +114,9 @@ REG
 
 # Locates Microsoft's HLSL compiler, downloading it if need be, and falls back to Wine's.
 find_hlsl_compiler() {
-    if [ -n "${FTS_D3DCOMPILER:-}" ] && [ -f "$FTS_D3DCOMPILER" ]; then
-        say "Using the HLSL compiler at $FTS_D3DCOMPILER" >&2
-        printf '%s' "$FTS_D3DCOMPILER"
+    if [ -n "${RIEL_D3DCOMPILER:-}" ] && [ -f "$RIEL_D3DCOMPILER" ]; then
+        say "Using the HLSL compiler at $RIEL_D3DCOMPILER" >&2
+        printf '%s' "$RIEL_D3DCOMPILER"
         return 0
     fi
 
@@ -149,7 +149,7 @@ find_hlsl_compiler() {
 download_hlsl_compiler() {
     local target="$1"
     local package=microsoft.windows.sdk.cpp
-    local version="${FTS_WINDOWS_SDK_VERSION:-10.0.28000.2705}"
+    local version="${RIEL_WINDOWS_SDK_VERSION:-10.0.28000.2705}"
     local archive="$repository_root/.build/$package.$version.nupkg"
 
     # Everything here goes to standard error: the caller reads this function's output.

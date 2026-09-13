@@ -1,25 +1,25 @@
-// COPYRIGHT 2026 by the Open Rails Linux Fork project.
+// COPYRIGHT 2026 by the Riel project.
 //
-// This file is part of Open Rails.
+// This file is part of Riel, a fork of Open Rails.
 //
-// Open Rails is free software: you can redistribute it and/or modify
+// Riel is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Open Rails is distributed in the hope that it will be useful,
+// Riel is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
+// along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace FreeTrainSimulator.Launcher
+namespace Riel.Launcher
 {
     /// <summary>Starts the simulator and waits for it.</summary>
     internal static class Simulator
@@ -55,16 +55,16 @@ namespace FreeTrainSimulator.Launcher
 
         /// <summary>
         /// Finds the simulator: next to the launcher, where both the build output and the
-        /// installed package put it, or wherever FTS_ACTIVITYRUNNER says.
+        /// installed package put it, or wherever RIEL_SIMULATOR says.
         /// </summary>
         private static string Locate()
         {
-            string configured = Environment.GetEnvironmentVariable("FTS_ACTIVITYRUNNER");
+            string configured = Environment.GetEnvironmentVariable("RIEL_SIMULATOR");
             if (!string.IsNullOrEmpty(configured))
             {
                 return File.Exists(configured)
                     ? configured
-                    : throw new LauncherException($"FTS_ACTIVITYRUNNER points at '{configured}', which does not exist");
+                    : throw new LauncherException($"RIEL_SIMULATOR points at '{configured}', which does not exist");
             }
 
             string beside = Path.Combine(AppContext.BaseDirectory, ExecutableName);
@@ -73,7 +73,7 @@ namespace FreeTrainSimulator.Launcher
 
             throw new LauncherException(
                 $"{ExecutableName} was not found next to the launcher ({AppContext.BaseDirectory}). " +
-                "Set FTS_ACTIVITYRUNNER to its path.");
+                "Set RIEL_SIMULATOR to its path.");
         }
     }
 }

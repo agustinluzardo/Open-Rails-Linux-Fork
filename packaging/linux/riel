@@ -1,0 +1,18 @@
+#!/bin/sh
+# Riel: the command a user actually types.
+#
+# Everything the program needs - the simulator, the compiled effects, the native libraries - lives
+# together under one directory that is deliberately not on PATH. This wrapper is the bridge, and
+# the one place where the environment a graphics driver reads can still be changed.
+
+set -eu
+
+install_dir="/usr/lib/riel"
+
+# Mesa's zink driver runs OpenGL on top of Vulkan. The renderer is unchanged - see
+# docs/linux/ARCHITECTURE.md for why the backend is OpenGL and what a real Vulkan backend needs.
+if [ "${RIEL_VULKAN:-0}" = "1" ]; then
+    export MESA_LOADER_DRIVER_OVERRIDE=zink
+fi
+
+exec "$install_dir/riel" "$@"

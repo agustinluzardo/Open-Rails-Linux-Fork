@@ -15,23 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.IO;
-
-namespace Orts.ActivityRunner.Viewer3D
+namespace FreeTrainSimulator.Common.Display
 {
-    /// <summary>
-    /// Windows counterpart of the OpenAL platform glue.
-    /// </summary>
-    /// <remarks>
-    /// Nothing has to be resolved here: soft_oal.dll ships next to the game and Program.cs adds
-    /// the architecture specific folder to the library search path before anything loads it.
-    /// </remarks>
-    internal static class OpenALLibrary
+    public static partial class GraphicsCapabilities
     {
-        /// <summary>The OpenAL Soft configuration file in the user's roaming profile.</summary>
-        internal static string ConfigurationFile => Path.Combine(
-            System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData),
-            "alsoft.ini");
+        /// <summary>
+        /// Direct3D creates the swap chain itself and the adapter has already been asked whether
+        /// it supports the sample count, so there is nothing further to probe.
+        /// </summary>
+        private static partial bool WindowSupportsMultiSample(int samples) => true;
     }
 }

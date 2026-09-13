@@ -204,11 +204,11 @@ namespace Orts.ActivityRunner.Processes
                         MessageDialogResult openTracker = MessageDialog.Show($"{RuntimeInfo.ProductName} {VersionInfo.Version}",
                                 $"A fatal error has occured and {RuntimeInfo.ProductName} cannot continue.\n\n" +
                                 $"    {errorSummary}\n\n" +
-                                $"This error may be due to bad data or a bug. You can help improve {RuntimeInfo.ProductName} by reporting this error in our bug tracker at https://github.com/perpetualKid/FreeTrainSimulator/issues and attaching the log file {logFile}.\n\n" +
+                                $"This error may be due to bad data or a bug. You can help improve {RuntimeInfo.ProductName} by reporting this error in our bug tracker at {LoggingUtil.BugTrackerUrl} and attaching the log file {logFile}.\n\n" +
                                 ">>> Click OK to report this error on the GitHub bug tracker <<<",
                                 MessageDialogButtons.OkCancel, MessageDialogIcon.Error);
                         if (openTracker == MessageDialogResult.Ok)
-                            SystemInfo.OpenBrowser("https://github.com/perpetualKid/FreeTrainSimulator/issues");
+                            SystemInfo.OpenBrowser(LoggingUtil.BugTrackerUrl);
                     }
                 }
                 // Make sure we quit after handling an error.

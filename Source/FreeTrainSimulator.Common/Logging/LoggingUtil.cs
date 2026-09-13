@@ -19,7 +19,7 @@ namespace FreeTrainSimulator.Common.Logging
 
         public static readonly string SeparatorLine = new string('-', 80);
 
-        public const string BugTrackerUrl = "https://github.com/perpetualKid/FreeTrainSimulator/issues";
+        public const string BugTrackerUrl = "https://github.com/agustinluzardo/Open-Rails-Linux-Fork/issues";
 
         static LoggingUtil()
         {

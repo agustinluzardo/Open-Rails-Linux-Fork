@@ -27,7 +27,7 @@ namespace Tests.FreeTrainSimulator.Models.Imported.Refresh
         {
             string uniqueSuffix = Guid.NewGuid().ToString("N");
             ContentModel contentModel = new ContentModel();
-            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"fts-content-{uniqueSuffix}"), contentModel);
+            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"riel-content-{uniqueSuffix}"), contentModel);
 
             contentModel = contentModel with
             {
@@ -62,7 +62,7 @@ namespace Tests.FreeTrainSimulator.Models.Imported.Refresh
         {
             string uniqueSuffix = Guid.NewGuid().ToString("N");
             ContentModel contentModel = new ContentModel();
-            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"fts-content-{uniqueSuffix}"), contentModel);
+            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"riel-content-{uniqueSuffix}"), contentModel);
             folderModel.Initialize(contentModel);
 
             RouteModel routeModel = new RouteModel(WorldLocation.None)
@@ -95,7 +95,7 @@ namespace Tests.FreeTrainSimulator.Models.Imported.Refresh
         {
             string uniqueSuffix = Guid.NewGuid().ToString("N");
             ContentModel contentModel = new ContentModel();
-            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"fts-content-{uniqueSuffix}"), contentModel);
+            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"riel-content-{uniqueSuffix}"), contentModel);
             folderModel.Initialize(contentModel);
 
             RouteModel routeModel = new RouteModel(WorldLocation.None)
@@ -119,7 +119,7 @@ namespace Tests.FreeTrainSimulator.Models.Imported.Refresh
         {
             string uniqueSuffix = Guid.NewGuid().ToString("N");
             ContentModel contentModel = new ContentModel();
-            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"fts-content-{uniqueSuffix}"), contentModel);
+            FolderModel folderModel = new FolderModel($"Folder-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"riel-content-{uniqueSuffix}"), contentModel);
             folderModel.Initialize(contentModel);
 
             RouteModel routeModel = new RouteModel(WorldLocation.None)
@@ -147,7 +147,7 @@ namespace Tests.FreeTrainSimulator.Models.Imported.Refresh
         {
             string uniqueSuffix = Guid.NewGuid().ToString("N");
             ContentModel contentModel = new ContentModel();
-            FolderModel configuredFolder = new FolderModel($"Configured-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"fts-configured-{uniqueSuffix}"), contentModel);
+            FolderModel configuredFolder = new FolderModel($"Configured-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"riel-configured-{uniqueSuffix}"), contentModel);
 
             contentModel = contentModel with
             {
@@ -164,11 +164,11 @@ namespace Tests.FreeTrainSimulator.Models.Imported.Refresh
         public void MergeFoldersForRefreshPreservesConfiguredAndAddsMissingLegacyFolders()
         {
             string uniqueSuffix = Guid.NewGuid().ToString("N");
-            string sharedPath = Path.Combine(Path.GetTempPath(), $"fts-shared-{uniqueSuffix}");
+            string sharedPath = Path.Combine(Path.GetTempPath(), $"riel-shared-{uniqueSuffix}");
 
             ContentModel contentModel = new ContentModel();
             FolderModel configuredSharedFolder = new FolderModel($"ConfiguredShared-{uniqueSuffix}", sharedPath, contentModel);
-            FolderModel configuredOnlyFolder = new FolderModel($"ConfiguredOnly-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"fts-configured-only-{uniqueSuffix}"), contentModel);
+            FolderModel configuredOnlyFolder = new FolderModel($"ConfiguredOnly-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"riel-configured-only-{uniqueSuffix}"), contentModel);
 
             contentModel = contentModel with
             {
@@ -177,7 +177,7 @@ namespace Tests.FreeTrainSimulator.Models.Imported.Refresh
             contentModel.Initialize(null);
 
             FolderModel legacySharedFolder = new FolderModel($"LegacyShared-{uniqueSuffix}", sharedPath, contentModel);
-            FolderModel legacyOnlyFolder = new FolderModel($"LegacyOnly-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"fts-legacy-only-{uniqueSuffix}"), contentModel);
+            FolderModel legacyOnlyFolder = new FolderModel($"LegacyOnly-{uniqueSuffix}", Path.Combine(Path.GetTempPath(), $"riel-legacy-only-{uniqueSuffix}"), contentModel);
 
             ImmutableArray<FolderModel> mergedFolders = FolderModelImportHandler.MergeFoldersForRefresh(contentModel, ImmutableArray.Create(legacySharedFolder, legacyOnlyFolder));
 

@@ -11,7 +11,7 @@ using System.Linq;
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Native;
 
-#if !FTS_UNIX
+#if !RIEL_UNIX
 using Microsoft.Win32;
 #endif
 
@@ -262,7 +262,7 @@ namespace Orts.Formats.Msts
         {
             get
             {
-#if FTS_UNIX
+#if RIEL_UNIX
                 return MstsInstallation.Locate(mstsLocation);
 #else
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Microsoft Games\Train Simulator\1.0");
