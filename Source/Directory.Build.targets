@@ -55,6 +55,27 @@
 		<None Include="**/*.Windows.cs" />
 	</ItemGroup>
 
+	<!--
+	  Shaders.
+
+	  The Windows build compiles the .fx sources in each project's own PostBuild step. The Linux
+	  build copies the prebuilt .mgfx files instead, because MonoGame's effect compiler needs
+	  Microsoft's HLSL compiler and so cannot run here unaided - see scripts/build-shaders.sh,
+	  which is what produces them.
+	-->
+	<PropertyGroup Condition="'$(FtsPlatform)' != 'windows'">
+		<FtsPrebuiltShaderDirectory Condition="'$(FtsPrebuiltShaderDirectory)' == ''">$(MSBuildThisFileDirectory)Shaders/prebuilt/$(FtsGraphicsBackend.Replace('DesktopGL','OpenGL'))</FtsPrebuiltShaderDirectory>
+	</PropertyGroup>
+	<Target Name="FtsCopyPrebuiltShaders" AfterTargets="Build"
+	        Condition="'$(FtsPlatform)' != 'windows' AND '$(OutputType)' == 'Exe' AND Exists('$(FtsPrebuiltShaderDirectory)')">
+		<ItemGroup>
+			<FtsPrebuiltShader Include="$(FtsPrebuiltShaderDirectory)/*.mgfx" />
+		</ItemGroup>
+		<Copy SourceFiles="@(FtsPrebuiltShader)" DestinationFolder="$(TargetDir)Content" SkipUnchangedFiles="true" />
+		<Warning Condition="'@(FtsPrebuiltShader)' == ''"
+		         Text="No prebuilt shaders in $(FtsPrebuiltShaderDirectory). Run scripts/build-shaders.sh; the simulator cannot render without them." />
+	</Target>
+
 	<!-- Compilation symbols so shared sources can branch on the target platform. -->
 	<PropertyGroup>
 		<DefineConstants Condition="'$(FtsPlatform)' != 'windows'">$(DefineConstants);FTS_UNIX</DefineConstants>
