@@ -1,0 +1,110 @@
+.TH OPEN-RAILS 6 "2026" "open-rails-linux" "Games"
+.SH NAME
+open\-rails \- native Linux train simulator for Microsoft Train Simulator content
+.SH SYNOPSIS
+.B open\-rails
+.RI [ arguments ]
+.br
+.B fts
+.I command
+.RI [ arguments ]
+.SH DESCRIPTION
+A train simulator that reads Microsoft Train Simulator routes, activities, rolling stock and
+sounds, built as a native Linux program rather than run under Wine.
+.PP
+.B open\-rails
+starts the simulator itself. With no arguments it continues with the selections from the last
+session; it is what the desktop entry runs.
+.PP
+.B fts
+is the launcher: it manages content folders, lists what they contain, and starts a run. It is
+the usual way in.
+.SH LAUNCHER COMMANDS
+.TP
+.B fts content
+List the configured content folders.
+.TP
+.BI "fts content add " "name path"
+Add a folder holding Microsoft Train Simulator content and scan it.
+.TP
+.BI "fts content remove " name
+Remove a folder.
+.TP
+.B fts content refresh
+Rescan every folder. Do this after adding or changing routes on disk.
+.TP
+.BI "fts routes [" folder ]
+List routes.
+.TP
+.BI "fts activities " route
+List a route's activities.
+.TP
+.BI "fts paths " route
+List a route's player paths.
+.TP
+.BI "fts consists [" folder ]
+List consists.
+.TP
+.BI "fts play " "route activity"
+Start an activity.
+.TP
+.BI "fts explore " "route path consist"
+Start an explore session. Accepts
+.BI \-\-time " HH:MM" \fR,
+.BI \-\-season " summer"
+and
+.BI \-\-weather " clear" \fR.
+.TP
+.B fts resume
+Continue the last save.
+.TP
+.B fts doctor
+Check that this machine can run the simulator and report what is missing.
+.PP
+Routes, activities, paths and consists are matched on their name, case insensitively; a unique
+prefix is enough.
+.SH ENVIRONMENT
+.TP
+.B FTS_MSTS_PATH
+Where Microsoft Train Simulator is installed. Set this when the content is somewhere the
+automatic search would not look; it checks the XDG data directory, the home directory and the
+Program Files folder of any Wine or Proton prefix.
+.TP
+.B OPEN_RAILS_VULKAN
+Set to 1 to run the OpenGL renderer on Vulkan through Mesa's zink driver.
+.TP
+.B FTS_ACTIVITYRUNNER
+Path to the simulator binary, for running the launcher against a build directory.
+.SH FILES
+.TP
+.I ~/.config/open\-rails\-linux
+Settings and profiles.
+.TP
+.I ~/.local/share/open\-rails\-linux
+Saves.
+.TP
+.I ~/.local/state/open\-rails\-linux/Logs
+Logs. Attach these to a bug report.
+.TP
+.I ~/.cache/open\-rails\-linux
+Scanned content indexes. Safe to delete; they are rebuilt on the next scan.
+.PP
+These follow the XDG base directory specification and move with the corresponding
+.BR XDG_ *_HOME
+variables.
+.SH NOTES
+Microsoft Train Simulator content refers to its own files with inconsistent capitalisation,
+which NTFS forgives and Linux file systems do not. The simulator resolves those references case
+insensitively, so a route copied from a Windows machine loads unchanged.
+.PP
+A RailDriver desk needs read access to its hidraw device. The package installs a udev rule
+granting it to the
+.B input
+group; add yourself to that group and log back in.
+.SH SEE ALSO
+The documentation installed under
+.IR /usr/share/doc/open\-rails\-linux .
+.SH BUGS
+Report at
+.UR https://github.com/agustinluzardo/Open-Rails-Linux-Fork/issues
+.UE .

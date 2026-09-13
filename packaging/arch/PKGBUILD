@@ -1,0 +1,108 @@
+# Maintainer: Agustin Luzardo <agustinluzardo09@gmail.com>
+
+pkgname=open-rails-linux
+pkgver=2.0.1
+pkgrel=1
+pkgdesc="Native Linux train simulator that runs Microsoft Train Simulator content (Open Rails / Free Train Simulator fork)"
+arch=('x86_64')
+url="https://github.com/agustinluzardo/Open-Rails-Linux-Fork"
+license=('GPL-3.0-or-later')
+
+depends=(
+    'dotnet-runtime-10.0'
+    # MonoGame's OpenGL backend talks to the display through SDL, and the simulator's own
+    # display enumeration and message boxes use it as well.
+    'sdl2'
+    # OpenAL Soft plays every sound in the simulator.
+    'openal'
+    # Fontconfig resolves the font families the cab labels and the head-up display ask for.
+    'fontconfig'
+    'zlib'
+)
+makedepends=('dotnet-sdk-10.0' 'git')
+optdepends=(
+    'vulkan-icd-loader: run the OpenGL renderer on Vulkan through Mesa zink'
+    'ttf-liberation: metric compatible replacements for the fonts MSTS content names'
+)
+
+source=("git+$url.git#branch=claude/magical-dijkstra-0slhlk")
+sha256sums=('SKIP')
+
+# The compiled effects are committed in the repository. Producing them needs Microsoft's HLSL
+# compiler, which does not run here, so building them at package time would mean pulling in Wine
+# for something whose result is identical every time. See docs/linux/ARCHITECTURE.md.
+
+_install_dir="/usr/lib/$pkgname"
+
+prepare() {
+    cd "$srcdir/Open-Rails-Linux-Fork"
+    # Nerdbank.GitVersioning derives the version from the history, which the clone above carries.
+    git config --local advice.detachedHead false
+}
+
+build() {
+    cd "$srcdir/Open-Rails-Linux-Fork/Source"
+
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1
+    export DOTNET_NOLOGO=1
+    # Keep the restore inside the build directory so nothing is written to the user's home.
+    export NUGET_PACKAGES="$srcdir/nuget"
+
+    # Published one project at a time: publishing a solution to a shared output directory is
+    # unsupported, and would drag the test projects along with it.
+    local project
+    for project in \
+        ActivityRunner/ActivityRunner.csproj \
+        Launcher.Cli/Launcher.Cli.csproj \
+        MultiPlayer.Hub/MultiPlayer.Hub.csproj
+    do
+        dotnet publish "$project" \
+            --configuration Release \
+            --runtime linux-x64 \
+            --self-contained false \
+            --output "$srcdir/publish"
+    done
+}
+
+check() {
+    cd "$srcdir/Open-Rails-Linux-Fork/Source"
+
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1
+    export DOTNET_NOLOGO=1
+    export NUGET_PACKAGES="$srcdir/nuget"
+
+    dotnet test Test/Tests.Orts/Tests.Orts.csproj --configuration Release
+    dotnet test Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj --configuration Release
+}
+
+package() {
+    cd "$srcdir/Open-Rails-Linux-Fork"
+
+    install -dm755 "$pkgdir$_install_dir"
+    cp -r "$srcdir/publish/." "$pkgdir$_install_dir/"
+
+    # The publish output carries a runtimes/ tree for every platform MonoGame and Skia support.
+    find "$pkgdir$_install_dir/runtimes" -mindepth 1 -maxdepth 1 \
+        ! -name 'linux-x64' ! -name 'unix' -exec rm -rf {} + 2>/dev/null || true
+    # Debug symbols and the Windows shader sources are not needed at runtime.
+    find "$pkgdir$_install_dir" -name '*.pdb' -delete
+
+    install -dm755 "$pkgdir/usr/bin"
+    install -Dm755 packaging/linux/open-rails "$pkgdir/usr/bin/open-rails"
+    install -Dm755 packaging/linux/open-rails-launcher "$pkgdir/usr/bin/fts"
+
+    install -Dm644 packaging/linux/open-rails.desktop "$pkgdir/usr/share/applications/open-rails.desktop"
+    install -Dm644 packaging/linux/70-raildriver.rules "$pkgdir/usr/lib/udev/rules.d/70-raildriver.rules"
+    install -Dm644 packaging/linux/open-rails.6 "$pkgdir/usr/share/man/man6/open-rails.6"
+
+    for size in 64 128 256; do
+        if [ -f "packaging/linux/icons/${size}.png" ]; then
+            install -Dm644 "packaging/linux/icons/${size}.png" \
+                "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/open-rails.png"
+        fi
+    done
+
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 docs/linux/INSTALL.md "$pkgdir/usr/share/doc/$pkgname/INSTALL.md"
+    install -Dm644 docs/linux/ARCHITECTURE.md "$pkgdir/usr/share/doc/$pkgname/ARCHITECTURE.md"
+}

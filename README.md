@@ -1,68 +1,73 @@
-# ![Logo](./Source/FTS_64.png) Free Train Simulator
+# ![Logo](./Source/FTS_64.png) Open Rails for Linux
 
-[![Join the chat at https://gitter.im/ORTS-MG/community](https://badges.gitter.im/ORTS-MG/community.svg)](https://gitter.im/ORTS-MG/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+A train simulator for Microsoft Train Simulator content, built to run natively on Linux.
 
-FreeTrainSimulator (FTS) has once been [forked](https://github.com/openrails/openrails) from [OpenRails](http://www.openrails.org). With consistent focus on platform improvements, and a different pace of development efforts, FTS has diverged much from the original OpenRails source base, so it became an independent application, which also led to and is expressed by the new branding and name.  
-FTS is running on .NET 8, based on the [Monogame patch](http://www.elvastower.com/forums/index.php?/topic/30924-going-beyond-the-4-gb-of-memory/page__view__findpost__p__237281), and includes many other changes and improvements, such as completely rewritten RailDriver input, new Signalscript-Parser engine, and much more.
+MSTS content under Wine is a frustrating experience: custom routes fail to load, performance is
+poor, and every problem has two possible causes. This is the same simulator as a Linux program -
+no Wine, no Direct3D, no Windows Forms - so the failures that are Wine's fault simply do not
+happen.
 
-## Feature overview
+It is a fork of [Free Train Simulator][fts], which is itself a modernized fork of
+[Open Rails][or]. The simulation is theirs; what is added here is the platform layer.
 
-In addition to features from OpenRails, Free Train Simulator includes:  
+[fts]: https://github.com/perpetualKid/FreeTrainSimulator
+[or]: https://github.com/openrails/openrails
 
-- Most recent version of Monogame (3.8.5)
-- build on .NET 10, which generally allows for cross platform use (see [wiki](https://github.com/perpetualKid/FreeTrainSimulator/wiki/Linux-Wine) for Linux support)
-- full 64bit support, removing out-of-memory situations and allows to use all available system memory also beyond 3GB/4GB barrier as with 32bit software
-- rewritten SignalScript parsing engine for faster loading time
-- [Standalone Multiplayer server](https://github.com/perpetualKid/FreeTrainSimulator/wiki#2021-12-05-multiplayer-standalone-server) simplifying multi-player games
-- New [TrackViewer Toolbox](https://github.com/perpetualKid/FreeTrainSimulator/wiki#2021-03-09-new-trackviewer-preview), also handling large routes smoothly
-- Rewritten RailDriver support, with built-in unit calibration support, no need to to handle extra files&tools
-- New Translation engine, allowing for simpler Localization (support for PoEdit .mo files removes the need for compiled resource dlls)
-- Many performance optimizations
+## What is different
 
-## Download
+- **Native throughout.** .NET 10 on `linux-x64`, MonoGame's OpenGL backend, SDL for the window,
+  the distribution's OpenAL for sound.
+- **Custom routes load.** MSTS content refers to its own files with inconsistent capitalisation,
+  which NTFS forgives and ext4 does not. Every content path is resolved case insensitively, which
+  is what makes a route copied from a Windows machine work unchanged. This is the single biggest
+  reason a route looks broken on a native Linux build.
+- **Text renders without GDI+.** .NET dropped `System.Drawing` on Unix, and the engine rasterizes
+  every label with it; a compatibility layer over SkiaSharp keeps that code unchanged.
+- **The RailDriver desk works**, through the kernel's hidraw driver rather than a Windows DLL.
+- **Files go where they belong.** Settings, saves, logs and caches follow the XDG base directory
+  specification.
+- **Packaged for Arch**, with a PKGBUILD ready for the AUR.
 
-[![GitHub All Releases](https://img.shields.io/github/downloads/perpetualKid/orts-mg/total)](https://github.com/perpetualKid/ORTS-MG/releases/)
+## Getting started
 
-If you came here just to download the software, please see the [Releases](https://github.com/perpetualKid/FreeTrainSimulator/releases) section to download a recent version of the software. Simply unzip the download folder and start FreeTrainSimulator.exe (or OpenRails.exe in older releases).  
-Once started, please be aware there may be further updates available for download, as the release page tracks major version releases only. Minor updates are available through the Auto-Updater, as well the developer builds which are shared each time when code is updated.  
-Also check the [News](https://https://github.com/perpetualKid/FreeTrainSimulator/wiki#news) section in the wiki for other announcements.
+```sh
+cd packaging/arch && makepkg -si          # or see docs/linux/INSTALL.md to build by hand
 
-## Content
+fts content add "MSTS" ~/games/train-simulator
+fts routes
+fts play "Marias Pass" "Coal Train"
+```
 
-Please refer to content from Open Rails
+`fts doctor` checks whether this machine can run the simulator and says what is missing.
 
-- [OpenRails currated content](https://www.openrails.org/download/explore-content/index.html)
+[**Installing and running**](docs/linux/INSTALL.md) covers the rest, including what to do when
+something does not work.
 
-Other Train Simulator forums and content developers
+## How it works
 
-- [Indian Railways Train Simulator](https://irts.in/)
-- [TrainSim.com](https://www.trainsim.com/forums/filelib-home)
-- [TSSF.eu](https://tssf.eu/forum/)
-- [Das MSTS Forum](https://kunifuchs.com/burningboard/)
+[**ARCHITECTURE.md**](docs/linux/ARCHITECTURE.md) explains why Free Train Simulator is the base,
+what had to be replaced and how, why the renderer is OpenGL rather than Vulkan and what a Vulkan
+backend would take, and how to merge from upstream without a fight.
 
-## Contributing
+## Status
 
-If you are interested in more information, documentation and news regarding recent updates, please check the [Wiki](https://github.com/perpetualKid/FreeTrainSimulator/wiki).
+The engine builds and runs natively, and the test suite passes on Linux. Known gaps:
 
-If you have bright ideas, questions or other topics to discuss, please share them in the [Discussions](https://github.com/perpetualKid/FreeTrainSimulator/discussions) section.
+- The prebuilt shaders in the repository are incomplete: 3 of 12 effects. Producing the rest needs
+  Microsoft's HLSL compiler - a Windows machine, or the `Shaders` workflow once GitHub Actions is
+  enabled on the fork. Until then the simulator will not render a scene. See
+  [the shaders section](docs/linux/ARCHITECTURE.md#shaders).
+- The launcher is a command line tool. A graphical one would sit on the same content model.
+- The WPF Toolbox and TrackViewer are Windows only and are not part of this build.
 
-To report bugs or other issues, use the [Issue Tracker](https://github.com/perpetualKid/FreeTrainSimulator/issues). Please provide as much input possible, ideally attaching log files or other relevant and supporting information.
+## Upstream
 
-Anyone is welcome to contribute, and this is not limited to programmers writing code. There are many areas which would benefit from a wide range of skills, experience or purely passion, such as improvements to visual designs, documentation and translations, support with project management and feature planning, software architecture and design, or research for new technologies and frameworks. Check the contribution guidelines for further details, submit change proposals through [pull requests](https://github.com/perpetualKid/FreeTrainSimulator/pulls), or introduce your thoughts for contribution in a [Discussion](https://github.com/perpetualKid/FreeTrainSimulator/discussions).
+Fixes that are not Linux specific belong upstream, in [Free Train Simulator][fts] or
+[Open Rails][or], rather than here. Where the two engines disagree about how a piece of MSTS
+content should behave, Open Rails is the reference.
 
-## Installation Requirements
+The original project's README is kept at [docs/UPSTREAM-README.md](docs/UPSTREAM-README.md).
 
-Running on Windows 10 with recent patch status (version 1809 or higher), the only separate download needed may be [.NET 1.0](https://dotnet.microsoft.com/en-us/download/dotnet/10.0).  
-If not installed already, trying to start the program will guide through necessary downloads. Please also see [this article](https://github.com/perpetualKid/FreeTrainSimulator/wiki/.NET-Framework) in our [wiki](https://github.com/perpetualKid/FreeTrainSimulator/Wiki).  
+## Licence
 
-You will need to have an DirectX 11.0 compatible graphics adapter (GPU).
-
-To install on Linux, please see the [Wiki](https://github.com/perpetualKid/ORTS-MG/wiki/Linux-Wine).
-
-## Build Information
-
-|Release Type|Build Status|Build Version|
-|------------|------------|-------------|
-|Release|[![Build Status](https://dev.azure.com/perpetualKid/ORTS-MG/_apis/build/status/Build/Azure%20Cloud%20Build?branchName=development)](https://dev.azure.com/perpetualKid/ORTS-MG/_build/latest?definitionId=17&branchName=main)|![Release Build](https://img.shields.io/endpoint?url=https://orts.blob.core.windows.net/releases/badges/v/freetrainsimulator.json)|
-|Release Candidate|[![Build Status](https://dev.azure.com/perpetualKid/ORTS-MG/_apis/build/status/Build/Azure%20Cloud%20Build?branchName=development)](https://dev.azure.com/perpetualKid/ORTS-MG/_build/latest?definitionId=17&branchName=release/*)|![Release Build](https://img.shields.io/endpoint?url=https://orts.blob.core.windows.net/releases/badges/vpre/freetrainsimulator.json)|
-|Developer Builds|[![Build Status](https://dev.azure.com/perpetualKid/ORTS-MG/_apis/build/status/Build/Azure%20Cloud%20Build?branchName=development)](https://dev.azure.com/perpetualKid/ORTS-MG/_build/latest?definitionId=17&branchName=development)|![Release Build](https://img.shields.io/endpoint?url=https://orts.blob.core.windows.net/builds/badges/vpre/freetrainsimulator.json)|
+GPL-3.0-or-later, as Open Rails and Free Train Simulator are. See [LICENSE](LICENSE).

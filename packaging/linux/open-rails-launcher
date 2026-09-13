@@ -1,0 +1,6 @@
+#!/bin/sh
+# Starts the launcher, which finds the simulator beside itself.
+
+set -eu
+
+exec /usr/lib/open-rails-linux/fts "$@"

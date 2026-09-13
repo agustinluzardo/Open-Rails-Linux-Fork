@@ -40,18 +40,27 @@ namespace FreeTrainSimulator.Common.Info
         /// </summary>
         public static string ApplicationFolder { get; } = AppContext.BaseDirectory;
 
-        public static string UserDataFolder { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ProductName);
+        /// <summary>
+        /// Settings, profiles and saves.
+        /// </summary>
+        /// <remarks>
+        /// Windows keeps all of this together in the roaming profile. The free desktops separate
+        /// configuration, data, state and caches into different trees, and put nothing with a
+        /// space in its name there, so <see cref="UserFolders"/> answers per platform. Everything
+        /// below is derived from those four so the layout is described in one place.
+        /// </remarks>
+        public static string UserDataFolder { get; } = UserFolders.Configuration;
 
         public static string ScreenshotFolder { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), ProductName);
 
-        public static string DeletedSaveFolder { get; } = Path.Combine(UserDataFolder, "Deleted Saves");
-        public static string SavePackFolder { get; } = Path.Combine(UserDataFolder, "Save Packs");
+        public static string DeletedSaveFolder { get; } = Path.Combine(UserFolders.Data, "Deleted Saves");
+        public static string SavePackFolder { get; } = Path.Combine(UserFolders.Data, "Save Packs");
 
-        public static string CacheFolder { get; } = Path.Combine(UserDataFolder, "Cache");
+        public static string CacheFolder { get; } = UserFolders.Cache;
 
         public static string ContentFolder { get; } = Path.Combine(ApplicationFolder, "content");
 
-        public static string LogFilesFolder { get; } = Path.Combine(UserDataFolder, "Logs");
+        public static string LogFilesFolder { get; } = Path.Combine(UserFolders.State, "Logs");
         /// <summary>
         /// returns the common program root. While this may be same as <see cref="ApplicationFolder"/>
         /// this is one level up in dual target environment ("Program" for "Program\netcoreapp3.1")

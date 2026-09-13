@@ -1,0 +1,17 @@
+#!/bin/sh
+# Starts the simulator.
+#
+# The engine expects to find its content, shaders and native libraries beside its own executable,
+# which after installation is not on PATH; this is the thin wrapper that bridges the two.
+
+set -eu
+
+install_dir="/usr/lib/open-rails-linux"
+
+# Mesa's zink driver runs OpenGL on top of Vulkan. The renderer is unchanged - see
+# docs/linux/ARCHITECTURE.md for why the backend is OpenGL and what a real Vulkan backend needs.
+if [ "${OPEN_RAILS_VULKAN:-0}" = "1" ]; then
+    export MESA_LOADER_DRIVER_OVERRIDE=zink
+fi
+
+exec "$install_dir/ActivityRunner" "$@"
