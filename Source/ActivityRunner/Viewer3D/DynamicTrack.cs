@@ -18,6 +18,7 @@
 // This file is the responsibility of the 3D & Environment Team. 
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Position;
 using FreeTrainSimulator.Common.Xna;
 
@@ -251,12 +252,12 @@ namespace Orts.ActivityRunner.Viewer3D
         {
             string path = routePath + @"\TrackProfiles";
             //Establish default track profile
-            if (File.Exists(path + @"\TrProfile.xml"))
+            if (ContentIO.FileExists(path + @"\TrProfile.xml"))
             {
                 // XML-style
                 trpFile = new TRPFile(viewer, path + @"\TrProfile.xml");
             }
-            else if (File.Exists(path + @"\TrProfile.stf"))
+            else if (ContentIO.FileExists(path + @"\TrProfile.stf"))
             {
                 // MSTS-style
                 trpFile = new TRPFile(viewer, path + @"\TrProfile.stf");
@@ -278,7 +279,7 @@ namespace Orts.ActivityRunner.Viewer3D
         /// <param name="filespec">Complete filepath string to track profile file.</param>
         public TRPFile(Viewer viewer, string filespec)
         {
-            if (string.IsNullOrEmpty(filespec) || !File.Exists(filespec))
+            if (string.IsNullOrEmpty(filespec) || !ContentIO.FileExists(filespec))
             {
                 // No track profile provided, use default
                 TrackProfile = new TrProfile(viewer);

@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -38,7 +39,7 @@ namespace Orts.Formats.OpenRails.Files
             Description = string.Empty;
             try
             {
-                using (StreamReader scrStream = new StreamReader(fileName, true))
+                using (StreamReader scrStream = ContentIO.OpenText(fileName))
                 {
                     TimeTableGroupFileRead(fileName, scrStream);
                     if (string.IsNullOrEmpty(Description))
@@ -88,7 +89,7 @@ namespace Orts.Formats.OpenRails.Files
         public static Collection<string> GetTimeTableList(string fileName)
         {
             Collection<string> result = new Collection<string>();
-            using (StreamReader scrStream = new StreamReader(fileName, true))
+            using (StreamReader scrStream = ContentIO.OpenText(fileName))
             {
                 // read first line - first character is separator, rest is train info
                 string readLine = scrStream.ReadLine();

@@ -1,4 +1,4 @@
-// COPYRIGHT 2014 by the Open Rails project.
+﻿// COPYRIGHT 2014 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -29,6 +29,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Api;
 using FreeTrainSimulator.Common.Calc;
 using FreeTrainSimulator.Common.Info;
@@ -1107,11 +1108,11 @@ namespace Orts.Simulation.Timetables
                 bool binaryloaded = false;
                 string formedpathFilefullBinary = RuntimeInfo.GetCacheFilePath("Path", formedpathFilefull);
 
-                if (binaryPaths && File.Exists(formedpathFilefullBinary))
+                if (binaryPaths && ContentIO.FileExists(formedpathFilefullBinary))
                 {
                     var binaryLastWriteTime = File.GetLastWriteTime(formedpathFilefullBinary);
                     if (binaryLastWriteTime < File.GetLastWriteTime(simulator.RouteFolder.TrackDatabaseFile(simulator.RouteModel.RouteKey)) ||
-                        File.Exists(formedpathFilefull) && binaryLastWriteTime < File.GetLastWriteTime(formedpathFilefull))
+                        ContentIO.FileExists(formedpathFilefull) && binaryLastWriteTime < File.GetLastWriteTime(formedpathFilefull))
                     {
                         File.Delete(formedpathFilefullBinary);
                     }
@@ -2362,7 +2363,7 @@ namespace Orts.Simulation.Timetables
                         wagonFilePath = wagonFolder + @"\" + wagon.Name + ".eot";
                     }
 
-                    if (!File.Exists(wagonFilePath))
+                    if (!ContentIO.FileExists(wagonFilePath))
                     {
                         Trace.TraceWarning($"Ignored missing {(wagon.IsEngine ? "engine" : "wagon")} {wagonFilePath} in consist {consistFile}");
                         continue;

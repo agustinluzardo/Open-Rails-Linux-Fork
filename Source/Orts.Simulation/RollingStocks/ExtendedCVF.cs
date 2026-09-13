@@ -40,6 +40,7 @@
  */
 
 using System.IO;
+using FreeTrainSimulator.Common.Native;
 
 using Microsoft.Xna.Framework;
 
@@ -74,7 +75,7 @@ namespace Orts.Simulation.RollingStocks
         internal virtual void Initialize(string wagFilePath)
         {
             string fileName = Path.ChangeExtension(wagFilePath, extension);
-            if (File.Exists(fileName))
+            if (ContentIO.FileExists(fileName))
             {
                 using (STFReader stf = new STFReader(fileName, false))
                 {

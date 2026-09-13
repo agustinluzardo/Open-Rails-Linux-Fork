@@ -31,6 +31,7 @@
 #endregion
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.IO;
 
 using Microsoft.Xna.Framework.Graphics;
@@ -432,7 +433,7 @@ namespace FreeTrainSimulator.Graphics.Xna
         /// <param name="loadMipMap">If true it will load the mip-map chain for this texture.</param>
         public static void DDSFromFile(string fileName, GraphicsDevice device, bool loadMipMap, out Texture2D texture)
         {
-            using (MemoryStream stream = new MemoryStream(File.ReadAllBytes(fileName)))
+            using (MemoryStream stream = new MemoryStream(ContentIO.ReadAllBytes(fileName)))
             {
                 InternalDDSFromStream(stream, device, 0, loadMipMap, out Texture tex);
 
@@ -455,7 +456,7 @@ namespace FreeTrainSimulator.Graphics.Xna
         /// <param name="loadMipMap">If true it will load the mip-map chain for this texture.</param>
         public static void DDSFromFile(string fileName, GraphicsDevice device, bool loadMipMap, out TextureCube texture)
         {
-            using (MemoryStream stream = new MemoryStream(File.ReadAllBytes(fileName)))
+            using (MemoryStream stream = new MemoryStream(ContentIO.ReadAllBytes(fileName)))
             {
                 InternalDDSFromStream(stream, device, 0, loadMipMap, out Texture tex);
 
@@ -478,7 +479,7 @@ namespace FreeTrainSimulator.Graphics.Xna
         /// <param name="loadMipMap">If true it will load the mip-map chain for this texture.</param>
         public static void DDSFromFile(string fileName, GraphicsDevice device, bool loadMipMap, out Texture3D texture)
         {
-            using (MemoryStream stream = new MemoryStream(File.ReadAllBytes(fileName)))
+            using (MemoryStream stream = new MemoryStream(ContentIO.ReadAllBytes(fileName)))
             {
                 InternalDDSFromStream(stream, device, 0, loadMipMap, out Texture tex);
 

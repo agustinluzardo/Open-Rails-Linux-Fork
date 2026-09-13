@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.Diagnostics;
+using FreeTrainSimulator.Common.Native;
 using System.IO;
 
 using Orts.Formats.Msts.Models;
@@ -33,7 +34,7 @@ namespace Orts.Formats.Msts.Files
 
         public void AddRouteTSectionDatFile(string fileName)
         {
-            if (File.Exists(fileName))
+            if (ContentIO.FileExists(fileName))
             {
                 using (STFReader stf = new STFReader(fileName, false))
                 {

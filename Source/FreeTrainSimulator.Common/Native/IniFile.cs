@@ -1,4 +1,4 @@
-// COPYRIGHT 2026 by the Open Rails Linux Fork project.
+﻿// COPYRIGHT 2026 by the Open Rails Linux Fork project.
 //
 // This file is part of Open Rails.
 //
@@ -194,7 +194,7 @@ namespace FreeTrainSimulator.Common.Native
             if (string.IsNullOrEmpty(fileName))
                 return null;
 
-            string resolved = ContentPath.ResolveFile(fileName);
+            string resolved = ContentIO.ResolveFile(fileName);
             if (resolved == null)
                 return null;
 

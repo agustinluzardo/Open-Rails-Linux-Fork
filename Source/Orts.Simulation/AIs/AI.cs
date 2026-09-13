@@ -1,4 +1,4 @@
-// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
+﻿// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -33,6 +33,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Calc;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Shim;
@@ -732,7 +733,7 @@ namespace Orts.Simulation.AIs
                     wagonFilePath = wagonFolder + @"\" + wagon.Name + ".eot";
                 }
 
-                if (!File.Exists(wagonFilePath))
+                if (!ContentIO.FileExists(wagonFilePath))
                 {
                     Trace.TraceWarning($"Ignored missing {(wagon.IsEngine ? "engine" : "wagon")} {wagonFilePath} in consist {consistFileName}");
                     continue;

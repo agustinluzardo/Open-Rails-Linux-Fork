@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Position;
 using FreeTrainSimulator.Common.Xna;
 
@@ -43,12 +44,12 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
             if (viewer.Simulator.RouteModel.RouteSounds[DefaultSoundType.Turntable] != null)
             {
                 string soundPath = Simulator.Instance.RouteFolder.SoundFile(Simulator.Instance.RouteModel.RouteSounds[DefaultSoundType.Turntable]);
-                if (File.Exists(soundPath))
+                if (ContentIO.FileExists(soundPath))
                 {
                     Sound = new SoundSource(WorldPosition.WorldLocation, SoundEventSource.Turntable, soundPath);
                     viewer.SoundProcess.AddSoundSource(this, Sound);
                 }
-                else if (File.Exists(soundPath = Simulator.Instance.RouteFolder.ContentFolder.SoundFile(Simulator.Instance.RouteModel.RouteSounds[DefaultSoundType.Turntable])))
+                else if (ContentIO.FileExists(soundPath = Simulator.Instance.RouteFolder.ContentFolder.SoundFile(Simulator.Instance.RouteModel.RouteSounds[DefaultSoundType.Turntable])))
                 {
                     Sound = new SoundSource(WorldPosition.WorldLocation, SoundEventSource.Turntable, soundPath);
                     viewer.SoundProcess.AddSoundSource(this, Sound);
@@ -156,12 +157,12 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
             if (Simulator.Instance.RouteModel.RouteSounds[DefaultSoundType.Turntable] != null)
             {
                 string soundPath = Simulator.Instance.RouteFolder.SoundFile(Simulator.Instance.RouteModel.RouteSounds[DefaultSoundType.Turntable]);
-                if (File.Exists(soundPath))
+                if (ContentIO.FileExists(soundPath))
                 {
                     Sound = new SoundSource(WorldPosition.WorldLocation, SoundEventSource.Turntable, soundPath);
                     viewer.SoundProcess.AddSoundSource(this, Sound);
                 }
-                else if (File.Exists(soundPath = Simulator.Instance.RouteFolder.ContentFolder.SoundFile(Simulator.Instance.RouteModel.RouteSounds[DefaultSoundType.Turntable])))
+                else if (ContentIO.FileExists(soundPath = Simulator.Instance.RouteFolder.ContentFolder.SoundFile(Simulator.Instance.RouteModel.RouteSounds[DefaultSoundType.Turntable])))
                 {
                     Sound = new SoundSource(WorldPosition.WorldLocation, SoundEventSource.Turntable, soundPath);
                     viewer.SoundProcess.AddSoundSource(this, Sound);

@@ -18,6 +18,7 @@
 // This file is the responsibility of the 3D & Environment Team. 
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
@@ -79,7 +80,7 @@ namespace Orts.Formats.Msts.Models
 
         public TileSample(string filePath, in Tile tile, TileHelper.TileZoom zoom, bool visible)
         {
-            if (!Directory.Exists(filePath))
+            if (!ContentIO.DirectoryExists(filePath))
                 return;
 
             this.tile = tile;

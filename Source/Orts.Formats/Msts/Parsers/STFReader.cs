@@ -22,6 +22,7 @@
 //        both unicode and binary compressed data files.
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -179,7 +180,7 @@ namespace Orts.Formats.Msts.Parsers
         /// <para>false - if Tree is not used which signicantly reduces GC</para></param>
         public STFReader(string filename, bool useTree)
         {
-            streamSTF = new StreamReader(filename, true); // was System.Text.Encoding.Unicode ); but I found some ASCII files, ie GLOBAL\SHAPES\milemarker.s
+            streamSTF = ContentIO.OpenText(filename); // was System.Text.Encoding.Unicode ); but I found some ASCII files, ie GLOBAL\SHAPES\milemarker.s
             FileName = filename;
             SimisSignature = streamSTF.ReadLine();
             LineNumber = 2;
@@ -1933,7 +1934,7 @@ namespace Orts.Formats.Msts.Parsers
                         if (Path.GetFileName(fileName).Equals("[[samename]]", StringComparison.OrdinalIgnoreCase))
                             fileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(FileName));
                         string includeFileName = Path.Combine(Path.GetDirectoryName(FileName), fileName);
-                        if (!File.Exists(includeFileName))
+                        if (!ContentIO.FileExists(includeFileName))
                             STFException.TraceWarning(this, $"'{includeFileName}' not found");
                         includeReader = new STFReader(includeFileName, false);
                         return ReadItem(skip_mode, string_mode); // Which will recurse down when includeReader is tested
@@ -3913,12 +3914,12 @@ namespace Orts.Parsers.Msts
         public StreamReader GetStreamReader(string fileName, out string simisSignature)
         {
             string directory = Path.GetDirectoryName(fileName);
-            if (!Directory.Exists(directory))
+            if (!ContentIO.DirectoryExists(directory))
             {
                 throw new DirectoryNotFoundException(directory);
             }
 
-            var stream = new StreamReader(fileName, true); // was System.Text.Encoding.Unicode ); but I found some ASCII files, ie GLOBAL\SHAPES\milemarker.s
+            var stream = ContentIO.OpenText(fileName); // was System.Text.Encoding.Unicode ); but I found some ASCII files, ie GLOBAL\SHAPES\milemarker.s
             simisSignature = stream.ReadLine();
             return stream;
         }

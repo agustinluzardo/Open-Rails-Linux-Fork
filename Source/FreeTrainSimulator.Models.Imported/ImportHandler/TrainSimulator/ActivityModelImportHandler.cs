@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Handler;
 using FreeTrainSimulator.Models.Imported.Shim;
@@ -28,7 +29,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             ConcurrentBag<ActivityModelHeader> results = new ConcurrentBag<ActivityModelHeader>();
 
             string sourceFolder = routeModel.MstsRouteFolder().ActivitiesFolder;
-            if (Directory.Exists(sourceFolder))
+            if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
                 ConcurrentDictionary<string, string> activityFiles = new ConcurrentDictionary<string, string>(Directory.EnumerateFiles(sourceFolder, "*.act").
@@ -59,7 +60,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             ArgumentException.ThrowIfNullOrEmpty(filePath, nameof(filePath));
             ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
 
-            if (File.Exists(filePath))
+            if (ContentIO.FileExists(filePath))
             {
                 ActivityFile activityFile;
                 try

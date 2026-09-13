@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Models.Imported.State;
 
@@ -180,7 +181,7 @@ namespace Orts.ActivityRunner.Processes
 
             string logFileName = RuntimeInfo.LogFile(Game.UserSettings.LogFilePath, Game.UserSettings.LogFileName);
 
-            if (File.Exists(logFileName))
+            if (ContentIO.FileExists(logFileName))
             {
                 Trace.Flush();
                 foreach (TraceListener listener in Trace.Listeners)

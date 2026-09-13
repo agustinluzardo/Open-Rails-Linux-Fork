@@ -1,4 +1,4 @@
-// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
+﻿// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -49,6 +49,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Calc;
 using FreeTrainSimulator.Common.DebugInfo;
 using FreeTrainSimulator.Models.Imported.State;
@@ -695,7 +696,7 @@ namespace Orts.Simulation.RollingStocks
             var extendedCVF = new ExtendedCVF();
 
             string basePath = Path.Combine(Path.GetDirectoryName(wagFilePath), "CABVIEW");
-            if (!File.Exists(Path.Combine(basePath, cvfFileName)))
+            if (!ContentIO.FileExists(Path.Combine(basePath, cvfFileName)))
                 return null;
 
             var cvfFile = new CabViewFile(basePath, cvfFileName);
@@ -725,7 +726,7 @@ namespace Orts.Simulation.RollingStocks
             if (wag.FreightShapeFileName != null)
             {
                 shapeFilePath = wagFolderSlash + wag.FreightShapeFileName;
-                if (shapeFilePath != null && File.Exists(shapeFilePath + "d"))
+                if (shapeFilePath != null && ContentIO.FileExists(shapeFilePath + "d"))
                 {
                     shapeFile = new ShapeDescriptorFile(shapeFilePath + "d");
                     if (shapeFile.Shape.EsdBoundingBox != null)
@@ -735,7 +736,7 @@ namespace Orts.Simulation.RollingStocks
             if (!boundingLimitsFound)
             {
                 shapeFilePath = wagFolderSlash + wag.MainShapeFileName;
-                if (shapeFilePath != null && File.Exists(shapeFilePath + "d"))
+                if (shapeFilePath != null && ContentIO.FileExists(shapeFilePath + "d"))
                 {
                     shapeFile = new ShapeDescriptorFile(shapeFilePath + "d");
                     if (shapeFile.Shape.EsdBoundingBox != null)
@@ -759,17 +760,17 @@ namespace Orts.Simulation.RollingStocks
 
             var cab3dBasePath = Path.Combine(Path.GetDirectoryName(WagFilePath), "CABVIEW3D");
             var shapeFilePath = Path.Combine(cab3dBasePath, Cab3DShapeFileName);
-            if (!File.Exists(shapeFilePath))
+            if (!ContentIO.FileExists(shapeFilePath))
                 return null;
 
             string cvfFileName = Path.ChangeExtension(Cab3DShapeFileName, "cvf");
-            if (!File.Exists(Path.Combine(cab3dBasePath, cvfFileName)))
+            if (!ContentIO.FileExists(Path.Combine(cab3dBasePath, cvfFileName)))
             {
                 cvfFileName = CVFFileName;
-                if (!File.Exists(Path.Combine(cab3dBasePath, cvfFileName)))
+                if (!ContentIO.FileExists(Path.Combine(cab3dBasePath, cvfFileName)))
                 {
                     cab3dBasePath = Path.Combine(Path.GetDirectoryName(WagFilePath), "CABVIEW");
-                    if (!File.Exists(Path.Combine(cab3dBasePath, cvfFileName)))
+                    if (!ContentIO.FileExists(Path.Combine(cab3dBasePath, cvfFileName)))
                         return null;
                 }
             }
@@ -6172,7 +6173,7 @@ namespace Orts.Simulation.RollingStocks
                     if (locomotive.AdvancedAdhesionModel)
                     {
                         this["Adhesion model"] = "Advanced Adhesion model";
-                        this["Wheel ang. pos."] = $"{(int)(locomotive.LocomotiveAxle.AxlePositionRad * 180 / Math.PI + 180)}�";
+                        this["Wheel ang. pos."] = $"{(int)(locomotive.LocomotiveAxle.AxlePositionRad * 180 / Math.PI + 180)}º";
                         if (locomotive.EngineType == EngineType.Steam && (locomotive is MSTSSteamLocomotive steamEngine &&
                             (steamEngine.SteamEngineType == SteamEngineType.Compound || steamEngine.SteamEngineType == SteamEngineType.Simple || steamEngine.SteamEngineType == SteamEngineType.Unknown))) // For display of steam locomotive adhesion info
                         {

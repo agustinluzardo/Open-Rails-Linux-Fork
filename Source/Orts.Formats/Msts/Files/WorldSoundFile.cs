@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using Orts.Formats.Msts.Models;
+using FreeTrainSimulator.Common.Native;
 using Orts.Formats.Msts.Parsers;
 
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace Orts.Formats.Msts.Files
 
         public WorldSoundFile(string fileName, int trackItemsCount)
         {
-            if (File.Exists(fileName))
+            if (ContentIO.FileExists(fileName))
             {
                 Trace.Write("$");
                 using (STFReader stf = new STFReader(fileName, false))

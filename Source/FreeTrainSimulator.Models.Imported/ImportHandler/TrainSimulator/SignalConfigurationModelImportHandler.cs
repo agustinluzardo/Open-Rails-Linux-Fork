@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Handler;
 using FreeTrainSimulator.Models.Imported.Shim;
@@ -38,7 +39,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             string sigcfgFile = routeFolder.SignalConfigurationFile;
             CompatibilityMode compatibilityMode = routeFolder.SignalConfigMode;
 
-            if (!System.IO.File.Exists(sigcfgFile))
+            if (!ContentIO.FileExists(sigcfgFile))
             {
                 Trace.TraceWarning($"Signal Configuration File not found: {sigcfgFile}");
                 return null;

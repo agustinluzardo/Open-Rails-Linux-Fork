@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Diagnostics;
 using System.IO;
 
@@ -32,7 +33,7 @@ namespace Orts.Formats.Msts.Files
 #pragma warning restore CA1814 // Prefer jagged arrays over multidimensional
             try
             {
-                using (BinaryReader reader = new BinaryReader(new MemoryStream(File.ReadAllBytes(fileName))))
+                using (BinaryReader reader = new BinaryReader(new MemoryStream(ContentIO.ReadAllBytes(fileName))))
                     for (int z = 0; z < sampleCount; z++)
                         for (int x = 0; x < sampleCount; x++)
                             elevation[x, z] = reader.ReadUInt16();
@@ -53,7 +54,7 @@ namespace Orts.Formats.Msts.Files
 #pragma warning restore CA1814 // Prefer jagged arrays over multidimensional
             try
             {
-                using (BinaryReader reader = new BinaryReader(new MemoryStream(File.ReadAllBytes(fileName))))
+                using (BinaryReader reader = new BinaryReader(new MemoryStream(ContentIO.ReadAllBytes(fileName))))
                     for (int z = 0; z < sampleCount; z++)
                         for (int x = 0; x < sampleCount; x++)
                             result[x, z] = reader.ReadUInt16();

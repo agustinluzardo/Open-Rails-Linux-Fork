@@ -19,6 +19,7 @@
 // #define DEBUG_JSON_READER
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -35,7 +36,7 @@ namespace Orts.Formats.OpenRails.Parsers
     {
         public static void ReadFile(string fileName, Func<JsonReader, bool> tryParse)
         {
-            using (JsonTextReader reader = new JsonTextReader(File.OpenText(fileName)))
+            using (JsonTextReader reader = new JsonTextReader(ContentIO.OpenText(fileName)))
             {
                 new JsonReader(fileName, reader).ReadBlock(tryParse);
             }

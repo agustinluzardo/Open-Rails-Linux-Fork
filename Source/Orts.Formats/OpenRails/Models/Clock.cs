@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 
 using Orts.Formats.Msts.Parsers;
 
@@ -21,7 +22,7 @@ namespace Orts.Formats.OpenRails.Models
                         else
                         {
                             var dataItem = new Clock(stf, shapePath);
-                            if (File.Exists(dataItem.Name))
+                            if (ContentIO.FileExists(dataItem.Name))
                                 Add(dataItem);
                             else
                                 STFException.TraceWarning(stf, $"Non-existent shape file {dataItem.Name} referenced");

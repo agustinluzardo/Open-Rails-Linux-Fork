@@ -18,6 +18,7 @@
 using System.IO;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 
 using Orts.Formats.Msts.Parsers;
 
@@ -57,7 +58,7 @@ namespace Orts.Formats.Msts.Files
             if (dataItem != null)
             {
                 dataItem = Path.Combine(path, dataItem);
-                if (File.Exists(dataItem))
+                if (ContentIO.FileExists(dataItem))
                     ShapeNames[shapeName] = dataItem;
                 else
                     STFException.TraceWarning(stf, $"Non-existent shape file {dataItem} referenced");

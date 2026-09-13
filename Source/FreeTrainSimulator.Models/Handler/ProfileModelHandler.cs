@@ -1,4 +1,5 @@
 ﻿using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.IO;
@@ -104,7 +105,7 @@ namespace FreeTrainSimulator.Models.Handler
 
             ImmutableArray<ProfileModel>.Builder results = ImmutableArray.CreateBuilder<ProfileModel>();
 
-            if (Directory.Exists(profilesFolder))
+            if (ContentIO.DirectoryExists(profilesFolder))
             {
                 foreach (string directory in Directory.EnumerateDirectories(profilesFolder))
                 {

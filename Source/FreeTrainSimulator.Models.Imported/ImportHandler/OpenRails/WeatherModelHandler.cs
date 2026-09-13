@@ -1,4 +1,5 @@
 ﻿using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -25,7 +26,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.OpenRails
             ConcurrentBag<WeatherModelHeader> results = new ConcurrentBag<WeatherModelHeader>();
 
             string sourceFolder = routeModel.MstsRouteFolder().WeatherFolder;
-            if (Directory.Exists(sourceFolder))
+            if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing OR weather files
                 ConcurrentBag<string> pathFiles = new ConcurrentBag<string>(Directory.EnumerateFiles(sourceFolder, "*.weather-or"));
@@ -52,7 +53,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.OpenRails
             ArgumentException.ThrowIfNullOrEmpty(filePath, nameof(filePath));
             ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
 
-            if (File.Exists(filePath))
+            if (ContentIO.FileExists(filePath))
             {
                 string id = Path.GetFileNameWithoutExtension(filePath);
                 //inelegant but works - split into separate words, bound by _ and - separators as well uppercase char inside as in camelCase, and convert all words to Title Case

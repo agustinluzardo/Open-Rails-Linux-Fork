@@ -1,4 +1,4 @@
-// COPYRIGHT 2009, 2010, 2011, 2012, 2013, 2014 by the Open Rails project.
+﻿// COPYRIGHT 2009, 2010, 2011, 2012, 2013, 2014 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -51,6 +51,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Position;
 using FreeTrainSimulator.Models.Track;
 using FreeTrainSimulator.Runtime;
@@ -246,7 +247,7 @@ namespace Orts.ActivityRunner.Viewer3D
             var WFilePath = Path.Combine(viewer.Simulator.RouteFolder.WorldFolder, WFileName);
 
             // if there isn't a file, then return with an empty WorldFile object
-            if (!File.Exists(WFilePath))
+            if (!ContentIO.FileExists(WFilePath))
             {
                 if (visible)
                     Trace.TraceWarning("World file missing - {0}", WFilePath);
@@ -258,7 +259,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
             // check for existence of world file in OpenRails subfolder
             WFilePath = Path.Combine(viewer.Simulator.RouteFolder.WorldFolder, "Openrails", WFileName);
-            if (File.Exists(WFilePath))
+            if (ContentIO.FileExists(WFilePath))
             {
                 // We have an OR-specific addition to world file
                 WFile.InsertORSpecificData(WFilePath, null);
@@ -292,14 +293,14 @@ namespace Orts.ActivityRunner.Viewer3D
                 if (shapeFilePath != null)
                 {
                     shapeFilePath = Path.GetFullPath(shapeFilePath);
-                    if (!File.Exists(shapeFilePath))
+                    if (!ContentIO.FileExists(shapeFilePath))
                     {
                         Trace.TraceWarning("{0} scenery object {1} with StaticFlags {3:X8} references non-existent {2}", WFileName, worldObject.UiD, shapeFilePath, worldObject.StaticFlags);
                         shapeFilePath = null;
                     }
                 }
 
-                if (shapeFilePath != null && File.Exists(shapeFilePath + "d"))
+                if (shapeFilePath != null && ContentIO.FileExists(shapeFilePath + "d"))
                 {
                     var shape = new ShapeDescriptorFile(shapeFilePath + "d");
                     if (shape.Shape.EsdBoundingBox != null)

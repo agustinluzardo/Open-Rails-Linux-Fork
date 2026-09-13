@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Handler;
 using FreeTrainSimulator.Models.Imported.Shim;
@@ -33,7 +34,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
 
             string sourceFolder = folderModel.MstsContentFolder().RoutesFolder;
 
-            if (Directory.Exists(sourceFolder))
+            if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // preload existing MSTS folders
                 foreach (string routeFolder in Directory.EnumerateDirectories(sourceFolder))
@@ -88,7 +89,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             string pattern = ModelFileResolver<RouteModelHeader>.WildcardSavePattern;
             ConcurrentDictionary<string, RouteModelHeader> persistedRoutes = new ConcurrentDictionary<string, RouteModelHeader>(StringComparer.OrdinalIgnoreCase);
 
-            if (Directory.Exists(routesFolder))
+            if (ContentIO.DirectoryExists(routesFolder))
             {
                 await Parallel.ForEachAsync(Directory.EnumerateFiles(routesFolder, pattern), cancellationToken, async (file, token) =>
                 {
@@ -124,7 +125,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             try
             {
                 FolderStructure.ContentFolder.RouteFolder routeFolder = routeModel.Parent.MstsContentFolder().Route(routeModel.Tags[SourceNameKey]);
-                return routeFolder.Valid && File.Exists(routeFolder.TrackFileName);
+                return routeFolder.Valid && ContentIO.FileExists(routeFolder.TrackFileName);
             }
             catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException or ArgumentException or DirectoryNotFoundException)
             {

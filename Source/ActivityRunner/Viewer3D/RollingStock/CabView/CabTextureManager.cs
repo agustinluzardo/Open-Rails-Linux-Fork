@@ -18,6 +18,7 @@
 // This file is the responsibility of the 3D & Environment Team. 
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -61,7 +62,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.CabView
             var lightpath = Path.Combine(lightdirectory, Path.GetFileName(FileName));
             var lightTexture = viewer.TextureManager.Get(lightpath);
             lightTextures.Add(FileName, lightTexture);
-            return Directory.Exists(lightdirectory);
+            return ContentIO.DirectoryExists(lightdirectory);
         }
 
         private static Texture2D[] Disassemble(GraphicsDevice graphicsDevice, Texture2D texture, int frameCount, Point frameGrid, string fileName)

@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 
 using Orts.Simulation;
 
@@ -55,19 +56,19 @@ namespace Orts.ActivityRunner.Viewer3D.Common
         {
             var texturePath = Path.GetDirectoryName(textureFilePath);
             var textureName = Path.GetFileName(textureFilePath);
-            var nightTexturePath = !File.Exists(texturePath + @"\Night\" + textureName) &&
-                !File.Exists(texturePath + @"\Night\" + Path.ChangeExtension(textureName, ".dds")) ? Path.GetDirectoryName(texturePath) + @"\Night\" : texturePath + @"\Night\";
+            var nightTexturePath = !ContentIO.FileExists(texturePath + @"\Night\" + textureName) &&
+                !ContentIO.FileExists(texturePath + @"\Night\" + Path.ChangeExtension(textureName, ".dds")) ? Path.GetDirectoryName(texturePath) + @"\Night\" : texturePath + @"\Night\";
 
-            if (!string.IsNullOrEmpty(nightTexturePath + textureName) && Path.GetExtension(nightTexturePath + textureName) == ".dds" && File.Exists(nightTexturePath + textureName))
+            if (!string.IsNullOrEmpty(nightTexturePath + textureName) && Path.GetExtension(nightTexturePath + textureName) == ".dds" && ContentIO.FileExists(nightTexturePath + textureName))
             {
                 return nightTexturePath + textureName;
             }
             else if (!string.IsNullOrEmpty(nightTexturePath + textureName) && Path.GetExtension(nightTexturePath + textureName) == ".ace")
             {
                 string alternativeTexture = Path.ChangeExtension(nightTexturePath + textureName, ".dds");
-                return (!string.IsNullOrEmpty(alternativeTexture) && File.Exists(alternativeTexture))
+                return (!string.IsNullOrEmpty(alternativeTexture) && ContentIO.FileExists(alternativeTexture))
                     ? alternativeTexture
-                    : File.Exists(nightTexturePath + textureName) ? nightTexturePath + textureName : null;
+                    : ContentIO.FileExists(nightTexturePath + textureName) ? nightTexturePath + textureName : null;
             }
             else
             {

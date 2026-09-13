@@ -1,4 +1,5 @@
 ﻿using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -47,7 +48,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
                 Task.Run(() =>
                 {
                     tdbFile = routeModel.MstsRouteFolder().TrackDatabaseFile(routeModelExtended.RouteKey);
-                    if (!System.IO.File.Exists(tdbFile))
+                    if (!ContentIO.FileExists(tdbFile))
                     {
                         Trace.TraceError($"Track Database File not found in {tdbFile}");
                         return;
@@ -57,7 +58,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
                 Task.Run(() =>
                 {
                     rdbFile = routeModel.MstsRouteFolder().RoadTrackDatabaseFile(routeModelExtended.RouteKey);
-                    if (!System.IO.File.Exists(rdbFile))
+                    if (!ContentIO.FileExists(rdbFile))
                     {
                         Trace.TraceInformation($"Road Database File not found in {rdbFile}");
                         return;

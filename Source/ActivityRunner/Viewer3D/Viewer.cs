@@ -26,6 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Api;
 using FreeTrainSimulator.Common.Calc;
 using FreeTrainSimulator.Common.DebugInfo;
@@ -332,7 +333,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 if (Simulator.ActivityFile.Activity.ActivityRestrictedSpeedZones != null)
                 {
                     string speedpostDatFile = Path.Combine(Simulator.RouteFolder.CurrentFolder, "speedpost.dat");
-                    if (File.Exists(speedpostDatFile))
+                    if (ContentIO.FileExists(speedpostDatFile))
                     {
                         Trace.Write(" SPEEDPOST");
                         SpeedpostDatFile = new SpeedpostDatFile(speedpostDatFile, Simulator.RouteFolder.ShapesFolder);
@@ -1267,7 +1268,7 @@ namespace Orts.ActivityRunner.Viewer3D
         private void LoadDefectCarSound(TrainCar car, string filename)
         {
             var smsFilePath = Simulator.RouteFolder.ContentFolder.SoundFile(filename);
-            if (!File.Exists(smsFilePath))
+            if (!ContentIO.FileExists(smsFilePath))
             {
                 Trace.TraceWarning("Cannot find defect car sound file {0}", filename);
                 return;
@@ -1615,7 +1616,7 @@ namespace Orts.ActivityRunner.Viewer3D
             if (Visibility == VisibilityState.Hidden)  // Test for Hidden state must come before setting Hidden state.
             {
                 Visibility = VisibilityState.ScreenshotPending;  // Next state else this path would be taken more than once.
-                if (!Directory.Exists(RuntimeInfo.ScreenshotFolder))
+                if (!ContentIO.DirectoryExists(RuntimeInfo.ScreenshotFolder))
                     Directory.CreateDirectory(RuntimeInfo.ScreenshotFolder);
                 string fileName = Path.Combine(RuntimeInfo.ScreenshotFolder, $"{RuntimeInfo.ProductName} {DateTime.Now:yyyy-MM-dd hh-mm-ss}.png");
                 SaveScreenshotToFile(Game.GraphicsDevice, fileName, false, false);

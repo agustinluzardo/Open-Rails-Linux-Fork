@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
@@ -32,7 +33,7 @@ namespace Orts.Formats.Msts.Files
             BitArray result = new BitArray(sampleCount * sampleCount);
             try
             {
-                using (BinaryReader reader = new BinaryReader(new MemoryStream(File.ReadAllBytes(fileName))))
+                using (BinaryReader reader = new BinaryReader(new MemoryStream(ContentIO.ReadAllBytes(fileName))))
                     for (int z = 0; z < sampleCount; z++)
                         for (int x = 0; x < sampleCount; x++)
                             result[x * sampleCount + z] = (reader.ReadByte() & 0x04) == 0x04;

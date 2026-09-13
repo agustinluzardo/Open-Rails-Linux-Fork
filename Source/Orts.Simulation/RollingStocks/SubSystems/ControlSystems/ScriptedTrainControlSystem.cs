@@ -1,4 +1,4 @@
-// COPYRIGHT 2021 by the Open Rails project.
+﻿// COPYRIGHT 2021 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -202,7 +202,7 @@ namespace Orts.Simulation.RollingStocks.SubSystems.ControlSystems
                         Path.Combine(Path.GetDirectoryName(Locomotive.WagFilePath), "SOUND"),
                         Path.Combine(Simulator.RouteFolder.ContentFolder.SoundFolder));
                     var soundPath = FolderStructure.FindFileFromFolders(soundPathArray, soundFileName);
-                    if (File.Exists(soundPath))
+                    if (ContentIO.FileExists(soundPath))
                         Sounds.Add(script, soundPath);
                 }
 
@@ -794,7 +794,7 @@ namespace Orts.Simulation.RollingStocks.SubSystems.ControlSystems
             string buffer;
             int length;
 
-            if (File.Exists(trainParametersFileName))
+            if (ContentIO.FileExists(trainParametersFileName))
             {
                 buffer = new string('\0', 256);
                 length = NativeMethods.GetPrivateProfileString(sectionName, keyName, null, buffer, buffer.Length, trainParametersFileName);
@@ -805,7 +805,7 @@ namespace Orts.Simulation.RollingStocks.SubSystems.ControlSystems
                 }
             }
 
-            if (File.Exists(parametersFileName))
+            if (ContentIO.FileExists(parametersFileName))
             {
                 buffer = new string('\0', 256);
                 length = NativeMethods.GetPrivateProfileString(sectionName, keyName, null, buffer, buffer.Length, parametersFileName);

@@ -1,4 +1,5 @@
 ﻿using FreeTrainSimulator.Common.Position;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Xna;
 
 using Microsoft.Xna.Framework;
@@ -83,14 +84,14 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
             //            string file = Path.GetFileName(filePath);
             //            string orFilePath = dir + @"\openrails\" + file;
             var sFile = new ShapeFile(filePath, viewer.UserSettings.ShapeWarnings);
-            //            if (file.ToLower().Contains("turntable") && File.Exists(orFilePath))
+            //            if (file.ToLower().Contains("turntable") && ContentIO.FileExists(orFilePath))
             //            {
             //                sFile.ReadAnimationBlock(orFilePath);
             //            }
 
 
             var textureFlags = Helpers.TextureFlags.None;
-            if (File.Exists(FilePath + "d"))
+            if (ContentIO.FileExists(FilePath + "d"))
             {
                 var sdFile = new ShapeDescriptorFile(FilePath + "d");
                 textureFlags = (Helpers.TextureFlags)sdFile.Shape.EsdAlternativeTexture;

@@ -9,8 +9,11 @@ using System.IO;
 using System.Linq;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 
+#if !FTS_UNIX
 using Microsoft.Win32;
+#endif
 
 namespace Orts.Formats.Msts
 {
@@ -141,9 +144,9 @@ namespace Orts.Formats.Msts
                     get 
                     {
                         string tsectionFile;
-                        if (File.Exists(tsectionFile = Path.Combine(CurrentFolder, OpenRailsSpecificFolder, tsection)))
+                        if (ContentIO.FileExists(tsectionFile = Path.Combine(CurrentFolder, OpenRailsSpecificFolder, tsection)))
                             return tsectionFile;
-                        else if (File.Exists(tsectionFile = Path.Combine(CurrentFolder, Global, tsection)))   // doesn't seem to be a valid option, but might have been used so keep for now
+                        else if (ContentIO.FileExists(tsectionFile = Path.Combine(CurrentFolder, Global, tsection)))   // doesn't seem to be a valid option, but might have been used so keep for now
                             return tsectionFile;
                         else
                             return ContentFolder.TrackSectionFile;
@@ -157,7 +160,7 @@ namespace Orts.Formats.Msts
                     get
                     {
                         string signalConfig;
-                        if (File.Exists(signalConfig = Path.Combine(CurrentFolder, OpenRailsSpecificFolder, "sigcfg.dat")))
+                        if (ContentIO.FileExists(signalConfig = Path.Combine(CurrentFolder, OpenRailsSpecificFolder, "sigcfg.dat")))
                         {
                             SignalConfigMode = CompatibilityMode.Orts;
                             return signalConfig;
@@ -247,10 +250,21 @@ namespace Orts.Formats.Msts
             "Microsoft Games", "Train Simulator");   // MSTS default path.
         private static readonly ConcurrentDictionary<string, ContentFolder> contentFolders = new ConcurrentDictionary<string, ContentFolder>(StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Where Microsoft Train Simulator is installed.
+        /// </summary>
+        /// <remarks>
+        /// Windows reads the path the installer recorded in the registry. Linux has no registry,
+        /// so <see cref="MstsInstallation"/> searches the places an installation actually turns
+        /// up - see that class for the list and for the override variable.
+        /// </remarks>
         public static string MstsFolder
         {
             get
             {
+#if FTS_UNIX
+                return MstsInstallation.Locate(mstsLocation);
+#else
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Microsoft Games\Train Simulator\1.0");
                 if (key == null)
                     key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Microsoft\Microsoft Games\Train Simulator\1.0");
@@ -260,6 +274,7 @@ namespace Orts.Formats.Msts
                 if (!mstsFolder.Exists)
                     Trace.TraceInformation($"MSTS directory '{mstsLocation}' does not exist.");
                 return mstsFolder.FullName;
+#endif
             }
         }
 
@@ -304,7 +319,7 @@ namespace Orts.Formats.Msts
         //    string trainsetSoundPath = Path.Combine(Path.GetDirectoryName(waggonFile), "SOUND", soundFile);
         //    string globalSoundPath = Path.Combine(SoundsFolder, soundFile);
 
-        //    return File.Exists(trainsetSoundPath) ? trainsetSoundPath : globalSoundPath;
+        //    return ContentIO.FileExists(trainsetSoundPath) ? trainsetSoundPath : globalSoundPath;
         //}
 
         ///// <summary>
@@ -315,7 +330,7 @@ namespace Orts.Formats.Msts
         //    string smsSoundPath = Path.Combine(Path.GetDirectoryName(smsFile), soundFile);
         //    string globalSoundPath = Path.Combine(SoundsFolder, soundFile);
 
-        //    return File.Exists(smsSoundPath) ? smsSoundPath : globalSoundPath;
+        //    return ContentIO.FileExists(smsSoundPath) ? smsSoundPath : globalSoundPath;
         //}
 
         /// <summary>
@@ -348,7 +363,7 @@ namespace Orts.Formats.Msts
             foreach (string path in paths)
             {
                 string fullPath = Path.Combine(path, fileRelative);
-                if (File.Exists(fullPath))
+                if (ContentIO.FileExists(fullPath))
                 {
                     if (null != existingFiles)
                         existingFiles.Add(path, fullPath);

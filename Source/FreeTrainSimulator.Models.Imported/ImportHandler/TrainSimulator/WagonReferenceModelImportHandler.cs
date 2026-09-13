@@ -1,4 +1,5 @@
 ﻿using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -41,7 +42,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
 
             string sourceFolder = folderModel.MstsContentFolder().TrainSetsFolder;
 
-            if (Directory.Exists(sourceFolder))
+            if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
                 IEnumerable<string> wagonFiles = sourceFileExtensions.SelectMany(extension =>
@@ -74,7 +75,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             ArgumentException.ThrowIfNullOrEmpty(filePath, nameof(filePath));
             ArgumentNullException.ThrowIfNull(folderModel, nameof(folderModel));
 
-            if (File.Exists(filePath))
+            if (ContentIO.FileExists(filePath))
             {
                 WagonReferenceModel wagonReferenceModel = null;
 

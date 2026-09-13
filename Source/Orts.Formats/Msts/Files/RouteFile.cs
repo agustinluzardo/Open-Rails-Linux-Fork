@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using Orts.Formats.Msts.Models;
+using FreeTrainSimulator.Common.Native;
 using Orts.Formats.Msts.Parsers;
 
 using System.IO;
@@ -32,7 +33,7 @@ namespace Orts.Formats.Msts.Files
             string dir = Path.GetDirectoryName(fileName);
             string file = Path.GetFileName(fileName);
             string orFile = Path.Combine(dir, "openrails", file);
-            if (File.Exists(orFile))
+            if (ContentIO.FileExists(orFile))
                 fileName = orFile;
             try
             {

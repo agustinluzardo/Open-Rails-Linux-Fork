@@ -1,4 +1,4 @@
-// COPYRIGHT 2026 by the Open Rails Linux Fork project.
+﻿// COPYRIGHT 2026 by the Open Rails Linux Fork project.
 //
 // This file is part of Open Rails.
 //
@@ -42,7 +42,7 @@ namespace FreeTrainSimulator.Common.Native
     /// The fast path is a plain existence check, so a correctly cased path - and every path on a
     /// case insensitive file system - costs one syscall and never builds an index.
     /// </remarks>
-    public static class ContentPath
+    public static class ContentIO
     {
         private sealed class DirectoryIndex
         {
@@ -133,6 +133,33 @@ namespace FreeTrainSimulator.Common.Native
             if (resolved == null)
                 throw new FileNotFoundException($"Content file not found: {path}", path);
             return File.OpenRead(resolved);
+        }
+
+        /// <summary>
+        /// Opens a content file for reading as text, resolving its case and letting the reader
+        /// detect the encoding - MSTS ships a mix of UTF-16 and plain ASCII files.
+        /// </summary>
+        public static StreamReader OpenText(string path)
+        {
+            return new StreamReader(ResolveOrOriginal(path), true);
+        }
+
+        /// <summary>Reads a content file, resolving its case.</summary>
+        public static byte[] ReadAllBytes(string path)
+        {
+            return File.ReadAllBytes(ResolveOrOriginal(path));
+        }
+
+        /// <summary>Reads a content file, resolving its case.</summary>
+        public static string ReadAllText(string path)
+        {
+            return File.ReadAllText(ResolveOrOriginal(path));
+        }
+
+        /// <summary>Reads a content file, resolving its case.</summary>
+        public static string[] ReadAllLines(string path)
+        {
+            return File.ReadAllLines(ResolveOrOriginal(path));
         }
 
         /// <summary>

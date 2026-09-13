@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using Orts.Simulation.RollingStocks.SubSystems;
+using FreeTrainSimulator.Common.Native;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -103,13 +104,13 @@ namespace Orts.Simulation.RollingStocks
         private static string FindTrainCarPlugin(string initialFolder, string fileName)
         {
             string dllPath = Path.Combine(initialFolder, fileName);  // search in trainset folder
-            if (File.Exists(dllPath))
+            if (ContentIO.FileExists(dllPath))
                 return dllPath;
             string rootFolder = Path.GetFullPath(Path.Combine(initialFolder, @"..\..\..", "OpenRails"));
-            if (Directory.Exists(rootFolder))
+            if (ContentIO.DirectoryExists(rootFolder))
             {
                 dllPath = Path.Combine(rootFolder, fileName);
-                if (File.Exists(dllPath))
+                if (ContentIO.FileExists(dllPath))
                     return dllPath;
             }
             return fileName;   // then search in OpenRails program folder

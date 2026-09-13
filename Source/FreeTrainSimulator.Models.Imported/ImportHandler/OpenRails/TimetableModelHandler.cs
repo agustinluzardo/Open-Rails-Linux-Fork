@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Handler;
 using FreeTrainSimulator.Models.Imported.Shim;
@@ -30,7 +31,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.OpenRails
 
             string sourceFolder = routeModel.MstsRouteFolder().OpenRailsActivitiesFolder;
 
-            if (Directory.Exists(sourceFolder))
+            if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
                 ConcurrentBag<string> consistFiles = new ConcurrentBag<string>(Directory.EnumerateFiles(sourceFolder, "*.timetable*or"));
@@ -77,7 +78,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.OpenRails
                 });
             }
 
-            if (File.Exists(filePath))
+            if (ContentIO.FileExists(filePath))
             {
                 TimetableModel timetableModel;
 

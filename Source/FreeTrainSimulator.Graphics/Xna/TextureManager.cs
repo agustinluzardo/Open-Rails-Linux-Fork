@@ -1,4 +1,5 @@
 ﻿using System;
+using FreeTrainSimulator.Common.Native;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -72,7 +73,7 @@ namespace FreeTrainSimulator.Graphics.Xna
                 {
                     case string _ when ".dds".Equals(extension, StringComparison.OrdinalIgnoreCase):
                         {
-                            if (File.Exists(path))
+                            if (ContentIO.FileExists(path))
                                 DDSLib.DDSFromFile(path, game.GraphicsDevice, true, out result);
                             else
                             {
@@ -84,9 +85,9 @@ namespace FreeTrainSimulator.Graphics.Xna
                     case string _ when ".ace".Equals(extension, StringComparison.OrdinalIgnoreCase):
                         {
                             string alternativeTexture;
-                            if (File.Exists(alternativeTexture = Path.ChangeExtension(path, "dds")))
+                            if (ContentIO.FileExists(alternativeTexture = Path.ChangeExtension(path, "dds")))
                                 result = LoadTexture(alternativeTexture, game);
-                            else if (File.Exists(path))
+                            else if (ContentIO.FileExists(path))
                             {
                                 result = AceFile.Texture2DFromFile(game.GraphicsDevice, path);
                             }
@@ -97,16 +98,16 @@ namespace FreeTrainSimulator.Graphics.Xna
                     case string _ when ".jpeg".Equals(extension, StringComparison.OrdinalIgnoreCase):
                     case string _ when ".png".Equals(extension, StringComparison.OrdinalIgnoreCase):
                         {
-                            if (File.Exists(path))
+                            if (ContentIO.FileExists(path))
                             {
-                                using (FileStream stream = File.OpenRead(path))
+                                using (FileStream stream = ContentIO.OpenRead(path))
                                     result = Texture2D.FromStream(game.GraphicsDevice, stream);
                             }
                             break;
                         }
                     case string _ when ".bmp".Equals(extension, StringComparison.OrdinalIgnoreCase):
                         {
-                            if (File.Exists(path))
+                            if (ContentIO.FileExists(path))
                             {
                                 using (System.Drawing.Image image = System.Drawing.Image.FromFile(path))
                                 {

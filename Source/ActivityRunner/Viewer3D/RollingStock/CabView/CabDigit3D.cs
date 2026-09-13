@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Xna;
 
 using Microsoft.Xna.Framework;
@@ -200,7 +201,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.CabView
 
             if (string.IsNullOrEmpty(trainCarShape.SharedShape.ReferencePath))
             {
-                if (!File.Exists(Path.Combine(globalText, imageName)))
+                if (!ContentIO.FileExists(Path.Combine(globalText, imageName)))
                 {
                     Trace.TraceInformation($"Ignored missing {imageName} using default. You can copy the {imageName} from OR\'s AddOns folder to {globalText}, or place it under {trainCarShape.SharedShape.ReferencePath}");
                 }
@@ -208,7 +209,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.CabView
             }
             else
             {
-                if (!File.Exists(trainCarShape.SharedShape.ReferencePath + @"\" + imageName))
+                if (!ContentIO.FileExists(trainCarShape.SharedShape.ReferencePath + @"\" + imageName))
                 {
                     Trace.TraceInformation("Ignored missing " + imageName + " using default. You can copy the " + imageName + " from OR\'s AddOns folder to " + globalText +
                         ", or place it under " + trainCarShape.SharedShape.ReferencePath);

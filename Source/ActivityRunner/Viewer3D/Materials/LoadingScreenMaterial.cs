@@ -1,6 +1,7 @@
 ﻿using System.IO;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 
 using Microsoft.Xna.Framework;
 
@@ -20,9 +21,9 @@ namespace Orts.ActivityRunner.Viewer3D.Materials
         {
             string texturePath = (game.GraphicsDevice.Adapter.IsWideScreen && !string.IsNullOrEmpty(Simulator.Instance.RouteModel.Graphics[GraphicType.WideScreen])) ?
                 Simulator.Instance.RouteModel.Graphics[GraphicType.WideScreen] : Simulator.Instance.RouteModel.Graphics[GraphicType.Screen];
-            if (string.IsNullOrEmpty(texturePath) || !File.Exists(texturePath = Path.Combine(Simulator.Instance.RouteFolder.CurrentFolder,texturePath)))
+            if (string.IsNullOrEmpty(texturePath) || !ContentIO.FileExists(texturePath = Path.Combine(Simulator.Instance.RouteFolder.CurrentFolder,texturePath)))
             {
-//                if (string.IsNullOrEmpty(texturePath = Simulator.Instance.Route.Thumbnail) || !File.Exists(texturePath = Path.Combine(Simulator.Instance.RouteFolder.CurrentFolder, texturePath)))
+//                if (string.IsNullOrEmpty(texturePath = Simulator.Instance.Route.Thumbnail) || !ContentIO.FileExists(texturePath = Path.Combine(Simulator.Instance.RouteFolder.CurrentFolder, texturePath)))
                     texturePath = Path.Combine(Simulator.Instance.RouteFolder.CurrentFolder, "load.ace");
             }
             return texturePath;

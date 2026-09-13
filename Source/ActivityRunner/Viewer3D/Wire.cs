@@ -24,6 +24,7 @@
  */
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -371,11 +372,11 @@ namespace Orts.ActivityRunner.Viewer3D
             lod = new LODWire(800.0f); // Create LOD for railsides with specified CutoffRadius
             lodItem = new LODItemWire("Wire");
             string overheadWire = Path.Combine(viewer.Simulator.RouteFolder.TexturesFolder, "overheadwire.ace");
-            if (File.Exists(overheadWire))
+            if (ContentIO.FileExists(overheadWire))
             {
                 lodItem.TexName = "overheadwire.ace";
             }
-            else if (File.Exists(overheadWire = Path.Combine(viewer.Simulator.RouteFolder.ContentFolder.TexturesFolder, "overheadwire.ace")))
+            else if (ContentIO.FileExists(overheadWire = Path.Combine(viewer.Simulator.RouteFolder.ContentFolder.TexturesFolder, "overheadwire.ace")))
             {
                 lodItem.TexName = overheadWire;
             }

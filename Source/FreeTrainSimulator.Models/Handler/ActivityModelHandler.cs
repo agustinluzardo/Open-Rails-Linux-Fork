@@ -1,4 +1,5 @@
 ﻿using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.IO;
@@ -68,7 +69,7 @@ namespace FreeTrainSimulator.Models.Handler
             ConcurrentBag<ActivityModelHeader> results = new ConcurrentBag<ActivityModelHeader>();
 
             //load existing activit models, and compare if the corresponding folder still exists.
-            if (Directory.Exists(activiesFolder))
+            if (ContentIO.DirectoryExists(activiesFolder))
             {
                 await Parallel.ForEachAsync(Directory.EnumerateFiles(activiesFolder, pattern), cancellationToken, async (file, token) =>
                 {

@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using Microsoft.Xna.Framework;
+using FreeTrainSimulator.Common.Native;
 
 using Orts.Formats.Msts.Models;
 using Orts.Formats.Msts.Parsers;
@@ -60,7 +61,7 @@ namespace Orts.Formats.Msts.Files
                             if (!Path.GetFileNameWithoutExtension(cvfileName).EndsWith("1024", StringComparison.OrdinalIgnoreCase))
                             {
                                 string name1024 = Path.GetFileNameWithoutExtension(cvfileName) + "1024" + Path.GetExtension(cvfileName);
-                                if (File.Exists(Path.Combine(path, name1024)))
+                                if (ContentIO.FileExists(Path.Combine(path, name1024)))
                                     name = name1024;
                             }
 

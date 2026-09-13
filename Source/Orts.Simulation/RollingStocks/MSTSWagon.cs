@@ -1,4 +1,4 @@
-// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
+﻿// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -44,6 +44,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Api;
 using FreeTrainSimulator.Common.Calc;
 using FreeTrainSimulator.Models.Imported.State;
@@ -392,7 +393,7 @@ namespace Orts.Simulation.RollingStocks
             string dir = Path.GetDirectoryName(wagFilePath);
             string file = Path.GetFileName(wagFilePath);
             string orFile = dir + @"\openrails\" + file;
-            if (File.Exists(orFile))
+            if (ContentIO.FileExists(orFile))
                 wagFilePath = orFile;
 
             using (STFReader stf = new STFReader(wagFilePath, true))
@@ -405,41 +406,41 @@ namespace Orts.Simulation.RollingStocks
             }
 
             string wagonFolder = Path.GetDirectoryName(WagFilePath);
-            if (MainShapeFileName != null && !File.Exists(Path.Combine(wagonFolder, MainShapeFileName)))
+            if (MainShapeFileName != null && !ContentIO.FileExists(Path.Combine(wagonFolder, MainShapeFileName)))
             {
                 Trace.TraceWarning("{0} references non-existent shape {1}", WagFilePath, (Path.GetFullPath(Path.Combine(wagonFolder, MainShapeFileName))));
                 MainShapeFileName = string.Empty;
             }
-            if (FreightShapeFileName != null && !File.Exists(Path.Combine(wagonFolder, FreightShapeFileName)))
+            if (FreightShapeFileName != null && !ContentIO.FileExists(Path.Combine(wagonFolder, FreightShapeFileName)))
             {
                 Trace.TraceWarning("{0} references non-existent shape {1}", WagFilePath, Path.GetFullPath(Path.Combine(wagonFolder, FreightShapeFileName)));
                 FreightShapeFileName = null;
             }
-            if (InteriorShapeFileName != null && !File.Exists(Path.Combine(wagonFolder, InteriorShapeFileName)))
+            if (InteriorShapeFileName != null && !ContentIO.FileExists(Path.Combine(wagonFolder, InteriorShapeFileName)))
             {
                 Trace.TraceWarning("{0} references non-existent shape {1}", WagFilePath, Path.GetFullPath(Path.Combine(wagonFolder, InteriorShapeFileName)));
                 InteriorShapeFileName = null;
             }
 
-            if (FrontCouplerAnimation != null && !File.Exists(Path.Combine(wagonFolder, FrontCouplerAnimation.ShapeFileName)))
+            if (FrontCouplerAnimation != null && !ContentIO.FileExists(Path.Combine(wagonFolder, FrontCouplerAnimation.ShapeFileName)))
             {
                 Trace.TraceWarning("{0} references non-existent shape {1}", WagFilePath, Path.GetFullPath(Path.Combine(wagonFolder, FrontCouplerAnimation.ShapeFileName)));
                 FrontCouplerAnimation = null;
             }
 
-            if (RearCouplerAnimation != null && !File.Exists(Path.Combine(wagonFolder, RearCouplerAnimation.ShapeFileName)))
+            if (RearCouplerAnimation != null && !ContentIO.FileExists(Path.Combine(wagonFolder, RearCouplerAnimation.ShapeFileName)))
             {
                 Trace.TraceWarning("{0} references non-existent shape {1}", WagFilePath, Path.GetFullPath(Path.Combine(wagonFolder, RearCouplerAnimation.ShapeFileName)));
                 RearCouplerAnimation = null;
             }
 
-            if (FrontAirHoseAnimation != null && !File.Exists(Path.Combine(wagonFolder, FrontAirHoseAnimation.ShapeFileName)))
+            if (FrontAirHoseAnimation != null && !ContentIO.FileExists(Path.Combine(wagonFolder, FrontAirHoseAnimation.ShapeFileName)))
             {
                 Trace.TraceWarning("{0} references non-existent shape {1}", WagFilePath, Path.GetFullPath(Path.Combine(wagonFolder, FrontAirHoseAnimation.ShapeFileName)));
                 FrontAirHoseAnimation = null;
             }
 
-            if (RearAirHoseAnimation != null && !File.Exists(Path.Combine(wagonFolder, RearAirHoseAnimation.ShapeFileName)))
+            if (RearAirHoseAnimation != null && !ContentIO.FileExists(Path.Combine(wagonFolder, RearAirHoseAnimation.ShapeFileName)))
             {
                 Trace.TraceWarning("{0} references non-existent shape {1}", WagFilePath, Path.GetFullPath(Path.Combine(wagonFolder, RearAirHoseAnimation.ShapeFileName)));
                 RearAirHoseAnimation = null;
@@ -594,7 +595,7 @@ namespace Orts.Simulation.RollingStocks
             {
                 foreach (var ortsFreightAnim in FreightAnimations.Animations)
                 {
-                    if (ortsFreightAnim.ShapeFileName != null && !File.Exists(Path.Combine(wagonFolder, ortsFreightAnim.ShapeFileName)))
+                    if (ortsFreightAnim.ShapeFileName != null && !ContentIO.FileExists(Path.Combine(wagonFolder, ortsFreightAnim.ShapeFileName)))
                     {
                         Trace.TraceWarning("ORTS FreightAnim in trainset {0} references non-existent shape {1}", WagFilePath, Path.GetFullPath(Path.Combine(wagonFolder, ortsFreightAnim.ShapeFileName)));
                         ortsFreightAnim.ShapeFileName = null;

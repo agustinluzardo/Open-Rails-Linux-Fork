@@ -25,6 +25,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Api;
 using FreeTrainSimulator.Common.Position;
 using FreeTrainSimulator.Common.Xna;
@@ -213,7 +214,7 @@ namespace Orts.Simulation.World
                     foreach (LoadDataEntry loadDataEntry in loadStationPopulation.LoadData)
                     {
                         string loadFilePath = Path.Combine(trainSetFolder, loadDataEntry.FolderName, Path.ChangeExtension(loadDataEntry.FileName, ".load-or"));
-                        if (!File.Exists(loadFilePath))
+                        if (!ContentIO.FileExists(loadFilePath))
                         {
                             Trace.TraceWarning($"Ignored missing load {loadFilePath}");
                             continue;

@@ -340,7 +340,7 @@ namespace Orts.ActivityRunner.Processes
                     string file = Path.Combine(RuntimeInfo.UserDataFolder, saveCommand.FileStem);
                     if (!file.EndsWith(FileNameExtensions.SaveFile, StringComparison.OrdinalIgnoreCase))
                         file += FileNameExtensions.SaveFile;
-                    if (File.Exists(file))
+                    if (ContentIO.FileExists(file))
                     {
                         previousSaveFile = file;
                         // Move commands after this to the replay command list.
@@ -472,7 +472,7 @@ namespace Orts.ActivityRunner.Processes
             LoadingDataState loadingData = null;
             try
             {
-                if (File.Exists(loadingDataFilePath))
+                if (ContentIO.FileExists(loadingDataFilePath))
                     loadingData = await LoadingDataState.FromFile<LoadingDataState>(loadingDataFilePath, Game.LoaderProcess.CancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception) when (exception is IOException || exception is UnauthorizedAccessException || exception is ArgumentException || exception is MemoryPackSerializationException)

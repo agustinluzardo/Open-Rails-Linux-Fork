@@ -1,4 +1,4 @@
-// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
+﻿// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -26,6 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Api;
 using FreeTrainSimulator.Common.Calc;
 using FreeTrainSimulator.Common.Info;
@@ -294,13 +295,13 @@ namespace Orts.Simulation
             MetricUnits = userSettings.MeasurementUnit == MeasurementUnit.Route ? RouteModel.MetricUnits : (userSettings.MeasurementUnit == MeasurementUnit.Metric || userSettings.MeasurementUnit == MeasurementUnit.System && System.Globalization.RegionInfo.CurrentRegion.IsMetric);
 
             string carSpawnFile = RouteFolder.CarSpawnerFile;
-            if (File.Exists(carSpawnFile))
+            if (ContentIO.FileExists(carSpawnFile))
             {
                 CarSpawnerFile csf = new CarSpawnerFile(carSpawnFile, RouteFolder.ShapesFolder);
                 CarSpawnerLists.Add(csf.CarSpawners);
             }
 
-            if (File.Exists(carSpawnFile = RouteFolder.OpenRailsCarSpawnerFile))
+            if (ContentIO.FileExists(carSpawnFile = RouteFolder.OpenRailsCarSpawnerFile))
             {
                 ORCarSpawnerFile acsf = new ORCarSpawnerFile(carSpawnFile, RouteFolder.ShapesFolder);
                 CarSpawnerLists.AddRange(acsf.CarSpawners);
@@ -308,7 +309,7 @@ namespace Orts.Simulation
 
             //Load OR-Clock if external file "openrails\clock.dat" exists --------------------------------------------------------
             string clockFile = Path.Combine(RouteFolder.OpenRailsRouteFolder, "clocks.dat");
-            if (File.Exists(clockFile))
+            if (ContentIO.FileExists(clockFile))
             {
                 ClockFile cf = new ClockFile(clockFile, RouteFolder.ShapesFolder);
                 Clocks = cf.Clocks;
@@ -333,7 +334,7 @@ namespace Orts.Simulation
 
             // check for existence of activity file in OpenRails subfolder
             activityPath = Path.Combine(RouteFolder.OpenRailsActivitiesFolder, Path.GetFileName(activityPath));
-            if (File.Exists(activityPath))
+            if (ContentIO.FileExists(activityPath))
             {
                 ORActivitySettingsFile orActivitySettings = new ORActivitySettingsFile(activityPath);
                 OverrideUserSettings(UserSettings, orActivitySettings.Activity);    // Override user settings for the purposes of this activity
@@ -1294,7 +1295,7 @@ namespace Orts.Simulation
                     wagonFilePath = wagonFolder + @"\" + wagon.Name + ".eot";
                 }
 
-                if (!File.Exists(wagonFilePath))
+                if (!ContentIO.FileExists(wagonFilePath))
                 {
                     // First wagon is the player's loco and required, so issue a fatal error message
                     if (wagon == conFile.Train.Wagons[0])
@@ -1489,7 +1490,7 @@ namespace Orts.Simulation
                             wagonFilePath = wagonFolder + @"\" + wagon.Name + ".eot";
                         }
 
-                        if (!File.Exists(wagonFilePath))
+                        if (!ContentIO.FileExists(wagonFilePath))
                         {
                             Trace.TraceWarning($"Ignored missing {(wagon.IsEngine ? "engine" : "wagon")} {wagonFilePath} in activity definition {activityObject.TrainSet.Name}");
                             continue;
@@ -2043,7 +2044,7 @@ namespace Orts.Simulation
 
             int logCount = 0;
 
-            while (File.Exists(logfileName) && logCount < maxLogFiles)
+            while (ContentIO.FileExists(logfileName) && logCount < maxLogFiles)
             {
                 logfileName = Path.Combine(RuntimeInfo.UserDataFolder, Path.ChangeExtension($"{logfile}{logCount:00}", "csv"));
                 logCount++;

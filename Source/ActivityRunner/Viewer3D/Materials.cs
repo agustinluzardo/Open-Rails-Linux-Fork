@@ -1,4 +1,4 @@
-// COPYRIGHT 2009, 2010, 2011, 2012, 2013, 2014 by the Open Rails project.
+﻿// COPYRIGHT 2009, 2010, 2011, 2012, 2013, 2014 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -18,6 +18,7 @@
 // This file is the responsibility of the 3D & Environment Team. 
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -66,7 +67,7 @@ namespace Orts.ActivityRunner.Viewer3D
                     Texture2D texture;
                     if (Path.GetExtension(path).Equals(".dds", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (File.Exists(path))
+                        if (ContentIO.FileExists(path))
                         {
                             DDSLib.DDSFromFile(path, GraphicsDevice, true, out texture);
                         }
@@ -75,7 +76,7 @@ namespace Orts.ActivityRunner.Viewer3D
                         // therefore avoiding that routes providing .ace textures show blank global shapes
                         {
                             var aceTexture = Path.ChangeExtension(path, ".ace");
-                            if (File.Exists(aceTexture))
+                            if (ContentIO.FileExists(aceTexture))
                             {
                                 texture = AceFile.Texture2DFromFile(GraphicsDevice, aceTexture);
                                 Trace.TraceWarning($"Required texture {path} not existing; using existing texture {aceTexture}");
@@ -88,18 +89,18 @@ namespace Orts.ActivityRunner.Viewer3D
                     {
                         var alternativeTexture = Path.ChangeExtension(path, ".dds");
 
-                        if (File.Exists(alternativeTexture))
+                        if (ContentIO.FileExists(alternativeTexture))
                         {
                             DDSLib.DDSFromFile(alternativeTexture, GraphicsDevice, true, out texture);
                         }
-                        else if (File.Exists(path))
+                        else if (ContentIO.FileExists(path))
                         {
                             texture = AceFile.Texture2DFromFile(GraphicsDevice, path);
                         }
                         else
                         {
                             string parentPath = Path.Combine(Path.GetDirectoryName(path), "..", Path.GetFileName(path));
-                            if (File.Exists(parentPath) && parentPath.Contains("texture", StringComparison.OrdinalIgnoreCase)) //in texure and exists
+                            if (ContentIO.FileExists(parentPath) && parentPath.Contains("texture", StringComparison.OrdinalIgnoreCase)) //in texure and exists
                             {
                                 texture = AceFile.Texture2DFromFile(GraphicsDevice, parentPath);
                             }
@@ -124,7 +125,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 }
                 catch (Exception error) when (error is Exception)
                 {
-                    if (File.Exists(path))
+                    if (ContentIO.FileExists(path))
                         Trace.WriteLine(new FileLoadException(path, error));
                     else
                         Trace.TraceWarning("Ignored missing texture file {0}", path);
@@ -148,7 +149,7 @@ namespace Orts.ActivityRunner.Viewer3D
             if (ext == ".ace")
                 return AceFile.Texture2DFromFile(graphicsDevice, path);
 
-            using (var stream = File.OpenRead(path))
+            using (var stream = ContentIO.OpenRead(path))
             {
                 if (ext == ".gif" || ext == ".jpg" || ext == ".png")
                     return Texture2D.FromStream(graphicsDevice, stream);
@@ -225,7 +226,7 @@ namespace Orts.ActivityRunner.Viewer3D
             PrecipitationShader = new PrecipitationShader(viewer.Game.GraphicsDevice);
             SceneryShader = new SceneryShader(viewer.Game.GraphicsDevice);
             var microtexPath = Path.Combine(viewer.Simulator.RouteFolder.TerrainTexturesFolder, "microtex.ace");
-            if (File.Exists(microtexPath))
+            if (ContentIO.FileExists(microtexPath))
             {
                 try
                 {

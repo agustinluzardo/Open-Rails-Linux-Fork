@@ -30,6 +30,7 @@
 //
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -60,7 +61,7 @@ namespace Orts.Formats.OpenRails.Files
             string separator = string.Empty;
             try
             {
-                using (StreamReader scrStream = new StreamReader(fileName, true))
+                using (StreamReader scrStream = ContentIO.OpenText(fileName))
                 {
                     PreliminaryRead(fileName, scrStream, separator);
                 }

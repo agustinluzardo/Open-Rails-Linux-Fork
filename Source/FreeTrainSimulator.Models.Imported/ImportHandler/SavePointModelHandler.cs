@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Common.Position;
 using FreeTrainSimulator.Models.Content;
@@ -66,7 +67,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler
 
             string sourceFolder = RuntimeInfo.UserDataFolder;
 
-            if (Directory.Exists(sourceFolder))
+            if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
                 ConcurrentBag<string> savepointFiles = new ConcurrentBag<string>(Directory.EnumerateFiles(sourceFolder, Path.ChangeExtension($"{activityPrefix}*", FileNameExtensions.SaveFile)));
@@ -97,7 +98,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler
             ArgumentException.ThrowIfNullOrEmpty(filePath, nameof(filePath));
             ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
 
-            if (File.Exists(filePath))
+            if (ContentIO.FileExists(filePath))
             {
                 try
                 {

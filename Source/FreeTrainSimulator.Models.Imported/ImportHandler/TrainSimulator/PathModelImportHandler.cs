@@ -1,4 +1,5 @@
 ﻿using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -41,7 +42,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             ConcurrentBag<PathModelHeader> results = new ConcurrentBag<PathModelHeader>();
 
             string sourceFolder = routeModel.MstsRouteFolder().PathsFolder;
-            if (Directory.Exists(sourceFolder))
+            if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
                 List<string> pathFiles = new List<string>(Directory.EnumerateFiles(sourceFolder, "*.pat"));
@@ -79,7 +80,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             ArgumentException.ThrowIfNullOrEmpty(filePath, nameof(filePath));
             ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
 
-            if (File.Exists(filePath))
+            if (ContentIO.FileExists(filePath))
             {
                 PathFile patFile = new PathFile(filePath);
 

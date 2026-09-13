@@ -30,6 +30,7 @@ using System.IO;
 using System.Linq;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Models.Signalling;
 
 using Orts.Formats.Msts.Signalling;
@@ -244,7 +245,7 @@ namespace Orts.Formats.Msts
                 string fullName = Path.Combine(routePath, fileName);
                 try
                 {
-                    using (StreamReader stream = new StreamReader(fullName, true))
+                    using (StreamReader stream = ContentIO.OpenText(fullName))
                     {
 #if DEBUG_PRINT_IN
                         File.AppendAllText(din_fileLoc + @"sigscr.txt", "Reading file : " + fullName + "\n\n");

@@ -1,4 +1,4 @@
-// COPYRIGHT 2009, 2010, 2011, 2012, 2013, 2014 by the Open Rails project.
+﻿// COPYRIGHT 2009, 2010, 2011, 2012, 2013, 2014 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Input;
 using FreeTrainSimulator.Common.Position;
 using FreeTrainSimulator.Common.Xna;
@@ -1267,9 +1268,9 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             if (filename == null)
                 return;
             string smsFilePath = Path.GetFullPath(Path.Combine(wagonFolder, "sound", filename));
-            if (!File.Exists(smsFilePath))
+            if (!ContentIO.FileExists(smsFilePath))
                 smsFilePath = Path.GetFullPath(Viewer.Simulator.RouteFolder.ContentFolder.SoundFile(filename));
-            if (!File.Exists(smsFilePath))
+            if (!ContentIO.FileExists(smsFilePath))
             {
                 Trace.TraceWarning("Cannot find {1} car sound file {0}", filename, wagonFolder);
                 return;
@@ -1309,9 +1310,9 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             if (filename == null)
                 return;
             string path = Viewer.Simulator.RouteFolder.SoundFile(filename);
-            if (!File.Exists(path))
+            if (!ContentIO.FileExists(path))
                 path = Viewer.Simulator.RouteFolder.ContentFolder.SoundFile(filename);
-            if (!File.Exists(path))
+            if (!ContentIO.FileExists(path))
             {
                 Trace.TraceWarning("Cannot find track sound file {0}", filename);
                 return;

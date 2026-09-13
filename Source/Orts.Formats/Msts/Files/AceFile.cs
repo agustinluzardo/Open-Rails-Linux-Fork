@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -31,7 +32,7 @@ namespace Orts.Formats.Msts.Files
     {
         public static Texture2D Texture2DFromFile(GraphicsDevice graphicsDevice, string fileName)
         {
-            using (MemoryStream stream = new MemoryStream(File.ReadAllBytes(fileName)))
+            using (MemoryStream stream = new MemoryStream(ContentIO.ReadAllBytes(fileName)))
                 return Texture2DFromStream(graphicsDevice, stream);
         }
 

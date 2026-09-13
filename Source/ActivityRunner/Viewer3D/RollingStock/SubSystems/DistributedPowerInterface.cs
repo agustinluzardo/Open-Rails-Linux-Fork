@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Xna;
 using FreeTrainSimulator.Graphics;
 using FreeTrainSimulator.Graphics.DrawableComponents;
@@ -805,7 +806,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.SubSystems
 
             if (String.IsNullOrEmpty(trainCarShape.SharedShape.ReferencePath))
             {
-                if (!File.Exists(globalText + imageName))
+                if (!ContentIO.FileExists(globalText + imageName))
                 {
                     Trace.TraceInformation("Ignored missing " + imageName + " using default. You can copy and unpack the " + imageName + " from OR\'s Documentation\\SampleFiles\\Manual folder to " + globalText +
                         ", or place it under " + trainCarShape.SharedShape.ReferencePath);
@@ -814,7 +815,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.SubSystems
             }
             else
             {
-                if (!File.Exists(trainCarShape.SharedShape.ReferencePath + @"\" + imageName))
+                if (!ContentIO.FileExists(trainCarShape.SharedShape.ReferencePath + @"\" + imageName))
                 {
                     Trace.TraceInformation("Ignored missing " + imageName + " using default. You can copy and unpack the " + imageName + " from OR\'s Documentation\\SampleFiles\\Manual folder to " + globalText +
                         ", or place it under " + trainCarShape.SharedShape.ReferencePath);

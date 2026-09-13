@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.Collections.ObjectModel;
+using FreeTrainSimulator.Common.Native;
 using System.IO;
 using System.Linq;
 
@@ -34,7 +35,7 @@ namespace Orts.Formats.OpenRails.Parsers
         public TimetableReader(string filePath)
         {
             FilePath = filePath;
-            using (StreamReader filestream = new StreamReader(filePath, true))
+            using (StreamReader filestream = ContentIO.OpenText(filePath))
             {
                 // read all lines in file
                 string readLine = filestream.ReadLine();

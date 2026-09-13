@@ -1,4 +1,5 @@
 ﻿using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace Orts.ActivityRunner.Viewer3D.PopupWindows
         public EndOfTrainDeviceWindow(WindowManager owner, Point relativeLocation, Catalog catalog = null) :
             base(owner, (catalog ??= CatalogManager.Catalog).GetString("Available EOT"), relativeLocation, new Point(200, 100), catalog)
         {
-            if (Directory.Exists(Simulator.Instance.RouteFolder.ContentFolder.EndOfTrainDevicesFolder))
+            if (ContentIO.DirectoryExists(Simulator.Instance.RouteFolder.ContentFolder.EndOfTrainDevicesFolder))
             {
                 foreach (string directory in Directory.EnumerateDirectories(Simulator.Instance.RouteFolder.ContentFolder.EndOfTrainDevicesFolder))
                 {

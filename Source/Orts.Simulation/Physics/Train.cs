@@ -1,4 +1,4 @@
-// COPYRIGHT 2013 by the Open Rails project.
+﻿// COPYRIGHT 2013 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -53,6 +53,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Api;
 using FreeTrainSimulator.Common.Calc;
 using FreeTrainSimulator.Common.DebugInfo;
@@ -2007,7 +2008,7 @@ namespace Orts.Simulation.Physics
 
             StringBuilder builder = new StringBuilder();
 
-            if (!string.IsNullOrEmpty(evaluationLogFile) && !File.Exists(evaluationLogFile))
+            if (!string.IsNullOrEmpty(evaluationLogFile) && !ContentIO.FileExists(evaluationLogFile))
             {
                 if ((evaluationContent & EvaluationLogContents.Time) == EvaluationLogContents.Time)
                 {

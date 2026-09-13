@@ -1,4 +1,5 @@
 ﻿using System;
+using FreeTrainSimulator.Common.Native;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -35,7 +36,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
 
             string sourceFolder = folderModel.MstsContentFolder().ConsistsFolder;
 
-            if (Directory.Exists(sourceFolder))
+            if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
                 ConcurrentBag<string> consistFiles = new ConcurrentBag<string>(Directory.EnumerateFiles(sourceFolder, "*.con"));
@@ -62,7 +63,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             ArgumentException.ThrowIfNullOrEmpty(filePath, nameof(filePath));
             ArgumentNullException.ThrowIfNull(folderModel, nameof(folderModel));
 
-            if (File.Exists(filePath))
+            if (ContentIO.FileExists(filePath))
             {
                 ConsistFile consistFile = new ConsistFile(filePath);
 
@@ -83,7 +84,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
                         locomotive = trainCars[i];
                         string engineFileName = folderModel.MstsContentFolder().EngineFile(locomotive.Reference, locomotive.Name);
 
-                        if (File.Exists(engineFileName))
+                        if (ContentIO.FileExists(engineFileName))
                         {
                             EngineFile engFile = new EngineFile(engineFileName);
                             locomotive = !string.IsNullOrEmpty(engFile.CabViewFile)

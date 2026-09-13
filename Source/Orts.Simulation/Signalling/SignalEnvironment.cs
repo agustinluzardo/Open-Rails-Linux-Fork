@@ -1,4 +1,4 @@
-// COPYRIGHT 2013 by the Open Rails project.
+﻿// COPYRIGHT 2013 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Api;
 using FreeTrainSimulator.Common.Position;
 using FreeTrainSimulator.Models.Imported.State;
@@ -347,7 +348,7 @@ namespace Orts.Simulation.Signalling
                                 if (!extendedWFileRead)
                                 {
                                     string orWorldFile = Path.Combine(worldPath, FolderStructure.OpenRailsSpecificFolder, Path.GetFileName(fileName));
-                                    if (File.Exists(orWorldFile))
+                                    if (ContentIO.FileExists(orWorldFile))
                                     {
                                         // We have an OR-specific addition to world file
                                         worldFile.InsertORSpecificData(orWorldFile, Tokens);

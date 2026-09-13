@@ -24,6 +24,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Api;
 using FreeTrainSimulator.Common.Position;
 using FreeTrainSimulator.Models.Imported.State;
@@ -44,7 +45,7 @@ namespace Orts.Simulation.World
         public static IEnumerable<MovingTable> ReadTurntableFile(string filePath)
         {
             List<MovingTable> result = new List<MovingTable>();
-            if (!File.Exists(filePath))
+            if (!ContentIO.FileExists(filePath))
                 return result;
 
             Trace.Write(" TURNTBL");

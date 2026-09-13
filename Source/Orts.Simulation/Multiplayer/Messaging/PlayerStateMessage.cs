@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common.Position;
 
 using MemoryPack;
@@ -159,7 +160,7 @@ namespace Orts.Simulation.Multiplayer.Messaging
                                 for (int i = 0; i < TrainState.TrainCars.Count; i++)
                                 {
                                     string wagonFilePath = Path.Combine(Simulator.Instance.RouteFolder.ContentFolder.TrainSetsFolder, TrainState.TrainCars[i].WagonFilePath);
-                                    if (!File.Exists(wagonFilePath))
+                                    if (!ContentIO.FileExists(wagonFilePath))
                                     {
                                         Trace.TraceWarning($"Ignored missing rolling stock {wagonFilePath}");
                                         continue;

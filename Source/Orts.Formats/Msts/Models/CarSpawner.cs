@@ -1,4 +1,5 @@
 ﻿using Orts.Formats.Msts.Parsers;
+using FreeTrainSimulator.Common.Native;
 
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,7 @@ namespace Orts.Formats.Msts.Models
                     else
                     {
                         CarSpawner dataItem = new CarSpawner(stf, shapePath);
-                        if (File.Exists(dataItem.Name))
+                        if (ContentIO.FileExists(dataItem.Name))
                             Add(dataItem);
                         else
                             STFException.TraceWarning(stf, $"Non-existent shape file {dataItem.Name} referenced");

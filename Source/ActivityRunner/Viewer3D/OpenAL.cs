@@ -339,7 +339,7 @@ namespace Orts.ActivityRunner.Viewer3D
         /// </summary>
         private static void CheckMaxSourcesConfig()
         {
-            string configFile = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "alsoft.ini");
+            string configFile = OpenALLibrary.ConfigurationFile;
             try
             {
                 StringBuilder result = new StringBuilder(255);
@@ -362,7 +362,7 @@ namespace Orts.ActivityRunner.Viewer3D
             catch (Exception ex)
 #pragma warning restore CA1031 // Do not catch general exception types
             {
-                Trace.TraceError("Couldn't check or set OpenAL max sound sources in %AppData%\\Roaming\\alsoft.ini: ", ex.Message);
+                Trace.TraceError($"Couldn't check or set OpenAL max sound sources in {configFile}: {ex.Message}");
             }
         }
     }
