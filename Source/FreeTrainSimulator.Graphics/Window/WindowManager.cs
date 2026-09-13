@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Info;
+using FreeTrainSimulator.Common.Display;
 using FreeTrainSimulator.Common.Input;
 using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Graphics.MapView.Shapes;
@@ -82,7 +82,10 @@ namespace FreeTrainSimulator.Graphics.Window
         public const string DefaultMonoFontName = "Courier New";
         public const int DefaultFontSize = 13;
 
-        public static readonly int KeyRepeatDelay = 1000 / Math.Clamp(SystemInformation.KeyboardSpeed / 4, 2, 30);
+        // Windows exposes the user's key repeat rate through SystemInformation.KeyboardSpeed,
+        // which has no cross platform equivalent; 250 ms is the middle of the range that setting
+        // covers and what the free desktops default to.
+        public static readonly int KeyRepeatDelay = 250;
 
         public float DpiScaling { get; private set; }
         public System.Drawing.Font TextFontDefault { get; }
@@ -120,18 +123,8 @@ namespace FreeTrainSimulator.Graphics.Window
         private protected WindowManager(Game game) :
             base(game)
         {
-            try
-            {
-                DpiScaling = DisplayScalingFactor(Screen.FromControl((Form)Control.FromHandle(game.Window.Handle)));
-            }
-            catch (InvalidOperationException) //potential cross thread operation if we are in a different thread
-            {
-                if (Application.OpenForms.Count > 0 && Application.OpenForms[0].InvokeRequired) // no way to know which window we are, so just trying the first one
-                    Application.OpenForms[0].Invoke(() =>
-                {
-                    DpiScaling = DisplayScalingFactor(Screen.FromControl((Form)Control.FromHandle(game.Window.Handle)));
-                });
-            }
+            Rectangle windowBounds = game.Window.ClientBounds;
+            DpiScaling = DisplayScalingFactor(DisplayDevices.FromBounds(windowBounds.X, windowBounds.Y, windowBounds.Width, windowBounds.Height));
             viewport = Game.GraphicsDevice.Viewport;
             size = viewport.Bounds.Size;
             windowSortComparer = new WindowSortComparer(this);
@@ -437,39 +430,12 @@ namespace FreeTrainSimulator.Graphics.Window
             base.Update(gameTime);
         }
 
-        public static float DisplayScalingFactor(Screen screen)
+        /// <summary>
+        /// How much the interface should be scaled on <paramref name="display"/>, 1.0 at 96 dpi.
+        /// </summary>
+        public static float DisplayScalingFactor(DisplayDevice display)
         {
-            if (screen == null)
-                return 1;
-            try
-            {
-                using (Form testForm = new Form
-                {
-                    WindowState = FormWindowState.Normal,
-                    StartPosition = FormStartPosition.Manual,
-                    Left = screen.Bounds.Left,
-                    Top = screen.Bounds.Top
-                })
-                {
-                    return (float)Math.Round(NativeMethods.GetDpiForWindow(testForm.Handle) / 96.0, 2);
-                }
-            }
-            catch (EntryPointNotFoundException)//running on Windows 7 or other unsupported OS
-            {
-                using (System.Drawing.Graphics g = System.Drawing.Graphics.FromHwnd(nint.Zero))
-                {
-                    try
-                    {
-                        nint desktop = g.GetHdc();
-                        int dpi = NativeMethods.GetDeviceCaps(desktop, (int)NativeMethods.DeviceCap.LOGPIXELSX);
-                        return (float)Math.Round(dpi / 96.0, 2);
-                    }
-                    finally
-                    {
-                        g.ReleaseHdc();
-                    }
-                }
-            }
+            return display?.ScalingFactor ?? 1f;
         }
 
         protected override void Dispose(bool disposing)

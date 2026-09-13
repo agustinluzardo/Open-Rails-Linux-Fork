@@ -22,10 +22,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.DebugInfo;
+using FreeTrainSimulator.Common.Display;
 using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Common.Logging;
 using FreeTrainSimulator.Models.Settings;
@@ -216,12 +216,13 @@ namespace Orts.ActivityRunner.Processes
             {
                 string errorSummary = error?.GetType().FullName + ": " + error.Message;
                 string logFile = RuntimeInfo.LogFile(UserSettings.LogFilePath, UserSettings.LogFileName);
-                DialogResult openTracker = MessageBox.Show($"A fatal error has occured and {RuntimeInfo.ProductName} cannot continue.\n\n" +
+                MessageDialogResult openTracker = MessageDialog.Show($"{RuntimeInfo.ProductName} {VersionInfo.Version}",
+                        $"A fatal error has occured and {RuntimeInfo.ProductName} cannot continue.\n\n" +
                         $"    {errorSummary}\n\n" +
                         $"This error may be due to bad data or a bug. You can help improve {RuntimeInfo.ProductName} by reporting this error in our bug tracker at {LoggingUtil.BugTrackerUrl} and attaching the log file {logFile}.\n\n" +
                         ">>> Click OK to report this error on the GitHub bug tracker <<<",
-                        $"{RuntimeInfo.ProductName} {VersionInfo.Version}", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
-                if (openTracker == DialogResult.OK)
+                        MessageDialogButtons.OkCancel, MessageDialogIcon.Error);
+                if (openTracker == MessageDialogResult.Ok)
                     FreeTrainSimulator.Common.Info.SystemInfo.OpenBrowser(LoggingUtil.BugTrackerUrl);
             }
             // Stop the world!

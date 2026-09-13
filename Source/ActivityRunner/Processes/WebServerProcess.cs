@@ -23,9 +23,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
-using System.Windows.Forms;
 
 using EmbedIO.Net;
+
+using FreeTrainSimulator.Common.Info;
 
 using Orts.ActivityRunner.Viewer3D.WebServices;
 
@@ -60,7 +61,7 @@ namespace Orts.ActivityRunner.Processes
 
         private void WebServerThread()
         {
-            string contentPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "Content\\Web");
+            string contentPath = Path.Combine(RuntimeInfo.ApplicationFolder, "Content", "Web");
             EndPointManager.UseIpv6 = true;
             try
             {

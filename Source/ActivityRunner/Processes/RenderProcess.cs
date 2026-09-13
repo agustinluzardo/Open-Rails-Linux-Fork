@@ -22,20 +22,19 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Windows.Forms;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Diagnostics;
+using FreeTrainSimulator.Common.Display;
 using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Graphics;
 using FreeTrainSimulator.Graphics.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 using Orts.ActivityRunner.Viewer3D;
-
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Orts.ActivityRunner.Processes
 {
@@ -50,13 +49,10 @@ namespace Orts.ActivityRunner.Processes
         private readonly GameHost game;
         private Viewport viewport;
 
-#pragma warning disable CA2213 // Disposable fields should be disposed
-        private readonly Form windowForm;
-#pragma warning restore CA2213 // Disposable fields should be disposed
         private bool syncing;
         private Point windowPosition;
         private System.Drawing.Size windowSize;
-        private Screen currentScreen;
+        private DisplayDevice currentDisplay;
         private ScreenMode currentScreenMode;
         private bool toggleScreenRequested;
 
@@ -68,7 +64,7 @@ namespace Orts.ActivityRunner.Processes
         private RenderFrame NextFrame;      // we prepare the next frame in the background while the current one is rendering,
 
         public bool IsMouseVisible { get; set; }  // handles cross thread issues by signalling RenderProcess of a change
-        public Cursor ActualCursor { get; set; } = Cursors.Default;
+        public MouseCursor ActualCursor { get; set; } = MouseCursor.Arrow;
 
         public ref readonly Viewport Viewport => ref viewport;
 
@@ -88,7 +84,6 @@ namespace Orts.ActivityRunner.Processes
         internal RenderProcess(GameHost gameHost)
         {
             this.game = gameHost;
-            windowForm = (Form)Control.FromHandle(gameHost.Window.Handle);
 
             profiler = new Profiler("Render");
             profiler.SetThread();
@@ -134,35 +129,48 @@ namespace Orts.ActivityRunner.Processes
             MethodInfo m = gameHost.Window.GetType().GetMethod("OnClientSizeChanged", BindingFlags.NonPublic | BindingFlags.Instance);
             onClientSizeChanged = (Action)Delegate.CreateDelegate(typeof(Action), gameHost.Window, m);
 
-            windowForm.LocationChanged += WindowForm_LocationChanged;
-            windowForm.ClientSizeChanged += WindowForm_ClientSizeChanged;
+            gameHost.Window.ClientSizeChanged += Window_ClientSizeChanged;
             FreeTrainSimulator.Common.Info.SystemInfo.SetGraphicAdapterInformation(graphicsDeviceManager.GraphicsDevice.Adapter.Description);
         }
 
-        private void WindowForm_LocationChanged(object sender, EventArgs e)
+        private void Window_ClientSizeChanged(object sender, EventArgs e)
         {
-            WindowForm_ClientSizeChanged(sender, e);
+            TrackWindowPlacement();
         }
 
-        private void WindowForm_ClientSizeChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Keeps the remembered size, position and display in step with the window.
+        /// </summary>
+        /// <remarks>
+        /// MonoGame raises an event when the window is resized but not when it is only moved, so
+        /// this also runs once per frame. Both paths are cheap: the bounds are already in memory
+        /// and the display lookup walks a cached list.
+        /// </remarks>
+        private void TrackWindowPlacement()
         {
             if (syncing)
                 return;
+
+            Rectangle bounds = game.Window.ClientBounds;
             if (currentScreenMode == ScreenMode.Windowed)
-                windowSize = new System.Drawing.Size(game.Window.ClientBounds.Width, game.Window.ClientBounds.Height);
-            //originally, following code would be in Window.LocationChanged handler, but seems to be more reliable here for MG version 3.7.1
-            if (currentScreenMode == ScreenMode.Windowed)
-                windowPosition = game.Window.Position;
-            // if (fullscreen) gameWindow is moved to different screen we may need to refit for different screen resolution
-            Screen newScreen = Screen.FromControl(windowForm);
-            (newScreen, currentScreen) = (currentScreen, newScreen);
-            if (newScreen.DeviceName != currentScreen.DeviceName && currentScreenMode != ScreenMode.Windowed)
             {
-                SetScreenMode(currentScreenMode);
-                //reset Window position to center on new screen
-                windowPosition = new Point(
-                    currentScreen.WorkingArea.Left + (currentScreen.WorkingArea.Size.Width - windowSize.Width) / 2,
-                    currentScreen.WorkingArea.Top + (currentScreen.WorkingArea.Size.Height - windowSize.Height) / 2);
+                windowSize = new System.Drawing.Size(bounds.Width, bounds.Height);
+                windowPosition = game.Window.Position;
+            }
+
+            // Dragging a full screen window onto another monitor means refitting to its resolution.
+            DisplayDevice newDisplay = DisplayDevices.FromBounds(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+            if (!newDisplay.Equals(currentDisplay))
+            {
+                currentDisplay = newDisplay;
+                if (currentScreenMode != ScreenMode.Windowed)
+                {
+                    SetScreenMode(currentScreenMode);
+                    // Recentre on the display it moved to.
+                    windowPosition = new Point(
+                        currentDisplay.WorkingArea.Left + (currentDisplay.WorkingArea.Width - windowSize.Width) / 2,
+                        currentDisplay.WorkingArea.Top + (currentDisplay.WorkingArea.Height - windowSize.Height) / 2);
+                }
             }
         }
 
@@ -262,7 +270,8 @@ namespace Orts.ActivityRunner.Processes
             if (IsMouseVisible != game.IsMouseVisible)
                 game.IsMouseVisible = IsMouseVisible;
 
-            Cursor.Current = ActualCursor;
+            Mouse.SetCursor(ActualCursor);
+            TrackWindowPlacement();
 
             if (toggleScreenRequested)
             {
@@ -282,15 +291,17 @@ namespace Orts.ActivityRunner.Processes
         private void LoadSettings()
         {
             currentScreenMode = game.UserSettings.ScreenMode;
-            currentScreen = game.UserSettings.WindowScreen >= 0 && game.UserSettings.WindowScreen < Screen.AllScreens.Length ? Screen.AllScreens[game.UserSettings.WindowScreen] : Screen.PrimaryScreen;
+            currentDisplay = DisplayDevices.At(game.UserSettings.WindowScreen);
 
             windowSize.Width = game.UserSettings.WindowSettings[WindowSetting.Size].X;
             windowSize.Height = game.UserSettings.WindowSettings[WindowSetting.Size].Y;
 
+            // The saved position is a percentage of the free space on the display, so it stays
+            // sensible when the resolution changes between sessions.
             windowPosition = game.UserSettings.WindowSettings[WindowSetting.Location].ToPoint();
             windowPosition = new Point(
-                currentScreen.WorkingArea.Left + windowPosition.X * (currentScreen.WorkingArea.Size.Width - windowSize.Width) / 100,
-                currentScreen.WorkingArea.Top + windowPosition.Y * (currentScreen.WorkingArea.Size.Height - windowSize.Height) / 100);
+                currentDisplay.WorkingArea.Left + windowPosition.X * (currentDisplay.WorkingArea.Width - windowSize.Width) / 100,
+                currentDisplay.WorkingArea.Top + windowPosition.Y * (currentDisplay.WorkingArea.Height - windowSize.Height) / 100);
         }
 
         private void SaveSettings()
@@ -298,48 +309,55 @@ namespace Orts.ActivityRunner.Processes
             /// Settings which should be persisted in the model, need to be configured also in <see cref="FreeTrainSimulator.Models.Shim.ProfileSettingsExtensions.UpdateRuntimeUserSettingsModel"/>
             game.UserSettings.WindowSettings[WindowSetting.Size] = (windowSize.Width, windowSize.Height);
             game.UserSettings.WindowSettings[WindowSetting.Location] = (
-                (int)Math.Max(0, Math.Round(100f * (windowPosition.X - currentScreen.Bounds.Left) / (currentScreen.WorkingArea.Width - windowSize.Width))),
-                (int)Math.Max(0, Math.Round(100.0 * (windowPosition.Y - currentScreen.Bounds.Top) / (currentScreen.WorkingArea.Height - windowSize.Height))));
-            game.UserSettings.WindowScreen = Screen.AllScreens.ToList().IndexOf(currentScreen);
+                (int)Math.Max(0, Math.Round(100f * (windowPosition.X - currentDisplay.Bounds.Left) / Math.Max(1, currentDisplay.WorkingArea.Width - windowSize.Width))),
+                (int)Math.Max(0, Math.Round(100.0 * (windowPosition.Y - currentDisplay.Bounds.Top) / Math.Max(1, currentDisplay.WorkingArea.Height - windowSize.Height))));
+            game.UserSettings.WindowScreen = currentDisplay.Index;
         }
 
+        /// <summary>
+        /// Applies a windowed, full screen or borderless full screen layout.
+        /// </summary>
+        /// <remarks>
+        /// Only the game thread may resize the window, which is where every caller runs: the
+        /// constructor, <see cref="Initialize"/> and <see cref="Update"/>, the last of which is
+        /// also how a screen mode key press reaches here.
+        /// </remarks>
         private void SetScreenMode(ScreenMode targetMode)
         {
             syncing = true;
-            windowForm.Invoke((System.Windows.Forms.MethodInvoker)delegate
+
+            if (graphicsDeviceManager.IsFullScreen)
+                graphicsDeviceManager.ToggleFullScreen();
+
+            switch (targetMode)
             {
-                if (graphicsDeviceManager.IsFullScreen)
-                    graphicsDeviceManager.ToggleFullScreen();
-                switch (targetMode)
-                {
-                    case ScreenMode.Windowed:
-                        if (targetMode != currentScreenMode)
-                            game.Window.Position = windowPosition;
-                        windowForm.FormBorderStyle = FormBorderStyle.FixedSingle;
-                        windowForm.Size = windowSize;
-                        graphicsDeviceManager.PreferredBackBufferWidth = windowSize.Width;
-                        graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
-                        graphicsDeviceManager.ApplyChanges();
-                        break;
-                    case ScreenMode.WindowedFullscreen:
-                        graphicsDeviceManager.PreferredBackBufferWidth = windowSize.Width;
-                        graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
-                        windowForm.FormBorderStyle = FormBorderStyle.FixedSingle;
-                        game.Window.Position = new Point(currentScreen.WorkingArea.Location.X, currentScreen.WorkingArea.Location.Y);
-                        graphicsDeviceManager.ApplyChanges();
-                        if (!graphicsDeviceManager.IsFullScreen)
-                            graphicsDeviceManager.ToggleFullScreen();
-                        break;
-                    case ScreenMode.BorderlessFullscreen:
-                        graphicsDeviceManager.PreferredBackBufferWidth = currentScreen.Bounds.Width;
-                        graphicsDeviceManager.PreferredBackBufferHeight = currentScreen.Bounds.Height;
-                        graphicsDeviceManager.ApplyChanges();
-                        windowForm.FormBorderStyle = FormBorderStyle.None;
-                        game.Window.Position = new Point(currentScreen.Bounds.X, currentScreen.Bounds.Y);
-                        graphicsDeviceManager.ApplyChanges();
-                        break;
-                }
-            });
+                case ScreenMode.Windowed:
+                    if (targetMode != currentScreenMode)
+                        game.Window.Position = windowPosition;
+                    game.Window.IsBorderless = false;
+                    graphicsDeviceManager.PreferredBackBufferWidth = windowSize.Width;
+                    graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
+                    graphicsDeviceManager.ApplyChanges();
+                    break;
+                case ScreenMode.WindowedFullscreen:
+                    graphicsDeviceManager.PreferredBackBufferWidth = windowSize.Width;
+                    graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
+                    game.Window.IsBorderless = false;
+                    game.Window.Position = new Point(currentDisplay.WorkingArea.Left, currentDisplay.WorkingArea.Top);
+                    graphicsDeviceManager.ApplyChanges();
+                    if (!graphicsDeviceManager.IsFullScreen)
+                        graphicsDeviceManager.ToggleFullScreen();
+                    break;
+                case ScreenMode.BorderlessFullscreen:
+                    graphicsDeviceManager.PreferredBackBufferWidth = currentDisplay.Bounds.Width;
+                    graphicsDeviceManager.PreferredBackBufferHeight = currentDisplay.Bounds.Height;
+                    graphicsDeviceManager.ApplyChanges();
+                    game.Window.IsBorderless = true;
+                    game.Window.Position = new Point(currentDisplay.Bounds.X, currentDisplay.Bounds.Y);
+                    graphicsDeviceManager.ApplyChanges();
+                    break;
+            }
+
             currentScreenMode = targetMode;
             onClientSizeChanged?.Invoke();
             syncing = false;

@@ -24,9 +24,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Display;
 using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Common.Logging;
 using FreeTrainSimulator.Common.Native;
@@ -154,11 +154,12 @@ namespace Orts.ActivityRunner.Processes
                         break;
                     case GamePlayAction.None:
                     default:
-                        MessageBox.Show($"To start {RuntimeInfo.ProductName}, please run 'FreeTrainSimulator.exe'.\n\n"
-                                + "If you are attempting to debug this component, please run 'FreeTrainSimulator.exe' and execute the scenario you are interested in. "
+                        MessageDialog.Show($"{RuntimeInfo.ProductName}  {VersionInfo.Version}",
+                                $"To start {RuntimeInfo.ProductName}, please run the launcher.\n\n"
+                                + "If you are attempting to debug this component, please start it from the launcher and execute the scenario you are interested in. "
                                 + "In the log file, the command-line arguments used will be listed at the top. "
                                 + "You should then configure your debug environment to execute this component with those command-line arguments.",
-                                $"{Application.ProductName}  {VersionInfo.Version}");
+                                MessageDialogButtons.Ok, MessageDialogIcon.Information);
                         Game.Exit();
                         break;
                 }
@@ -173,37 +174,38 @@ namespace Orts.ActivityRunner.Processes
                         error = fileLoadException.InnerException;
 
                     if (error is InvalidCommandLineException invalidCommandLineException)
-                        MessageBox.Show($"{RuntimeInfo.ProductName} was started with an invalid command-line. {error.Message} Arguments given:\n\n{invalidCommandLineException.ArgumentsList}",
-                            $"{RuntimeInfo.ProductName} {VersionInfo.Version}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageDialog.Show($"{RuntimeInfo.ProductName} {VersionInfo.Version}",
+                            $"{RuntimeInfo.ProductName} was started with an invalid command-line. {error.Message} Arguments given:\n\n{invalidCommandLineException.ArgumentsList}");
                     else if (error is MissingTrackNodeException)
-                        MessageBox.Show($"{RuntimeInfo.ProductName} detected a track section which is not present in tsection.dat and cannot continue.\n\n" +
-                            "Most likely you don't have the XTracks or Ytracks version needed for this route.",
-                            $"{RuntimeInfo.ProductName} {VersionInfo.Version}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageDialog.Show($"{RuntimeInfo.ProductName} {VersionInfo.Version}",
+                            $"{RuntimeInfo.ProductName} detected a track section which is not present in tsection.dat and cannot continue.\n\n" +
+                            "Most likely you don't have the XTracks or Ytracks version needed for this route.");
                     else if (error is FileNotFoundException fileNotFoundException)
                     {
-                        MessageBox.Show($"An essential file is missing and {RuntimeInfo.ProductName} cannot continue.\n\n" +
-                                $"    {fileNotFoundException.FileName}",
-                                $"{RuntimeInfo.ProductName} {VersionInfo.Version}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageDialog.Show($"{RuntimeInfo.ProductName} {VersionInfo.Version}",
+                                $"An essential file is missing and {RuntimeInfo.ProductName} cannot continue.\n\n" +
+                                $"    {fileNotFoundException.FileName}");
                     }
                     else if (error is DirectoryNotFoundException directoryNotFoundException)
                     {
                         // This is a hack to try and extract the actual file name from the exception message. It isn't available anywhere else.
                         Match match = new Regex("'([^']+)'").Match(directoryNotFoundException.Message);
                         string fileName = match.Groups[1].Success ? match.Groups[1].Value : directoryNotFoundException.Message;
-                        MessageBox.Show($"An essential folder is missing and {RuntimeInfo.ProductName} cannot continue.\n\n" +
-                                $"    {fileName}",
-                                $"{RuntimeInfo.ProductName} {VersionInfo.Version}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageDialog.Show($"{RuntimeInfo.ProductName} {VersionInfo.Version}",
+                                $"An essential folder is missing and {RuntimeInfo.ProductName} cannot continue.\n\n" +
+                                $"    {fileName}");
                     }
                     else
                     {
                         string errorSummary = error.GetType().FullName + ": " + error.Message;
                         string logFile = RuntimeInfo.LogFile(Game.UserSettings.LogFilePath, Game.UserSettings.LogFileName);
-                        DialogResult openTracker = MessageBox.Show($"A fatal error has occured and {RuntimeInfo.ProductName} cannot continue.\n\n" +
+                        MessageDialogResult openTracker = MessageDialog.Show($"{RuntimeInfo.ProductName} {VersionInfo.Version}",
+                                $"A fatal error has occured and {RuntimeInfo.ProductName} cannot continue.\n\n" +
                                 $"    {errorSummary}\n\n" +
                                 $"This error may be due to bad data or a bug. You can help improve {RuntimeInfo.ProductName} by reporting this error in our bug tracker at https://github.com/perpetualKid/FreeTrainSimulator/issues and attaching the log file {logFile}.\n\n" +
                                 ">>> Click OK to report this error on the GitHub bug tracker <<<",
-                                $"{RuntimeInfo.ProductName} {VersionInfo.Version}", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
-                        if (openTracker == DialogResult.OK)
+                                MessageDialogButtons.OkCancel, MessageDialogIcon.Error);
+                        if (openTracker == MessageDialogResult.Ok)
                             SystemInfo.OpenBrowser("https://github.com/perpetualKid/FreeTrainSimulator/issues");
                     }
                 }

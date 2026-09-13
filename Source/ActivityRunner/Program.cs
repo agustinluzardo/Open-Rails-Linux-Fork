@@ -21,7 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Common.Native;
@@ -41,16 +40,12 @@ namespace Orts.ActivityRunner
         private static readonly char[] optionSeparators = new[] { '=', ':' };
 
         public static Viewer Viewer;
-        public static SoundDebugForm SoundDebugForm;
 
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         private static async Task Main(string[] args)
         {
-            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
-
             List<string> argumentList = args.ToList();
             string profileName = ParseCommandLineOption(argumentList, "Profile");
 
@@ -61,7 +56,9 @@ namespace Orts.ActivityRunner
             ProfileUserSettingsModel userSettings = await profile.LoadSettingsModel<ProfileUserSettingsModel>(CancellationToken.None).ConfigureAwait(false);
             userSettings.MultiPlayer = !string.IsNullOrEmpty(ParseCommandLineOption(argumentList, "MultiplayerClient"));
 
-            //enables loading of dll for specific architecture(32 or 64bit) from distinct folders, useful when both versions require same name (as for soft_oal.dll)
+            // Windows ships a 32 and a 64 bit soft_oal.dll under the same name, so the right
+            // folder has to be added to the search path first. On Linux the loader finds the
+            // distribution's libopenal.so.1 through the resolver in OpenAL.Unix.cs instead.
             string path = Path.Combine(RuntimeInfo.ApplicationFolder, "Native", (Environment.Is64BitProcess) ? "x64" : "x86");
             NativeMethods.SetDllDirectory(path);
 

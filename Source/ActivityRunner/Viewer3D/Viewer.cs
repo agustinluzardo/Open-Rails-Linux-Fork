@@ -1,4 +1,4 @@
-// COPYRIGHT 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 by the Open Rails project.
+﻿// COPYRIGHT 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 by the Open Rails project.
 //
 // This file is part of Open Rails.
 //
@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Api;
@@ -47,6 +46,7 @@ using GetText;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 using Orts.ActivityRunner.Processes;
 using Orts.ActivityRunner.Viewer3D.Common;
@@ -189,7 +189,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private bool forceMouseVisible;
         private double mouseVisibleTillRealTime;
-        private Cursor actualCursor = Cursors.Default;
+        private MouseCursor actualCursor = MouseCursor.Arrow;
         public bool SaveScreenshot { get; set; }
         public bool SaveActivityThumbnail { get; private set; }
         public string SaveActivityFileStem { get; private set; }
@@ -803,7 +803,11 @@ namespace Orts.ActivityRunner.Viewer3D
             UserCommandController.AddEvent(UserCommand.GameResetOutOfControlMode, KeyEventType.KeyPressed, () => _ = new ResetOutOfControlModeCommand(Log));
 
             UserCommandController.AddEvent(UserCommand.GameMultiPlayerDispatcher, KeyEventType.KeyPressed, ToggleDispatcherView);
-            UserCommandController.AddEvent(UserCommand.DebugSoundForm, KeyEventType.KeyPressed, () => SoundDebugFormEnabled = !SoundDebugFormEnabled);
+            UserCommandController.AddEvent(UserCommand.DebugSoundForm, KeyEventType.KeyPressed, () =>
+            {
+                SoundDebugFormEnabled = !SoundDebugFormEnabled;
+                Debugging.SoundDebugView.SetVisible(SoundDebugFormEnabled);
+            });
             UserCommandController.AddEvent(UserCommand.CameraJumpSeeSwitch, KeyEventType.KeyPressed, () =>
             {
                 //TODO 20220322 select items in new dispatcher 
@@ -1315,8 +1319,8 @@ namespace Orts.ActivityRunner.Viewer3D
             }
 
             // reset cursor type when needed
-            if (!(Camera is CabCamera) && !(Camera is CabCamera3D) && actualCursor != Cursors.Default)
-                actualCursor = Cursors.Default;
+            if (!(Camera is CabCamera) && !(Camera is CabCamera3D) && actualCursor != MouseCursor.Arrow)
+                actualCursor = MouseCursor.Arrow;
 
             RenderProcess.IsMouseVisible = forceMouseVisible || RealTime < mouseVisibleTillRealTime;
         }
@@ -1613,7 +1617,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 Visibility = VisibilityState.ScreenshotPending;  // Next state else this path would be taken more than once.
                 if (!Directory.Exists(RuntimeInfo.ScreenshotFolder))
                     Directory.CreateDirectory(RuntimeInfo.ScreenshotFolder);
-                string fileName = Path.Combine(RuntimeInfo.ScreenshotFolder, $"{Application.ProductName} {DateTime.Now:yyyy-MM-dd hh-mm-ss}.png");
+                string fileName = Path.Combine(RuntimeInfo.ScreenshotFolder, $"{RuntimeInfo.ProductName} {DateTime.Now:yyyy-MM-dd hh-mm-ss}.png");
                 SaveScreenshotToFile(Game.GraphicsDevice, fileName, false, false);
                 SaveScreenshot = false; // cancel trigger
             }
@@ -1693,7 +1697,9 @@ namespace Orts.ActivityRunner.Viewer3D
                 {
                     dataDump?.Dispose();
                     dispatcherWindow?.Dispose();
-                    actualCursor?.Dispose();
+                    // MouseCursor.Arrow and the other built-ins are shared singletons owned by
+                    // MonoGame, so nothing here is ours to dispose.
+                    actualCursor = null;
                 }
                 disposedValue = true;
             }

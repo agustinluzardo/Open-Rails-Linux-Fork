@@ -54,6 +54,8 @@ namespace System.Drawing
 
         public abstract void Save(string filename, ImageFormat format);
 
+        public abstract void Save(Stream stream, ImageFormat format);
+
         protected virtual void Dispose(bool disposing)
         {
         }
@@ -103,11 +105,30 @@ namespace System.Drawing
             bitmap = source;
         }
 
+        /// <summary>
+        /// Creates a scaled copy of <paramref name="source"/>, used to make screenshot thumbnails.
+        /// </summary>
+        public Bitmap(Image source, Size size)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+            if (source is not Bitmap original)
+                throw new ArgumentException("Only a bitmap can be resized.", nameof(source));
+
+            bitmap = new SKBitmap(new SKImageInfo(Math.Max(1, size.Width), Math.Max(1, size.Height), SKColorType.Bgra8888, SKAlphaType.Premul));
+            using SKCanvas canvas = new SKCanvas(bitmap);
+            canvas.Clear(SKColors.Transparent);
+            using SKPaint paint = new SKPaint { IsAntialias = true };
+            canvas.DrawBitmap(original.bitmap, new SKRect(0, 0, bitmap.Width, bitmap.Height), paint);
+        }
+
         public override int Width => bitmap.Width;
 
         public override int Height => bitmap.Height;
 
         internal SKBitmap SkiaBitmap => bitmap;
+
+        /// <summary>The pixel layout, always 32 bit straight-alpha BGRA in this layer.</summary>
+        public PixelFormat PixelFormat => PixelFormat.Format32bppArgb;
 
         internal static Bitmap Decode(SKBitmap decoded, string source)
         {
@@ -203,6 +224,15 @@ namespace System.Drawing
             using SKData encoded = bitmap.Encode(format.EncodedFormat, 100);
             using FileStream output = File.Create(filename);
             encoded.SaveTo(output);
+        }
+
+        public override void Save(Stream stream, ImageFormat format)
+        {
+            ArgumentNullException.ThrowIfNull(format);
+            ArgumentNullException.ThrowIfNull(stream);
+
+            using SKData encoded = bitmap.Encode(format.EncodedFormat, 100);
+            encoded.SaveTo(stream);
         }
 
         public void Save(string filename)

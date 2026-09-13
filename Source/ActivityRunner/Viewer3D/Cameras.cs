@@ -1,4 +1,4 @@
-// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
+﻿// COPYRIGHT 2009, 2010, 2011, 2012, 2013 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Api;
@@ -38,6 +37,7 @@ using FreeTrainSimulator.Runtime.Track;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 using Orts.ActivityRunner.Viewer3D.RollingStock;
 using Orts.ActivityRunner.Viewer3D.RollingStock.CabView;
@@ -2311,11 +2311,11 @@ namespace Orts.ActivityRunner.Viewer3D
                     if (pointedControl != control)
                         // say what control you have here
                         viewer.Simulator.Confirmer.Message(ConfirmLevel.None, string.IsNullOrEmpty(pointedControl.ControlLabel) ? pointedControl.GetControlName(pointerCommandArgs.Position) : pointedControl.ControlLabel);
-                    viewer.RenderProcess.ActualCursor = Cursors.Hand;
+                    viewer.RenderProcess.ActualCursor = MouseCursor.Hand;
                 }
                 else
                 {
-                    viewer.RenderProcess.ActualCursor = Cursors.Default;
+                    viewer.RenderProcess.ActualCursor = MouseCursor.Arrow;
                 }
             }
         }
@@ -2658,11 +2658,11 @@ namespace Orts.ActivityRunner.Viewer3D
                     if (pointedControl != control)
                         // say what control you have here
                         viewer.Simulator.Confirmer.Message(ConfirmLevel.None, string.IsNullOrEmpty(pointedControl.ControlLabel) ? pointedControl.GetControlName(pointerCommandArgs.Position) : pointedControl.ControlLabel);
-                    viewer.RenderProcess.ActualCursor = Cursors.Hand;
+                    viewer.RenderProcess.ActualCursor = MouseCursor.Hand;
                 }
                 else
                 {
-                    viewer.RenderProcess.ActualCursor = Cursors.Default;
+                    viewer.RenderProcess.ActualCursor = MouseCursor.Arrow;
                 }
             }
         }

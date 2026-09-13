@@ -74,8 +74,7 @@ namespace Orts.ActivityRunner.Processes
 
                 // We must create these forms on the main thread (Render) or they won't pump events correctly.
 
-                Program.SoundDebugForm = new SoundDebugForm(Viewer);
-                Program.SoundDebugForm.Hide();
+                SoundDebugView.Create(Viewer);
                 Viewer.SoundDebugFormEnabled = false;
 
                 firstFrame = false;
@@ -143,7 +142,7 @@ namespace Orts.ActivityRunner.Processes
             {
                 Viewer.Terminate();
                 Simulator.Instance.Stop();
-                Program.SoundDebugForm?.Dispose();
+                SoundDebugView.Close();
             }
             base.Dispose(disposing);
         }

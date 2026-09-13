@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -17,12 +17,12 @@ using FreeTrainSimulator.Graphics.DrawableComponents;
 using FreeTrainSimulator.Graphics.MapView;
 using FreeTrainSimulator.Graphics.MapView.Widgets;
 using FreeTrainSimulator.Graphics.Window;
+using FreeTrainSimulator.Common.Display;
 using FreeTrainSimulator.Graphics.Xna;
 using FreeTrainSimulator.Models.Settings;
 using FreeTrainSimulator.Models.Shim;
 
 using GetText;
-using GetText.WindowsForms;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -41,20 +41,17 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
         private const int targetFps = 15;
 
         private readonly GraphicsDeviceManager graphicsDeviceManager;
-        private readonly System.Windows.Forms.Form windowForm;
         private bool syncing;
         private ScreenMode currentScreenMode;
-        private System.Windows.Forms.Screen currentScreen;
+        private DisplayDevice currentDisplay;
         private Point windowPosition;
         private System.Drawing.Size windowSize;
-        private readonly Point clientRectangleOffset;
 
         private readonly ProfileUserSettingsModel userSettings;
         private readonly ProfileDispatcherSettingsModel dispatcherSettings;
         private Color BackgroundColor;
 
         private Catalog Catalog;
-        private readonly ObjectPropertiesStore store = new ObjectPropertiesStore();
 
         private readonly Action onClientSizeChanged;
 
@@ -97,12 +94,9 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
         {
             this.userSettings = userSettings ?? throw new ArgumentNullException(nameof(userSettings));
             this.dispatcherSettings = dispatcherSettings ?? throw new ArgumentNullException(nameof(dispatcherSettings));
-            windowForm = (System.Windows.Forms.Form)System.Windows.Forms.Control.FromHandle(Window.Handle);
 
-            currentScreen = dispatcherSettings.WindowScreen < System.Windows.Forms.Screen.AllScreens.Length
-                ? System.Windows.Forms.Screen.AllScreens[dispatcherSettings.WindowScreen]
-                : System.Windows.Forms.Screen.PrimaryScreen;
-            FontManager.ScalingFactor = (float)WindowManager.DisplayScalingFactor(currentScreen);
+            currentDisplay = DisplayDevices.At(dispatcherSettings.WindowScreen);
+            FontManager.ScalingFactor = WindowManager.DisplayScalingFactor(currentDisplay);
             LoadSettings();
 
             TargetElapsedTime = TimeSpan.FromMilliseconds(1000 / targetFps);
@@ -117,14 +111,12 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
 
             //Window.ClientSizeChanged += Window_ClientSizeChanged; // not using the GameForm event as it does not raise when Window is moved (ie to another screeen) using keyboard shortcut
 
-            clientRectangleOffset = new Point(windowForm.Width - windowForm.ClientRectangle.Width, windowForm.Height - windowForm.ClientRectangle.Height);
             Window.Position = windowPosition;
 
             SetScreenMode(currentScreenMode);
 
-            windowForm.LocationChanged += WindowForm_LocationChanged;
-            windowForm.ClientSizeChanged += WindowForm_ClientSizeChanged;
-            windowForm.FormClosing += WindowForm_FormClosing;
+            Window.ClientSizeChanged += WindowForm_ClientSizeChanged;
+            Exiting += DispatcherWindow_Exiting;
 
             // using reflection to be able to trigger ClientSizeChanged event manually as this is not 
             // reliably raised otherwise with the resize functionality below in SetScreenMode
@@ -135,7 +127,7 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
             Window.Title = Catalog.GetString("Dispatcher View");
         }
 
-        private async void WindowForm_FormClosing(object sender, System.Windows.Forms.FormClosingEventArgs e)
+        private async void DispatcherWindow_Exiting(object sender, EventArgs e)
         {
             await SaveSettings().ConfigureAwait(true);
         }
@@ -322,38 +314,39 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
             if (currentScreenMode == ScreenMode.Windowed)
                 windowPosition = Window.Position;
             // if (fullscreen) gameWindow is moved to different screen we may need to refit for different screen resolution
-            System.Windows.Forms.Screen newScreen = System.Windows.Forms.Screen.FromControl(windowForm);
-            (newScreen, currentScreen) = (currentScreen, newScreen);
-            if (newScreen.DeviceName != currentScreen.DeviceName && currentScreenMode != ScreenMode.Windowed)
+            Rectangle bounds = Window.ClientBounds;
+            DisplayDevice newDisplay = DisplayDevices.FromBounds(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+            if (!newDisplay.Equals(currentDisplay) && currentScreenMode != ScreenMode.Windowed)
             {
+                currentDisplay = newDisplay;
                 SetScreenMode(currentScreenMode);
                 //reset Window position to center on new screen
                 windowPosition = new Point(
-                    currentScreen.WorkingArea.Left + (currentScreen.WorkingArea.Size.Width - windowSize.Width) / 2,
-                    currentScreen.WorkingArea.Top + (currentScreen.WorkingArea.Size.Height - windowSize.Height) / 2);
+                    currentDisplay.WorkingArea.Left + (currentDisplay.WorkingArea.Width - windowSize.Width) / 2,
+                    currentDisplay.WorkingArea.Top + (currentDisplay.WorkingArea.Height - windowSize.Height) / 2);
             }
         }
 
         private void LoadSettings()
         {
-            windowSize.Width = (int)(currentScreen.WorkingArea.Size.Width * Math.Abs(dispatcherSettings.WindowSettings[WindowSetting.Size].X) / 100.0);
-            windowSize.Height = (int)(currentScreen.WorkingArea.Size.Height * Math.Abs(dispatcherSettings.WindowSettings[WindowSetting.Size].Y) / 100.0);
+            windowSize.Width = (int)(currentDisplay.WorkingArea.Width * Math.Abs(dispatcherSettings.WindowSettings[WindowSetting.Size].X) / 100.0);
+            windowSize.Height = (int)(currentDisplay.WorkingArea.Height * Math.Abs(dispatcherSettings.WindowSettings[WindowSetting.Size].Y) / 100.0);
 
             windowPosition = PointExtension.ToPoint(dispatcherSettings.WindowSettings[WindowSetting.Location]);
             windowPosition = new Point(
-                currentScreen.WorkingArea.Left + windowPosition.X * (currentScreen.WorkingArea.Size.Width - windowSize.Width) / 100,
-                currentScreen.WorkingArea.Top + windowPosition.Y * (currentScreen.WorkingArea.Size.Height - windowSize.Height) / 100);
+                currentDisplay.WorkingArea.Left + windowPosition.X * (currentDisplay.WorkingArea.Width - windowSize.Width) / 100,
+                currentDisplay.WorkingArea.Top + windowPosition.Y * (currentDisplay.WorkingArea.Height - windowSize.Height) / 100);
             BackgroundColor = ColorExtension.FromName(colorSettings[ColorSetting.Background]);
         }
 
         private async Task SaveSettings()
         {
-            dispatcherSettings.WindowSettings[WindowSetting.Size] = ((int)Math.Round(100.0 * windowSize.Width / currentScreen.WorkingArea.Width), (int)Math.Round(100.0 * windowSize.Height / currentScreen.WorkingArea.Height));
+            dispatcherSettings.WindowSettings[WindowSetting.Size] = ((int)Math.Round(100.0 * windowSize.Width / currentDisplay.WorkingArea.Width), (int)Math.Round(100.0 * windowSize.Height / currentDisplay.WorkingArea.Height));
 
             dispatcherSettings.WindowSettings[WindowSetting.Location] = 
-                ((int)Math.Max(0, Math.Round(100f * (windowPosition.X - currentScreen.Bounds.Left) / (currentScreen.WorkingArea.Width - windowSize.Width))), 
-                (int)Math.Max(0, Math.Round(100.0 * (windowPosition.Y - currentScreen.Bounds.Top) / (currentScreen.WorkingArea.Height - windowSize.Height))));
-            dispatcherSettings.WindowScreen = System.Windows.Forms.Screen.AllScreens.ToList().IndexOf(currentScreen);
+                ((int)Math.Max(0, Math.Round(100f * (windowPosition.X - currentDisplay.Bounds.Left) / (currentDisplay.WorkingArea.Width - windowSize.Width))), 
+                (int)Math.Max(0, Math.Round(100.0 * (windowPosition.Y - currentDisplay.Bounds.Top) / (currentDisplay.WorkingArea.Height - windowSize.Height))));
+            dispatcherSettings.WindowScreen = currentDisplay.Index;
 
             foreach (DispatcherWindowType windowType in EnumExtension.GetValues<DispatcherWindowType>())
             {
@@ -370,7 +363,8 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
 
         private void LoadLanguage()
         {
-            Localizer.Revert(windowForm, store);
+            // The Windows Forms localizer walked the form's control tree; this window draws its
+            // own interface, so only the catalog needs switching.
             CatalogManager.Reset();
 
             if (!string.IsNullOrEmpty(userSettings.Language))
@@ -389,44 +383,51 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
                 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InstalledUICulture;
             }
             Catalog = CatalogManager.Catalog;
-            Localizer.Localize(windowForm, Catalog, store);
         }
 
+        /// <summary>
+        /// Applies a windowed, full screen or borderless full screen layout.
+        /// </summary>
+        /// <remarks>
+        /// Every caller runs on the game thread, which is the only one allowed to resize the
+        /// window, so no marshalling is needed here.
+        /// </remarks>
         private void SetScreenMode(ScreenMode targetMode)
         {
             syncing = true;
-            windowForm.Invoke((System.Windows.Forms.MethodInvoker)delegate
+
+            if (graphicsDeviceManager.IsFullScreen)
+                graphicsDeviceManager.ToggleFullScreen();
+
+            switch (targetMode)
             {
-                if (graphicsDeviceManager.IsFullScreen)
-                    graphicsDeviceManager.ToggleFullScreen();
-                switch (targetMode)
-                {
-                    case ScreenMode.Windowed:
-                        if (targetMode != currentScreenMode)
-                            Window.Position = windowPosition;
-                        windowForm.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
-                        windowForm.Size = windowSize;
-                        graphicsDeviceManager.PreferredBackBufferWidth = windowSize.Width;
-                        graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
-                        graphicsDeviceManager.ApplyChanges();
-                        break;
-                    case ScreenMode.WindowedFullscreen:
-                        graphicsDeviceManager.PreferredBackBufferWidth = currentScreen.WorkingArea.Width - clientRectangleOffset.X;
-                        graphicsDeviceManager.PreferredBackBufferHeight = currentScreen.WorkingArea.Height - clientRectangleOffset.Y;
-                        windowForm.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-                        Window.Position = new Point(currentScreen.WorkingArea.Location.X, currentScreen.WorkingArea.Location.Y);
-                        graphicsDeviceManager.ApplyChanges();
-                        break;
-                    case ScreenMode.BorderlessFullscreen:
-                        graphicsDeviceManager.PreferredBackBufferWidth = currentScreen.Bounds.Width;
-                        graphicsDeviceManager.PreferredBackBufferHeight = currentScreen.Bounds.Height;
-                        graphicsDeviceManager.ApplyChanges();
-                        windowForm.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-                        Window.Position = new Point(currentScreen.Bounds.X, currentScreen.Bounds.Y);
-                        graphicsDeviceManager.ApplyChanges();
-                        break;
-                }
-            });
+                case ScreenMode.Windowed:
+                    if (targetMode != currentScreenMode)
+                        Window.Position = windowPosition;
+                    Window.IsBorderless = false;
+                    Window.AllowUserResizing = true;
+                    graphicsDeviceManager.PreferredBackBufferWidth = windowSize.Width;
+                    graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
+                    graphicsDeviceManager.ApplyChanges();
+                    break;
+                case ScreenMode.WindowedFullscreen:
+                    graphicsDeviceManager.PreferredBackBufferWidth = currentDisplay.WorkingArea.Width;
+                    graphicsDeviceManager.PreferredBackBufferHeight = currentDisplay.WorkingArea.Height;
+                    Window.IsBorderless = false;
+                    Window.AllowUserResizing = false;
+                    Window.Position = new Point(currentDisplay.WorkingArea.Left, currentDisplay.WorkingArea.Top);
+                    graphicsDeviceManager.ApplyChanges();
+                    break;
+                case ScreenMode.BorderlessFullscreen:
+                    graphicsDeviceManager.PreferredBackBufferWidth = currentDisplay.Bounds.Width;
+                    graphicsDeviceManager.PreferredBackBufferHeight = currentDisplay.Bounds.Height;
+                    graphicsDeviceManager.ApplyChanges();
+                    Window.IsBorderless = true;
+                    Window.Position = new Point(currentDisplay.Bounds.X, currentDisplay.Bounds.Y);
+                    graphicsDeviceManager.ApplyChanges();
+                    break;
+            }
+
             currentScreenMode = targetMode;
             onClientSizeChanged?.Invoke();
             syncing = false;
@@ -445,24 +446,18 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
 
         public void Close()
         {
-            if (windowForm.InvokeRequired)
-                windowForm.Invoke(new Action(() => Close()));
-            else
-                windowForm.Close();
+            Exit();
         }
 
         public void BringToFront()
         {
+            // MonoGame has no raise-window call. Toggling borderless makes SDL recreate the
+            // window, which brings it forward on every window manager that honours the request.
             try
             {
-                if (windowForm.InvokeRequired)
-                    windowForm.Invoke(new Action(() => BringToFront()));
-                else
-                {
-                    windowForm.WindowState = System.Windows.Forms.FormWindowState.Minimized;
-                    windowForm.Show();
-                    windowForm.WindowState = System.Windows.Forms.FormWindowState.Normal;
-                }
+                bool borderless = Window.IsBorderless;
+                Window.IsBorderless = !borderless;
+                Window.IsBorderless = borderless;
             }
             catch (ObjectDisposedException)
             { }
