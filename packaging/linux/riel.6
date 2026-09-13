@@ -71,8 +71,12 @@ prefix is enough.
 .TP
 .B RIEL_MSTS_PATH
 Where Microsoft Train Simulator is installed. Set this when the content is somewhere the
-automatic search would not look; it checks the XDG data directory, the home directory and the
-Program Files folder of any Wine or Proton prefix.
+automatic search would not look; it checks the XDG data directory, the home directory, every disk
+mounted under
+.I /mnt
+or
+.I /media
+and a games folder inside each, and the Program Files folder of any Wine or Proton prefix.
 .TP
 .B RIEL_VULKAN
 Set to 1 to run the OpenGL renderer on Vulkan through Mesa's zink driver.

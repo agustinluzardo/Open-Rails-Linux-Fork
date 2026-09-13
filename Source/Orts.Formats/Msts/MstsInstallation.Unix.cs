@@ -34,9 +34,10 @@ namespace Orts.Formats.Msts
     /// from a Windows machine, installed into a Wine or Proton prefix, or unpacked by hand.
     ///
     /// The search therefore looks, in order, at an explicit override, then at the usual places -
-    /// the XDG data directory, the home directory, and the Program Files folder of every Wine
-    /// prefix it can find, including Steam's Proton prefixes. A folder counts as an installation
-    /// when it holds both ROUTES and GLOBAL, which is what the rest of the code needs from it.
+    /// the XDG data directory, the home directory, every disk mounted under /mnt or /media and a
+    /// games folder inside each, and the Program Files folder of every Wine prefix it can find,
+    /// including Steam's Proton prefixes. A folder counts as an installation when it holds both
+    /// ROUTES and GLOBAL, which is what the rest of the code needs from it.
     /// </remarks>
     public static class MstsInstallation
     {
@@ -66,7 +67,8 @@ namespace Orts.Formats.Msts
             }
 
             Trace.TraceInformation(
-                $"No Microsoft Train Simulator installation found. Looked in ~/.local/share, the home directory and any Wine prefix; " +
+                $"No Microsoft Train Simulator installation found. Looked in ~/.local/share, the home directory, " +
+                $"the disks mounted under /mnt and /media, and any Wine prefix; " +
                 $"set {OverrideVariable} to point at one, or add the folder as content in the launcher.");
             return defaultLocation;
         }
@@ -90,20 +92,22 @@ namespace Orts.Formats.Msts
                 : null;
         }
 
+        /// <summary>Folder names an installation is found under, in the order they are tried.</summary>
+        private static readonly string[] installationNames = { "MSTS", "Train Simulator", "TrainSimulator", "msts" };
+
+        /// <summary>Folder names a games disk keeps its games in.</summary>
+        private static readonly string[] gamesFolders = { "", "games", "Games", "juegos" };
+
         private static IEnumerable<string> Candidates()
         {
             string over = Environment.GetEnvironmentVariable(OverrideVariable);
             if (!string.IsNullOrEmpty(over))
                 yield return over;
 
-            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
-            foreach (string name in new[] { "MSTS", "Train Simulator", "TrainSimulator", "msts" })
+            foreach (string root in SearchRoots())
             {
-                yield return Path.Combine(data, name);
-                yield return Path.Combine(home, name);
-                yield return Path.Combine(home, "Games", name);
+                foreach (string name in installationNames)
+                    yield return Path.Combine(root, name);
             }
 
             foreach (string prefix in WinePrefixes())
@@ -112,6 +116,66 @@ namespace Orts.Formats.Msts
                 {
                     yield return Path.Combine(prefix, "drive_c", programFiles, "Microsoft Games", "Train Simulator");
                 }
+            }
+        }
+
+        /// <summary>
+        /// The folders an installation is looked for in, before its own name is appended.
+        /// </summary>
+        /// <remarks>
+        /// The home directory is only half the answer: a train simulator install is tens of
+        /// gigabytes, so it usually lives on a second disk mounted under /mnt or /media rather
+        /// than on the system one. Those are walked one level deep - the mount points themselves
+        /// and a games folder inside each - which is bounded work, one directory listing per
+        /// mount root, and finds the ordinary /mnt/&lt;disk&gt;/games/MSTS layout.
+        /// </remarks>
+        private static IEnumerable<string> SearchRoots()
+        {
+            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string data = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+            yield return data;
+            yield return home;
+            foreach (string games in gamesFolders)
+            {
+                if (games.Length > 0)
+                    yield return Path.Combine(home, games);
+            }
+
+            foreach (string mount in MountPoints())
+            {
+                foreach (string games in gamesFolders)
+                    yield return games.Length == 0 ? mount : Path.Combine(mount, games);
+            }
+        }
+
+        /// <summary>
+        /// Where a second disk is mounted. Removable and secondary drives land under these on
+        /// every desktop distribution; nothing is mounted or probed, only listed.
+        /// </summary>
+        private static IEnumerable<string> MountPoints()
+        {
+            string user = Environment.UserName;
+
+            foreach (string parent in new[] { "/mnt", "/media", Path.Combine("/media", user), Path.Combine("/run/media", user) })
+            {
+                if (!Directory.Exists(parent))
+                    continue;
+
+                // The parent itself counts: /mnt/datos is as likely to be the mount as /mnt.
+                yield return parent;
+
+                string[] mounts;
+                try
+                {
+                    mounts = Directory.GetDirectories(parent);
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    continue;
+                }
+                foreach (string mount in mounts)
+                    yield return mount;
             }
         }
 

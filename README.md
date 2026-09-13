@@ -47,7 +47,7 @@ That is the change the rest of this project was built around.
 ```sh
 cd packaging/arch && makepkg -si          # or build by hand: docs/linux/INSTALL.md
 
-riel content add "MSTS" ~/games/train-simulator
+riel content add "MSTS" /mnt/datos/games/MSTS   # or wherever the ROUTES/GLOBAL folder lives
 riel routes
 riel play "Marias Pass" "Coal Train"
 ```
@@ -60,7 +60,7 @@ to do when something does not work.
 
 Riel builds and starts natively: it creates its OpenGL device, loads all twelve compiled effects,
 brings up sound, runs its game loop and shuts down cleanly. The test suite passes on Linux — 541
-tests in `Tests.FreeTrainSimulator`, 203 in `Tests.Orts`.
+tests in `Tests.FreeTrainSimulator`, 211 in `Tests.Orts`.
 
 What has not been verified is a real route being driven, because that needs MSTS content and a
 GPU, and the machine this was developed on had neither. Expect to find things when you first load

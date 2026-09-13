@@ -4,11 +4,32 @@
 
 - A 64-bit Linux system with a working OpenGL 3.3 driver (Mesa, or NVIDIA's).
 - The .NET 10 runtime.
-- SDL 2, OpenAL Soft, fontconfig.
+- SDL 2, OpenAL Soft, fontconfig, zlib.
 - Microsoft Train Simulator content: routes, rolling stock and activities. Copying the MSTS folder
   from a Windows machine is enough; nothing needs installing.
 
 Riel is native. Wine is not involved at runtime, and MSTS itself does not have to be installed.
+
+### Dependencies by distribution
+
+Installing the package pulls these in; they are listed for building by hand. The **build** column
+is needed only to compile, the **run** column only to play.
+
+| | build | run |
+| --- | --- | --- |
+| Arch, Manjaro, EndeavourOS | `dotnet-sdk-10.0 git` | `dotnet-runtime-10.0 sdl2 openal fontconfig zlib` |
+| Fedora | `dotnet-sdk-10.0 git` | `dotnet-runtime-10.0 SDL2 openal-soft fontconfig zlib` |
+| Debian, Ubuntu | `dotnet-sdk-10.0 git` | `dotnet-runtime-10.0 libsdl2-2.0-0 libopenal1 libfontconfig1 zlib1g` |
+
+```sh
+sudo pacman -S --needed dotnet-sdk-10.0 dotnet-runtime-10.0 sdl2 openal fontconfig zlib git   # Arch
+sudo dnf install dotnet-sdk-10.0 SDL2 openal-soft fontconfig zlib git                         # Fedora
+sudo apt install dotnet-sdk-10.0 libsdl2-2.0-0 libopenal1 libfontconfig1 zlib1g git           # Debian, Ubuntu
+```
+
+Two more worth having, neither required: `ttf-liberation` (Arch) or `liberation-fonts`, which are
+metric compatible replacements for the fonts MSTS content asks for by name, and `mesa-utils` /
+`mesa-demos` for the `glxinfo` used further down to check the driver.
 
 ## Arch Linux
 
@@ -18,24 +39,47 @@ cd Open-Rails-Linux-Fork/packaging/arch
 makepkg -si
 ```
 
-The build needs `dotnet-sdk-10.0`; the installed package needs only `dotnet-runtime-10.0`.
+That builds, runs the tests and installs `riel`. It takes a few minutes and several gigabytes of
+scratch space in the build directory. The build needs `dotnet-sdk-10.0`; the installed package
+needs only `dotnet-runtime-10.0`.
 
 Before publishing to the AUR, take the `source=()` line off the working branch and point it at a
 tag, and set `sha256sums` accordingly.
 
 ## Building it yourself
 
-```sh
-sudo pacman -S --needed dotnet-sdk-10.0 sdl2 openal fontconfig     # Arch
-sudo apt install dotnet-sdk-10.0 libsdl2-2.0-0 libopenal1 fontconfig  # Debian, Ubuntu
+Any distribution, no packaging involved:
 
+```sh
 git clone https://github.com/agustinluzardo/Open-Rails-Linux-Fork.git
 cd Open-Rails-Linux-Fork/Source
 dotnet build Riel.slnx -c Release
 ```
 
-The binaries land in `Program/net10.0/`: `ActivityRunner` is the simulator and `riel` the command
-that drives it. Run `./riel` from there; it finds the simulator beside itself.
+The first build downloads the NuGet packages and takes a few minutes; later ones are quick. The
+binaries land in `../Program/net10.0/`: `ActivityRunner` is the simulator and `riel` the command
+that drives it.
+
+```sh
+cd ../Program/net10.0
+./riel doctor
+```
+
+Run `./riel` from that directory - it finds the simulator beside itself. To use it from anywhere
+without installing the package, link it onto your path:
+
+```sh
+mkdir -p ~/.local/bin
+ln -sf "$PWD/riel" ~/.local/bin/riel
+```
+
+Optionally run the tests, which need no display and take a few seconds:
+
+```sh
+cd ../../Source
+dotnet test Test/Tests.Orts/Tests.Orts.csproj
+dotnet test Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj
+```
 
 ### Shaders
 
@@ -57,10 +101,24 @@ bridge so the Wine prefix needs nothing else. See the shaders section of
 Point Riel at your content. The folder is the one holding `ROUTES` and `GLOBAL`:
 
 ```sh
-riel content add "MSTS" ~/games/train-simulator
+riel content add "MSTS" /mnt/datos/games/MSTS
 ```
 
-That scans the routes, which takes a while the first time and is cached afterwards. Then:
+Any path works, on any disk. A train simulator install is tens of gigabytes, so keeping it on a
+second drive - `/mnt/datos/games`, `/media/games`, wherever it is mounted - is the normal case,
+not a special one. Riel only ever reads that folder, so a drive mounted read only is fine.
+
+Riel also looks for an installation by itself, in `~/.local/share`, the home directory, every disk
+mounted under `/mnt` or `/media` and a `games` folder inside each, and any Wine or Proton prefix.
+A layout like `/mnt/datos/games/MSTS` is found without being told. Somewhere else entirely:
+
+```sh
+export RIEL_MSTS_PATH=/mnt/datos/otra-carpeta/TrainSim
+```
+
+Adding the folder as content, as above, is the normal way and does not need that variable.
+
+Scanning takes a while the first time and is cached afterwards. Then:
 
 ```sh
 riel routes                                  # what is installed
@@ -80,6 +138,15 @@ riel explore "Marias Pass" "Shelby-Essex" "Freight" --time 08:30 --season autumn
 ```
 
 `riel resume` continues the last save, and `riel help` lists everything.
+
+More than one folder can be added - a second disk, a folder of downloaded routes kept apart from
+the original install - and `riel routes` lists them all with the folder each came from:
+
+```sh
+riel content add "Rutas propias" /mnt/datos/games/rutas-custom
+riel content                                 # what is configured
+riel content refresh                         # after adding or changing routes on disk
+```
 
 ## When something is wrong
 
@@ -101,12 +168,26 @@ it could not find - that is worth reporting, with the route.
 
 ### The MSTS installation is not found
 
-Riel looks in the XDG data directory, the home directory, and any Wine or Proton prefix. If your
-content is elsewhere, either add it as a content folder - which is the normal way - or:
+Riel looks in the XDG data directory, the home directory, every disk mounted under `/mnt` or
+`/media` and a `games` folder inside each, and any Wine or Proton prefix. If your content is
+elsewhere, either add it as a content folder - which is the normal way - or:
 
 ```sh
-export RIEL_MSTS_PATH=/mnt/games/MSTS
+export RIEL_MSTS_PATH=/mnt/datos/games/MSTS
 ```
+
+A folder counts as an installation when it holds both `ROUTES` and `GLOBAL`. If yours has them one
+level down, name that level: `/mnt/datos/games/MSTS`, not `/mnt/datos/games`.
+
+### The content is on a disk that is not mounted yet
+
+`riel doctor` reads the folder at the moment you run it, so a drive mounted by hand after login
+looks like missing content. Mount it at boot instead - an `/etc/fstab` entry for the partition, or
+the "mount at startup" checkbox in your desktop's disk utility.
+
+If the drive is shared with Windows and formatted NTFS, mount it with `ntfs3` and make sure your
+user can read it; the usual symptom of the wrong ownership is a route that lists but will not
+load. Riel never writes to the content folder, so read only is enough.
 
 ### The RailDriver desk is not detected
 
