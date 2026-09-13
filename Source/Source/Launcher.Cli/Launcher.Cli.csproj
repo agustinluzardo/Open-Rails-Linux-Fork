@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<AssemblyTitle>Free Train Simulator Launcher</AssemblyTitle>
+		<Description>Command line launcher for the Linux build</Description>
+		<RootNamespace>FreeTrainSimulator.Launcher</RootNamespace>
+		<AssemblyName>fts</AssemblyName>
+		<OutputPath>..\..\Program</OutputPath>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\FreeTrainSimulator.Common\FreeTrainSimulator.Common.csproj" />
+		<ProjectReference Include="..\FreeTrainSimulator.Models\FreeTrainSimulator.Models.csproj" />
+		<ProjectReference Include="..\FreeTrainSimulator.Models.Imported\FreeTrainSimulator.Models.Imported.csproj" />
+	</ItemGroup>
+</Project>

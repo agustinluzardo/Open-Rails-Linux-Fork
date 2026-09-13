@@ -12,14 +12,12 @@ using System.Threading.Tasks;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Handler;
 
-using Microsoft.Win32;
 
 namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
 {
-    internal sealed class FolderModelImportHandler : ContentHandlerBase<FolderModel>
+    internal sealed partial class FolderModelImportHandler : ContentHandlerBase<FolderModel>
     {
         private const string importKey = "$Import";
-        private const string ortsFoldersKey = "SOFTWARE\\OpenRails\\ORTS\\Folders";
 
         internal static ImmutableArray<FolderModel> InitialFolderImport(ContentModel contentModel)
         {
@@ -96,34 +94,13 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             return mergedFolders.Values.ToImmutableArray();
         }
 
-        private static ImmutableArray<FolderModel> DiscoverLegacyFolders(ContentModel contentModel)
-        {
-            ArgumentNullException.ThrowIfNull(contentModel, nameof(contentModel));
+        /// <summary>
+        /// Finds the content folders an earlier Open Rails installation configured, so they carry
+        /// over on first run. Where that list lives is platform specific - see the .Windows and
+        /// .Unix parts of this class.
+        /// </summary>
+        private static partial ImmutableArray<FolderModel> DiscoverLegacyFolders(ContentModel contentModel);
 
-            List<FolderModel> folderModels = new List<FolderModel>();
-
-            try
-            {
-                using RegistryKey key = Registry.CurrentUser.OpenSubKey(ortsFoldersKey);
-                if (key != null)
-                {
-                    foreach (string folder in key.GetValueNames())
-                    {
-                        string contentPath = key.GetValue(folder) as string;
-                        if (string.IsNullOrWhiteSpace(contentPath))
-                            continue;
-
-                        folderModels.Add(new FolderModel(folder, contentPath, contentModel));
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is SecurityException or UnauthorizedAccessException or ObjectDisposedException)
-            {
-                Trace.TraceWarning($"Could not import existing content folders {ex.Message}.");
-            }
-
-            return folderModels.ToImmutableArray();
-        }
 
         private static string ResolveFolderMergeKey(FolderModel folderModel)
         {

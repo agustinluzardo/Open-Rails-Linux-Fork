@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <Description>Free Train Simulator Unit Tests</Description>
     <AssemblyTitle>Free Train Simulator Unit Tests</AssemblyTitle>
     <Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
-    <UseWPF>true</UseWPF>
+    <!-- Only the Toolbox tests need WPF, and they are Windows only. -->
+    <UseWPF Condition="'$(FtsPlatform)' == 'windows'">true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5.1" />
@@ -24,6 +25,10 @@
 		<ProjectReference Include="..\..\FreeTrainSimulator.Graphics\FreeTrainSimulator.Graphics.csproj" />
 		<ProjectReference Include="..\..\Orts.Simulation\Orts.Simulation.csproj" />
 		<ProjectReference Include="..\..\FreeTrainSimulator.Common\FreeTrainSimulator.Common.csproj" />
-		<ProjectReference Include="..\..\Toolbox\Toolbox.csproj" />
+		<!-- The Toolbox is WPF; its tests only exist in the Windows build. -->
+		<ProjectReference Include="..\..\Toolbox\Toolbox.csproj" Condition="'$(FtsPlatform)' == 'windows'" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(FtsPlatform)' != 'windows'">
+		<Compile Remove="Toolbox\**\*.cs" />
 	</ItemGroup>
 </Project>	

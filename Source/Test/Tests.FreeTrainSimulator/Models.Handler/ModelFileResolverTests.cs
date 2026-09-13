@@ -29,7 +29,7 @@ namespace Tests.FreeTrainSimulator.Models.Handler
         {
             ContentModel model = new ContentModel();
             string genericTargetFileName = ModelFileResolver<ContentModel>.FolderPath(model);
-            Assert.IsTrue(genericTargetFileName.EndsWith("\\Content", System.StringComparison.OrdinalIgnoreCase));
+            Assert.IsTrue(genericTargetFileName.EndsWith($"{Path.DirectorySeparatorChar}Content", System.StringComparison.OrdinalIgnoreCase));
         }
 
         [TestMethod]
@@ -40,7 +40,7 @@ namespace Tests.FreeTrainSimulator.Models.Handler
                 Profile = "Something"
             };
             string targetFileName = ModelFileResolver<AllProfileSettingsModel>.FilePath(current);
-            Assert.IsTrue(targetFileName.EndsWith($"{ModelFileResolver<AllProfileSettingsModel>.SubFolder}\\{ModelFileResolver<AllProfileSettingsModel>.FileExtension}", System.StringComparison.OrdinalIgnoreCase));
+            Assert.IsTrue(targetFileName.EndsWith($"{ModelFileResolver<AllProfileSettingsModel>.SubFolder}{Path.DirectorySeparatorChar}{ModelFileResolver<AllProfileSettingsModel>.FileExtension}", System.StringComparison.OrdinalIgnoreCase));
         }
 
         [TestMethod]
@@ -61,7 +61,7 @@ namespace Tests.FreeTrainSimulator.Models.Handler
         public void ProfileFilePathTest()
         {
             string targetFileName = ModelFileResolver<ProfileModel>.FilePath<ProfileModel>("Default", null);
-            Assert.IsTrue(targetFileName.EndsWith("Profiles\\Default.profile", System.StringComparison.OrdinalIgnoreCase));
+            Assert.IsTrue(targetFileName.EndsWith($"Profiles{Path.DirectorySeparatorChar}Default.profile", System.StringComparison.OrdinalIgnoreCase));
         }
 
         [TestMethod]
@@ -72,7 +72,7 @@ namespace Tests.FreeTrainSimulator.Models.Handler
             profileSelections.Initialize(profile);
             Assert.AreEqual(profileSelections, await ProfileSettingModelHandler<ProfileSelectionsModel>.FromFile(profileSelections, CancellationToken.None).ConfigureAwait(false));
             string targetFileName = ModelFileResolver<ProfileSelectionsModel>.FilePath(profileSelections);
-            Assert.IsTrue(targetFileName.EndsWith("Profiles\\TestDefault\\TestDefault.selections", System.StringComparison.OrdinalIgnoreCase));
+            Assert.IsTrue(targetFileName.EndsWith($"Profiles{Path.DirectorySeparatorChar}TestDefault{Path.DirectorySeparatorChar}TestDefault.selections", System.StringComparison.OrdinalIgnoreCase));
         }
 
         [TestMethod]
@@ -109,7 +109,7 @@ namespace Tests.FreeTrainSimulator.Models.Handler
             };
             routeModel.Initialize(folder);
             string targetFileName = ModelFileResolver<RouteModelHeader>.FilePath(routeModel);
-            Assert.IsTrue(targetFileName.EndsWith($"Content\\{folder.Name}\\{routeModel.Id}.route", System.StringComparison.OrdinalIgnoreCase));
+            Assert.IsTrue(targetFileName.EndsWith($"Content{Path.DirectorySeparatorChar}{folder.Name}{Path.DirectorySeparatorChar}{routeModel.Id}.route", System.StringComparison.OrdinalIgnoreCase));
         }
 
         [TestMethod]

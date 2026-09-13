@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+	  The launcher for the Linux build.
+
+	  Upstream's launcher is a Windows Forms application, which the Linux build cannot compile.
+	  This is a command line front end over the same content model, so a profile configured here
+	  is the one the simulator reads.
+	-->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<AssemblyTitle>Free Train Simulator Launcher</AssemblyTitle>
+		<Description>Command line launcher for the Linux build</Description>
+		<RootNamespace>FreeTrainSimulator.Launcher</RootNamespace>
+		<AssemblyName>fts</AssemblyName>
+		<OutputPath>..\..\Program</OutputPath>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\FreeTrainSimulator.Common\FreeTrainSimulator.Common.csproj" />
+		<ProjectReference Include="..\FreeTrainSimulator.Models\FreeTrainSimulator.Models.csproj" />
+		<ProjectReference Include="..\FreeTrainSimulator.Models.Imported\FreeTrainSimulator.Models.Imported.csproj" />
+		<ProjectReference Include="..\Orts.Formats\Orts.Formats.csproj" />
+	</ItemGroup>
+</Project>

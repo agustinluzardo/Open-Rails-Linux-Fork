@@ -1,0 +1,42 @@
+<Solution>
+  <!--
+    The projects that make up the Linux build.
+
+    The Windows solution also carries the Windows Forms menu and updater, the WPF Toolbox and the
+    TrackViewer; none of those compile without Windows, and the launcher below replaces the menu.
+  -->
+  <Configurations>
+    <BuildType Name="CodeAnalysis" />
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+  </Configurations>
+  <Folder Name="/Contrib/">
+    <!-- ContentChecker hosts an XNA device in a Windows Forms control, so it stays behind. -->
+    <Project Path="Contrib/SimulatorTester/SimulatorTester.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="../README.md" />
+    <File Path="../docs/linux/ARCHITECTURE.md" />
+    <File Path="../docs/linux/INSTALL.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/Test/">
+    <Project Path="Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj" />
+    <Project Path="Test/Tests.Orts/Tests.Orts.csproj" />
+  </Folder>
+  <Project Path="ActivityRunner/ActivityRunner.csproj" />
+  <Project Path="FreeTrainSimulator.Common/FreeTrainSimulator.Common.csproj" />
+  <Project Path="FreeTrainSimulator.Graphics/FreeTrainSimulator.Graphics.csproj" />
+  <Project Path="FreeTrainSimulator.Models.Imported/FreeTrainSimulator.Models.Imported.csproj" />
+  <Project Path="FreeTrainSimulator.Models/FreeTrainSimulator.Models.csproj" />
+  <Project Path="FreeTrainSimulator.Online/FreeTrainSimulator.Online.csproj" />
+  <Project Path="FreeTrainSimulator.Updater/FreeTrainSimulator.Updater.csproj" />
+  <Project Path="FreetrainSimulator.Runtime/FreetrainSimulator.Runtime.csproj" />
+  <Project Path="Launcher.Cli/Launcher.Cli.csproj" />
+  <Project Path="MultiPlayer.Hub/MultiPlayer.Hub.csproj" />
+  <Project Path="Orts.Formats/Orts.Formats.csproj" />
+  <Project Path="Orts.Scripting.Api/Orts.Scripting.Api.csproj" />
+  <Project Path="Orts.Simulation/Orts.Simulation.csproj" />
+</Solution>
