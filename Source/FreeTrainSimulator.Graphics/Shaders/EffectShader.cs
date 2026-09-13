@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 
 using FreeTrainSimulator.Common.Info;
+using FreeTrainSimulator.Common.Native;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -48,7 +49,7 @@ namespace FreeTrainSimulator.Graphics.Shaders
             try
             {
                 string filePath = Path.Combine(RuntimeInfo.ContentFolder, fileName + ".mgfx");
-                return File.ReadAllBytes(filePath);
+                return ContentIO.ReadAllBytes(filePath);
             }
             catch (Exception exception)
             {

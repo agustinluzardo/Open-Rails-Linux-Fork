@@ -51,14 +51,19 @@ backend would take, and how to merge from upstream without a fight.
 
 ## Status
 
-The engine builds and runs natively, and the test suite passes on Linux. Known gaps:
+The engine builds and starts natively: it creates its OpenGL device, loads all twelve compiled
+effects, brings up sound, runs its game loop and shuts down cleanly. The test suite passes on
+Linux - 532 tests in `Tests.FreeTrainSimulator`, 203 in `Tests.Orts`.
 
-- The prebuilt shaders in the repository are incomplete: 3 of 12 effects. Producing the rest needs
-  Microsoft's HLSL compiler - a Windows machine, or the `Shaders` workflow once GitHub Actions is
-  enabled on the fork. Until then the simulator will not render a scene. See
-  [the shaders section](docs/linux/ARCHITECTURE.md#shaders).
+What has not been verified is a real route being driven, because that needs MSTS content and a
+GPU, neither of which the machine this was developed on had. Expect to find things when you first
+load a route; the logs in `~/.local/state/open-rails-linux/Logs` name the file that failed.
+
+Known gaps:
+
 - The launcher is a command line tool. A graphical one would sit on the same content model.
 - The WPF Toolbox and TrackViewer are Windows only and are not part of this build.
+- Multiplayer is built but untested here.
 
 ## Upstream
 

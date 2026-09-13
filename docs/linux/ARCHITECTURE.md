@@ -187,16 +187,30 @@ shader model 3. Neither can be produced on Linux unaided, so the compiled `.mgfx
 committed under `Source/Shaders/prebuilt/` and the build copies them into place. The distribution
 package then needs no shader toolchain at all.
 
-`scripts/build-shaders.sh` regenerates them. MonoGame's own setup for this downloads the Windows
-.NET SDK and Microsoft's `d3dcompiler_47.dll` into a Wine prefix; `Source/Tools/FxcBridge` removes
-the first - it is a small self contained Windows program that speaks the protocol `mgfxc` uses, so
-the prefix needs no .NET SDK. Wine's own HLSL compiler is used when Microsoft's is absent, which
-today compiles 3 of the 12 effects and reports "not yet implemented feature" for the rest, so full
-coverage still wants Microsoft's compiler or a Windows machine.
+`scripts/build-shaders.sh` regenerates them on Linux, and needs nothing but Wine and the .NET SDK.
+MonoGame's own setup for this downloads two things into a Wine prefix - the Windows .NET SDK, and
+Microsoft's `d3dcompiler_47.dll` extracted from a Firefox installer. Neither is needed here:
 
-The `Shaders` workflow does the latter and commits the result. **GitHub Actions has to be enabled
-on the fork for it to run** - Settings, Actions, General - after which
-`Actions → Shaders → Run workflow` produces the complete set.
+- `Source/Tools/FxcBridge` is a small self contained Windows program that speaks the protocol
+  `mgfxc` uses, so the prefix needs no .NET SDK.
+- The compiler comes from `Microsoft.Windows.SDK.CPP` on NuGet, which ships the D3D
+  redistributable - the same DLL, from its actual source.
+
+One wrinkle is worth recording. `mgfxc` runs the prefix with `WINEDLLOVERRIDES=d3dcompiler_47=n`,
+native only, because its own setup expects Microsoft's redistributable. Wine recognises its own
+builtin even when it is loaded from disk, so a copy under that name is rejected; the compiler is
+therefore installed under a private file name, which the override does not match. That also means
+Wine's own HLSL compiler can be used when the download is unavailable, though its shader model 3
+backend is incomplete - as of vkd3d-shader 1.10 it compiles 3 of the 12 effects and reports "not
+yet implemented feature" for the rest.
+
+The `Shaders` workflow compiles them on Windows instead and commits the result. **GitHub Actions
+has to be enabled on the fork for it to run** - Settings, Actions, General.
+
+The effect compiler must match the framework: the tool manifest pins `dotnet-mgfxc` to the same
+version as the `MonoGame.Framework` package. They were out of step upstream, and the older
+compiler talks to the Wine bridge differently, which fails in a way that looks like a broken
+prefix rather than a version mismatch.
 
 ## Keeping up with upstream
 

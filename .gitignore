@@ -378,3 +378,6 @@ MigrationBackup/
 /Docs
 /Source/.github
 /.github
+
+# Shader toolchain scratch: the Wine bridge build and the downloaded HLSL compiler.
+/.build/

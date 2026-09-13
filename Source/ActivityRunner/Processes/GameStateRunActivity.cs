@@ -164,7 +164,9 @@ namespace Orts.ActivityRunner.Processes
                         break;
                 }
             }
-            catch (Exception error) when (!Debugger.IsAttached)
+            // Quitting cancels the loader, and the cancellation surfaces here; it is how the game
+            // ends normally, not a failure to report.
+            catch (Exception error) when (!Debugger.IsAttached && !IsCancellation(error))
             {
                 Trace.WriteLine(new FatalException(error));
                 if (Game.UserSettings.ErrorDialogEnabled)
@@ -629,6 +631,17 @@ namespace Orts.ActivityRunner.Processes
 
             Game.UserSettings.KeyboardSettings = await keyboardSettingsTask.ConfigureAwait(false);
             Game.UserSettings.RailDriverSettings = await raildriverSettingsTask.ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// True when <paramref name="error"/> is the loader being cancelled, directly or wrapped
+        /// in the aggregate a faulted task hands back.
+        /// </summary>
+        private static bool IsCancellation(Exception error)
+        {
+            return error is OperationCanceledException
+                || (error is AggregateException aggregate && aggregate.InnerExceptions.Count > 0
+                    && aggregate.InnerExceptions.All(inner => inner is OperationCanceledException));
         }
 
         private async Task<ProfileSelectionsModel> ResolveSelectionsFromCommandLine(string[] args)

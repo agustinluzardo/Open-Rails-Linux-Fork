@@ -38,11 +38,18 @@ The binaries land in `Program/net10.0/`: `ActivityRunner` is the simulator, `fts
 
 ### Shaders
 
-The compiled effects are committed, so a normal build needs no shader toolchain. If
-`fts doctor` reports fewer than twelve of them, the prebuilt set in the repository is incomplete;
-regenerate it with `scripts/build-shaders.sh` or run the `Shaders` workflow (which needs GitHub
-Actions enabled on the fork). See the shaders section of [ARCHITECTURE.md](ARCHITECTURE.md) for
-what that involves and why.
+All twelve compiled effects are committed, so a normal build needs no shader toolchain and
+`fts doctor` should report twelve of them. Regenerating them - after changing a `.fx` file - needs
+Wine and the .NET SDK:
+
+```sh
+sudo pacman -S --needed wine
+./scripts/build-shaders.sh
+```
+
+The script fetches Microsoft's HLSL compiler from their own NuGet package and builds a small
+bridge so the Wine prefix needs nothing else. See the shaders section of
+[ARCHITECTURE.md](ARCHITECTURE.md#shaders) for why it works this way.
 
 ## First run
 

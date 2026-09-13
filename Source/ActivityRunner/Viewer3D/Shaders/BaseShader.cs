@@ -21,6 +21,7 @@ using System.IO;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Info;
+using FreeTrainSimulator.Common.Native;
 
 using Microsoft.Xna.Framework.Graphics;
 
@@ -36,7 +37,7 @@ namespace Orts.ActivityRunner.Viewer3D.Shaders
         private static byte[] GetEffectCode(string fileName)
         {
             string filePath = Path.Combine(RuntimeInfo.ContentFolder, fileName + FileNameExtensions.CompiledShaderFile);
-            return File.ReadAllBytes(filePath);
+            return ContentIO.ReadAllBytes(filePath);
         }
     }
 }

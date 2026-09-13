@@ -120,17 +120,12 @@ namespace Orts.ActivityRunner.Processes
             };
             graphicsDeviceManager.PreparingDeviceSettings += GraphicsPreparingDeviceSettings;
 
-            gameHost.Window.Position = windowPosition;
-            SetScreenMode(currentScreenMode);
-            RenderPrimitive.SetGraphicsDevice(gameHost.GraphicsDevice);
-
             // using reflection to be able to trigger ClientSizeChanged event manually as this is not 
             // reliably raised otherwise with the resize functionality below in SetScreenMode
             MethodInfo m = gameHost.Window.GetType().GetMethod("OnClientSizeChanged", BindingFlags.NonPublic | BindingFlags.Instance);
             onClientSizeChanged = (Action)Delegate.CreateDelegate(typeof(Action), gameHost.Window, m);
 
             gameHost.Window.ClientSizeChanged += Window_ClientSizeChanged;
-            FreeTrainSimulator.Common.Info.SystemInfo.SetGraphicAdapterInformation(graphicsDeviceManager.GraphicsDevice.Adapter.Description);
         }
 
         private void Window_ClientSizeChanged(object sender, EventArgs e)
@@ -176,11 +171,39 @@ namespace Orts.ActivityRunner.Processes
 
         private void GraphicsPreparingDeviceSettings(object sender, PreparingDeviceSettingsEventArgs e)
         {
-            e.GraphicsDeviceInformation.GraphicsProfile = GraphicsProfile.HiDef;
+            GraphicsDeviceInformation information = e.GraphicsDeviceInformation;
+            information.GraphicsProfile = GraphicsProfile.HiDef;
             // This stops ResolveBackBuffer() clearing the back buffer.
-            e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
-            e.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
-            e.GraphicsDeviceInformation.PresentationParameters.MultiSampleCount = game.UserSettings.MultiSamplingCount;
+            information.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
+            information.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
+            information.PresentationParameters.MultiSampleCount = SupportedMultiSampleCount(information, game.UserSettings.MultiSamplingCount);
+        }
+
+        /// <summary>
+        /// Reduces the requested antialiasing to what the adapter will actually give us.
+        /// </summary>
+        /// <remarks>
+        /// Asking for a sample count the driver cannot provide does not degrade gracefully: the
+        /// device is never created and the game dies before it draws anything. That happens on
+        /// software rendering, and on drivers whose multisample support depends on the format, so
+        /// the count is halved until the adapter accepts it.
+        /// </remarks>
+        private static int SupportedMultiSampleCount(GraphicsDeviceInformation information, int requested)
+        {
+            for (int samples = requested; samples > 1; samples /= 2)
+            {
+                if (information.Adapter.QueryRenderTargetFormat(information.GraphicsProfile,
+                    information.PresentationParameters.BackBufferFormat,
+                    information.PresentationParameters.DepthStencilFormat,
+                    samples, out _, out _, out int selected) || selected >= samples)
+                {
+                    return samples;
+                }
+            }
+
+            if (requested > 1)
+                Trace.TraceWarning($"The graphics adapter does not support {requested}x antialiasing; it has been turned off.");
+            return 0;
         }
 
         internal void Start()
@@ -259,9 +282,24 @@ namespace Orts.ActivityRunner.Processes
             }
         }
 
+        /// <summary>
+        /// Applies the graphics settings, once the game has a window and a graphics device.
+        /// </summary>
+        /// <remarks>
+        /// This runs from the game's own Initialize, which is the earliest point at which the
+        /// device exists. Doing any of it in the constructor - reading GraphicsDevice, or calling
+        /// ApplyChanges - forces the device to be created before the window is up, which the
+        /// OpenGL backend cannot do: there is no context yet for it to load its entry points from,
+        /// and it fails inside MonoGame with a null reference rather than a useful message.
+        /// </remarks>
         internal void Initialize()
         {
+            game.Window.Position = windowPosition;
             SetScreenMode(currentScreenMode);
+
+            RenderPrimitive.SetGraphicsDevice(game.GraphicsDevice);
+            FreeTrainSimulator.Common.Info.SystemInfo.SetGraphicAdapterInformation(game.GraphicsDevice.Adapter.Description);
+
             viewport = game.GraphicsDevice.Viewport;
         }
 

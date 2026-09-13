@@ -13,16 +13,17 @@
 #   MonoGame's effect compiler shells out to Microsoft's HLSL compiler, which only exists as a
 #   Windows DLL. On Windows it is already there. On Linux mgfxc runs it under Wine and, out of
 #   the box, expects a Wine prefix containing the Windows .NET SDK and Microsoft's
-#   d3dcompiler_47.dll - two large downloads its own setup script fetches.
+#   d3dcompiler_47.dll - two large downloads its own setup script fetches, one of them out of a
+#   Firefox installer.
 #
-#   This script removes the first: Source/Tools/FxcBridge is a small self contained Windows
-#   program that speaks the protocol mgfxc uses, so the prefix needs no .NET SDK at all.
+#   Neither is needed here. Source/Tools/FxcBridge is a small self contained Windows program that
+#   speaks the protocol mgfxc uses, so the prefix needs no .NET SDK; and the compiler itself comes
+#   from Microsoft.Windows.SDK.CPP on NuGet, which ships the D3D redistributable. Wine is the only
+#   thing that has to be installed.
 #
-#   The second download is still needed for full coverage. Wine ships its own HLSL compiler and
-#   this script will use it when Microsoft's is absent, but its shader model 3 backend is
-#   incomplete - as of vkd3d-shader 1.10 it compiles 3 of the 12 effects and reports
-#   "not yet implemented feature" for the rest. Copy d3dcompiler_47.dll into the prefix, or run
-#   this on Windows (which is what the release workflow does), for all of them.
+#   Wine's own HLSL compiler is used as a fallback when the download is unavailable, but its
+#   shader model 3 backend is incomplete - as of vkd3d-shader 1.10 it compiles 3 of the 12 effects
+#   and reports "not yet implemented feature" for the rest.
 #
 # The OpenGL profile is limited to shader model 3, so the profile lines in each .fx are rewritten
 # from 5_0 to 3_0 on the way in. The sources keep the 5_0 form the Windows build uses, so nothing
@@ -74,6 +75,15 @@ prepare_wine() {
         export PATH="$repository_root/.build/bin:$PATH"
     fi
 
+    # Create the prefix up front. Wine prints a banner the first time it initialises one, and
+    # mgfxc reads the output of "winepath" to build its command line, so that banner would end up
+    # inside the path it passes and the compile would fail with mangled arguments.
+    if [ ! -d "$WINEPREFIX/drive_c" ]; then
+        say "Creating the Wine prefix in $WINEPREFIX"
+        wine wineboot --init >/dev/null 2>&1 || true
+        wineserver -w
+    fi
+
     local bridge="$WINEPREFIX/drive_c/fxcbridge"
     if [ ! -f "$bridge/dotnet.exe" ]; then
         say "Building the shader compiler bridge into $bridge"
@@ -92,25 +102,75 @@ REG
         wine regedit "$repository_root/.build/fxcbridge-path.reg" >/dev/null 2>&1 || true
     fi
 
-    # The compiler itself: Microsoft's if the user supplied one, Wine's otherwise. It is copied
-    # in under a private name because mgfxc sets WINEDLLOVERRIDES=d3dcompiler_47=n, and Wine
-    # recognises its own builtin even when loaded from disk, so the original name is rejected.
+    # The compiler itself. It is installed under a private name because mgfxc sets
+    # WINEDLLOVERRIDES=d3dcompiler_47=n - native only - and Wine recognises its own builtin even
+    # when it is loaded from disk, so a copy under the original name would be rejected.
     if [ ! -f "$bridge/hlslcompiler.dll" ]; then
-        local supplied="${FTS_D3DCOMPILER:-$WINEPREFIX/drive_c/windows/system32/d3dcompiler_47.dll}"
-        local builtin
-        builtin="$(ls /usr/lib*/wine/x86_64-windows/d3dcompiler_47.dll /usr/lib/*/wine/x86_64-windows/d3dcompiler_47.dll 2>/dev/null | head -1 || true)"
-
-        if [ -f "$supplied" ]; then
-            say "Using the HLSL compiler at $supplied"
-            cp "$supplied" "$bridge/hlslcompiler.dll"
-        elif [ -n "$builtin" ]; then
-            say "Using Wine's own HLSL compiler ($builtin)."
-            say "Its shader model 3 support is incomplete; set FTS_D3DCOMPILER to Microsoft's d3dcompiler_47.dll for full coverage."
-            cp "$builtin" "$bridge/hlslcompiler.dll"
-        else
-            die "no HLSL compiler found; install wine's d3dcompiler or set FTS_D3DCOMPILER"
-        fi
+        local compiler
+        compiler="$(find_hlsl_compiler)" || die "no HLSL compiler available"
+        cp "$compiler" "$bridge/hlslcompiler.dll"
     fi
+}
+
+# Locates Microsoft's HLSL compiler, downloading it if need be, and falls back to Wine's.
+find_hlsl_compiler() {
+    if [ -n "${FTS_D3DCOMPILER:-}" ] && [ -f "$FTS_D3DCOMPILER" ]; then
+        say "Using the HLSL compiler at $FTS_D3DCOMPILER" >&2
+        printf '%s' "$FTS_D3DCOMPILER"
+        return 0
+    fi
+
+    local cached="$repository_root/.build/d3dcompiler_47.dll"
+    if [ -f "$cached" ]; then
+        printf '%s' "$cached"
+        return 0
+    fi
+
+    # Microsoft.Windows.SDK.CPP carries the D3D redistributable, which Microsoft licenses for
+    # redistribution; this is the same DLL MonoGame's setup script extracts from a Firefox
+    # installer, obtained from its actual source.
+    if command -v curl >/dev/null 2>&1 && download_hlsl_compiler "$cached"; then
+        printf '%s' "$cached"
+        return 0
+    fi
+
+    local builtin
+    builtin="$(ls /usr/lib*/wine/x86_64-windows/d3dcompiler_47.dll /usr/lib/*/wine/x86_64-windows/d3dcompiler_47.dll 2>/dev/null | head -1 || true)"
+    if [ -n "$builtin" ]; then
+        say "Falling back to Wine's own HLSL compiler ($builtin)." >&2
+        say "Its shader model 3 support is incomplete, so several effects will fail to compile." >&2
+        printf '%s' "$builtin"
+        return 0
+    fi
+
+    return 1
+}
+
+download_hlsl_compiler() {
+    local target="$1"
+    local package=microsoft.windows.sdk.cpp
+    local version="${FTS_WINDOWS_SDK_VERSION:-10.0.28000.2705}"
+    local archive="$repository_root/.build/$package.$version.nupkg"
+
+    # Everything here goes to standard error: the caller reads this function's output.
+    say "Fetching Microsoft's HLSL compiler from $package $version" >&2
+    mkdir -p "$repository_root/.build"
+
+    if [ ! -f "$archive" ] && ! curl -fsSL --retry 3 -o "$archive" \
+        "https://api.nuget.org/v3-flatcontainer/$package/$version/$package.$version.nupkg"
+    then
+        rm -f "$archive"
+        say "Download failed." >&2
+        return 1
+    fi
+
+    python3 - "$archive" "$target" <<'PYTHON'
+import sys, zipfile
+archive, target = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(archive) as package:
+    with open(target, "wb") as output:
+        output.write(package.read("c/Redist/D3D/x64/d3dcompiler_47.dll"))
+PYTHON
 }
 
 # ---------------------------------------------------------------------------------------- build
