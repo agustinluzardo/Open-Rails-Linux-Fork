@@ -32,7 +32,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
-                ConcurrentDictionary<string, string> activityFiles = new ConcurrentDictionary<string, string>(Directory.EnumerateFiles(sourceFolder, "*.act").
+                ConcurrentDictionary<string, string> activityFiles = new ConcurrentDictionary<string, string>(ContentIO.EnumerateFiles(sourceFolder, "*.act").
                     ToDictionary(Path.GetFileNameWithoutExtension), StringComparer.OrdinalIgnoreCase);
 
                 await Parallel.ForEachAsync(activityFiles, cancellationToken, async (path, token) =>

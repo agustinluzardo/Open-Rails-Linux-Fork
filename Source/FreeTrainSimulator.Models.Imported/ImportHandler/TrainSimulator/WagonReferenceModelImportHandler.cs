@@ -46,11 +46,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             {
                 // load existing MSTS files
                 IEnumerable<string> wagonFiles = sourceFileExtensions.SelectMany(extension =>
-                        Directory.EnumerateFiles(sourceFolder, extension, new EnumerationOptions()
-                        {
-                            RecurseSubdirectories = true,
-                            MaxRecursionDepth = 1,
-                        }));
+                        ContentIO.EnumerateFiles(sourceFolder, extension, depth: 1));
 
                 await Parallel.ForEachAsync(wagonFiles, cancellationToken, async (wagonFile, token) =>
                     {

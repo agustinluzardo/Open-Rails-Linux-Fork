@@ -28,9 +28,9 @@ namespace Orts.ActivityRunner.Viewer3D.PopupWindows
         {
             if (ContentIO.DirectoryExists(Simulator.Instance.RouteFolder.ContentFolder.EndOfTrainDevicesFolder))
             {
-                foreach (string directory in Directory.EnumerateDirectories(Simulator.Instance.RouteFolder.ContentFolder.EndOfTrainDevicesFolder))
+                foreach (string directory in ContentIO.EnumerateDirectories(Simulator.Instance.RouteFolder.ContentFolder.EndOfTrainDevicesFolder))
                 {
-                    foreach (string file in Directory.EnumerateFiles(directory, "*.eot"))
+                    foreach (string file in ContentIO.EnumerateFiles(directory, "*.eot"))
                     {
                         availableEotContent.Add(file);
                     }

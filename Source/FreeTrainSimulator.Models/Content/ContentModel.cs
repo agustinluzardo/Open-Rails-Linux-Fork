@@ -19,8 +19,18 @@ namespace FreeTrainSimulator.Models.Content
         /// <inheritdoc/>
         public override ModelBase Parent => null; // Content is root and does not implement a parent
 
+        /// <summary>
+        /// The oldest build whose scanned content is still readable. A cache written by anything
+        /// older is thrown away and rescanned.
+        /// </summary>
+        /// <remarks>
+        /// This is compared against the running version, so it has to be stated in the version
+        /// line the program actually uses. Riel restarted that line at 0.1.0, and upstream's
+        /// 2.0.1-dev.482 left every build below the floor - which does not fail, it just rescans
+        /// every route on every command, for ever. Raise this only when the model changes shape.
+        /// </remarks>
         [MemoryPackIgnore]
-        public const string MinimumVersion = "2.0.1-dev.482";
+        public const string MinimumVersion = "0.1.0-dev.0";
 
         [MemoryPackIgnore]
         public static ContentModel None { get; } = default(ContentModel);

@@ -292,7 +292,7 @@ namespace Orts.Simulation.Signalling
 
             int speedPostIndex = 0;
 
-            Parallel.ForEach(Directory.EnumerateFiles(worldPath, "w-??????+??????.w"), new ParallelOptions() { MaxDegreeOfParallelism = System.Environment.ProcessorCount, CancellationToken = token },
+            Parallel.ForEach(ContentIO.EnumerateFiles(worldPath, "w-??????+??????.w"), new ParallelOptions() { MaxDegreeOfParallelism = System.Environment.ProcessorCount, CancellationToken = token },
                 (fileName) =>
                 {
                     try

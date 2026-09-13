@@ -39,7 +39,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
-                ConcurrentBag<string> consistFiles = new ConcurrentBag<string>(Directory.EnumerateFiles(sourceFolder, "*.con"));
+                ConcurrentBag<string> consistFiles = new ConcurrentBag<string>(ContentIO.EnumerateFiles(sourceFolder, "*.con"));
 
                 await Parallel.ForEachAsync(consistFiles, cancellationToken, async (consistFile, token) =>
                 {

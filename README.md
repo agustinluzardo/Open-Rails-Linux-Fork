@@ -59,7 +59,7 @@ to do when something does not work.
 ## Status
 
 Riel builds and starts natively: it creates its OpenGL device, loads all twelve compiled effects,
-brings up sound, runs its game loop and shuts down cleanly. The test suite passes on Linux — 541
+brings up sound, runs its game loop and shuts down cleanly. The test suite passes on Linux — 547
 tests in `Tests.FreeTrainSimulator`, 211 in `Tests.Orts`.
 
 What has not been verified is a real route being driven, because that needs MSTS content and a

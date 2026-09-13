@@ -151,6 +151,13 @@ Coverage is at the two central readers, `SBR` for the binary formats and `STFRea
 ones, plus the terrain, ace, timetable, signal script, texture and sound loaders, and every
 existence check in the content projects.
 
+Searching a folder needs both halves, and missing the second one is easy: a guard that resolved
+the case, followed by an enumeration that did not, found `TRAINS/CONSISTS` and then threw on
+`Trains/Consists`. `ContentIO.EnumerateFiles` and `EnumerateDirectories` resolve the folder *and*
+match the pattern case insensitively - `*.con` has to find `COAL.CON` - and answer empty for a
+folder that is not there, because an installation without timetables has no timetable folder and
+that should not end the scan of everything else.
+
 ### Finding content
 
 `Orts.Formats/Msts/MstsInstallation.Unix.cs` replaces the registry lookup. It searches where an

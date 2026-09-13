@@ -34,7 +34,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.OpenRails
             if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
-                ConcurrentBag<string> consistFiles = new ConcurrentBag<string>(Directory.EnumerateFiles(sourceFolder, "*.timetable*or"));
+                ConcurrentBag<string> consistFiles = new ConcurrentBag<string>(ContentIO.EnumerateFiles(sourceFolder, "*.timetable*or"));
 
                 await Parallel.ForEachAsync(consistFiles, cancellationToken, async (consistFile, token) =>
                 {

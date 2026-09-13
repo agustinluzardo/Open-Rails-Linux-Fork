@@ -37,7 +37,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // preload existing MSTS folders
-                foreach (string routeFolder in Directory.EnumerateDirectories(sourceFolder))
+                foreach (string routeFolder in ContentIO.EnumerateDirectories(sourceFolder))
                 {
                     FolderStructure.ContentFolder.RouteFolder folder = FolderStructure.Route(routeFolder);
                     if (folder.Valid)

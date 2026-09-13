@@ -23,6 +23,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
+using FreeTrainSimulator.Common.Native;
+
 using Orts.Formats.OpenRails.Parsers;
 
 namespace Orts.Simulation.Timetables
@@ -100,11 +102,11 @@ namespace Orts.Simulation.Timetables
             // check type of timetable file - list or single
             string fileDirectory = Path.GetDirectoryName(filePath);
 
-            foreach (string poolFile in Directory.EnumerateFiles(fileDirectory, $"*.{filenameIdentifier}_or"))
+            foreach (string poolFile in ContentIO.EnumerateFiles(fileDirectory, $"*.{filenameIdentifier}_or"))
             {
                 yield return poolFile;
             }
-            foreach (string poolFile in Directory.EnumerateFiles(fileDirectory, $"*.{filenameIdentifier}-or"))
+            foreach (string poolFile in ContentIO.EnumerateFiles(fileDirectory, $"*.{filenameIdentifier}-or"))
             {
                 yield return poolFile;
             }

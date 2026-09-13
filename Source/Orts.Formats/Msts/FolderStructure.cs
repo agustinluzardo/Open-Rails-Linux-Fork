@@ -47,7 +47,7 @@ namespace Orts.Formats.Msts
 
                 public ContentFolder ContentFolder { get; }
 
-                public string TrackFileName => Directory.EnumerateFiles(CurrentFolder, "*.trk").FirstOrDefault();
+                public string TrackFileName => ContentIO.EnumerateFiles(CurrentFolder, "*.trk").FirstOrDefault();
 
                 public string ActivitiesFolder => Path.Combine(CurrentFolder, "Activities");
 

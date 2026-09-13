@@ -17,6 +17,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 
 using FreeTrainSimulator.Common.Native;
 
@@ -48,6 +49,14 @@ namespace Tests.FreeTrainSimulator.Common
             File.WriteAllText(Path.Combine(root, "ROUTES", "Marias Pass", "MariasPass.trk"), "route");
             File.WriteAllText(Path.Combine(root, "ROUTES", "Marias Pass", "TEXTURES", "Rail.ace"), "texture");
             File.WriteAllText(Path.Combine(root, "Global", "Shapes", "Track1.s"), "shape");
+
+            // An install off a Windows disk: folders and extensions shouting, which is what the
+            // engine's own lower case search patterns have to find.
+            Directory.CreateDirectory(Path.Combine(root, "TRAINS", "CONSISTS"));
+            Directory.CreateDirectory(Path.Combine(root, "TRAINS", "TRAINSET", "BNSF"));
+            File.WriteAllText(Path.Combine(root, "TRAINS", "CONSISTS", "COAL.CON"), "consist");
+            File.WriteAllText(Path.Combine(root, "TRAINS", "CONSISTS", "Grain.con"), "consist");
+            File.WriteAllText(Path.Combine(root, "TRAINS", "TRAINSET", "BNSF", "DASH9.ENG"), "engine");
         }
 
         [ClassCleanup]
@@ -150,5 +159,62 @@ namespace Tests.FreeTrainSimulator.Common
             string missing = Path.Combine(root, "nothing", "here.dat");
             Assert.AreEqual(ContentIO.Normalize(missing), ContentIO.ResolveOrOriginal(missing));
         }
+        // ------------------------------------------------------------------------- enumeration
+
+        /// <summary>
+        /// The case that crashed a scan: the folder is asked for as Trains/Consists and stored as
+        /// TRAINS/CONSISTS, and the guard that said it existed resolved the case while the
+        /// enumeration that followed did not.
+        /// </summary>
+        [TestMethod]
+        public void EnumeratesAFolderWhoseCaseDiffers()
+        {
+            string requested = Path.Combine(root, "Trains", "Consists");
+            Assert.AreEqual(2, ContentIO.EnumerateFiles(requested, "*.con").Count());
+        }
+
+        /// <summary>
+        /// Resolving the folder is only half of it: the pattern has to ignore case too, or the
+        /// folder is found and reported empty.
+        /// </summary>
+        [TestMethod]
+        public void MatchesThePatternWithoutRegardToCase()
+        {
+            string consists = Path.Combine(root, "TRAINS", "CONSISTS");
+            CollectionAssert.AreEquivalent(
+                new[] { "COAL.CON", "Grain.con" },
+                ContentIO.EnumerateFiles(consists, "*.con").Select(Path.GetFileName).ToArray());
+            Assert.AreEqual(2, ContentIO.EnumerateFiles(consists, "*.CON").Count());
+        }
+
+        /// <summary>
+        /// An installation without timetables has no timetable folder, and one route in twenty
+        /// has no PATHS. That used to end the scan of everything else.
+        /// </summary>
+        [TestMethod]
+        public void MissingFolderEnumeratesEmptyRatherThanThrowing()
+        {
+            Assert.AreEqual(0, ContentIO.EnumerateFiles(Path.Combine(root, "PATHS"), "*.pat").Count());
+            Assert.AreEqual(0, ContentIO.EnumerateDirectories(Path.Combine(root, "not here")).Count());
+        }
+
+        [TestMethod]
+        public void EnumeratesSubfoldersWhoseCaseDiffers()
+        {
+            string requested = Path.Combine(root, "trains", "trainset");
+            CollectionAssert.AreEquivalent(
+                new[] { "BNSF" },
+                ContentIO.EnumerateDirectories(requested).Select(Path.GetFileName).ToArray());
+        }
+
+        /// <summary>Rolling stock sits one level below TRAINSET, in a folder per manufacturer.</summary>
+        [TestMethod]
+        public void DescendsAsFarAsItIsAsked()
+        {
+            string trainset = Path.Combine(root, "Trains", "Trainset");
+            Assert.AreEqual(0, ContentIO.EnumerateFiles(trainset, "*.eng").Count());
+            Assert.AreEqual(1, ContentIO.EnumerateFiles(trainset, "*.eng", depth: 1).Count());
+        }
+
     }
 }

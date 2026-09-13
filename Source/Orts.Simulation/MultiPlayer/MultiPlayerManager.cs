@@ -35,6 +35,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Calc;
 using FreeTrainSimulator.Common.Position;
@@ -794,7 +795,7 @@ namespace Orts.Simulation.Multiplayer
             string ending = "*.eng";
             if (type == 'w')
                 ending = "*.wag";
-            string[] filePaths = Directory.GetFiles(Simulator.Instance.RouteFolder.ContentFolder.TrainSetsFolder, ending, SearchOption.AllDirectories);
+            string[] filePaths = ContentIO.EnumerateFiles(Simulator.Instance.RouteFolder.ContentFolder.TrainSetsFolder, ending, depth: int.MaxValue).ToArray();
             string temp;
             List<string> allEngines = new List<string>();
             SortedList<double, string> carList = new SortedList<double, string>();

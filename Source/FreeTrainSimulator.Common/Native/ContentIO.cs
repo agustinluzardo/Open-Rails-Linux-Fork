@@ -163,6 +163,70 @@ namespace FreeTrainSimulator.Common.Native
         }
 
         /// <summary>
+        /// How content is searched: the folder's case is resolved first, and the pattern is then
+        /// matched without regard to case either.
+        /// </summary>
+        /// <remarks>
+        /// Both halves matter. A route's consists live in TRAINS/CONSISTS on one installation and
+        /// Trains/Consists on the next, and the files inside are .con on one and .CON on another,
+        /// because MSTS was authored where neither distinction existed. Matching the pattern
+        /// case sensitively would find the folder and then report it empty.
+        ///
+        /// Win32 matching is what the framework uses for the overloads without options, and these
+        /// replace those call sites; the search patterns were written for it. Inaccessible entries
+        /// are skipped rather than thrown over: content copied off a Windows disk routinely
+        /// carries a file the current user cannot read, and losing one of forty thousand files is
+        /// better than losing the scan. Nothing is skipped for being hidden - a dot prefixed file
+        /// on a Linux file system is not a hidden file to MSTS.
+        /// </remarks>
+        private static EnumerationOptions SearchOptions(int depth) => new EnumerationOptions
+        {
+            MatchCasing = MatchCasing.CaseInsensitive,
+            MatchType = MatchType.Win32,
+            AttributesToSkip = FileAttributes.None,
+            IgnoreInaccessible = true,
+            RecurseSubdirectories = depth > 0,
+            MaxRecursionDepth = depth > 0 ? depth : int.MaxValue,
+        };
+
+        private static readonly EnumerationOptions flatSearch = SearchOptions(0);
+
+        /// <summary>
+        /// Case insensitive replacement for <see cref="Directory.EnumerateFiles(string, string)"/>
+        /// that yields nothing when the folder is absent.
+        /// </summary>
+        /// <remarks>
+        /// A missing folder is not exceptional in content: an installation with no timetables has
+        /// no timetable folder, and one route in twenty has no PATHS. Throwing there ended the
+        /// scan of everything else, so the empty answer is the useful one. A folder that is
+        /// genuinely required is reported by whoever needed it, by name.
+        /// </remarks>
+        /// <param name="depth">
+        /// How many levels of subdirectory to descend into; 0, the default, searches only the
+        /// folder itself.
+        /// </param>
+        public static IEnumerable<string> EnumerateFiles(string path, string searchPattern, int depth = 0)
+        {
+            string directory = ResolveDirectory(path);
+            return directory == null
+                ? Array.Empty<string>()
+                : Directory.EnumerateFiles(directory, searchPattern, depth > 0 ? SearchOptions(depth) : flatSearch);
+        }
+
+        /// <summary>
+        /// Case insensitive replacement for
+        /// <see cref="Directory.EnumerateDirectories(string)"/> that yields nothing when the
+        /// folder is absent.
+        /// </summary>
+        public static IEnumerable<string> EnumerateDirectories(string path, string searchPattern = "*")
+        {
+            string directory = ResolveDirectory(path);
+            return directory == null
+                ? Array.Empty<string>()
+                : Directory.EnumerateDirectories(directory, searchPattern, flatSearch);
+        }
+
+        /// <summary>
         /// Drops cached directory listings. Pass a directory to drop just that one.
         /// </summary>
         public static void InvalidateCache(string directory = null)

@@ -29,7 +29,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.OpenRails
             if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing OR weather files
-                ConcurrentBag<string> pathFiles = new ConcurrentBag<string>(Directory.EnumerateFiles(sourceFolder, "*.weather-or"));
+                ConcurrentBag<string> pathFiles = new ConcurrentBag<string>(ContentIO.EnumerateFiles(sourceFolder, "*.weather-or"));
 
                 await Parallel.ForEachAsync(pathFiles, cancellationToken, async (path, token) =>
                 {

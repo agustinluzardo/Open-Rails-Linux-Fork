@@ -45,7 +45,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
             if (ContentIO.DirectoryExists(sourceFolder))
             {
                 // load existing MSTS files
-                List<string> pathFiles = new List<string>(Directory.EnumerateFiles(sourceFolder, "*.pat"));
+                List<string> pathFiles = new List<string>(ContentIO.EnumerateFiles(sourceFolder, "*.pat"));
 
                 foreach (IGrouping<string, string> item in pathFiles.GroupBy(f => Path.GetFileNameWithoutExtension(f).Trim(), StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1))
                 {

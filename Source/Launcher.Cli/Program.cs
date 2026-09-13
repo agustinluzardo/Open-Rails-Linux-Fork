@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -54,6 +55,15 @@ namespace Riel.Launcher
             catch (LauncherException ex)
             {
                 Console.Error.WriteLine($"riel: {ex.Message}");
+                return 1;
+            }
+            // Scanning walks tens of thousands of files on a disk this program does not own: one
+            // of them being unreadable, renamed mid scan or on a drive that went away is a thing
+            // to report, not a stack trace and an abort.
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                Console.Error.WriteLine($"riel: {ex.Message}");
+                Console.Error.WriteLine("riel: run 'riel doctor' to check the configured content.");
                 return 1;
             }
         }

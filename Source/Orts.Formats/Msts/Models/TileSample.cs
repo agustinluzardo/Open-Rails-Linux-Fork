@@ -88,7 +88,7 @@ namespace Orts.Formats.Msts.Models
 
             string filePattern = TileHelper.TileFileName(tile, zoom);
 
-            foreach (string fileName in Directory.EnumerateFiles(filePath, filePattern + "??.*"))
+            foreach (string fileName in ContentIO.EnumerateFiles(filePath, filePattern + "??.*"))
             {
                 try
                 {
