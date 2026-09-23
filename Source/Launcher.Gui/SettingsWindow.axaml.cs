@@ -148,8 +148,12 @@ namespace Riel.Launcher.Gui
             if ((e.KeyModifiers & KeyModifiers.Alt) != 0)
                 modifiers |= CommonKeyModifiers.Alt;
 
-            keyboardSettings.UserCommands[pendingCommand].UniqueDescriptor =
-                UserCommandInput.ComposeUniqueDescriptor(modifiers, 0, key);
+            int oldDescriptor = keyboardSettings.UserCommands[pendingCommand].UniqueDescriptor;
+            int newDescriptor = UserCommandInput.ComposeUniqueDescriptor(modifiers, 0, key);
+            // Modifiable commands use the high byte to remember which modifier keys are
+            // intentionally ignored. Keep that metadata when changing their main key.
+            newDescriptor |= oldDescriptor & unchecked((int)0xFF000000);
+            keyboardSettings.UserCommands[pendingCommand].UniqueDescriptor = newDescriptor;
 
             pendingKeyButton.Content = keyboardSettings.UserCommands[pendingCommand].ToString();
             pendingKeyButton = null;
