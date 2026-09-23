@@ -15,6 +15,7 @@ using FreeTrainSimulator.Models.Settings;
 using FreeTrainSimulator.Models.Shim;
 
 using CommonKeyModifiers = FreeTrainSimulator.Common.Input.KeyModifiers;
+using AvaloniaKeyModifiers = Avalonia.Input.KeyModifiers;
 using XnaKeys = Microsoft.Xna.Framework.Input.Keys;
 
 namespace Riel.Launcher.Gui
@@ -141,11 +142,11 @@ namespace Riel.Launcher.Gui
                 return;
 
             CommonKeyModifiers modifiers = CommonKeyModifiers.None;
-            if ((e.KeyModifiers & KeyModifiers.Shift) != 0)
+            if ((e.KeyModifiers & AvaloniaKeyModifiers.Shift) != 0)
                 modifiers |= CommonKeyModifiers.Shift;
-            if ((e.KeyModifiers & KeyModifiers.Control) != 0)
+            if ((e.KeyModifiers & AvaloniaKeyModifiers.Control) != 0)
                 modifiers |= CommonKeyModifiers.Control;
-            if ((e.KeyModifiers & KeyModifiers.Alt) != 0)
+            if ((e.KeyModifiers & AvaloniaKeyModifiers.Alt) != 0)
                 modifiers |= CommonKeyModifiers.Alt;
 
             int oldDescriptor = keyboardSettings.UserCommands[pendingCommand].UniqueDescriptor;
