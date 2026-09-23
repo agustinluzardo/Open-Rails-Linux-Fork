@@ -571,7 +571,6 @@ namespace Orts.ActivityRunner.Viewer3D
         public override void SetState(Material previousMaterial)
         {
             base.SetState(previousMaterial);
-            graphicsDevice.Indices = TerrainPrimitive.SharedPatchIndexBuffer;
         }
     }
 
@@ -585,7 +584,6 @@ namespace Orts.ActivityRunner.Viewer3D
         public override void SetState(Material previousMaterial)
         {
             base.SetState(previousMaterial);
-            graphicsDevice.Indices = TerrainPrimitive.SharedPatchIndexBuffer;
 
             graphicsDevice.BlendState = BlendState.Opaque; // Override the normal terrain blending!
             graphicsDevice.RasterizerState = RasterizerState.CullNone;

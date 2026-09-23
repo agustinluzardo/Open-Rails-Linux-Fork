@@ -622,7 +622,6 @@ namespace Orts.ActivityRunner.Viewer3D
             // Render terrain shadow items now, with their magic.
             if (logging)
                 Trace.WriteLine($"      {renderShadowTerrainItems[shadowMapIndex].Count,-5} * TerrainMaterial (normal)");
-            game.GraphicsDevice.Indices = TerrainPrimitive.SharedPatchIndexBuffer;
             //            shadowMapMaterial.Render(graphicsDevice, renderShadowTerrainItems[shadowMapIndex], ref shadowMapLightView[shadowMapIndex], ref shadowMapLightProjection[shadowMapIndex]);
             shadowMapMaterial.Render(renderShadowTerrainItems[shadowMapIndex], ref shadowMapLightView[shadowMapIndex], ref shadowMapLightProjection[shadowMapIndex], ref shadowMapLightViewProjection[shadowMapIndex]);
 
