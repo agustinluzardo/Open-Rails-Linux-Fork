@@ -363,16 +363,17 @@ namespace Orts.Formats.Msts
             foreach (string path in paths)
             {
                 string fullPath = Path.Combine(path, fileRelative);
-                if (ContentIO.FileExists(fullPath))
+                string resolvedPath = ContentIO.ResolveFile(fullPath);
+                if (resolvedPath != null)
                 {
                     if (null != existingFiles)
-                        existingFiles.Add(path, fullPath);
+                        existingFiles.Add(path, resolvedPath);
                     else
                         filesFound.Add(fileRelative, new StringDictionary
                                 {
-                                    { path, fullPath }
+                                    { path, resolvedPath }
                                 });
-                    return fullPath;
+                    return resolvedPath;
                 }
             }
 
