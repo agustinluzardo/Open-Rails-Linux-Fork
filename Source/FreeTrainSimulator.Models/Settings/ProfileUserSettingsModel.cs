@@ -24,6 +24,15 @@ namespace FreeTrainSimulator.Models.Settings
 
         public static ProfileUserSettingsModel Default => defaultModel ??= new ProfileUserSettingsModel();
 
+        public ProfileUserSettingsModel()
+        {
+            // Keyboard and RailDriver settings are runtime-only members and therefore are not
+            // restored by MemoryPack. Always create them so the simulator has usable defaults
+            // even when the corresponding per-profile files have never been saved.
+            KeyboardSettings = new ProfileKeyboardSettingsModel();
+            RailDriverSettings = new ProfileRailDriverSettingsModel();
+        }
+
         [MemoryPackIgnore]
         public ProfileKeyboardSettingsModel KeyboardSettings { get; set; }
 
