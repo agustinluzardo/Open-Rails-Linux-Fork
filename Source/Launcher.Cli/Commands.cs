@@ -18,7 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +28,7 @@ using System.Threading.Tasks;
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Models.Content;
+using FreeTrainSimulator.Models.Settings;
 using FreeTrainSimulator.Models.Shim;
 
 namespace Riel.Launcher
@@ -43,7 +46,8 @@ namespace Riel.Launcher
             {
                 case "list":
                 {
-                    ContentModel content = await ContentStore.Load(cancellationToken).ConfigureAwait(false);
+                    ContentModel content = await ContentStore.Load(ScanProgress.Create(), cancellationToken).ConfigureAwait(false);
+                    ScanProgress.Done();
                     if (content.ContentFolders.Length == 0)
                     {
                         Console.WriteLine("No content folders configured. Add one with:");
@@ -59,7 +63,8 @@ namespace Riel.Launcher
                 {
                     if (arguments.Count < 3)
                         throw new LauncherException("usage: riel content add <name> <path>");
-                    await ContentStore.AddFolder(arguments[1], arguments[2], cancellationToken).ConfigureAwait(false);
+                    _ = await ContentStore.AddFolder(arguments[1], arguments[2], ScanProgress.Create(), cancellationToken).ConfigureAwait(false);
+                    ScanProgress.Done();
                     return 0;
                 }
 
@@ -67,12 +72,14 @@ namespace Riel.Launcher
                 {
                     if (arguments.Count < 2)
                         throw new LauncherException("usage: riel content remove <name>");
-                    await ContentStore.RemoveFolder(arguments[1], cancellationToken).ConfigureAwait(false);
+                    _ = await ContentStore.RemoveFolder(arguments[1], ScanProgress.Create(), cancellationToken).ConfigureAwait(false);
+                    ScanProgress.Done();
                     return 0;
                 }
 
                 case "refresh":
-                    await ContentStore.Refresh(cancellationToken).ConfigureAwait(false);
+                    _ = await ContentStore.Refresh(ScanProgress.Create(), cancellationToken).ConfigureAwait(false);
+                    ScanProgress.Done();
                     return 0;
 
                 default:
@@ -84,7 +91,7 @@ namespace Riel.Launcher
 
         internal static async Task<int> Routes(List<string> arguments, CancellationToken cancellationToken)
         {
-            ContentModel content = await ContentStore.Load(cancellationToken).ConfigureAwait(false);
+            ContentModel content = await LoadContent(cancellationToken).ConfigureAwait(false);
             IEnumerable<FolderModel> folders = arguments.Count > 0
                 ? new[] { ContentStore.MatchFolder(content, arguments[0]) }
                 : content.ContentFolders;
@@ -104,7 +111,7 @@ namespace Riel.Launcher
             if (arguments.Count < 1)
                 throw new LauncherException("usage: riel activities <route>");
 
-            (_, RouteModelHeader route) = await ContentStore.MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
+            (_, RouteModelHeader route) = await MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
             ImmutableArray<ActivityModelHeader> activities = await route.GetActivities(cancellationToken).ConfigureAwait(false);
 
             foreach (ActivityModelHeader activity in activities.OrderBy(a => a.Name, StringComparer.CurrentCulture))
@@ -122,7 +129,7 @@ namespace Riel.Launcher
             if (arguments.Count < 1)
                 throw new LauncherException("usage: riel paths <route>");
 
-            (_, RouteModelHeader route) = await ContentStore.MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
+            (_, RouteModelHeader route) = await MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
             ImmutableArray<PathModelHeader> paths = await route.GetPaths(cancellationToken).ConfigureAwait(false);
 
             foreach (PathModelHeader path in paths.OrderBy(p => p.Name, StringComparer.CurrentCulture))
@@ -132,7 +139,7 @@ namespace Riel.Launcher
 
         internal static async Task<int> Consists(List<string> arguments, CancellationToken cancellationToken)
         {
-            ContentModel content = await ContentStore.Load(cancellationToken).ConfigureAwait(false);
+            ContentModel content = await LoadContent(cancellationToken).ConfigureAwait(false);
             IEnumerable<FolderModel> folders = arguments.Count > 0
                 ? new[] { ContentStore.MatchFolder(content, arguments[0]) }
                 : content.ContentFolders;
@@ -153,18 +160,11 @@ namespace Riel.Launcher
             if (arguments.Count < 2)
                 throw new LauncherException("usage: riel play <route> <activity>");
 
-            (FolderModel folder, RouteModelHeader route) = await ContentStore.MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
+            (FolderModel folder, RouteModelHeader route) = await MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
             ImmutableArray<ActivityModelHeader> activities = await route.GetActivities(cancellationToken).ConfigureAwait(false);
             ActivityModelHeader activity = ContentStore.Match(activities, arguments[1], "activity");
 
-            return Simulator.Start(new[]
-            {
-                "-SingleplayerNewGame",
-                "-Activity",
-                folder.Name,
-                route.Id,
-                activity.Id,
-            });
+            return await Run(Selections.Activity(folder, route, activity), cancellationToken).ConfigureAwait(false);
         }
 
         internal static async Task<int> Explore(List<string> arguments, CancellationToken cancellationToken)
@@ -190,12 +190,12 @@ namespace Riel.Launcher
 
             if (!TimeOnly.TryParse(time, CultureInfo.CurrentCulture, out TimeOnly startTime))
                 throw new LauncherException($"'{time}' is not a time of day");
-            if (!EnumExtension.GetValue(season, out SeasonType _))
+            if (!EnumExtension.GetValue(season, out SeasonType seasonType))
                 throw new LauncherException($"'{season}' is not a season (spring, summer, autumn, winter)");
-            if (!EnumExtension.GetValue(weather, out WeatherType _))
+            if (!EnumExtension.GetValue(weather, out WeatherType weatherType))
                 throw new LauncherException($"'{weather}' is not a weather type (clear, snow, rain)");
 
-            (FolderModel folder, RouteModelHeader route) = await ContentStore.MatchRoute(positional[0], cancellationToken).ConfigureAwait(false);
+            (FolderModel folder, RouteModelHeader route) = await MatchRoute(positional[0], cancellationToken).ConfigureAwait(false);
 
             ImmutableArray<PathModelHeader> paths = await route.GetPaths(cancellationToken).ConfigureAwait(false);
             PathModelHeader path = ContentStore.Match(paths, positional[1], "path");
@@ -203,33 +203,29 @@ namespace Riel.Launcher
             ImmutableArray<WagonSetModel> wagonSets = await folder.GetWagonSets(cancellationToken).ConfigureAwait(false);
             WagonSetModel wagonSet = ContentStore.Match(wagonSets, positional[2], "consist");
 
-            return Simulator.Start(new[]
-            {
-                "-SingleplayerNewGame",
-                "-ExploreActivity",
-                folder.Name,
-                route.Id,
-                path.Id,
-                wagonSet.Id,
-                startTime.ToString("HH\\:mm", CultureInfo.InvariantCulture),
-                season,
-                weather,
-            });
+            return await Run(Selections.Explore(folder, route, path, wagonSet, startTime, seasonType, weatherType), cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Starts the simulator with no arguments, which reopens whatever the profile was left
-        /// on. This is what the desktop entry runs, so a double click behaves like the Windows
-        /// menu's "start" button rather than dropping the user at a prompt.
+        /// Starts whatever was played last. The selection is saved by every start, from here or
+        /// from the graphical launcher, so this has something to go on once anything has been
+        /// played at all.
         /// </summary>
-        internal static int Start()
+        internal static async Task<int> Start(CancellationToken cancellationToken)
         {
-            return Simulator.Start(Array.Empty<string>());
+            ProfileSelectionsModel selections = await Selections.Load(cancellationToken).ConfigureAwait(false);
+            if (!Selections.IsPlayable(selections))
+            {
+                throw new LauncherException(
+                    "nothing has been played yet, so there is nothing to start again. Open the launcher with 'riel gui', " +
+                    "or pick something with 'riel play' or 'riel explore'.");
+            }
+            return Report(Simulator.Start(Selections.Arguments(selections), captureErrors: false));
         }
 
         internal static int Resume()
         {
-            return Simulator.Start(new[] { "-SingleplayerResume" });
+            return Report(Simulator.Start(Selections.ResumeArguments(), captureErrors: false));
         }
 
         internal static int RunRaw(List<string> arguments)
@@ -237,14 +233,83 @@ namespace Riel.Launcher
             // "--" is the conventional end-of-options marker; drop it if the shell passed it on.
             if (arguments.Count > 0 && arguments[0] == "--")
                 arguments.RemoveAt(0);
-            return Simulator.Start(arguments.ToArray());
+            return Report(Simulator.Start(arguments, captureErrors: false));
+        }
+
+        /// <summary>Opens the graphical launcher, which is installed beside this command.</summary>
+        internal static int Gui(List<string> arguments)
+        {
+            string gui = Path.Combine(AppContext.BaseDirectory, "riel-gui");
+            if (!File.Exists(gui))
+                throw new LauncherException($"the graphical launcher is not installed ({gui} is missing)");
+
+            ProcessStartInfo startInfo = new ProcessStartInfo(gui) { UseShellExecute = false };
+            foreach (string argument in arguments)
+                startInfo.ArgumentList.Add(argument);
+            using Process process = Process.Start(startInfo) ?? throw new LauncherException($"could not start {gui}");
+            process.WaitForExit();
+            return process.ExitCode;
+        }
+
+        private static async Task<int> Run(ProfileSelectionsModel selections, CancellationToken cancellationToken)
+        {
+            await Selections.Save(selections, cancellationToken).ConfigureAwait(false);
+            return Report(Simulator.Start(Selections.Arguments(selections), captureErrors: false));
+        }
+
+        /// <summary>
+        /// Waits for the simulator and, when it failed, says so and where to look. Standard error
+        /// already reached the terminal; what the terminal never showed is the log.
+        /// </summary>
+        private static int Report(SimulatorRun run)
+        {
+            using (run)
+            {
+                Console.Error.WriteLine($"Starting {run.CommandLine}");
+                SimulatorOutcome outcome = run.Wait();
+
+                if (!outcome.Failed)
+                    return 0;
+
+                Console.Error.WriteLine();
+                Console.Error.WriteLine(outcome.ExitCode != 0
+                    ? $"riel: the simulator stopped with exit code {outcome.ExitCode}."
+                    : "riel: the simulator stopped with an error.");
+                if (outcome.FatalError != null)
+                {
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine(outcome.FatalError);
+                }
+                Console.Error.WriteLine();
+                Console.Error.WriteLine(outcome.LogFile != null
+                    ? $"The full log is {outcome.LogFile}"
+                    : $"No log was written; the simulator stopped before it got that far. Logs live in {RuntimeInfo.LogFilesFolder}");
+                return outcome.ExitCode != 0 ? outcome.ExitCode : 1;
+            }
         }
 
         // --------------------------------------------------------------------------- diagnostics
 
         internal static async Task<int> Doctor(CancellationToken cancellationToken)
         {
-            return await Diagnostics.Run(cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<CheckResult> results = await Diagnostics.Run(cancellationToken).ConfigureAwait(false);
+            foreach (CheckResult result in results)
+            {
+                string mark = result.State switch
+                {
+                    CheckState.Ok => "ok  ",
+                    CheckState.Failed => "FAIL",
+                    _ => "--  ",
+                };
+                Console.WriteLine($"  {mark}  {result.Name,-12} {result.Detail}");
+            }
+
+            bool healthy = Diagnostics.Healthy(results);
+            Console.WriteLine();
+            Console.WriteLine(healthy
+                ? "Everything needed to run is in place."
+                : "Some checks failed; see the notes above.");
+            return healthy ? 0 : 1;
         }
 
         internal static int Version()
@@ -254,11 +319,68 @@ namespace Riel.Launcher
             return 0;
         }
 
+        // ------------------------------------------------------------------------------ helpers
+
+        private static async Task<ContentModel> LoadContent(CancellationToken cancellationToken)
+        {
+            ContentModel content = await ContentStore.Load(ScanProgress.Create(), cancellationToken).ConfigureAwait(false);
+            ScanProgress.Done();
+            return content;
+        }
+
+        private static async Task<(FolderModel Folder, RouteModelHeader Route)> MatchRoute(string name, CancellationToken cancellationToken)
+        {
+            (FolderModel, RouteModelHeader) match = await ContentStore.MatchRoute(name, ScanProgress.Create(), cancellationToken).ConfigureAwait(false);
+            ScanProgress.Done();
+            return match;
+        }
+
         private static string Next(List<string> arguments, ref int index, string option)
         {
             if (index + 1 >= arguments.Count)
                 throw new LauncherException($"{option} needs a value");
             return arguments[++index];
+        }
+    }
+
+    /// <summary>
+    /// Scanning a large installation takes a while; this shows it is happening, on standard
+    /// error so a listing piped elsewhere stays clean, and only when there is a terminal to
+    /// redraw a line on.
+    /// </summary>
+    internal static class ScanProgress
+    {
+        private static bool shown;
+        private static int scansBefore;
+
+        internal static IProgress<int> Create()
+        {
+            shown = false;
+            scansBefore = ContentStore.ScanCount;
+            return new Progress<int>(percent =>
+            {
+                if (Console.IsErrorRedirected)
+                    return;
+                shown = true;
+                Console.Error.Write($"\rScanning content... {percent,3}%");
+            });
+        }
+
+        internal static void Done()
+        {
+            if (shown && !Console.IsErrorRedirected)
+                Console.Error.WriteLine("\rScanning content... done");
+
+            // Only after an actual scan: a load that read the cache skipped nothing new.
+            if (ContentStore.ScanCount != scansBefore && ContentStore.LastScanSkipped.Count > 0)
+            {
+                Console.Error.WriteLine();
+                Console.Error.WriteLine("Some content could not be read. Everything else loaded; these will not work until fixed:");
+                foreach (var file in ContentStore.LastScanSkipped.OrderBy(file => file.Kind).ThenBy(file => file.Path))
+                    Console.Error.WriteLine($"  {file.Kind,-13} {file.Path}{Environment.NewLine}  {"",-13} {file.Reason}");
+                Console.Error.WriteLine();
+            }
+            shown = false;
         }
     }
 }

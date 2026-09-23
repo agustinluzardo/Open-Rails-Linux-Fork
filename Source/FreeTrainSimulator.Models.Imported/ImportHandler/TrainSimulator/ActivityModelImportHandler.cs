@@ -69,12 +69,12 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
                 }
                 catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
                 {
-                    Trace.TraceWarning($"Could not read activity file {filePath} with reason {ex.Message}.");
+                    ImportFailures.Record("activity", filePath, ex);
                     return null;
                 }
-                catch (Exception ex) when (ex is SystemException)
+                catch (Exception ex) when (ex is SystemException && ex is not OperationCanceledException)
                 {
-                    Trace.TraceError($"Could not read activity file {filePath} with reason {ex.Message}.");
+                    ImportFailures.Record("activity", filePath, ex);
                     return null;
                 }
 
@@ -85,12 +85,12 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
                 }
                 catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
                 {
-                    Trace.TraceWarning($"Could not read service file {filePath} for activity {activityFile.Activity.Header.Name} with reason {ex.Message}.");
+                    ImportFailures.Record("activity", filePath, new InvalidDataException($"its service file is missing: {ex.Message}", ex));
                     return null;
                 }
-                catch (Exception ex) when (ex is SystemException)
+                catch (Exception ex) when (ex is SystemException && ex is not OperationCanceledException)
                 {
-                    Trace.TraceError($"Could not read service file {filePath} for activity {activityFile.Activity.Header.Name} with reason {ex.Message}.");
+                    ImportFailures.Record("activity", filePath, new InvalidDataException($"its service file could not be read: {ex.Message}", ex));
                     return null;
                 }
 

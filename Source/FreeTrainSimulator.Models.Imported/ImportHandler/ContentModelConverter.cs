@@ -98,18 +98,28 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler
                 return routeModel;
             }
 
-            await Task.WhenAll(
-                TrackSectionModelImportHandler.ExpandTrackSectionModel(routeModel, cancellationToken),
-                PathModelImportHandler.ExpandPathModels(routeModel, cancellationToken),
-                ActivityModelImportHandler.ExpandActivityModels(routeModel, cancellationToken),
-                TimetableModelHandler.ExpandTimetableModels(routeModel, cancellationToken),
-                WeatherModelHandler.ExpandPathModels(routeModel, cancellationToken),
-                SignalConfigurationModelImportHandler.ExpandSignalConfigurationModel(routeModel, cancellationToken)
-                ).ConfigureAwait(false);
-            // Expanding track model needs the track sections and signal config expanded before
-            await Task.WhenAll(
-                TrackModelImportHandler.ExpandTrackModel(routeModel, cancellationToken)
-                ).ConfigureAwait(false);
+            // One route with a broken track database or signal configuration must not end the
+            // scan of every other route. It stays listed - its header read fine - and what went
+            // wrong is recorded; playing it then fails with the same reason, where it can be seen.
+            try
+            {
+                await Task.WhenAll(
+                    TrackSectionModelImportHandler.ExpandTrackSectionModel(routeModel, cancellationToken),
+                    PathModelImportHandler.ExpandPathModels(routeModel, cancellationToken),
+                    ActivityModelImportHandler.ExpandActivityModels(routeModel, cancellationToken),
+                    TimetableModelHandler.ExpandTimetableModels(routeModel, cancellationToken),
+                    WeatherModelHandler.ExpandPathModels(routeModel, cancellationToken),
+                    SignalConfigurationModelImportHandler.ExpandSignalConfigurationModel(routeModel, cancellationToken)
+                    ).ConfigureAwait(false);
+                // Expanding track model needs the track sections and signal config expanded before
+                await Task.WhenAll(
+                    TrackModelImportHandler.ExpandTrackModel(routeModel, cancellationToken)
+                    ).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ImportFailures.Skippable(ex))
+            {
+                ImportFailures.Record("route", string.IsNullOrEmpty(routeModel.Name) ? routeModel.Id : routeModel.Name, ex);
+            }
 
             return routeModel;
         }

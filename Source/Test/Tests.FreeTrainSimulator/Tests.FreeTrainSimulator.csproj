@@ -25,6 +25,7 @@
 		<ProjectReference Include="..\..\FreeTrainSimulator.Graphics\FreeTrainSimulator.Graphics.csproj" />
 		<ProjectReference Include="..\..\Orts.Simulation\Orts.Simulation.csproj" />
 		<ProjectReference Include="..\..\FreeTrainSimulator.Common\FreeTrainSimulator.Common.csproj" />
+		<ProjectReference Include="..\..\Launcher.Core\Launcher.Core.csproj" />
 		<!-- The Toolbox is WPF; its tests only exist in the Windows build. -->
 		<ProjectReference Include="..\..\Toolbox\Toolbox.csproj" Condition="'$(RielPlatform)' == 'windows'" />
 	</ItemGroup>

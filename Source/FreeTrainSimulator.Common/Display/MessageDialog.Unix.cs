@@ -54,6 +54,11 @@ namespace FreeTrainSimulator.Common.Display
                         false);
                 }
 
+                // SDL lays the text out as given and sizes the box to its longest line. The error
+                // dialogs carry a paragraph on one line, which made a box wider than the screen with
+                // the explanation cut off at both edges.
+                message = Wrap(message, WrapColumn);
+
                 SdlNative.MessageBoxData data = new SdlNative.MessageBoxData
                 {
                     Flags = icon switch

@@ -10,14 +10,18 @@ riel \- drive Microsoft Train Simulator routes natively on Linux
 reads the routes, activities, rolling stock and sounds of Microsoft Train Simulator and runs them
 as a native Linux program, without Wine.
 .PP
-One command does everything: it holds the list of content folders, lists what they contain, and
-starts a run. The simulator itself is not on
-.BR PATH ;
-this is the way in.
+There are two ways in, over the same content and the same saved selections. The graphical
+launcher, which the desktop entry opens, is where most people start: choose a route, then an
+activity or a path and a train, and press Play. The commands below do the same from a terminal.
+The simulator itself is not on
+.BR PATH .
 .SH COMMANDS
 .TP
+.B riel gui
+Open the graphical launcher.
+.TP
 .B riel start
-Start with the selections the last session was left on. This is what the desktop entry runs.
+Start again with whatever was played last, from here or from the graphical launcher.
 .TP
 .B riel content
 List the configured content folders.

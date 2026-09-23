@@ -47,7 +47,7 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
                 await Parallel.ForEachAsync(routeFolders, cancellationToken, async (routeFolder, token) =>
                 {
                     Task<RouteModelHeader> modelTask = Cast(Convert(routeFolder.Value, folderModel, token));
-                    RouteModelHeader routeModel = await modelTask.ConfigureAwait(false);
+                    RouteModelHeader routeModel = await ImportFailures.Guard(modelTask, "route", routeFolder.Value.TrackFileName ?? routeFolder.Key).ConfigureAwait(false);
                     if (routeModel == null || string.IsNullOrWhiteSpace(routeModel.Id))
                         return;
 

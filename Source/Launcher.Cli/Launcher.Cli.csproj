@@ -16,9 +16,6 @@
 		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\FreeTrainSimulator.Common\FreeTrainSimulator.Common.csproj" />
-		<ProjectReference Include="..\FreeTrainSimulator.Models\FreeTrainSimulator.Models.csproj" />
-		<ProjectReference Include="..\FreeTrainSimulator.Models.Imported\FreeTrainSimulator.Models.Imported.csproj" />
-		<ProjectReference Include="..\Orts.Formats\Orts.Formats.csproj" />
+		<ProjectReference Include="..\Launcher.Core\Launcher.Core.csproj" />
 	</ItemGroup>
 </Project>

@@ -155,7 +155,8 @@ namespace Orts.ActivityRunner.Processes
                     case GamePlayAction.None:
                     default:
                         MessageDialog.Show($"{RuntimeInfo.ProductName}  {VersionInfo.Version}",
-                                $"To start {RuntimeInfo.ProductName}, please run the launcher.\n\n"
+                                $"To start {RuntimeInfo.ProductName}, open the Riel launcher from the applications menu, or run 'riel gui'. " +
+                                "'riel play' and 'riel explore' start a run from a terminal.\n\n"
                                 + "If you are attempting to debug this component, please start it from the launcher and execute the scenario you are interested in. "
                                 + "In the log file, the command-line arguments used will be listed at the top. "
                                 + "You should then configure your debug environment to execute this component with those command-line arguments.",
@@ -169,7 +170,7 @@ namespace Orts.ActivityRunner.Processes
             catch (Exception error) when (!Debugger.IsAttached && !IsCancellation(error))
             {
                 Trace.WriteLine(new FatalException(error));
-                if (Game.UserSettings.ErrorDialogEnabled)
+                if (Game.UserSettings.ErrorDialogEnabled && !LaunchContext.LauncherReportsErrors)
                 {
                     // If we had a load error but the inner error is one we handle here specially, unwrap it and discard the extra file information.
                     if (error is FileLoadException fileLoadException && (fileLoadException.InnerException is FileNotFoundException || fileLoadException.InnerException is DirectoryNotFoundException))

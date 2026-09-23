@@ -15,4 +15,11 @@ if [ "${RIEL_VULKAN:-0}" = "1" ]; then
     export MESA_LOADER_DRIVER_OVERRIDE=zink
 fi
 
+# The graphical launcher is its own program; going straight to it saves a process that would
+# only sit and wait. The environment above applies to it, and to the simulator it starts.
+if [ "${1:-}" = "gui" ]; then
+    shift
+    exec "$install_dir/riel-gui" "$@"
+fi
+
 exec "$install_dir/riel" "$@"

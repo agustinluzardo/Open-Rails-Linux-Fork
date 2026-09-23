@@ -30,36 +30,51 @@ using FreeTrainSimulator.Models.Shim;
 
 namespace Riel.Launcher
 {
+    /// <summary>How a check came out.</summary>
+    public enum CheckState
+    {
+        /// <summary>In place.</summary>
+        Ok,
+        /// <summary>Missing or broken, and the simulator needs it.</summary>
+        Failed,
+        /// <summary>Not present, and not needed: optional hardware, for instance.</summary>
+        Absent,
+    }
+
+    /// <summary>One line of the diagnosis.</summary>
+    public sealed record CheckResult(string Name, CheckState State, string Detail);
+
     /// <summary>
     /// Checks the things that stop the simulator starting, so a first run that fails says why.
     /// </summary>
-    internal static class Diagnostics
+    public static class Diagnostics
     {
-        internal static async Task<int> Run(CancellationToken cancellationToken)
+        public static async Task<IReadOnlyList<CheckResult>> Run(CancellationToken cancellationToken)
         {
-            bool healthy = true;
+            List<CheckResult> results = new List<CheckResult>
+            {
+                Required("simulator", LocateSimulator()),
+                Required("shaders", CheckShaders()),
+                Required("OpenAL", CheckLibrary(new[] { "libopenal.so", "libopenal.so.1" }, "sound will be silent; install openal")),
+                Required("SDL", CheckLibrary(new[] { "libSDL2-2.0.so.0", "libSDL2.so.0" }, "the game window cannot open; install sdl2")),
+                Required("display", CheckDisplay()),
+                Required("content", await CheckContent(cancellationToken).ConfigureAwait(false)),
+            };
 
-            healthy &= Report("simulator", LocateSimulator());
-            healthy &= Report("shaders", CheckShaders());
-            healthy &= Report("OpenAL", CheckLibrary(new[] { "libopenal.so", "libopenal.so.1" }, "sound will be silent; install openal"));
-            healthy &= Report("SDL", CheckLibrary(new[] { "libSDL2-2.0.so.0", "libSDL2.so.0" }, "the game window cannot open; install sdl2"));
-            healthy &= Report("display", CheckDisplay());
-            healthy &= Report("content", await CheckContent(cancellationToken).ConfigureAwait(false));
+            // Optional hardware, so never a failure: most people drive with the keyboard. It is
+            // listed so someone who does own the desk can see whether it was found.
+            (bool desk, string deskDetail) = CheckRailDriver();
+            results.Add(new CheckResult("RailDriver", desk ? CheckState.Ok : CheckState.Absent, deskDetail));
 
-            // Not a failure on its own: plenty of people run without the desk plugged in.
-            _ = Report("RailDriver", CheckRailDriver());
-
-            Console.WriteLine();
-            Console.WriteLine(healthy
-                ? "Everything needed to run is in place."
-                : "Some checks failed; see the notes above.");
-            return healthy ? 0 : 1;
+            return results;
         }
 
-        private static bool Report(string name, (bool Ok, string Detail) result)
+        /// <summary>Whether every check that matters passed.</summary>
+        public static bool Healthy(IEnumerable<CheckResult> results) => results.All(result => result.State != CheckState.Failed);
+
+        private static CheckResult Required(string name, (bool Ok, string Detail) result)
         {
-            Console.WriteLine($"  {(result.Ok ? "ok  " : "FAIL")}  {name,-12} {result.Detail}");
-            return result.Ok;
+            return new CheckResult(name, result.Ok ? CheckState.Ok : CheckState.Failed, result.Detail);
         }
 
         private static (bool, string) LocateSimulator()
@@ -99,10 +114,17 @@ namespace Riel.Launcher
                     return (true, candidate);
                 }
 
-                // The copy MonoGame ships next to the game is not on the loader's search path.
-                string bundled = Path.Combine(AppContext.BaseDirectory, "runtimes", "linux-x64", "native", candidate);
-                if (File.Exists(bundled))
-                    return (true, $"{bundled} (bundled)");
+                // The copy shipped with the game is not on the loader's search path: it sits beside
+                // the executable once published and installed, and under runtimes/ in a build tree.
+                foreach (string bundled in new[]
+                {
+                    Path.Combine(AppContext.BaseDirectory, candidate),
+                    Path.Combine(AppContext.BaseDirectory, "runtimes", "linux-x64", "native", candidate),
+                })
+                {
+                    if (File.Exists(bundled))
+                        return (true, $"{bundled} (bundled)");
+                }
             }
             return (false, $"not found - {consequence}");
         }
@@ -123,7 +145,7 @@ namespace Riel.Launcher
         {
             const string hidraw = "/sys/class/hidraw";
             if (!Directory.Exists(hidraw))
-                return (false, "no hidraw devices");
+                return (false, "none (optional USB control desk; the keyboard works without it)");
 
             foreach (string entry in Directory.EnumerateDirectories(hidraw))
             {
@@ -140,7 +162,7 @@ namespace Riel.Launcher
                         : (false, $"{device} found but not readable; install the udev rule from packaging/linux/udev");
                 }
             }
-            return (false, "not connected");
+            return (false, "none (optional USB control desk; the keyboard works without it)");
         }
 
         private static bool CanRead(string device)
@@ -160,12 +182,12 @@ namespace Riel.Launcher
         {
             try
             {
-                ContentModel content = await ContentStore.Load(cancellationToken).ConfigureAwait(false);
+                ContentModel content = await ContentStore.Load(null, cancellationToken).ConfigureAwait(false);
                 if (content.ContentFolders.Length == 0)
                 {
                     string detected = MstsInstallationHint();
                     return (false, detected == null
-                        ? "no folders configured; add one with 'riel content add'"
+                        ? "no folders configured; add one in the launcher or with 'riel content add'"
                         : $"no folders configured, but content looks present at {detected}");
                 }
 

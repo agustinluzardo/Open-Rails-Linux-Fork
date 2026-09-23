@@ -30,6 +30,16 @@ namespace FreeTrainSimulator.Runtime
             TrackModel trackModel = await route.GetTrackModel(cancellationToken).ConfigureAwait(false);
             SignalConfigurationModel signalConfigurationModel = await route.GetSignalConfigurationModel(cancellationToken).ConfigureAwait(false);
 
+            string routeName = string.IsNullOrEmpty(route?.Name) ? route?.Id : route.Name;
+            if (trackSectionModel == null)
+                throw new RouteDataUnavailableException(
+                    $"The track sections of route '{routeName}' could not be loaded. They come from GLOBAL/tsection.dat, and from the route's own tsection.dat where it has one; " +
+                    "one of them is missing or could not be read. Scanning the content again lists the file and the reason.");
+            if (trackModel == null)
+                throw new RouteDataUnavailableException(
+                    $"The track database of route '{routeName}' could not be loaded: its .tdb file is missing or could not be read, or uses track pieces the installed tsection.dat lacks. " +
+                    "Scanning the content again lists the file and the reason.");
+
             Track.TrackWorld trackWorld = Track.TrackWorld.Initialize(null, trackModel, trackSectionModel);
 
             _ = GameService<RuntimeDataResolver>.Set(null, new RuntimeDataResolver(route, trackSectionModel, signalConfigurationModel, trackWorld, metricUnits, runtimeReferenceResolver));

@@ -40,7 +40,9 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.OpenRails
                 {
                     Task<TimetableModel> modelTask = Convert(consistFile, routeModel, cancellationToken);
 
-                    TimetableModel timetableModel = await modelTask.ConfigureAwait(false);
+                    TimetableModel timetableModel = await ImportFailures.Guard(modelTask, "timetable", consistFile).ConfigureAwait(false);
+                    if (timetableModel == null)
+                        return;
                     string key = timetableModel.Hierarchy();
                     results.Add(timetableModel);
                     modelTaskCache[key] = modelTask;

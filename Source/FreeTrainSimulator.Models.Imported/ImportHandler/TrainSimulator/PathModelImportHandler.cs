@@ -62,7 +62,9 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
                 {
                     Task<PathModelHeader> modelTask = Cast(Convert(path, routeModel, cancellationToken));
 
-                    PathModelHeader pathModel = await modelTask.ConfigureAwait(false);
+                    PathModelHeader pathModel = await ImportFailures.Guard(modelTask, "path", path).ConfigureAwait(false);
+                    if (pathModel == null)
+                        return;
                     string key = pathModel.Hierarchy();
                     results.Add(pathModel);
                     modelTaskCache[key] = modelTask;

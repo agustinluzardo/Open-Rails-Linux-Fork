@@ -211,8 +211,9 @@ namespace Orts.ActivityRunner.Processes
         {
             // Log the error first in case we're burning.
             Trace.WriteLine(new FatalException(error));
-            // Show the user that it's all gone horribly wrong.
-            if (UserSettings.ErrorDialogEnabled)
+            // Show the user that it's all gone horribly wrong - unless the launcher that started
+            // this is watching, and will show it better once the simulator has exited.
+            if (UserSettings.ErrorDialogEnabled && !LaunchContext.LauncherReportsErrors)
             {
                 string errorSummary = error?.GetType().FullName + ": " + error.Message;
                 string logFile = RuntimeInfo.LogFile(UserSettings.LogFilePath, UserSettings.LogFileName);

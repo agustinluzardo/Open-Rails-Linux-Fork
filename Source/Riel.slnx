@@ -35,6 +35,8 @@
   <Project Path="FreeTrainSimulator.Updater/FreeTrainSimulator.Updater.csproj" />
   <Project Path="FreetrainSimulator.Runtime/FreetrainSimulator.Runtime.csproj" />
   <Project Path="Launcher.Cli/Launcher.Cli.csproj" />
+  <Project Path="Launcher.Core/Launcher.Core.csproj" />
+  <Project Path="Launcher.Gui/Launcher.Gui.csproj" />
   <Project Path="MultiPlayer.Hub/MultiPlayer.Hub.csproj" />
   <Project Path="Orts.Formats/Orts.Formats.csproj" />
   <Project Path="Orts.Scripting.Api/Orts.Scripting.Api.csproj" />

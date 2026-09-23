@@ -1,0 +1,368 @@
+# Strings of the Riel launcher: the template for a translation.
+# Copyright (C) 2026 the Riel project
+# This file is distributed under the same license as Riel (GPL-3.0-or-later).
+#
+# To add a language: copy Launcher.Gui.pot to <language>.po - de.po, pt_BR.po - and fill in
+# every msgstr. An empty msgstr falls back to the English. Keep the {0} placeholders.
+msgid ""
+msgstr ""
+"Project-Id-Version: Riel launcher\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Reading content…"
+msgstr ""
+
+msgid "Choose the Microsoft Train Simulator folder"
+msgstr ""
+
+msgid "That folder does not exist"
+msgstr ""
+
+msgid "Nothing was found at {0}. Check the path, and that the disk it is on is mounted."
+msgstr ""
+
+msgid "This does not look like an installation"
+msgstr ""
+
+msgid "{0} has no ROUTES and GLOBAL folders, so its routes would not load. Add it anyway?"
+msgstr ""
+
+msgid "Add anyway"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Using {0}, the installation inside the folder chosen."
+msgstr ""
+
+msgid "Scanning {0}…"
+msgstr ""
+
+msgid "Added {0}: {1}."
+msgstr ""
+
+msgid "Added {0}, but no routes were found in it."
+msgstr ""
+
+msgid "Remove {0}?"
+msgstr ""
+
+msgid "Only the entry is removed. The folder and everything in it stay on disk."
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Removing…"
+msgstr ""
+
+msgid "Removed {0}."
+msgstr ""
+
+msgid "Scanning every folder…"
+msgstr ""
+
+msgid "Scanned again."
+msgstr ""
+
+msgid "That did not work"
+msgstr ""
+
+msgid "Something went wrong"
+msgstr ""
+
+msgid "{0} route"
+msgstr ""
+
+msgid "{0} routes"
+msgstr ""
+
+msgid "Check this computer"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "What the simulator needs, and whether it is here"
+msgstr ""
+
+msgid "Checking…"
+msgstr ""
+
+msgid "Everything the simulator needs is in place."
+msgstr ""
+
+msgid "Something the simulator needs is missing; the lines marked ✗ say what."
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "Some content could not be read"
+msgstr ""
+
+msgid "Everything else loaded. These will not work until the files are fixed or replaced; the first one: {0}"
+msgstr ""
+
+msgid "route"
+msgstr ""
+
+msgid "path"
+msgstr ""
+
+msgid "train"
+msgstr ""
+
+msgid "rolling stock"
+msgstr ""
+
+msgid "activity"
+msgstr ""
+
+msgid "timetable"
+msgstr ""
+
+msgid "Details"
+msgstr ""
+
+msgid "The simulator stopped"
+msgstr ""
+
+msgid "The simulator stopped because of an error"
+msgstr ""
+
+msgid "It exited with code {0} without saying why."
+msgstr ""
+
+msgid "When the content was scanned, this route reported: {0}"
+msgstr ""
+
+msgid "Full log: {0}"
+msgstr ""
+
+msgid "No log was written; the simulator stopped before it got that far. Logs are kept in {0}"
+msgstr ""
+
+msgid "Copy details"
+msgstr ""
+
+msgid "Open the log"
+msgstr ""
+
+msgid "A file the route or the train needs is missing. Routes often borrow objects or rolling stock from other content packs; the missing file is named above, and installing the pack it belongs to fixes it."
+msgstr ""
+
+msgid "A file could not be read because of its permissions. If the content is on a disk shared with Windows, check that your user can read it."
+msgstr ""
+
+msgid "The graphics card could not be set up. Check that its driver is installed; \"glxinfo | grep renderer\" should name the card rather than llvmpipe."
+msgstr ""
+
+msgid "A system library is missing. \"Check this computer\" in the main window lists which one."
+msgstr ""
+
+msgid "The launcher and the simulator disagreed about what to start. Choosing the route again usually fixes it."
+msgstr ""
+
+msgid "The content scan could not read this route's track data, so it cannot be driven. Content folders, then Scan again, lists which file is missing or broken."
+msgstr ""
+
+msgid "The computer ran out of memory. Closing other programs, or lowering the viewing distance, may help."
+msgstr ""
+
+msgid "The details below and the log say more. If it looks like a bug, reporting it with the log attached helps get it fixed."
+msgstr ""
+
+msgid "Spring"
+msgstr ""
+
+msgid "Summer"
+msgstr ""
+
+msgid "Autumn"
+msgstr ""
+
+msgid "Winter"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "Rain"
+msgstr ""
+
+msgid "Snow"
+msgstr ""
+
+msgid "Easy"
+msgstr ""
+
+msgid "Medium"
+msgstr ""
+
+msgid "Hard"
+msgstr ""
+
+msgid "{0} h {1} min"
+msgstr ""
+
+msgid "{0} min"
+msgstr ""
+
+msgid "{0} vehicle"
+msgstr ""
+
+msgid "{0} vehicles"
+msgstr ""
+
+msgid "No routes were found in the content folders. Check that each one is the folder holding ROUTES and GLOBAL."
+msgstr ""
+
+msgid "{0} in {1}."
+msgstr ""
+
+msgid "1 problem"
+msgstr ""
+
+msgid "{0} problems"
+msgstr ""
+
+msgid "An installation was found at {0}"
+msgstr ""
+
+msgid "Adding the folder…"
+msgstr ""
+
+msgid "Choose a route"
+msgstr ""
+
+msgid "Choose a route."
+msgstr ""
+
+msgid "Choose an activity, or explore the route instead."
+msgstr ""
+
+msgid "Choose a path to explore."
+msgstr ""
+
+msgid "Choose a train to explore with."
+msgstr ""
+
+msgid "Write the time as hours and minutes, like 08:30."
+msgstr ""
+
+msgid "Nothing to play yet"
+msgstr ""
+
+msgid "the saved game"
+msgstr ""
+
+msgid "Starting {0}…"
+msgstr ""
+
+msgid "Running {0}. The simulator window may take a moment to appear."
+msgstr ""
+
+msgid "The simulator stopped because of an error."
+msgstr ""
+
+msgid "Finished {0}."
+msgstr ""
+
+msgid "Scanning content… {0}%"
+msgstr ""
+
+msgid "{0} content folder"
+msgstr ""
+
+msgid "{0} content folders"
+msgstr ""
+
+msgid "Play"
+msgstr ""
+
+msgid "Content folders"
+msgstr ""
+
+msgid "Each one is a Microsoft Train Simulator installation, or a copy of one: the folder that holds ROUTES and GLOBAL. It can be on any disk, or inside a Wine or Proton prefix. Riel only ever reads it."
+msgstr ""
+
+msgid "Folder"
+msgstr ""
+
+msgid "Paste a path, or browse for it"
+msgstr ""
+
+msgid "Browse…"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Scan again"
+msgstr ""
+
+msgid "No folders yet."
+msgstr ""
+
+msgid "Microsoft Train Simulator routes, natively on Linux"
+msgstr ""
+
+msgid "Routes"
+msgstr ""
+
+msgid "Search routes"
+msgstr ""
+
+msgid "Activity"
+msgstr ""
+
+msgid "This route has no activities. Explore it instead: pick a path and a train in the Explore tab."
+msgstr ""
+
+msgid "Explore"
+msgstr ""
+
+msgid "Path"
+msgstr ""
+
+msgid "Train"
+msgstr ""
+
+msgid "Search trains"
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Season"
+msgstr ""
+
+msgid "Weather"
+msgstr ""
+
+msgid "No content yet"
+msgstr ""
+
+msgid "Choose the folder where Microsoft Train Simulator is installed: the one that contains ROUTES and GLOBAL. It can be on any disk, or inside a Wine or Proton prefix."
+msgstr ""
+
+msgid "Use this one"
+msgstr ""
+
+msgid "Choose a folder"
+msgstr ""
+
+msgid "Continue saved game"
+msgstr ""

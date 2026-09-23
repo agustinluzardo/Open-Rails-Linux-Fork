@@ -54,6 +54,49 @@ namespace FreeTrainSimulator.Common.Display
     public static partial class MessageDialog
     {
         /// <summary>
+        /// Where lines are broken. Narrow enough for the smallest screen the game supports at the
+        /// default font, wide enough that a path or a URL usually fits on one line.
+        /// </summary>
+        internal const int WrapColumn = 90;
+
+        /// <summary>
+        /// Breaks each paragraph of <paramref name="text"/> at spaces so no line is longer than
+        /// <paramref name="width"/>. Existing line breaks are kept; a single word longer than the
+        /// width - a long path - is left whole rather than cut somewhere unreadable.
+        /// </summary>
+        internal static string Wrap(string text, int width)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            System.Text.StringBuilder result = new System.Text.StringBuilder(text.Length + 16);
+            string[] paragraphs = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+            for (int p = 0; p < paragraphs.Length; p++)
+            {
+                if (p > 0)
+                    result.Append('\n');
+
+                int lineLength = 0;
+                foreach (string word in paragraphs[p].Split(' '))
+                {
+                    if (lineLength > 0 && lineLength + 1 + word.Length > width)
+                    {
+                        result.Append('\n');
+                        lineLength = 0;
+                    }
+                    else if (lineLength > 0)
+                    {
+                        result.Append(' ');
+                        lineLength++;
+                    }
+                    result.Append(word);
+                    lineLength += word.Length;
+                }
+            }
+            return result.ToString();
+        }
+
+        /// <summary>
         /// Shows <paramref name="message"/> and waits for the user. Also written to the log, so
         /// a report contains the failure even when the user dismisses the dialog.
         /// </summary>

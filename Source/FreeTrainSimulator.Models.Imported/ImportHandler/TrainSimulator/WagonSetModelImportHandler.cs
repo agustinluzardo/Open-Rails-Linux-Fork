@@ -45,7 +45,9 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
                 {
                     Task<WagonSetModel> modelTask = Convert(consistFile, folderModel, cancellationToken);
 
-                    WagonSetModel wagonSetModel = await modelTask.ConfigureAwait(false);
+                    WagonSetModel wagonSetModel = await ImportFailures.Guard(modelTask, "consist", consistFile).ConfigureAwait(false);
+                    if (wagonSetModel == null)
+                        return;
                     string key = wagonSetModel.Hierarchy();
                     results.Add(wagonSetModel);
                     modelTaskCache[key] = modelTask;

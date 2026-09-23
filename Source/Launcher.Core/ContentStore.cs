@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Models.Base;
 using FreeTrainSimulator.Models.Content;
+using FreeTrainSimulator.Models.Imported.ImportHandler;
 using FreeTrainSimulator.Models.Imported.Shim;
 using FreeTrainSimulator.Models.Shim;
 
@@ -34,32 +35,49 @@ namespace Riel.Launcher
     /// <summary>
     /// Reads and edits the content configuration the simulator shares with the Windows menu.
     /// </summary>
-    internal static class ContentStore
+    /// <remarks>
+    /// Every change rescans and hands back the new model, so a caller never holds a stale one.
+    /// </remarks>
+    public static class ContentStore
     {
         /// <summary>
         /// Loads the content model, scanning the folders the first time or after an upgrade.
         /// </summary>
-        internal static async Task<ContentModel> Load(CancellationToken cancellationToken)
+        /// <param name="progress">Told the percentage done if a scan turns out to be needed.</param>
+        public static async Task<ContentModel> Load(IProgress<int> progress, CancellationToken cancellationToken)
         {
             ContentModel content = await ((ContentModel)null).Get(cancellationToken).ConfigureAwait(false);
 
             if (content.RefreshRequired())
-            {
-                Console.Error.WriteLine("Content has changed since it was last scanned; rescanning.");
-                content = await Scan(content, cancellationToken).ConfigureAwait(false);
-            }
+                content = await Scan(content, progress, cancellationToken).ConfigureAwait(false);
             return content;
         }
 
         /// <summary>Rescans every configured folder.</summary>
-        internal static async Task Refresh(CancellationToken cancellationToken)
+        public static async Task<ContentModel> Refresh(IProgress<int> progress, CancellationToken cancellationToken)
         {
             ContentModel content = await ((ContentModel)null).Get(cancellationToken).ConfigureAwait(false);
-            _ = await Scan(content, cancellationToken).ConfigureAwait(false);
+            return await Scan(content, progress, cancellationToken).ConfigureAwait(false);
         }
 
-        internal static async Task AddFolder(string name, string path, CancellationToken cancellationToken)
+        /// <summary>
+        /// A name for a folder the user picked, when they did not give one: the name of the
+        /// install folder itself, which is what they would recognise.
+        /// </summary>
+        public static string SuggestName(string path)
         {
+            string trimmed = Path.TrimEndingDirectorySeparator(path ?? string.Empty);
+            string name = Path.GetFileName(trimmed);
+            return string.IsNullOrWhiteSpace(name) ? "MSTS" : name;
+        }
+
+        public static async Task<ContentModel> AddFolder(string name, string path, IProgress<int> progress, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                throw new LauncherException("no folder was given");
+            if (string.IsNullOrWhiteSpace(name))
+                name = SuggestName(path);
+
             string resolved = ContentIO.ResolveDirectory(Path.GetFullPath(path))
                 ?? throw new LauncherException($"'{path}' is not a directory");
 
@@ -73,10 +91,10 @@ namespace Riel.Launcher
                 .ToList();
 
             ContentModel updated = await ((ContentModel)null).Setup(folders, cancellationToken).ConfigureAwait(false);
-            _ = await Scan(updated, cancellationToken).ConfigureAwait(false);
+            return await Scan(updated, progress, cancellationToken).ConfigureAwait(false);
         }
 
-        internal static async Task RemoveFolder(string name, CancellationToken cancellationToken)
+        public static async Task<ContentModel> RemoveFolder(string name, IProgress<int> progress, CancellationToken cancellationToken)
         {
             ContentModel content = await ((ContentModel)null).Get(cancellationToken).ConfigureAwait(false);
             FolderModel target = MatchFolder(content, name);
@@ -87,31 +105,43 @@ namespace Riel.Launcher
                 .ToList();
 
             ContentModel updated = await ((ContentModel)null).Setup(folders, cancellationToken).ConfigureAwait(false);
-            _ = await Scan(updated, cancellationToken).ConfigureAwait(false);
+            return await Scan(updated, progress, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Imports the routes, activities, paths and consists of every folder. This is the slow
         /// part of adding content - a large route takes a while - so it reports progress.
         /// </summary>
-        private static async Task<ContentModel> Scan(ContentModel content, CancellationToken cancellationToken)
+        /// <summary>
+        /// The files the most recent scan could not read and passed over; empty when it read
+        /// everything, or when no scan has run.
+        /// </summary>
+        /// <remarks>
+        /// This is the answer to "why is my route not in the list": a route whose .trk has an
+        /// error is skipped so the others still load, and this names it and says what was wrong.
+        /// </remarks>
+        public static IReadOnlyList<SkippedFile> LastScanSkipped { get; private set; } = Array.Empty<SkippedFile>();
+
+        /// <summary>How many scans have run, so a caller can tell whether one ran just now.</summary>
+        public static int ScanCount { get; private set; }
+
+        private static async Task<ContentModel> Scan(ContentModel content, IProgress<int> progress, CancellationToken cancellationToken)
         {
-            Progress<int> progress = new Progress<int>(percent =>
+            _ = ImportFailures.Take();
+            ScanCount++;
+            try
             {
-                if (!Console.IsOutputRedirected)
-                    Console.Error.Write($"\rScanning content... {percent,3}%");
-            });
-
-            ContentModel scanned = await content.Setup(progress, cancellationToken).ConfigureAwait(false);
-
-            if (!Console.IsOutputRedirected)
-                Console.Error.WriteLine("\rScanning content... done");
-            return scanned;
+                return await content.Setup(progress ?? new Progress<int>(), cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                LastScanSkipped = ImportFailures.Take();
+            }
         }
 
         // ----------------------------------------------------------------------------- matching
 
-        internal static FolderModel MatchFolder(ContentModel content, string name)
+        public static FolderModel MatchFolder(ContentModel content, string name)
         {
             ArgumentNullException.ThrowIfNull(content);
             return Match(content.ContentFolders, name, "content folder");
@@ -120,9 +150,9 @@ namespace Riel.Launcher
         /// <summary>
         /// Finds a route by name across every folder, and returns the folder holding it.
         /// </summary>
-        internal static async Task<(FolderModel Folder, RouteModelHeader Route)> MatchRoute(string name, CancellationToken cancellationToken)
+        public static async Task<(FolderModel Folder, RouteModelHeader Route)> MatchRoute(string name, IProgress<int> progress, CancellationToken cancellationToken)
         {
-            ContentModel content = await Load(cancellationToken).ConfigureAwait(false);
+            ContentModel content = await Load(progress, cancellationToken).ConfigureAwait(false);
 
             List<(FolderModel Folder, RouteModelHeader Route)> candidates = new List<(FolderModel, RouteModelHeader)>();
             foreach (FolderModel folder in content.ContentFolders)
@@ -147,7 +177,7 @@ namespace Riel.Launcher
         /// Finds one model by name: an exact match wins, otherwise a unique prefix, otherwise a
         /// unique substring. Comparisons ignore case.
         /// </summary>
-        internal static T Match<T>(ImmutableArray<T> models, string name, string what) where T : ModelBase
+        public static T Match<T>(ImmutableArray<T> models, string name, string what) where T : ModelBase
         {
             List<T> matches = Narrow(models.ToList(), model => model, name);
             return matches.Count switch

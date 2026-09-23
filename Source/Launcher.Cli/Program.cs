@@ -82,7 +82,8 @@ namespace Riel.Launcher
                 "activities" => await Commands.Activities(arguments, cancellationToken).ConfigureAwait(false),
                 "paths" => await Commands.Paths(arguments, cancellationToken).ConfigureAwait(false),
                 "consists" => await Commands.Consists(arguments, cancellationToken).ConfigureAwait(false),
-                "start" => Commands.Start(),
+                "start" => await Commands.Start(cancellationToken).ConfigureAwait(false),
+                "gui" => Commands.Gui(arguments),
                 "play" => await Commands.Play(arguments, cancellationToken).ConfigureAwait(false),
                 "explore" => await Commands.Explore(arguments, cancellationToken).ConfigureAwait(false),
                 "resume" => Commands.Resume(),
@@ -105,6 +106,8 @@ namespace Riel.Launcher
             (exitCode == 0 ? Console.Out : Console.Error).Write(
 @"riel - drive Microsoft Train Simulator routes natively on Linux
 
+  riel gui                           open the graphical launcher
+
   riel content                       list the content folders
   riel content add <name> <path>     add a folder of MSTS content
   riel content remove <name>         remove a folder
@@ -115,7 +118,7 @@ namespace Riel.Launcher
   riel paths <route>                 list a route's player paths
   riel consists [folder]             list consists
 
-  riel start                         start with the last selections
+  riel start                         start again with what was played last
   riel play <route> <activity>       start an activity
   riel explore <route> <path> <consist> [--time HH:MM] [--season summer]
                                     [--weather clear]
@@ -132,19 +135,4 @@ insensitively; a unique prefix is enough. Quote names containing spaces.
         }
     }
 
-    /// <summary>An error worth reporting to the user without a stack trace.</summary>
-    internal sealed class LauncherException : Exception
-    {
-        public LauncherException(string message) : base(message)
-        {
-        }
-
-        public LauncherException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
-        public LauncherException()
-        {
-        }
-    }
 }

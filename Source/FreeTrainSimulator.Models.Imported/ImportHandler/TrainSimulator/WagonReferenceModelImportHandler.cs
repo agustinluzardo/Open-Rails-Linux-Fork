@@ -52,7 +52,9 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
                     {
                         Task<WagonReferenceModel> modelTask = Cast(Convert(wagonFile, folderModel, cancellationToken));
 
-                        WagonReferenceModel wagonModel = await modelTask.ConfigureAwait(false);
+                        WagonReferenceModel wagonModel = await ImportFailures.Guard(modelTask, "rolling stock", wagonFile).ConfigureAwait(false);
+                        if (wagonModel == null)
+                            return;
                         string key = wagonModel.Hierarchy();
                         results.Add(wagonModel);
                         modelTaskCache[key] = modelTask;

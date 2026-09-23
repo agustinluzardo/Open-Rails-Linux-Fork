@@ -18,9 +18,22 @@ depends=(
     # Fontconfig resolves the font families the cab labels and the head-up display ask for.
     'fontconfig'
     'zlib'
+    # The graphical launcher is Avalonia on X11 - XWayland under a Wayland session - and loads
+    # these directly.
+    'libglvnd'
+    'libice'
+    'libsm'
+    'libx11'
+    'libxcursor'
+    'libxext'
+    'libxfixes'
+    'libxi'
+    'libxrandr'
 )
 makedepends=('dotnet-sdk-10.0' 'git')
 optdepends=(
+    'xdg-desktop-portal: the folder picker in the launcher, through the desktop dialog'
+    'gtk3: the folder picker in the launcher, where there is no desktop portal'
     'vulkan-icd-loader: run the OpenGL renderer on Vulkan through Mesa zink'
     'ttf-liberation: metric compatible replacements for the fonts MSTS content names'
 )
@@ -46,6 +59,9 @@ build() {
 
     export DOTNET_CLI_TELEMETRY_OPTOUT=1
     export DOTNET_NOLOGO=1
+    # Avalonia's build reports usage to its vendor; the project already switches that off, and
+    # this makes sure of it.
+    export AVALONIA_TELEMETRY_OPTOUT=1
     # Keep the restore inside the build directory so nothing is written to the user's home.
     export NUGET_PACKAGES="$srcdir/nuget"
 
@@ -55,6 +71,7 @@ build() {
     for project in \
         ActivityRunner/ActivityRunner.csproj \
         Launcher.Cli/Launcher.Cli.csproj \
+        Launcher.Gui/Launcher.Gui.csproj \
         MultiPlayer.Hub/MultiPlayer.Hub.csproj
     do
         dotnet publish "$project" \
