@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Riel.Launcher.Gui.SettingsWindow"
+        Title="Riel Settings" Width="900" Height="720" MinWidth="720" MinHeight="560"
+        WindowStartupLocation="CenterOwner" KeyDown="Window_KeyDown">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+    <StackPanel Grid.Row="0" Spacing="4">
+      <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold"/>
+      <TextBlock Text="These settings are used by the simulator when you press Play." Opacity="0.7"/>
+    </StackPanel>
+    <TabControl Grid.Row="1" Margin="0,16">
+      <TabItem Header="Controls">
+        <Grid RowDefinitions="Auto,*">
+          <Border Padding="12" Margin="0,0,0,10" Background="{DynamicResource SystemControlBackgroundAltLowBrush}">
+            <TextBlock Text="Click a key field, then press the key combination you want. The default bindings are the original Open Rails bindings." TextWrapping="Wrap"/>
+          </Border>
+          <ScrollViewer Grid.Row="1"><StackPanel x:Name="KeyboardPanel" Spacing="4"/></ScrollViewer>
+        </Grid>
+      </TabItem>
+      <TabItem Header="Video">
+        <ScrollViewer>
+          <Grid ColumnDefinitions="220,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12" Margin="8">
+            <TextBlock Grid.Row="0" Text="Window mode" VerticalAlignment="Center"/><ComboBox Grid.Row="0" Grid.Column="1" x:Name="ScreenModeBox"/>
+            <TextBlock Grid.Row="1" Text="Resolution width" VerticalAlignment="Center"/><NumericUpDown Grid.Row="1" Grid.Column="1" x:Name="WidthBox" Minimum="640" Maximum="7680" Increment="1"/>
+            <TextBlock Grid.Row="2" Text="Resolution height" VerticalAlignment="Center"/><NumericUpDown Grid.Row="2" Grid.Column="1" x:Name="HeightBox" Minimum="480" Maximum="4320" Increment="1"/>
+            <CheckBox Grid.Row="3" Grid.Column="1" x:Name="VsyncBox" Content="Vertical sync"/>
+            <ComboBox Grid.Row="4" Grid.Column="1" x:Name="MsaaBox"/><TextBlock Grid.Row="4" Text="Multisampling" VerticalAlignment="Center"/>
+            <CheckBox Grid.Row="5" Grid.Column="1" x:Name="DynamicShadowsBox" Content="Dynamic shadows"/>
+            <CheckBox Grid.Row="6" Grid.Column="1" x:Name="ModelInstancingBox" Content="Model instancing"/>
+            <CheckBox Grid.Row="7" Grid.Column="1" x:Name="ShadowAllShapesBox" Content="Cast shadows from all shapes"/>
+            <TextBlock Grid.Row="8" Text="Viewing distance (m)" VerticalAlignment="Center"/><NumericUpDown Grid.Row="8" Grid.Column="1" x:Name="ViewingDistanceBox" Minimum="100" Maximum="100000" Increment="100"/>
+            <TextBlock Grid.Row="9" Text="Far mountains distance (m)" VerticalAlignment="Center"/><NumericUpDown Grid.Row="9" Grid.Column="1" x:Name="FarMountainsBox" Minimum="1000" Maximum="200000" Increment="1000"/>
+            <TextBlock Grid.Row="10" Text="Field of view (degrees)" VerticalAlignment="Center"/><NumericUpDown Grid.Row="10" Grid.Column="1" x:Name="FovBox" Minimum="30" Maximum="120" Increment="1"/>
+            <TextBlock Grid.Row="11" Text="Visible detail level" VerticalAlignment="Center"/><NumericUpDown Grid.Row="11" Grid.Column="1" x:Name="DetailLevelBox" Minimum="0" Maximum="100" Increment="1"/>
+            <TextBlock Grid.Row="12" Text="Ambient brightness" VerticalAlignment="Center"/><NumericUpDown Grid.Row="12" Grid.Column="1" x:Name="AmbientBox" Minimum="0" Maximum="100" Increment="1"/>
+            <TextBlock Grid.Row="13" Text="Shadow map resolution" VerticalAlignment="Center"/><ComboBox Grid.Row="13" Grid.Column="1" x:Name="ShadowResolutionBox"/>
+            <CheckBox Grid.Row="14" Grid.Column="1" x:Name="ShadowBlurBox" Content="Blur shadow maps"/>
+            <CheckBox Grid.Row="15" Grid.Column="1" x:Name="SignalGlowBox" Content="Signal light glow"/>
+          </Grid>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button x:Name="ResetKeyboardButton" Content="Reset controls to Open Rails defaults"/>
+      <Button x:Name="CancelButton" Content="Cancel"/><Button x:Name="SaveButton" Classes="accent" Content="Save"/>
+    </StackPanel>
+  </Grid>
+</Window>
