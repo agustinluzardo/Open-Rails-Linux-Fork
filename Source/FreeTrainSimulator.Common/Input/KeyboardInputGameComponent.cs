@@ -102,7 +102,7 @@ namespace FreeTrainSimulator.Common.Input
                     currentModifiers |= KeyModifiers.Shift;
                 if (currentKeyboardState.IsKeyDown(Keys.LeftControl) || currentKeyboardState.IsKeyDown(Keys.RightControl))
                     currentModifiers |= KeyModifiers.Control;
-                if (currentKeyboardState.IsKeyDown(Keys.LeftAlt) || currentKeyboardState.IsKeyDown(Keys.LeftAlt))
+                if (currentKeyboardState.IsKeyDown(Keys.LeftAlt) || currentKeyboardState.IsKeyDown(Keys.RightAlt))
                     currentModifiers |= KeyModifiers.Alt;
 
                 Keys[] currentKeys = currentKeyboardState.GetPressedKeys();
