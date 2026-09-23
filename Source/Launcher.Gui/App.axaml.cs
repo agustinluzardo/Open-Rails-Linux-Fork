@@ -30,6 +30,7 @@ namespace Riel.Launcher.Gui
 
         public override void OnFrameworkInitializationCompleted()
         {
+            Appearance.Load();
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 desktop.MainWindow = new MainWindow();
             base.OnFrameworkInitializationCompleted();

@@ -5,6 +5,8 @@
 - A 64-bit Linux system with a working OpenGL 3.3 driver (Mesa, or NVIDIA's).
 - The .NET 10 runtime.
 - SDL 2, OpenAL Soft, fontconfig, zlib.
+- For the launcher window: the X11 client libraries every desktop has. Under Wayland it runs
+  through XWayland, which KDE, GNOME, Hyprland and Sway all provide.
 - Microsoft Train Simulator content: routes, rolling stock and activities. Copying the MSTS folder
   from a Windows machine is enough; nothing needs installing.
 
@@ -17,19 +19,23 @@ is needed only to compile, the **run** column only to play.
 
 | | build | run |
 | --- | --- | --- |
-| Arch, Manjaro, EndeavourOS | `dotnet-sdk-10.0 git` | `dotnet-runtime-10.0 sdl2 openal fontconfig zlib` |
-| Fedora | `dotnet-sdk-10.0 git` | `dotnet-runtime-10.0 SDL2 openal-soft fontconfig zlib` |
-| Debian, Ubuntu | `dotnet-sdk-10.0 git` | `dotnet-runtime-10.0 libsdl2-2.0-0 libopenal1 libfontconfig1 zlib1g` |
+| Arch, Manjaro, EndeavourOS | `dotnet-sdk-10.0 git` | `dotnet-runtime-10.0 sdl2 openal fontconfig zlib libx11 libxcursor libxext libxfixes libxi libxrandr libice libsm libglvnd` |
+| Fedora | `dotnet-sdk-10.0 git` | `dotnet-runtime-10.0 SDL2 openal-soft fontconfig zlib libX11 libXcursor libXext libXfixes libXi libXrandr libICE libSM libglvnd-glx` |
+| Debian, Ubuntu | `dotnet-sdk-10.0 git` | `dotnet-runtime-10.0 libsdl2-2.0-0 libopenal1 libfontconfig1 zlib1g libx11-6 libxcursor1 libxext6 libxfixes3 libxi6 libxrandr2 libice6 libsm6 libgl1` |
 
 ```sh
-sudo pacman -S --needed dotnet-sdk-10.0 dotnet-runtime-10.0 sdl2 openal fontconfig zlib git   # Arch
-sudo dnf install dotnet-sdk-10.0 SDL2 openal-soft fontconfig zlib git                         # Fedora
-sudo apt install dotnet-sdk-10.0 libsdl2-2.0-0 libopenal1 libfontconfig1 zlib1g git           # Debian, Ubuntu
+# Arch
+sudo pacman -S --needed dotnet-sdk-10.0 dotnet-runtime-10.0 sdl2 openal fontconfig zlib git \
+    libx11 libxcursor libxext libxfixes libxi libxrandr libice libsm libglvnd
 ```
 
-Two more worth having, neither required: `ttf-liberation` (Arch) or `liberation-fonts`, which are
-metric compatible replacements for the fonts MSTS content asks for by name, and `mesa-utils` /
-`mesa-demos` for the `glxinfo` used further down to check the driver.
+Worth having, none required:
+
+- `ttf-liberation` (Arch) or `liberation-fonts`: metric compatible replacements for the fonts
+  MSTS content asks for by name.
+- `xdg-desktop-portal` with your desktop's backend, or `gtk3`: the launcher's "Browse" button uses
+  your desktop's own folder picker. Without either, paste the path instead.
+- `mesa-utils` / `mesa-demos`: the `glxinfo` used further down to check the driver.
 
 ## Arch Linux
 
@@ -98,11 +104,22 @@ bridge so the Wine prefix needs nothing else. See the shaders section of
 
 ## First run
 
-Point Riel at your content. The folder is the one holding `ROUTES` and `GLOBAL`:
+Open **Riel** from the applications menu - or run `riel gui` - and choose the folder that holds
+`ROUTES` and `GLOBAL`, with "Browse" or by pasting its path. A folder one level off is fine: pick
+`Microsoft Games` and the `Train Simulator` inside it is found. Then choose a route, an activity
+- or, in the Explore tab, a path and a train - and press **Play**.
+
+The launcher follows the system language; Spanish is complete. It is dark unless the switch at
+the top says otherwise, and remembers the choice.
+
+The same from a terminal:
 
 ```sh
 riel content add "MSTS" /mnt/datos/games/MSTS
 ```
+
+Quote a path with spaces or brackets as a whole - `"/.../Program Files (x86)/Microsoft Games/Train
+Simulator"` - or the shell splits it, and fish reads the brackets as a command.
 
 Any path works, on any disk. A train simulator install is tens of gigabytes, so keeping it on a
 second drive - `/mnt/datos/games`, `/media/games`, wherever it is mounted - is the normal case,
@@ -150,14 +167,32 @@ riel content refresh                         # after adding or changing routes o
 
 ## When something is wrong
 
+"Check this computer" in the launcher, or
+
 ```sh
 riel doctor
 ```
 
-checks the simulator binary, the shaders, OpenAL, SDL, the display session, the configured content
-and the RailDriver, and names the fix for each.
+checks the simulator binary, the shaders, OpenAL, SDL, the display session and the configured
+content, and names the fix for each. The RailDriver line is informational: the desk is optional
+hardware, and "none" is the normal answer.
 
+When a run fails, the launcher shows why: the cause in one sentence, what usually helps, the
+details, and buttons to copy them or open the log. `riel play` prints the same in the terminal.
 Logs are in `~/.local/state/riel/Logs`. Attach one to a bug report.
+
+### A route is missing from the list, or will not start
+
+Some content cannot be read - a route whose `.trk` has an error, an activity whose service file is
+missing, a track database the installed `tsection.dat` does not cover. Riel skips what it cannot
+read and loads everything else, and says what it skipped: a "problems" button appears at the
+bottom of the launcher, and `riel content refresh` prints the list. Each entry names the file and
+the parser's reason, usually with the line.
+
+A route that was listed but whose track data could not be read fails when started, and the
+launcher shows what the scan recorded against it. The fix is almost always a missing file from
+another content pack - many routes borrow objects, track pieces (XTracks) or rolling stock - which
+the message names.
 
 ### A route loads with things missing
 

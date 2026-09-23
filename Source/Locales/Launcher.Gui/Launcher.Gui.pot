@@ -319,6 +319,9 @@ msgstr ""
 msgid "Microsoft Train Simulator routes, natively on Linux"
 msgstr ""
 
+msgid "Dark"
+msgstr ""
+
 msgid "Routes"
 msgstr ""
 

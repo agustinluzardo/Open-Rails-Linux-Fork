@@ -319,6 +319,9 @@ msgstr "Todavía no hay carpetas."
 msgid "Microsoft Train Simulator routes, natively on Linux"
 msgstr "Rutas de Microsoft Train Simulator, nativas en Linux"
 
+msgid "Dark"
+msgstr "Modo oscuro"
+
 msgid "Routes"
 msgstr "Rutas"
 

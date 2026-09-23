@@ -1,8 +1,8 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Riel.Launcher.Gui.App"
-             RequestedThemeVariant="Default">
-  <!-- Default follows the desktop's light or dark preference. -->
+             RequestedThemeVariant="Dark">
+  <!-- Dark unless the user switched it off; see Appearance.cs. -->
   <Application.Styles>
     <FluentTheme />
 

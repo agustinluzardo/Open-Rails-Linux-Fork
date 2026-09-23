@@ -99,6 +99,9 @@ namespace Riel.Launcher.Gui
             Opened += (_, _) => Guarded(() => Reload(restoreSelections: true));
             Closed += (_, _) => closing.Cancel();
 
+            DarkSwitch.IsChecked = Appearance.Dark;
+            DarkSwitch.IsCheckedChanged += (_, _) => Appearance.Set(DarkSwitch.IsChecked == true);
+
             UpdateButtons();
         }
 
@@ -135,7 +138,7 @@ namespace Riel.Launcher.Gui
             if (restoreSelections)
                 await Restore();
             else
-                await SelectRoute(previous == null ? null : routes.FirstOrDefault(route => Same(route, previous)) ?? routes.FirstOrDefault());
+                await SelectRoute((previous == null ? null : routes.FirstOrDefault(route => Same(route, previous))) ?? routes.FirstOrDefault());
 
             StatusText.Text = empty
                 ? string.Empty

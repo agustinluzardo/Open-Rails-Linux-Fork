@@ -70,7 +70,7 @@ The engine used Windows Forms for four things, each replaced by something both p
 | Display layout and window placement | `Screen`, `Form` | `Common/Display/DisplayDevices` - SDL here, the Win32 monitor functions there |
 | Fatal error and missing content dialogs | `MessageBox` | `Common/Display/MessageDialog` - SDL here, `MessageBoxW` there |
 | Mouse cursors | `Cursors` | MonoGame's own `MouseCursor` |
-| The launcher | the `Menu` project | `Source/Launcher.Cli`, see [The riel command](#the-riel-command) |
+| The launcher | the `Menu` project | `Source/Launcher.Gui` and `Source/Launcher.Cli`, see [The launchers](#the-launchers) |
 
 `RenderProcess` now drives the MonoGame `GameWindow` directly - `IsBorderless` and `Position`
 instead of a form's border style and size. MonoGame reports window resizes but not moves, so the
@@ -276,7 +276,10 @@ Source/
     Native/ContentIO.cs        case insensitive content paths
     Native/IniFile.cs          GetPrivateProfileString
     Native/ScanCodeMap.*.cs    scan codes to keys
+  Launcher.Core/                what both launchers share
   Launcher.Cli/                the riel command
+  Launcher.Gui/                the graphical launcher (Avalonia)
+  Locales/Launcher.Gui/        its translations, GetText .po
   Shaders/prebuilt/            compiled effects
   Tools/FxcBridge/             shader compilation under Wine
 packaging/
@@ -285,18 +288,82 @@ packaging/
 scripts/build-shaders.sh
 ```
 
-## The riel command
+## The launchers
 
-`riel` manages content folders, lists routes, activities, paths and consists, and starts a run. It
-works on the same content model the Windows menu does, so a profile configured with one works with
-the other. Names are matched case insensitively on a unique prefix.
+The Windows build's menu is Windows Forms. Here there are two launchers over the same content
+model and the same profile the Windows menu uses, so a profile configured with one works with the
+others:
 
-`riel start` is what the desktop entry runs: it opens the simulator on whatever the profile was
-last left on, so a double click behaves the way the Windows menu's start button does.
+- **riel-gui**, what the desktop entry opens. Avalonia, drawn with Skia.
+- **riel**, the command line: content folders, listings, `play`, `explore`, `resume`, `start`,
+  `doctor`. Names are matched case insensitively on a unique prefix.
 
-`riel doctor` answers the first question a failed first run raises: it checks the simulator binary,
-the compiled shaders, OpenAL, SDL, the display session, the configured content and the RailDriver,
-and names the fix for each.
+Both are thin. `Launcher.Core` holds everything they would otherwise each implement - the content
+configuration, the selections, starting the simulator and reading back how it went, the doctor
+checks - so they cannot drift apart.
 
-A graphical launcher would be the natural next step; the content model it would sit on is the same
-one `riel` already uses.
+### Starting a run
+
+The Windows menu starts the simulator with no arguments, after saving the choice in the profile as
+a `ProfileSelectionsModel`; the simulator reads it back. Both launchers save the selection the same
+way on every start - which is what makes `riel start` and reopening on the last route work - but
+start the run with the selection spelled out as arguments too. The two describe the same thing;
+the arguments make the run independent of which profile is current, and give a command line that
+reproduces it exactly.
+
+### When a run fails
+
+Started from a desktop icon, the simulator's standard error goes nowhere, and a failure looks
+exactly like a click that did nothing. So `SimulatorRun` keeps the end of standard error, and after
+exit `SimulatorOutcome` finds the log that run wrote - the newest one changed since it started -
+and picks out the fatal error. Only a fatal error counts: the log also records errors the
+simulator carried on past, and treating those as failures would put a dialog after every normal
+session.
+
+The cause shown is one sentence: from the chain of exceptions as .NET prints it, the innermost one,
+passing over wrappers and the null reference that is only ever a symptom. The launcher adds what
+usually helps for the common causes - a missing file, permissions, the graphics device.
+
+A launcher that reports failures itself sets `RIEL_LAUNCHER_REPORTS_ERRORS=1` for the simulator,
+which then skips its own SDL error dialog: one failure, one window. That dialog is still there when
+the simulator is started any other way, and its text is wrapped now - SDL sizes the box to the
+longest line, and the paragraph used to arrive on one, wider than the screen.
+
+### Content that cannot be read
+
+Third party MSTS content is full of files that are slightly wrong, which Microsoft's reader
+tolerated. The content scan used to stop at the first one, and a folder with a single broken route
+listed no routes at all - which looks exactly like pointing Riel at the wrong folder.
+
+`ImportFailures.Guard` now wraps the import of each route, path, consist, piece of rolling stock
+and timetable; activities already coped. A file that cannot be read is skipped and recorded, with
+the parser's reason and usually the line, and the scan carries on. A route whose track database or
+signal configuration fails is recorded the same way but stays listed, since its header read fine;
+starting it throws `RouteDataUnavailableException` naming the route, rather than the null
+reference it used to, and the launcher shows what the scan recorded against it. The launcher lists
+what a scan skipped behind a "problems" button, and `riel content refresh` prints it.
+
+### The graphical launcher
+
+Avalonia 12 asks for SkiaSharp 3; the engine uses SkiaSharp 4 for its GDI+ layer. Both are
+published into one directory, which holds one `libSkiaSharp.so`, so the launcher is built against
+the engine's version. Avalonia renders correctly on it - checked under Xvfb, not assumed.
+Avalonia runs on X11, and so under XWayland in a Wayland session. Its build reports usage to the
+vendor unless `UsedAvaloniaProducts` is empty, which the project sees to; the PKGBUILD also sets
+`AVALONIA_TELEMETRY_OPTOUT`.
+
+Its text is written in English and translated through GetText catalogs in
+`Source/Locales/Launcher.Gui`, compiled into the program: `es.po` is complete, and
+`Launcher.Gui.pot` is the template for another language. A test checks that every string in the
+template is translated and keeps its `{0}` placeholders - a lost one throws when the text is
+formatted. The language comes from `LANGUAGE`, then the locale.
+
+It is dark unless the switch in the header says otherwise; the choice is one word in
+`~/.config/riel/launcher-theme`.
+
+### doctor
+
+`riel doctor`, and "Check this computer" in the launcher, answer the first question a failed first
+run raises: the simulator binary, the compiled shaders, OpenAL, SDL, the display session and the
+configured content, each with the fix. The RailDriver is reported but never as a failure; it is
+optional hardware, and "FAIL not connected" read like the reason the game would not start.
