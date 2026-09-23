@@ -34,8 +34,11 @@ namespace FreeTrainSimulator.Common.Input
             //with multiple instances (such as seconday window for Dispatcher or another Toolbox instance, Keyboard is not activated despite
             //the window is activated when either just opening new window, or switching between windows other than keyboard
             //hence we simply brutforce set the keyboard to active when the game window is active
+            //only MonoGame's Windows backend has this; on SDL the keyboard state is kept whatever window has the focus
             MethodInfo setActiveMethod = typeof(Keyboard).GetMethod("SetActive", BindingFlags.NonPublic | BindingFlags.Static);
-            SetKeyboardActive = (Action<bool>)Delegate.CreateDelegate(typeof(Action<bool>), setActiveMethod);
+            SetKeyboardActive = setActiveMethod == null
+                ? static _ => { }
+                : (Action<bool>)Delegate.CreateDelegate(typeof(Action<bool>), setActiveMethod);
         }
 
         public ref readonly KeyboardState KeyboardState => ref currentKeyboardState;

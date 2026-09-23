@@ -379,6 +379,9 @@ namespace Orts.Simulation
                 StartTime = TimeOnly.FromTimeSpan(startTime),
                 Season = season,
                 Weather = weather,
+                // An activity file says how full the tanks start; exploring has no file, and
+                // without this every diesel or steam locomotive failed to load, on the null levels.
+                FuelLevels = new EnumArray<int, FuelType>(100),
             };
             ActivityType = ActivityType.ExploreActivity;
             ActivityFile = new ActivityFile((int)startTime.TotalSeconds, Path.GetFileNameWithoutExtension(consist));

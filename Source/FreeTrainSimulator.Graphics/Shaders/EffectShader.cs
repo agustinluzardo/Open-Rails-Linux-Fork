@@ -15,15 +15,27 @@ namespace FreeTrainSimulator.Graphics.Shaders
         private readonly byte worldIndex = byte.MaxValue;
         private readonly byte wvpIndex = byte.MaxValue;
 
+        // A shader that declares a matrix but never reads it has no such parameter once compiled
+        // for OpenGL: the GLSL compiler drops unused uniforms, where Direct3D keeps them in the
+        // constant buffer. The popup windows' shader is one - it has no World - so setting a
+        // matrix the shader lacks does nothing rather than index past the parameters.
 #pragma warning disable CA1044 // Properties should not be write only
         public Matrix World
         {
-            set => Parameters[worldIndex].SetValue(value);
+            set
+            {
+                if (worldIndex != byte.MaxValue)
+                    Parameters[worldIndex].SetValue(value);
+            }
         }
 
         public Matrix WorldViewProjection
         {
-            set => Parameters[wvpIndex].SetValue(value);
+            set
+            {
+                if (wvpIndex != byte.MaxValue)
+                    Parameters[wvpIndex].SetValue(value);
+            }
         }
 #pragma warning restore CA1044 // Properties should not be write only
 
