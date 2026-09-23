@@ -73,6 +73,12 @@ namespace Orts.ActivityRunner.Processes
             WaitHandle.WaitAny(finishEvents);
         }
 
+        /// <summary>Waits at most <paramref name="millisecondsTimeout"/>; true when finished or terminated.</summary>
+        public bool WaitTillFinished(int millisecondsTimeout)
+        {
+            return WaitHandle.WaitAny(finishEvents, millisecondsTimeout) != WaitHandle.WaitTimeout;
+        }
+
         private void Dispose(bool disposing)
         {
             if (!disposedValue)

@@ -337,13 +337,27 @@ namespace Orts.ActivityRunner.Processes
                 viewport = game.GraphicsDevice.Viewport;
             }
 
-            game.UpdaterProcess.WaitForComplection();
+            // The updater may be waiting for this thread in turn, to fill a buffer: see GraphicsQueue.
+            GraphicsQueue.WaitFor(game.UpdaterProcess);
 
             // Swap frames and start the next update (non-threaded updater does the whole update).
             (CurrentFrame, NextFrame) = (NextFrame, CurrentFrame);
             game.UpdaterProcess.TriggerUpdate(NextFrame, gameTime);
             game.SystemProcess.TriggerUpdate(gameTime);
+
+            // While a route loads, the loader creates its textures and buffers through this thread,
+            // one at a time. The loading screen only needs a few frames a second, so most of each
+            // frame goes to that instead of to sleeping until the next one - except in the extra
+            // updates MonoGame runs to catch up, which would only fall further behind.
+            if (game.State is GameStateRunActivity && !gameTime.IsRunningSlowly)
+                GraphicsQueue.Pump(LoadingPumpTime);
         }
+
+        /// <summary>
+        /// How much of each loading screen frame, which lasts 100 ms, goes to the loader's graphics
+        /// work; the rest is left for drawing the frame.
+        /// </summary>
+        private static readonly TimeSpan LoadingPumpTime = TimeSpan.FromMilliseconds(70);
 
         private void LoadSettings()
         {

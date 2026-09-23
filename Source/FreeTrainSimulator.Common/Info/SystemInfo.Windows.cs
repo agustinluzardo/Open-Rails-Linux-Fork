@@ -19,6 +19,7 @@ namespace FreeTrainSimulator.Common.Info
 
         public static string SetGraphicAdapterInformation(string adapterName)
         {
+            GraphicAdapterName = adapterName;
             if (GraphicAdapterMemoryInformation == null)
                 try
                 {

@@ -13,6 +13,19 @@ namespace FreeTrainSimulator.Common.Info
     /// </summary>
     public static partial class SystemInfo
     {
+        /// <summary>
+        /// The graphics adapter the game runs on, as the renderer names it; null until the render
+        /// thread has set up the graphics device.
+        /// </summary>
+        /// <remarks>
+        /// On OpenGL the name is a query to the driver, and the driver only answers the thread
+        /// that holds the context. From any other thread the call has no context to go to: Mesa
+        /// ignores it, NVIDIA's driver crashes on it. So the render thread records the name when it
+        /// creates the device, and the log header and the diagnostics overlay - written by the
+        /// loader and the system thread - read it from here.
+        /// </remarks>
+        public static string GraphicAdapterName { get; private set; }
+
         public static void WriteSystemDetails()
         {
             StringBuilder builder = new StringBuilder();

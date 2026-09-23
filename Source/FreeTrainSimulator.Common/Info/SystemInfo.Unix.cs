@@ -49,6 +49,7 @@ namespace FreeTrainSimulator.Common.Info
         /// </summary>
         public static string SetGraphicAdapterInformation(string adapterName)
         {
+            GraphicAdapterName = adapterName;
             GraphicAdapterMemoryInformation ??= ReadGraphicsMemory(adapterName) ?? "n/a";
             return GraphicAdapterMemoryInformation;
         }
@@ -71,9 +72,10 @@ namespace FreeTrainSimulator.Common.Info
                 output.AppendLine(CultureInfo.InvariantCulture, $"{"Video",-12}= {card}");
 
             // The OpenGL backend has no DeviceName or IsDefaultAdapter; SDL reports one adapter
-            // per display and the description is all it carries.
+            // per display. Its Description is a GL query, which this thread - the loader's, when
+            // the log opens - must not make: the render thread recorded the answer instead.
             foreach (GraphicsAdapter adapter in GraphicsAdapter.Adapters)
-                output.AppendLine(CultureInfo.InvariantCulture, $"{"Display",-12}= {adapter.Description} (resolution {adapter.CurrentDisplayMode.Width} x {adapter.CurrentDisplayMode.Height}{(adapter == GraphicsAdapter.DefaultAdapter ? ", primary" : "")})");
+                output.AppendLine(CultureInfo.InvariantCulture, $"{"Display",-12}= {GraphicAdapterName ?? "OpenGL"} (resolution {adapter.CurrentDisplayMode.Width} x {adapter.CurrentDisplayMode.Height}{(adapter == GraphicsAdapter.DefaultAdapter ? ", primary" : "")})");
 
             foreach (string device in ReadSoundDevices())
                 output.AppendLine(CultureInfo.InvariantCulture, $"{"Sound",-12}= {device}");

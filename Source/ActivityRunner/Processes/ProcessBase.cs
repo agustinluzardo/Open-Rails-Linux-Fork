@@ -56,6 +56,15 @@ namespace Orts.ActivityRunner.Processes
             processState.WaitTillFinished();
         }
 
+        /// <summary>
+        /// Waits at most <paramref name="millisecondsTimeout"/> for the current update to finish;
+        /// true when it has.
+        /// </summary>
+        internal bool WaitForComplection(int millisecondsTimeout)
+        {
+            return processState.WaitTillFinished(millisecondsTimeout);
+        }
+
         protected abstract void Update(GameTime gameTime);
 
         protected virtual void Initialize()
