@@ -66,22 +66,28 @@ namespace Orts.Simulation.World
                     hazardFile = new HazardFile(Simulator.Instance.RouteFolder.HazardFile(hazFileName));
                     hazardFiles.Add(hazFileName, hazardFile);
                 }
-                hazards[itemID].HazardFile = hazardFile;
+                if (!hazards.TryGetValue(itemID, out Hazard hazard))
+                {
+                    Trace.TraceWarning("Skipping hazard item {0}: no matching hazard track item was found.", itemID);
+                    return null;
+                }
+
+                hazard.HazardFile = hazardFile;
                 //based on act setting for frequency
                 if (Simulator.Instance.ActivityModel != null)
                 {
-                    if (hazards[itemID].Animal && (StaticRandom.Next(100) > Simulator.Instance.ActivityModel.HazardProbability))
+                    if (hazard.Animal && (StaticRandom.Next(100) > Simulator.Instance.ActivityModel.HazardProbability))
                         return null;
                 }
                 else //in explore mode
                 {
-                    if (!hazards[itemID].Animal)
+                    if (!hazard.Animal)
                         return null;//not show worker in explore mode
                     if (StaticRandom.Next(100) > 20)
                         return null;//show 10% animals
                 }
-                currentHazards.Add(itemID, hazards[itemID]);
-                return hazards[itemID];//successfully added the hazard with associated haz file
+                currentHazards.Add(itemID, hazard);
+                return hazard;//successfully added the hazard with associated haz file
             }
             return null;
         }
