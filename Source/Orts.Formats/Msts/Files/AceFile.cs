@@ -213,7 +213,15 @@ namespace Orts.Formats.Msts.Files
             { 0x0E, SurfaceFormat.Bgr565 },
             { 0x10, SurfaceFormat.Bgra5551 },
             { 0x11, SurfaceFormat.Bgra4444 },
+#if RIEL_UNIX
+            // MSTS DXT1 ACE textures may carry a 1-bit transparency mask. Windows'
+            // Direct3D path preserves that alpha with DXT1, while OpenGL has distinct
+            // RGB and RGBA DXT1 formats; use Dxt1a on Linux so vegetation cut-outs
+            // do not become opaque rectangles.
+            { 0x12, SurfaceFormat.Dxt1a },
+#else
             { 0x12, SurfaceFormat.Dxt1 },
+#endif
             { 0x14, SurfaceFormat.Dxt3 },
             { 0x16, SurfaceFormat.Dxt5 },
         };
