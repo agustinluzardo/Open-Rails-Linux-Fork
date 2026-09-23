@@ -414,7 +414,13 @@ namespace Orts.ActivityRunner.Viewer3D
             ShapeManager = new SharedShapeManager(this);
             SignalTypeDataManager = new SignalTypeDataManager(this);
 
-            windowManager = WindowManager.Initialize<UserCommand, ViewerWindowType>(Game, UserCommandController.AddTopLayerController());
+            UserCommandController<UserCommand> topLayerController = UserCommandController.AddTopLayerController();
+            topLayerController.AddEvent(UserCommand.GameQuit, KeyEventType.KeyPressed, (UserCommandArgs args) =>
+            {
+                args.Handled = true;
+                Game.Exit();
+            });
+            windowManager = WindowManager.Initialize<UserCommand, ViewerWindowType>(Game, topLayerController);
             windowManager.MultiLayerModalWindows = true;
             windowManager.WindowOpacity = 0.4f;
             windowManager.OnModalWindow += WindowManager_OnModalWindow;
@@ -550,10 +556,6 @@ namespace Orts.ActivityRunner.Viewer3D
             PlayerLocomotiveViewer = World.Trains.GetViewer(PlayerLocomotive);
 
             #region UserCommmands
-            UserCommandController.AddEvent(UserCommand.GameQuit, KeyEventType.KeyPressed, static () =>
-            {
-                Program.Viewer?.Game.Exit();
-            });
             if (MultiPlayerManager.IsMultiPlayer())
             {
                 UserCommandController.AddEvent(UserCommand.GamePauseMenu, KeyEventType.KeyPressed, () => Simulator.Confirmer?.Information(Catalog.GetString("In multiplayer mode, use Alt-F4 to quit directly")));
