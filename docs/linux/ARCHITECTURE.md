@@ -373,6 +373,39 @@ hardware and not in a test display:
   MonoGame loaded it again. The probe now loads the driver through SDL once and holds it, so there
   is a single driver instance from the probe to the game's window, and it asks once per run.
 
+### OpenGL belongs to one thread
+
+The first crash report from a real machine - a GeForce GTX 1070 - named the cause of a SIGSEGV on
+every route: the system thread asked `GraphicsAdapter.Description` for the diagnostics overlay. On
+Direct3D that is a stored string; on OpenGL it is `glGetString`, a GL call from a thread with no
+context. Mesa ignores such a call, which is why nothing showed in testing. NVIDIA's driver patches
+libglvnd's dispatch stubs for speed and crashes on it. The render thread now records the adapter's
+name when it creates the device (`SystemInfo.GraphicAdapterName`), and the overlay and the log
+header read that.
+
+libglvnd can be made as strict as NVIDIA anywhere: with `__GLVND_APP_ERROR_CHECKING=1` and
+`__GLVND_ABORT_ON_APP_ERROR=1` any GL call without a current context aborts, and the crash report
+names the caller. Every change to threading or rendering should be run that way.
+
+MonoGame's OpenGL backend queues texture and buffer work from other threads for the graphics thread,
+and runs the queue once per frame. The engine, written for Direct3D, does such work from two other
+threads, so `GraphicsQueue` runs the queue while the graphics thread waits for the updater - which
+fills particle buffers while the graphics thread waits for it, and froze the game as soon as a
+locomotive smoked - and for most of each loading screen frame, which took a small route from 41 s
+to 3.5 s.
+
+Two more differences between MonoGame's backends: the GLSL compiler drops uniforms a shader never
+reads, where Direct3D keeps them, so `EffectShader` ignores a matrix its effect lacks; and
+`Keyboard.SetActive`, which the keyboard component bound by reflection, only exists on Windows.
+
+### Testing without content
+
+`Source/Tools/TestRoute/make_test_route.py` writes a small MSTS installation the simulator can load
+and drive: a straight track with its track sections, database and signal configuration, two paths,
+environment and sound files, and a diesel with a textured body, exhaust effects and a 2D cab. It is
+what took the simulator past its loading screen here for the first time; see the script for how to
+run it.
+
 ### Content that cannot be read
 
 Third party MSTS content is full of files that are slightly wrong, which Microsoft's reader
