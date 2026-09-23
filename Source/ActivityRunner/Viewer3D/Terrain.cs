@@ -190,7 +190,7 @@ namespace Orts.ActivityRunner.Viewer3D
     {
         private readonly Viewer Viewer;
         private readonly Tile tile;
-        private readonly int Size, PatchX, PatchZ, PatchSize;
+        private readonly int Size, PatchX, PatchZ, PatchSize, PatchSampleCount;
         private readonly float AverageElevation;
         private readonly Vector3 PatchLocation;        // In MSTS world coordinates relative to the center of the tile
         private readonly VertexBuffer PatchVertexBuffer;  // Separate vertex buffer for each patch
@@ -200,7 +200,7 @@ namespace Orts.ActivityRunner.Viewer3D
         private readonly VertexBufferBinding[] VertexBufferBindings;
 
         // These can be shared since they are the same for all patches
-        public static IndexBuffer SharedPatchIndexBuffer { get; private set; }
+        private static readonly Dictionary<int, IndexBuffer> SharedPatchIndexBuffers = new Dictionary<int, IndexBuffer>();
 
         // These are only used while the contructor runs and are discarded after.
         private readonly TileManager TileManager;
@@ -216,6 +216,7 @@ namespace Orts.ActivityRunner.Viewer3D
             PatchX = x;
             PatchZ = z;
             PatchSize = tileSample.Size * 2048 / tileSample.PatchCount;
+            PatchSampleCount = tileSample.SampleCount / tileSample.PatchCount;
 
             TileManager = tileManager;
             Tile = tileSample;
@@ -236,8 +237,8 @@ namespace Orts.ActivityRunner.Viewer3D
             else
                 PatchMaterial = viewer.MaterialManager.Load(terrainMaterial, Helpers.GetTerrainTextureFile(ts[0].FileName) + "\0" + Helpers.GetTerrainTextureFile("microtex.ace"));
 
-            if (SharedPatchIndexBuffer == null)
-                SetupSharedData(Viewer.Game.GraphicsDevice);
+            if (!SharedPatchIndexBuffers.ContainsKey(PatchSampleCount))
+                SetupSharedData(Viewer.Game.GraphicsDevice, PatchSampleCount);
 
             Tile = null;
             Patch = null;
@@ -257,19 +258,18 @@ namespace Orts.ActivityRunner.Viewer3D
         public override void Draw()
         {
             graphicsDevice.SetVertexBuffers(VertexBufferBindings);
-            if (PatchIndexBuffer != null)
-                graphicsDevice.Indices = PatchIndexBuffer;
+            graphicsDevice.Indices = PatchIndexBuffer ?? SharedPatchIndexBuffers[PatchSampleCount];
             graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, PatchPrimitiveCount);
         }
 
         private float Elevation(int x, int z)
         {
-            return TileManager.GetElevation(Tile, PatchX * 16 + x, PatchZ * 16 + z);
+            return TileManager.GetElevation(Tile, PatchX * PatchSampleCount + x, PatchZ * PatchSampleCount + z);
         }
 
         private bool IsVertexHidden(int x, int z)
         {
-            return TileManager.IsVertexHidden(Tile, PatchX * 16 + x, PatchZ * 16 + z);
+            return TileManager.IsVertexHidden(Tile, PatchX * PatchSampleCount + x, PatchZ * PatchSampleCount + z);
         }
 
         private Vector3 TerrainNormal(int x, int z)
@@ -360,97 +360,89 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private IndexBuffer GetIndexBuffer(out int primitiveCount)
         {
-            const int bufferSize = 1536;    //16 * 16 * 2 * 3;
-            int i = 0;
-            short[] indexBuffer = new short[bufferSize];
-            for (var z = 0; z < 16; ++z)
+            // PatchSampleCount squares * 2 triangles per square * 3 indices per triangle.
+            var indexData = new List<short>(PatchSampleCount * PatchSampleCount * 2 * 3);
+
+            for (var z = 0; z < PatchSampleCount; ++z)
             {
-                for (var x = 0; x < 16; ++x)
+                for (var x = 0; x < PatchSampleCount; ++x)
                 {
-                    var nw = (short)(z * 17 + x);  // Vertex index in the north west corner
+                    var nw = (short)(z * (1 + PatchSampleCount) + x);
                     var ne = (short)(nw + 1);
-                    var sw = (short)(nw + 17);
+                    var sw = (short)(nw + (1 + PatchSampleCount));
                     var se = (short)(sw + 1);
 
                     bool vertexHiddenXZ = IsVertexHidden(x, z);
                     bool vertexHiddenX1Z1 = IsVertexHidden(x + 1, z + 1);
                     bool vertexHiddenX1Z = IsVertexHidden(x + 1, z);
                     bool vertexHiddenXZ1 = IsVertexHidden(x, z + 1);
-                    if ((z & 1) == (x & 1))  // Triangles alternate
+                    if ((z & 1) == (x & 1))
                     {
                         if (!vertexHiddenXZ && !vertexHiddenX1Z1 && !vertexHiddenXZ1)
                         {
-                            indexBuffer[i++] = nw;
-                            indexBuffer[i++] = se;
-                            indexBuffer[i++] = sw;
+                            indexData.Add(nw);
+                            indexData.Add(se);
+                            indexData.Add(sw);
                         }
                         if (!vertexHiddenXZ && !vertexHiddenX1Z && !vertexHiddenX1Z1)
                         {
-                            indexBuffer[i++] = nw;
-                            indexBuffer[i++] = ne;
-                            indexBuffer[i++] = se;
+                            indexData.Add(nw);
+                            indexData.Add(ne);
+                            indexData.Add(se);
                         }
                     }
                     else
                     {
                         if (!vertexHiddenX1Z && !vertexHiddenX1Z1 && !vertexHiddenXZ1)
                         {
-                            indexBuffer[i++] = ne;
-                            indexBuffer[i++] = se;
-                            indexBuffer[i++] = sw;
+                            indexData.Add(ne);
+                            indexData.Add(se);
+                            indexData.Add(sw);
                         }
                         if (!vertexHiddenXZ && !vertexHiddenX1Z && !vertexHiddenXZ1)
                         {
-                            indexBuffer[i++] = nw;
-                            indexBuffer[i++] = ne;
-                            indexBuffer[i++] = sw;
+                            indexData.Add(nw);
+                            indexData.Add(ne);
+                            indexData.Add(sw);
                         }
                     }
                 }
             }
-            primitiveCount = i / 3;
+            primitiveCount = indexData.Count / 3;
 
-            // If this patch has no holes, use the shared IndexBuffer for better performance.
-            if (i == bufferSize) //16 * 16 * 6
+            if (indexData.Count == PatchSampleCount * PatchSampleCount * 6)
                 return null;
 
-            IndexBuffer result = new IndexBuffer(Viewer.Game.GraphicsDevice, IndexElementSize.SixteenBits, i, BufferUsage.WriteOnly);
-            result.SetData(indexBuffer, 0, i);
+            var result = new IndexBuffer(Viewer.Game.GraphicsDevice, IndexElementSize.SixteenBits, indexData.Count, BufferUsage.WriteOnly);
+            result.SetData(indexData.ToArray());
             return result;
         }
 
         private VertexBuffer GetVertexBuffer(out float averageElevation)
         {
-            const int bufferSize = 289; //17*17
-            int i = 0;
             var totalElevation = 0f;
-            var vertexbuffer = new VertexPositionNormalTexture[bufferSize];
+            var patchSampleCountPlus = 1 + PatchSampleCount;
+            var vertexbuffer = new VertexPositionNormalTexture[patchSampleCountPlus * patchSampleCountPlus];
             var step = Tile.SampleSize;
-            for (var z = 0; z < 17; ++z)
+            int i = 0;
+            for (var z = 0; z < patchSampleCountPlus; ++z)
             {
-                for (var x = 0; x < 17; ++x)
+                for (var x = 0; x < patchSampleCountPlus; ++x)
                 {
                     var e = -Patch.RadiusM + x * step;
                     var n = -Patch.RadiusM + z * step;
-
                     var u = (float)x;
                     var v = (float)z;
-
-                    // Rotate, Flip, and stretch the texture using the matrix coordinates stored in terrain_patchset_patch 
-                    // transform uv by the 2x3 matrix made up of X,Y  W,B  C,H
                     var U = u * Patch.W + v * Patch.B + Patch.X;
                     var V = u * Patch.C + v * Patch.H + Patch.Y;
-
-                    // V represents the north/south shift
-
                     var y = Elevation(x, z) - Tile.Floor;
                     totalElevation += y;
                     vertexbuffer[i++] = new VertexPositionNormalTexture(new Vector3(e, y, n), TerrainNormal(x, z), new Vector2(U, V));
                 }
             }
 
-            averageElevation = totalElevation / bufferSize;
-            VertexBuffer result = new VertexBuffer(Viewer.Game.GraphicsDevice, typeof(VertexPositionNormalTexture), bufferSize, BufferUsage.WriteOnly);
+            averageElevation = totalElevation / vertexbuffer.Length;
+            var result = new VertexBuffer(Viewer.Game.GraphicsDevice, typeof(VertexPositionNormalTexture), vertexbuffer.Length, BufferUsage.WriteOnly);
             result.SetData(vertexbuffer);
             return result;
         }
@@ -460,24 +452,22 @@ namespace Orts.ActivityRunner.Viewer3D
             PatchMaterial.Mark();
         }
 
-        private static void SetupSharedData(GraphicsDevice graphicsDevice)
+        private static void SetupSharedData(GraphicsDevice graphicsDevice, int patchSampleCount)
         {
-            // 16 x 16 squares * 2 triangles per square * 3 indices per triangle
-            const int bufferSize = 1536;    //16 * 16 * 2 * 3;
+            var bufferSize = patchSampleCount * patchSampleCount * 2 * 3;
             int i = 0;
             short[] indexBuffer = new short[bufferSize];
 
-            // For each 8 meter rectangle
-            for (var z = 0; z < 16; ++z)
+            for (var z = 0; z < patchSampleCount; ++z)
             {
-                for (var x = 0; x < 16; ++x)
+                for (var x = 0; x < patchSampleCount; ++x)
                 {
-                    var nw = (short)(z * 17 + x);  // Vertex index in the north west corner
+                    var nw = (short)(z * (1 + patchSampleCount) + x);
                     var ne = (short)(nw + 1);
-                    var sw = (short)(nw + 17);
+                    var sw = (short)(nw + (1 + patchSampleCount));
                     var se = (short)(sw + 1);
 
-                    if ((z & 1) == (x & 1))  // Triangles alternate
+                    if ((z & 1) == (x & 1))
                     {
                         indexBuffer[i++] = nw;
                         indexBuffer[i++] = se;
@@ -498,9 +488,9 @@ namespace Orts.ActivityRunner.Viewer3D
                 }
             }
 
-            SharedPatchIndexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.SixteenBits, i, BufferUsage.WriteOnly);
-            SharedPatchIndexBuffer.SetData(indexBuffer, 0, i);
-
+            var sharedPatchIndexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.SixteenBits, indexBuffer.Length, BufferUsage.WriteOnly);
+            sharedPatchIndexBuffer.SetData(indexBuffer);
+            SharedPatchIndexBuffers[patchSampleCount] = sharedPatchIndexBuffer;
         }
     }
 
