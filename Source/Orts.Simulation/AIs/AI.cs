@@ -735,6 +735,10 @@ namespace Orts.Simulation.AIs
 
                 if (!ContentIO.FileExists(wagonFilePath))
                 {
+                    if (isInitialPlayerTrain && wagon.IsEngine)
+                        throw new FileNotFoundException(
+                            $"Player locomotive file was not found for consist '{consistFileName}'.", wagonFilePath);
+
                     Trace.TraceWarning($"Ignored missing {(wagon.IsEngine ? "engine" : "wagon")} {wagonFilePath} in consist {consistFileName}");
                     continue;
                 }
@@ -789,10 +793,17 @@ namespace Orts.Simulation.AIs
                 }
                 catch (Exception error)
                 {
+                    if (isInitialPlayerTrain && wagon.IsEngine)
+                        throw new FileLoadException(wagonFilePath, error);
+
                     Trace.WriteLine(new FileLoadException(wagonFilePath, error));
                 }
 
             }// for each rail car
+
+            if (isInitialPlayerTrain && !train.Cars.Any(car => car is MSTSLocomotive && car.IsDriveable))
+                throw new InvalidDataException(
+                    $"Player consist '{consistFileName}' loaded no driveable locomotive. Loaded cars: {train.Cars.Count}.");
 
             if (train.Cars.Count <= 0)
             {

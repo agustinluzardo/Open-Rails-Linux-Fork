@@ -746,9 +746,11 @@ namespace Orts.Simulation
 
         internal static MSTSLocomotive SetPlayerLocomotive(Train playerTrain)
         {
+            ArgumentNullException.ThrowIfNull(playerTrain, nameof(playerTrain));
+
             MSTSLocomotive playerLocomotive = null;
             foreach (TrainCar car in playerTrain.Cars)
-                if (car is MSTSLocomotive locomotive)  // first loco is the one the player drives
+                if (car is MSTSLocomotive locomotive && car.IsDriveable)  // first driveable locomotive is the one the player drives
                 {
                     playerLocomotive = locomotive;
                     playerTrain.LeadLocomotive = locomotive;
@@ -756,7 +758,9 @@ namespace Orts.Simulation
                     playerLocomotive.LocalThrottlePercent = playerTrain.AITrainThrottlePercent;
                     break;
                 }
-            return playerLocomotive ?? throw new InvalidDataException("Can't find player locomotive in activity");
+
+            return playerLocomotive ?? throw new InvalidDataException(
+                $"Can't find a driveable locomotive in player train '{playerTrain.Name}'. Loaded cars: {playerTrain.Cars.Count}.");
         }
 
         /// <summary>

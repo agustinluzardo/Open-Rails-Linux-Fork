@@ -1795,6 +1795,7 @@ namespace Orts.Simulation.RollingStocks
             }
 
             base.Initialize();
+            IsDriveable = true;
             if (DynamicBrakeBlendingEnabled)
                 airPipeSystem = BrakeSystem as AirSinglePipe;
 

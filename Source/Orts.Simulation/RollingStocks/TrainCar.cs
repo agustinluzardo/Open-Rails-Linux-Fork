@@ -173,6 +173,7 @@ namespace Orts.Simulation.RollingStocks
         public float CarHeightM { get; protected set; } = 4;        // derived classes must overwrite these defaults
         public float MassKG { get; internal protected set; } = 10000;        // Mass in KG at runtime; coincides with InitialMassKG if there is no load and no ORTS freight anim
         public float InitialMassKG { get; protected set; } = 10000;
+        public bool IsDriveable { get; protected internal set; }
         public int PassengerCapacity { get; protected set; }
         public bool HasInsideView { get; protected set; }
         public float CarHeightAboveSeaLevel { get; set; }
