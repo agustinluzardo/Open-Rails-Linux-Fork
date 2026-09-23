@@ -801,7 +801,7 @@ namespace Orts.Simulation.AIs
 
             }// for each rail car
 
-            if (isInitialPlayerTrain && !train.Cars.Any(car => car is MSTSLocomotive && car.IsDriveable))
+            if (isInitialPlayerTrain && !System.Linq.Enumerable.Any(train.Cars, car => car is MSTSLocomotive && car.IsDriveable))
                 throw new InvalidDataException(
                     $"Player consist '{consistFileName}' loaded no driveable locomotive. Loaded cars: {train.Cars.Count}.");
 
