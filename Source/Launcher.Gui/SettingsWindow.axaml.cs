@@ -141,11 +141,11 @@ namespace Riel.Launcher.Gui
                 return;
 
             CommonKeyModifiers modifiers = CommonKeyModifiers.None;
-            if (e.KeyModifiers.HasAll(KeyModifiers.Shift))
+            if ((e.KeyModifiers & KeyModifiers.Shift) != 0)
                 modifiers |= CommonKeyModifiers.Shift;
-            if (e.KeyModifiers.HasAll(KeyModifiers.Control))
+            if ((e.KeyModifiers & KeyModifiers.Control) != 0)
                 modifiers |= CommonKeyModifiers.Control;
-            if (e.KeyModifiers.HasAll(KeyModifiers.Alt))
+            if ((e.KeyModifiers & KeyModifiers.Alt) != 0)
                 modifiers |= CommonKeyModifiers.Alt;
 
             keyboardSettings.UserCommands[pendingCommand].UniqueDescriptor =
