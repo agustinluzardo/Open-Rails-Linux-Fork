@@ -16,10 +16,13 @@
 // along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 
 using FreeTrainSimulator.Common.Native;
+
+using Orts.Formats.Msts;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -177,6 +180,29 @@ namespace Tests.FreeTrainSimulator.Common
         /// Resolving the folder is only half of it: the pattern has to ignore case too, or the
         /// folder is found and reported empty.
         /// </summary>
+        [TestMethod]
+        public void FindFileFromFoldersReturnsTheCorrectlyCasedPath()
+        {
+            string soundFolder = Path.Combine(root, "SOUND");
+            Directory.CreateDirectory(soundFolder);
+            string soundFile = Path.Combine(soundFolder, "e_wind_3.wav");
+            File.WriteAllText(soundFile, "sound");
+
+            try
+            {
+                string resolved = FolderStructure.FindFileFromFolders(
+                    ImmutableArray.Create(Path.Combine(root, "Sound")),
+                    "e_wind_3.wav");
+
+                Assert.AreEqual(soundFile, resolved);
+            }
+            finally
+            {
+                File.Delete(soundFile);
+                Directory.Delete(soundFolder);
+            }
+        }
+
         [TestMethod]
         public void MatchesThePatternWithoutRegardToCase()
         {
