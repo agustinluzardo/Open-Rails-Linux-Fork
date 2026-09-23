@@ -70,7 +70,7 @@ namespace FreeTrainSimulator.Models.Settings
             WindowSetting.Size => (1024, 768),// absolute pixels
             _ => throw new System.NotImplementedException(),
         });
-        public ScreenMode ScreenMode { get; set; } = ScreenMode.BorderlessFullscreen;
+        public ScreenMode ScreenMode { get; set; } = ScreenMode.WindowedFullscreen;
         public int WindowScreen { get; set; } = -1;
         #endregion
 
