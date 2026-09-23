@@ -94,6 +94,7 @@ namespace Riel.Launcher.Gui
             AddFirstFolderButton.Click += (_, _) => Guarded(() => ManageContent(browseFirst: true));
             UseDetectedButton.Click += (_, _) => Guarded(AddDetected);
             DoctorButton.Click += (_, _) => Guarded(() => new DiagnosticsWindow().ShowDialog(this));
+            SettingsButton.Click += (_, _) => Guarded(ShowSettings);
             ProblemsButton.Click += (_, _) => Guarded(() => Dialogs.Problems(this, problems));
 
             Opened += (_, _) => Guarded(() => Reload(restoreSelections: true));
@@ -103,6 +104,13 @@ namespace Riel.Launcher.Gui
             DarkSwitch.IsCheckedChanged += (_, _) => Appearance.Set(DarkSwitch.IsChecked == true);
 
             UpdateButtons();
+        }
+
+        private async Task ShowSettings()
+        {
+            ProfileModel profile = await ((ProfileModel)null).Current(closing.Token);
+            SettingsWindow window = new SettingsWindow(profile);
+            await window.ShowDialog(this);
         }
 
         // ----------------------------------------------------------------------------- content
