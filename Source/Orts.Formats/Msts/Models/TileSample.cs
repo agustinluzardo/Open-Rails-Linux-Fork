@@ -88,27 +88,57 @@ namespace Orts.Formats.Msts.Models
 
             string filePattern = TileHelper.TileFileName(tile, zoom);
 
+            string terrainFileName = null;
+            string terrainAltitudeFileName = null;
+            string terrainFlagsFileName = null;
+
+            // Enumerating a Linux filesystem does not guarantee the order in which the files
+            // appear. The altitude and flags buffers need SampleCount from the .t file, so first
+            // discover all files and then load them in dependency order.
             foreach (string fileName in ContentIO.EnumerateFiles(filePath, filePattern + "??.*"))
+            {
+                if (fileName.EndsWith(".t", StringComparison.OrdinalIgnoreCase))
+                    terrainFileName = fileName;
+                else if (fileName.EndsWith("_y.raw", StringComparison.OrdinalIgnoreCase))
+                    terrainAltitudeFileName = fileName;
+                else if (fileName.EndsWith("_f.raw", StringComparison.OrdinalIgnoreCase))
+                    terrainFlagsFileName = fileName;
+            }
+
+            if (terrainFileName != null)
             {
                 try
                 {
-                    switch (fileName)
-                    {
-                        case string t when t.EndsWith(".t", StringComparison.OrdinalIgnoreCase):
-                            terrain = TerrainFile.LoadTerrainFile(fileName);
-                            SampleCount = terrain.Samples.SampleCount;
-                            break;
-                        case string y when y.EndsWith("_y.raw", StringComparison.OrdinalIgnoreCase):
-                            terrainAltitude = TerrainAltitudeFile.LoadTerrainAltitudeFile(fileName, SampleCount);
-                            break;
-                        case string f when f.EndsWith("_f.raw", StringComparison.OrdinalIgnoreCase):
-                            terrainFlags = TerrainFlagsFile.LoadTerrainFlagsFile(fileName, SampleCount);
-                            break;
-                    }
+                    terrain = TerrainFile.LoadTerrainFile(terrainFileName);
+                    SampleCount = terrain.Samples.SampleCount;
                 }
                 catch (IOException exception)
                 {
-                    Trace.WriteLine(new FileLoadException(fileName, exception));
+                    Trace.WriteLine(new FileLoadException(terrainFileName, exception));
+                }
+            }
+
+            if (SampleCount > 0 && terrainAltitudeFileName != null)
+            {
+                try
+                {
+                    terrainAltitude = TerrainAltitudeFile.LoadTerrainAltitudeFile(terrainAltitudeFileName, SampleCount);
+                }
+                catch (IOException exception)
+                {
+                    Trace.WriteLine(new FileLoadException(terrainAltitudeFileName, exception));
+                }
+            }
+
+            if (SampleCount > 0 && terrainFlagsFileName != null)
+            {
+                try
+                {
+                    terrainFlags = TerrainFlagsFile.LoadTerrainFlagsFile(terrainFlagsFileName, SampleCount);
+                }
+                catch (IOException exception)
+                {
+                    Trace.WriteLine(new FileLoadException(terrainFlagsFileName, exception));
                 }
             }
             // T and Y files are expected to exist; F files are optional.
