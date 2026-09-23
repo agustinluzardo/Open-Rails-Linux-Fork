@@ -59,7 +59,10 @@ namespace FreeTrainSimulator.Models.Shim
             initialModel.OdometerShortDistances = settingsModel.OdometerShortDistances;
             initialModel.VibrationLevel = settingsModel.VibrationLevel;
 
-            return await UpdateSettingsModel(profileModel, settingsModel, cancellationToken).ConfigureAwait(false);
+            // The copy is what gets saved: saving the runtime model would store every setting the
+            // simulator adjusted for this run alone - shadows it turned off because the display
+            // could not do them, the multiplayer flag, a safe mode the launcher asked for.
+            return await UpdateSettingsModel(profileModel, initialModel, cancellationToken).ConfigureAwait(false);
         }
         #endregion
 

@@ -181,6 +181,44 @@ When a run fails, the launcher shows why: the cause in one sentence, what usuall
 details, and buttons to copy them or open the log. `riel play` prints the same in the terminal.
 Logs are in `~/.local/state/riel/Logs`. Attach one to a bug report.
 
+### The simulator crashes: exit code 139, "SIGSEGV"
+
+A crash in native code - a graphics driver, the sound server, SDL - ends the process on the spot,
+before anything reaches the log, so the log is no help. Riel keeps two other records of it:
+
+- **A startup trail**, `~/.local/state/riel/Logs/Startup.log`: each step of starting up as it is
+  reached - the window, the graphics device (with the card, `x11` or `wayland`, the screen mode and
+  the antialiasing it got), the sound device, loading. The last step says where it died.
+- **A crash report** in `~/.local/state/riel/Logs/Crashes`: .NET's own description of the crash,
+  written as the process dies, with the stack of the thread that crashed - the library it died in
+  and the code that called it.
+
+The launcher reads both and shows them: what crashed and when, the library, and in "Copy details"
+the whole trail and stack. That text is what a bug report needs. `riel play` and `riel explore`
+print the same in the terminal.
+
+The error window also offers to run again leaving a part out, for that run only - the saved
+settings do not change:
+
+- **Try without sound** opens no audio device at all.
+- **Try with basic graphics** starts in a window instead of full screen, without antialiasing,
+  dynamic shadows or hardware instancing.
+
+The one that works points at the culprit. From a terminal, the same switches are environment
+variables:
+
+```sh
+RIEL_NO_SOUND=1 riel start
+RIEL_BASIC_GRAPHICS=1 riel start
+```
+
+If no crash report was written (it needs `createdump`, which the .NET runtime package includes),
+systemd keeps its own record of every crash:
+
+```sh
+coredumpctl info ActivityRunner
+```
+
 ### A route is missing from the list, or will not start
 
 Some content cannot be read - a route whose `.trk` has an error, an activity whose service file is
@@ -273,7 +311,7 @@ than failing to start.
 | --- | --- |
 | `~/.config/riel` | settings and profiles |
 | `~/.local/share/riel` | saves |
-| `~/.local/state/riel/Logs` | logs |
+| `~/.local/state/riel/Logs` | logs, the startup trail, and crash reports under `Crashes` |
 | `~/.cache/riel` | scanned content, safe to delete |
 
 These follow the XDG base directory specification and move with the corresponding `XDG_*_HOME`

@@ -29,6 +29,25 @@ namespace FreeTrainSimulator.Common.Display
     /// </summary>
     public static partial class DisplayDevices
     {
+        /// <summary>
+        /// The window system SDL is talking to - x11 or wayland - which is worth knowing when a
+        /// problem only shows up on one of them.
+        /// </summary>
+        public static string VideoDriver
+        {
+            get
+            {
+                try
+                {
+                    return Marshal.PtrToStringUTF8(SdlNative.GetCurrentVideoDriver()) ?? "no video driver";
+                }
+                catch (Exception ex) when (ex is DllNotFoundException || ex is EntryPointNotFoundException)
+                {
+                    return "no SDL";
+                }
+            }
+        }
+
         private static IReadOnlyList<DisplayDevice> Enumerate()
         {
             int count;

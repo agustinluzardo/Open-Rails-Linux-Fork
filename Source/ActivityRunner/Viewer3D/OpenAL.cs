@@ -84,6 +84,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public const int ALC_DEFAULT_DEVICE_SPECIFIER = 0x1004;
         public const int ALC_DEVICE_SPECIFIER = 0x1005;
+        public const int ALC_ALL_DEVICES_SPECIFIER = 0x1013;
 
         public const int AL_NO_ERROR = 0;
         public const int AL_INVALID = -1;
@@ -153,140 +154,141 @@ namespace Orts.ActivityRunner.Viewer3D
         public const int AL_EAXREVERB_DECAY_HFLIMIT = 0x0017;
 #pragma warning restore CA1707 // Identifiers should not contain underscores
 
-        [DllImport("soft_oal.dll", EntryPoint = "alcOpenDevice", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alcOpenDevice", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern IntPtr OpenDevice(string deviceName);
-        [DllImport("soft_oal.dll", EntryPoint = "alcCreateContext", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alcCreateContext", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern IntPtr CreateContext(IntPtr device, int[] attribute);
-        [DllImport("soft_oal.dll", EntryPoint = "alcMakeContextCurrent", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alcMakeContextCurrent", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern int MakeContextCurrent(IntPtr context);
-        [DllImport("soft_oal.dll", EntryPoint = "alcGetString", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        // The strings OpenAL returns belong to it: marshalling them as string would have .NET
+        // free them afterwards, so these hand back the pointer and callers copy from it.
+        [DllImport("soft_oal.dll", EntryPoint = "alcGetString", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-        internal static extern string GetString(IntPtr device, int attribute);
-        [DllImport("soft_oal.dll", EntryPoint = "alcIsExtensionPresent", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        internal static extern IntPtr GetString(IntPtr device, int attribute);
+        [DllImport("soft_oal.dll", EntryPoint = "alcIsExtensionPresent", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-        internal static extern int IsExtensionPresent(IntPtr device, string extensionName);
+        internal static extern byte IsExtensionPresent(IntPtr device, string extensionName);
 
-        [DllImport("soft_oal.dll", EntryPoint = "AlInitialize", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alIsExtensionPresent", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-        internal static extern string Initialize(string devName);
-        [DllImport("soft_oal.dll", EntryPoint = "alIsExtensionPresent", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
-        [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-        internal static extern int IsExtensionPresent(string extensionName);
-        [DllImport("soft_oal.dll", EntryPoint = "alGetBufferi", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        internal static extern byte IsExtensionPresent(string extensionName);
+        [DllImport("soft_oal.dll", EntryPoint = "alGetBufferi", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void GetBufferi(int buffer, int attribute, out int val);
-        [DllImport("soft_oal.dll", EntryPoint = "alGetString", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGetString", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern IntPtr GetString(int state);
-        [DllImport("soft_oal.dll", EntryPoint = "alGetError", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGetError", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern int GetError();
-        [DllImport("soft_oal.dll", EntryPoint = "alDeleteBuffers", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alDeleteBuffers", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void DeleteBuffers(int number, [In] ref int buffer);
-        [DllImport("soft_oal.dll", EntryPoint = "alDeleteBuffers", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alDeleteBuffers", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void DeleteBuffers(int number, int[] buffers);
-        [DllImport("soft_oal.dll", EntryPoint = "alDeleteSources", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alDeleteSources", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void DeleteSources(int number, [In] int[] sources);
-        [DllImport("soft_oal.dll", EntryPoint = "alDeleteSources", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alDeleteSources", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void DeleteSources(int number, [In] ref int sources);
-        [DllImport("soft_oal.dll", EntryPoint = "alDistanceModel", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alDistanceModel", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void DistanceModel(int model);
-        [DllImport("soft_oal.dll", EntryPoint = "alGenSources", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGenSources", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void GenSources(int number, out int source);
-        [DllImport("soft_oal.dll", EntryPoint = "alGetSourcei", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGetSourcei", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void GetSourcei(int source, int attribute, out int val);
-        [DllImport("soft_oal.dll", EntryPoint = "alGetSourcef", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGetSourcef", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void GetSourcef(int source, int attribute, out float val);
-        [DllImport("soft_oal.dll", EntryPoint = "alGetSource3f", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGetSource3f", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void GetSource3f(int source, int attribute, out float value1, out float value2, out float value3);
-        [DllImport("soft_oal.dll", EntryPoint = "alListener3f", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alListener3f", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Listener3f(int attribute, float value1, float value2, float value3);
-        [DllImport("soft_oal.dll", EntryPoint = "alListenerfv", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alListenerfv", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Listenerfv(int attribute, [In] float[] values);
-        [DllImport("soft_oal.dll", EntryPoint = "alListenerf", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alListenerf", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Listenerf(int attribute, float value);
-        [DllImport("soft_oal.dll", EntryPoint = "alGetListener3f", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGetListener3f", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void GetListener3f(int attribute, out float value1, out float value2, out float value3);
-        [DllImport("soft_oal.dll", EntryPoint = "alSourcePlay", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSourcePlay", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void SourcePlay(int source);
-        [DllImport("soft_oal.dll", EntryPoint = "alSourceRewind", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSourceRewind", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void SourceRewind(int source);
-        [DllImport("soft_oal.dll", EntryPoint = "alSourceQueueBuffers", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSourceQueueBuffers", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void SourceQueueBuffers(int source, int number, [In] ref int buffer);
-        [DllImport("soft_oal.dll", EntryPoint = "alSourcei", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSourcei", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Sourcei(int source, int attribute, int val);
-        [DllImport("soft_oal.dll", EntryPoint = "alSource3i", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSource3i", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Source3i(int source, int attribute, int value1, int value2, int value3);
-        [DllImport("soft_oal.dll", EntryPoint = "alSourcef", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSourcef", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Sourcef(int source, int attribute, float val);
-        [DllImport("soft_oal.dll", EntryPoint = "alSource3f", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSource3f", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Source3f(int source, int attribute, float value1, float value2, float value3);
-        [DllImport("soft_oal.dll", EntryPoint = "alSourcefv", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSourcefv", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Sourcefv(int source, int attribute, [In] float[] values);
-        [DllImport("soft_oal.dll", EntryPoint = "alSourceStop", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSourceStop", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void SourceStop(int source);
-        [DllImport("soft_oal.dll", EntryPoint = "alSourceUnqueueBuffers", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSourceUnqueueBuffers", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void SourceUnqueueBuffers(int source, int number, int[] buffers);
-        [DllImport("soft_oal.dll", EntryPoint = "alSourceUnqueueBuffers", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alSourceUnqueueBuffers", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void SourceUnqueueBuffers(int source, int number, ref int buffers);
-        [DllImport("soft_oal.dll", EntryPoint = "alGetEnumValue", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGetEnumValue", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern int GetEnumValue(string enumName);
-        [DllImport("soft_oal.dll", EntryPoint = "alGenBuffers", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGenBuffers", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void GenBuffers(int number, out int buffer);
-        [DllImport("soft_oal.dll", EntryPoint = "alBufferData", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alBufferData", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void BufferData(int buffer, int format, [In] byte[] data, int size, int frequency);
-        [DllImport("soft_oal.dll", EntryPoint = "alBufferiv", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alBufferiv", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Bufferiv(int buffer, int attribute, [In] int[] values);
-        [DllImport("soft_oal.dll", EntryPoint = "alIsSource", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        // ALboolean is a single byte, not the four of a Win32 BOOL.
+        [DllImport("soft_oal.dll", EntryPoint = "alIsSource", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.I1)]
         internal static extern bool IsSource(int source);
-        [DllImport("soft_oal.dll", EntryPoint = "alGenAuxiliaryEffectSlots", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGenAuxiliaryEffectSlots", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void GenAuxiliaryEffectSlots(int number, out int effectslot);
-        [DllImport("soft_oal.dll", EntryPoint = "alAuxiliaryEffectSloti", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alAuxiliaryEffectSloti", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void AuxiliaryEffectSloti(int effectslot, int attribute, int val);
-        [DllImport("soft_oal.dll", EntryPoint = "alGenEffects", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alGenEffects", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void GenEffects(int number, out int effect);
-        [DllImport("soft_oal.dll", EntryPoint = "alEffecti", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alEffecti", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Effecti(int effect, int attribute, int val);
-        [DllImport("soft_oal.dll", EntryPoint = "alEffectf", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alEffectf", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Effectf(int effect, int attribute, float val);
-        [DllImport("soft_oal.dll", EntryPoint = "alEffectfv", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("soft_oal.dll", EntryPoint = "alEffectfv", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern void Effectfv(int effect, int attribute, [In] float[] values);
 
@@ -311,7 +313,11 @@ namespace Orts.ActivityRunner.Viewer3D
             };
         }
 
-        public static void Initialize()
+        /// <summary>
+        /// Opens the default audio device and makes a context on it current.
+        /// </summary>
+        /// <returns>What was opened, for the log: the OpenAL version and the device.</returns>
+        public static string Initialize()
         {
             CheckMaxSourcesConfig();
             //if (alcIsExtensionPresent(IntPtr.Zero, "ALC_ENUMERATION_EXT") == AL_TRUE)
@@ -320,13 +326,30 @@ namespace Orts.ActivityRunner.Viewer3D
             //    string[] split = deviceList.Split('\0');
             //    Trace.TraceInformation("___devlist {0}",deviceList);
             //}
-            int[] attribs = Array.Empty<int>();
+
+            // The attribute list is read up to a terminating zero, so even an empty one needs it.
+            int[] attribs = { 0 };
             IntPtr device = OpenDevice(null);
+            if (device == IntPtr.Zero)
+            {
+                Trace.TraceWarning("No audio device could be opened; the simulator runs without sound.");
+                return "no audio device";
+            }
+
             IntPtr context = CreateContext(device, attribs);
+            if (context == IntPtr.Zero)
+            {
+                Trace.TraceWarning("The audio device '{0}' would not take a context; the simulator runs without sound.", Marshal.PtrToStringUTF8(GetString(device, ALC_DEVICE_SPECIFIER)));
+                return "no audio context";
+            }
             _ = MakeContextCurrent(context);
 
-            // Note: Must use custom marshalling here because the returned strings must NOT be automatically deallocated by runtime.
-            Trace.TraceInformation("Initialized OpenAL {0}; device '{1}' by '{2}'", Marshal.PtrToStringAnsi(GetString(AL_VERSION)), Marshal.PtrToStringAnsi(GetString(AL_RENDERER)), Marshal.PtrToStringAnsi(GetString(AL_VENDOR)));
+            // The plain specifier is only "OpenAL Soft"; the full one names the sound server's device.
+            string deviceName = Marshal.PtrToStringUTF8(GetString(device, ALC_ALL_DEVICES_SPECIFIER))
+                ?? Marshal.PtrToStringUTF8(GetString(device, ALC_DEVICE_SPECIFIER));
+            string description = $"OpenAL {Marshal.PtrToStringUTF8(GetString(AL_VERSION))}; device '{deviceName}' by '{Marshal.PtrToStringUTF8(GetString(AL_VENDOR))}'";
+            Trace.TraceInformation("Initialized {0}", description);
+            return description;
         }
 
         /// <summary>

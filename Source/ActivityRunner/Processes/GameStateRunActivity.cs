@@ -117,6 +117,8 @@ namespace Orts.ActivityRunner.Processes
 
         internal override async Task Load()
         {
+            StartupTrail.Mark(StartupStage.Loading);
+
             // Load loading image first!
             loading ??= new LoadingPrimitive(Game);
             loadingBar ??= new LoadingBarPrimitive(Game);

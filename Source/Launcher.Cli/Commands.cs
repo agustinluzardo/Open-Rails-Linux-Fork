@@ -272,9 +272,14 @@ namespace Riel.Launcher
                     return 0;
 
                 Console.Error.WriteLine();
-                Console.Error.WriteLine(outcome.ExitCode != 0
-                    ? $"riel: the simulator stopped with exit code {outcome.ExitCode}."
-                    : "riel: the simulator stopped with an error.");
+                if (outcome.CrashedNatively)
+                    ReportCrash(outcome);
+                else
+                {
+                    Console.Error.WriteLine(outcome.ExitCode != 0
+                        ? $"riel: the simulator stopped with exit code {outcome.ExitCode}."
+                        : "riel: the simulator stopped with an error.");
+                }
                 if (outcome.FatalError != null)
                 {
                     Console.Error.WriteLine();
@@ -286,6 +291,46 @@ namespace Riel.Launcher
                     : $"No log was written; the simulator stopped before it got that far. Logs live in {RuntimeInfo.LogFilesFolder}");
                 return outcome.ExitCode != 0 ? outcome.ExitCode : 1;
             }
+        }
+
+        /// <summary>
+        /// Says where a native crash happened and what to try: the terminal saw nothing, since a
+        /// crash in a driver ends the process without a word.
+        /// </summary>
+        private static void ReportCrash(SimulatorOutcome outcome)
+        {
+            string stage = outcome.Stage switch
+            {
+                StartupStage.Started => " while starting",
+                StartupStage.OpeningWindow => " while opening its window",
+                StartupStage.CreatingGraphicsDevice => " while setting up the graphics card",
+                StartupStage.GraphicsDeviceReady => " while showing its window for the first time",
+                StartupStage.FirstFrame => " just after showing its window",
+                StartupStage.StartingSound => " while opening the sound device",
+                StartupStage.SoundReady or StartupStage.Loading => " while loading the route",
+                StartupStage.Running => " while running",
+                _ => string.Empty,
+            };
+            Console.Error.WriteLine($"riel: the simulator crashed ({outcome.SignalName}){stage}.");
+
+            if (outcome.Crash != null)
+            {
+                Console.Error.WriteLine($"It crashed in {outcome.Crash.Module ?? "managed code"}{(outcome.Crash.Caller == null ? "" : ", called from " + outcome.Crash.Caller)}.");
+                Console.Error.WriteLine();
+                foreach (string frame in outcome.Crash.Frames.Take(12))
+                    Console.Error.WriteLine("  " + frame);
+                Console.Error.WriteLine();
+                Console.Error.WriteLine($"Crash report: {outcome.Crash.File}");
+            }
+
+            foreach (StartupStep step in outcome.Trail.Where(step => step.Detail != null))
+                Console.Error.WriteLine($"{step.Stage}: {step.Detail}");
+
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("A crash like this happens in a driver or a system library, not in the route. These leave");
+            Console.Error.WriteLine("out the likeliest parts, one each, for this run only:");
+            Console.Error.WriteLine($"  {LaunchContext.NoSoundVariable}=1 riel start");
+            Console.Error.WriteLine($"  {LaunchContext.BasicGraphicsVariable}=1 riel start");
         }
 
         // --------------------------------------------------------------------------- diagnostics

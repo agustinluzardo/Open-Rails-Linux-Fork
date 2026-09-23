@@ -21,6 +21,8 @@ namespace FreeTrainSimulator.Common.Display
 {
     public static partial class GraphicsCapabilities
     {
+        private static bool driverHeld;
+
         /// <summary>
         /// Tries to create a hidden window with that many samples. SDL picks the GLX or EGL
         /// visual here, so a sample count with no matching visual fails at this point rather
@@ -36,7 +38,7 @@ namespace FreeTrainSimulator.Common.Display
             IntPtr window = IntPtr.Zero;
             try
             {
-                if (SdlNative.InitSubSystem(SdlNative.InitVideo) != 0)
+                if (SdlNative.InitSubSystem(SdlNative.InitVideo) != 0 || !HoldDriver())
                     return true;
 
                 SdlNative.GlSetAttribute(SdlNative.GlAttribute.RedSize, 8);
@@ -64,6 +66,7 @@ namespace FreeTrainSimulator.Common.Display
             }
             finally
             {
+                // With the driver held, destroying the last OpenGL window no longer unloads it.
                 if (window != IntPtr.Zero)
                     SdlNative.DestroyWindow(window);
                 try
@@ -73,6 +76,26 @@ namespace FreeTrainSimulator.Common.Display
                 catch (DllNotFoundException) { }
                 catch (EntryPointNotFoundException) { }
             }
+        }
+
+        /// <summary>
+        /// Loads the OpenGL driver through SDL once and keeps it loaded for the rest of the run.
+        /// </summary>
+        /// <remarks>
+        /// The probe runs before MonoGame has a window, so its window is the first OpenGL one and
+        /// SDL loads the driver for it - and unloads it again when that window, the last OpenGL
+        /// window, is destroyed. On EGL, which Wayland uses, that means terminating the display and
+        /// closing the libraries, only for MonoGame's window to load them again a moment later. Not
+        /// every driver survives being unloaded and reloaded inside one process, and nothing is
+        /// gained by it: SDL counts loads, so holding one here keeps a single driver instance from
+        /// the probe through to the game's own window. It also means the driver is set up with
+        /// SDL's default attributes rather than the probe's.
+        /// </remarks>
+        private static bool HoldDriver()
+        {
+            if (!driverHeld)
+                driverHeld = SdlNative.GlLoadLibrary(IntPtr.Zero) == 0;
+            return driverHeld;
         }
     }
 }

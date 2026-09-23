@@ -87,6 +87,14 @@ Set to 1 to run the OpenGL renderer on Vulkan through Mesa's zink driver.
 .TP
 .B RIEL_SIMULATOR
 Path to the simulator binary, for running this command against a build directory.
+.TP
+.B RIEL_NO_SOUND
+Set to 1 to run without sound: no audio device is opened. For telling a sound driver crash apart
+from a graphics one.
+.TP
+.B RIEL_BASIC_GRAPHICS
+Set to 1 to run in a window, without antialiasing, dynamic shadows or hardware instancing. Only
+that run changes; the saved settings stay as they are.
 .SH FILES
 .TP
 .I ~/.config/riel
@@ -97,6 +105,10 @@ Saves.
 .TP
 .I ~/.local/state/riel/Logs
 Logs. Attach these to a bug report.
+.I Startup.log
+records how far the last run got while starting, and
+.I Crashes
+holds the reports .NET writes when the simulator crashes in native code.
 .TP
 .I ~/.cache/riel
 Scanned content indexes. Safe to delete; they are rebuilt on the next scan.

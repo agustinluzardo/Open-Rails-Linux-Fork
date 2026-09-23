@@ -329,6 +329,50 @@ which then skips its own SDL error dialog: one failure, one window. That dialog 
 the simulator is started any other way, and its text is wrapped now - SDL sizes the box to the
 longest line, and the paragraph used to arrive on one, wider than the screen.
 
+### When a run crashes
+
+A crash in native code gives none of that: a driver faults, the kernel ends the process, the exit
+code is 139 and nothing was logged. Two records cover it.
+
+The simulator appends each step of starting up to `Startup.log` - `StartupTrail`, in
+`FreeTrainSimulator.Common.Info` - closing the file after every line so the step survives a crash
+right after it, with what it found where that matters: the card, the SDL video driver, the screen
+mode and sample count, the audio device. Three threads report once the device exists (the game
+thread showing the window, sound, loading), and `SimulatorOutcome.Stage` blames whichever had not
+finished, the window first.
+
+`SimulatorRun` also sets `DOTNET_DbgEnableMiniDump` and `DOTNET_EnableCrashReportOnly` for the
+simulator, so the runtime's signal handler runs `createdump` as the process dies and writes a
+crash report - JSON, a few kilobytes, no dump - with managed and native frames side by side.
+`CrashReport` reads the crashing thread's stack out of it: the library the fault was in, and the
+nearest managed method, which is usually enough to name the part that failed. `FindSuspect` turns
+the library, the caller or the stage into graphics, sound or window, and the error window aims its
+advice there.
+
+The error window then offers the run again with a `SafeMode`: `RIEL_NO_SOUND` sets the sound detail
+level to zero, so no audio device is opened, and `RIEL_BASIC_GRAPHICS` starts in a window without
+antialiasing, dynamic shadows or instancing. Both change the settings in memory only; the
+simulator saves just the runtime settings listed in `UpdateRuntimeUserSettingsModel` on exit, a
+copy of the profile's settings updated with those - saving the whole runtime model instead was a
+bug that stored anything adjusted for one run.
+
+Three things found along the way belong here too, since each is a way the game dies on real
+hardware and not in a test display:
+
+- The simulator's `Main` is synchronous. It used to be `async`, and the first await that yielded -
+  reading a settings file - moved the rest of it, which is the whole game, to a thread-pool
+  thread. SDL expects video calls on the main thread, and that is where a graphics driver expects
+  to find the context.
+- MonoGame's OpenGL backend takes the first thread to reach its internal `Threading` class to be
+  the one owning the context. Nothing on the game thread reached it before the first frame, and the
+  loader thread, creating the loading screen's texture, often got there first: it then made GL
+  calls with no context, and the game thread was refused when it drew. `GameHost` now runs that
+  class constructor itself, on the game thread, before any other thread starts.
+- The antialiasing probe creates the process's first OpenGL window, and destroying it made SDL
+  unload the driver - on EGL, terminating the display and closing the libraries - just before
+  MonoGame loaded it again. The probe now loads the driver through SDL once and holds it, so there
+  is a single driver instance from the probe to the game's window, and it asks once per run.
+
 ### Content that cannot be read
 
 Third party MSTS content is full of files that are slightly wrong, which Microsoft's reader

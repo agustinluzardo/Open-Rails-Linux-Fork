@@ -69,6 +69,8 @@ namespace Orts.ActivityRunner.Processes
 
             if (firstFrame)
             {
+                StartupTrail.Mark(StartupStage.Running);
+
                 // Turn off the 10FPS fixed-time-step and return to running as fast as we can.
                 Game.IsFixedTimeStep = false;
                 Game.InactiveSleepTime = TimeSpan.Zero;

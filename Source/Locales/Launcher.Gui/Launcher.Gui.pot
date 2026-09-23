@@ -136,10 +136,22 @@ msgstr ""
 msgid "The simulator stopped"
 msgstr ""
 
+msgid "The simulator crashed"
+msgstr ""
+
 msgid "The simulator stopped because of an error"
 msgstr ""
 
 msgid "It exited with code {0} without saying why."
+msgstr ""
+
+msgid "It happened in {0}, called from {1}."
+msgstr ""
+
+msgid "managed code"
+msgstr ""
+
+msgid "code that could not be named"
 msgstr ""
 
 msgid "When the content was scanned, this route reported: {0}"
@@ -155,6 +167,57 @@ msgid "Copy details"
 msgstr ""
 
 msgid "Open the log"
+msgstr ""
+
+msgid "Try without sound"
+msgstr ""
+
+msgid "Try with basic graphics"
+msgstr ""
+
+msgid "Try without sound and with basic graphics"
+msgstr ""
+
+msgid "while starting"
+msgstr ""
+
+msgid "while opening its window"
+msgstr ""
+
+msgid "while setting up the graphics card"
+msgstr ""
+
+msgid "while showing its window for the first time"
+msgstr ""
+
+msgid "just after showing its window"
+msgstr ""
+
+msgid "while opening the sound device"
+msgstr ""
+
+msgid "while loading the route"
+msgstr ""
+
+msgid "while running"
+msgstr ""
+
+msgid "It was stopped by a crash in native code ({0})."
+msgstr ""
+
+msgid "It was stopped by a crash in native code ({0}) {1}."
+msgstr ""
+
+msgid "That points at the graphics driver. Try with basic graphics: if it works, the driver has trouble with full screen, antialiasing or shadows. Copy details and include them in a bug report; they name the exact place."
+msgstr ""
+
+msgid "That points at the sound system. Try without sound: if it works, the problem is between OpenAL and the sound server. Copy details and include them in a bug report; they name the exact place."
+msgstr ""
+
+msgid "That points at SDL or the window system. Try with basic graphics, which starts in a window rather than full screen. Copy details and include them in a bug report; they name the exact place."
+msgstr ""
+
+msgid "A crash like this happens in a driver or a system library, not in the route. Try without sound and with basic graphics: the one that works points at the part that fails. Copy details and include them in a bug report."
 msgstr ""
 
 msgid "A file the route or the train needs is missing. Routes often borrow objects or rolling stock from other content packs; the missing file is named above, and installing the pack it belongs to fixes it."
@@ -268,13 +331,31 @@ msgstr ""
 msgid "Starting {0}…"
 msgstr ""
 
+msgid "without sound"
+msgstr ""
+
+msgid "with basic graphics"
+msgstr ""
+
+msgid "without sound and with basic graphics"
+msgstr ""
+
 msgid "Running {0}. The simulator window may take a moment to appear."
+msgstr ""
+
+msgid "Running {0} {1}. The simulator window may take a moment to appear."
+msgstr ""
+
+msgid "The simulator crashed."
 msgstr ""
 
 msgid "The simulator stopped because of an error."
 msgstr ""
 
 msgid "Finished {0}."
+msgstr ""
+
+msgid "Finished {0} {1}."
 msgstr ""
 
 msgid "Scanning content… {0}%"

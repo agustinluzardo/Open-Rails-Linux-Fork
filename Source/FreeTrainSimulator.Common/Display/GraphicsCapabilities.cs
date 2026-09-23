@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
+using System.Collections.Generic;
+
 namespace FreeTrainSimulator.Common.Display
 {
     /// <summary>
@@ -38,13 +40,28 @@ namespace FreeTrainSimulator.Common.Display
             if (requested < 2)
                 return 0;
 
-            for (int samples = requested; samples > 1; samples /= 2)
+            // The answer does not change during a run, and the question comes back with every
+            // change of screen mode; each probe is a window created and destroyed.
+            lock (answers)
             {
-                if (WindowSupportsMultiSample(samples))
-                    return samples;
+                if (answers.TryGetValue(requested, out int known))
+                    return known;
+
+                int supported = 0;
+                for (int samples = requested; samples > 1; samples /= 2)
+                {
+                    if (WindowSupportsMultiSample(samples))
+                    {
+                        supported = samples;
+                        break;
+                    }
+                }
+                answers[requested] = supported;
+                return supported;
             }
-            return 0;
         }
+
+        private static readonly Dictionary<int, int> answers = new Dictionary<int, int>();
 
         /// <summary>
         /// Whether a window with <paramref name="samples"/> samples can be created. Platforms

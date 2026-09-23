@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 using FreeTrainSimulator.Common;
@@ -89,6 +90,7 @@ namespace Orts.ActivityRunner.Processes
         /// <param name="settings">The <see cref="UserSettings"/> for the game to use.</param>
         public GameHost(ProfileUserSettingsModel userSettings)
         {
+            ClaimGraphicsThread();
             UserSettings = userSettings;
             Exiting += Game_Exiting;
             RenderProcess = new RenderProcess(this);
@@ -98,6 +100,27 @@ namespace Orts.ActivityRunner.Processes
             WebServerProcess = new WebServerProcess(this);
             gameStates = new Stack<GameState>();
             SystemProcess = new SystemProcess(this);
+        }
+
+        /// <summary>
+        /// Makes the thread running the game the one MonoGame treats as owning the graphics device.
+        /// </summary>
+        /// <remarks>
+        /// MonoGame's OpenGL backend takes whichever thread first reaches its internal Threading
+        /// class to be the one with the GL context, and nothing on the game thread gets there before
+        /// the first frame is drawn. The loader thread, started just before that, creates the
+        /// loading screen's texture straight away - and when it gets there first it runs GL calls
+        /// on a thread that has no context, while the game thread is then refused as "not the UI
+        /// thread" the moment it draws. Running the class constructor here, on the game thread and
+        /// before any other thread exists, settles the question the right way.
+        /// </remarks>
+        private static void ClaimGraphicsThread()
+        {
+            Type threading = typeof(Game).Assembly.GetType("Microsoft.Xna.Framework.Threading", throwOnError: false);
+            if (threading != null)
+                RuntimeHelpers.RunClassConstructor(threading.TypeHandle);
+            else
+                Trace.TraceWarning("MonoGame's Threading class was not found; the graphics thread is left to chance.");
         }
 
         protected override void Initialize()
@@ -156,7 +179,14 @@ namespace Orts.ActivityRunner.Processes
         {
             RenderProcess.EndDraw();
             base.EndDraw();
+            if (!firstFramePresented)
+            {
+                firstFramePresented = true;
+                StartupTrail.Mark(StartupStage.FirstFrame);
+            }
         }
+
+        private bool firstFramePresented;
 
         protected override async void EndRun()
         {

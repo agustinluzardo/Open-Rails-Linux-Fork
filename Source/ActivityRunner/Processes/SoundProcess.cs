@@ -26,6 +26,7 @@ using System.Threading;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Diagnostics;
+using FreeTrainSimulator.Common.Info;
 
 using Microsoft.Xna.Framework;
 
@@ -65,7 +66,8 @@ namespace Orts.ActivityRunner.Processes
         protected override void Initialize()
         {
             base.Initialize();
-            OpenAL.Initialize();
+            StartupTrail.Mark(StartupStage.StartingSound);
+            StartupTrail.Mark(StartupStage.SoundReady, OpenAL.Initialize());
         }
 
         protected override void Update(GameTime gameTime)

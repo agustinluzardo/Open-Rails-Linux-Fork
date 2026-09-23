@@ -136,11 +136,23 @@ msgstr "Detalles"
 msgid "The simulator stopped"
 msgstr "El simulador se cerró"
 
+msgid "The simulator crashed"
+msgstr "El simulador se colgó y se cerró"
+
 msgid "The simulator stopped because of an error"
 msgstr "El simulador se cerró por un error"
 
 msgid "It exited with code {0} without saying why."
 msgstr "Terminó con el código {0} sin decir por qué."
+
+msgid "It happened in {0}, called from {1}."
+msgstr "Pasó en {0}, llamado desde {1}."
+
+msgid "managed code"
+msgstr "código administrado"
+
+msgid "code that could not be named"
+msgstr "código que no se pudo identificar"
 
 msgid "When the content was scanned, this route reported: {0}"
 msgstr "Al escanear el contenido, esta ruta dio: {0}"
@@ -156,6 +168,57 @@ msgstr "Copiar detalles"
 
 msgid "Open the log"
 msgstr "Abrir el log"
+
+msgid "Try without sound"
+msgstr "Probar sin sonido"
+
+msgid "Try with basic graphics"
+msgstr "Probar con gráficos básicos"
+
+msgid "Try without sound and with basic graphics"
+msgstr "Probar sin sonido y con gráficos básicos"
+
+msgid "while starting"
+msgstr "mientras arrancaba"
+
+msgid "while opening its window"
+msgstr "mientras abría su ventana"
+
+msgid "while setting up the graphics card"
+msgstr "mientras preparaba la placa de video"
+
+msgid "while showing its window for the first time"
+msgstr "mientras mostraba su ventana por primera vez"
+
+msgid "just after showing its window"
+msgstr "justo después de mostrar su ventana"
+
+msgid "while opening the sound device"
+msgstr "mientras abría el dispositivo de sonido"
+
+msgid "while loading the route"
+msgstr "mientras cargaba la ruta"
+
+msgid "while running"
+msgstr "mientras corría"
+
+msgid "It was stopped by a crash in native code ({0})."
+msgstr "Lo cortó un fallo en código nativo ({0})."
+
+msgid "It was stopped by a crash in native code ({0}) {1}."
+msgstr "Lo cortó un fallo en código nativo ({0}) {1}."
+
+msgid "That points at the graphics driver. Try with basic graphics: if it works, the driver has trouble with full screen, antialiasing or shadows. Copy details and include them in a bug report; they name the exact place."
+msgstr "Eso apunta al driver de video. Probá con gráficos básicos: si anda, el driver tiene problemas con la pantalla completa, el antialiasing o las sombras. Copiá los detalles y mandalos en el reporte: dicen el lugar exacto."
+
+msgid "That points at the sound system. Try without sound: if it works, the problem is between OpenAL and the sound server. Copy details and include them in a bug report; they name the exact place."
+msgstr "Eso apunta al sistema de sonido. Probá sin sonido: si anda, el problema está entre OpenAL y el servidor de sonido. Copiá los detalles y mandalos en el reporte: dicen el lugar exacto."
+
+msgid "That points at SDL or the window system. Try with basic graphics, which starts in a window rather than full screen. Copy details and include them in a bug report; they name the exact place."
+msgstr "Eso apunta a SDL o al sistema de ventanas. Probá con gráficos básicos, que arranca en una ventana en vez de pantalla completa. Copiá los detalles y mandalos en el reporte: dicen el lugar exacto."
+
+msgid "A crash like this happens in a driver or a system library, not in the route. Try without sound and with basic graphics: the one that works points at the part that fails. Copy details and include them in a bug report."
+msgstr "Un fallo así pasa en un driver o en una biblioteca del sistema, no en la ruta. Probá sin sonido y con gráficos básicos: la opción que funcione señala la parte que falla. Copiá los detalles y mandalos en el reporte."
 
 msgid "A file the route or the train needs is missing. Routes often borrow objects or rolling stock from other content packs; the missing file is named above, and installing the pack it belongs to fixes it."
 msgstr "Falta un archivo que la ruta o el tren necesita. Las rutas suelen usar objetos o material rodante de otros paquetes de contenido; el archivo que falta figura arriba, e instalar el paquete al que pertenece lo soluciona."
@@ -268,14 +331,32 @@ msgstr "la partida guardada"
 msgid "Starting {0}…"
 msgstr "Arrancando {0}…"
 
+msgid "without sound"
+msgstr "sin sonido"
+
+msgid "with basic graphics"
+msgstr "con gráficos básicos"
+
+msgid "without sound and with basic graphics"
+msgstr "sin sonido y con gráficos básicos"
+
 msgid "Running {0}. The simulator window may take a moment to appear."
 msgstr "Jugando {0}. La ventana del simulador puede tardar un momento en aparecer."
+
+msgid "Running {0} {1}. The simulator window may take a moment to appear."
+msgstr "Corriendo {0} {1}. La ventana del simulador puede tardar un momento en aparecer."
+
+msgid "The simulator crashed."
+msgstr "El simulador se colgó y se cerró."
 
 msgid "The simulator stopped because of an error."
 msgstr "El simulador se cerró por un error."
 
 msgid "Finished {0}."
 msgstr "Terminó {0}."
+
+msgid "Finished {0} {1}."
+msgstr "Terminó {0} {1}."
 
 msgid "Scanning content… {0}%"
 msgstr "Escaneando el contenido… {0}%"

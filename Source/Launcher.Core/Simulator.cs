@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -27,6 +28,32 @@ using FreeTrainSimulator.Common.Info;
 
 namespace Riel.Launcher
 {
+    /// <summary>
+    /// Parts of the simulator a run can leave out, to get past a crash in a driver and to find
+    /// out which driver it was.
+    /// </summary>
+    [Flags]
+    public enum SafeMode
+    {
+        None = 0,
+        /// <summary>No audio device is opened at all.</summary>
+        NoSound = 1,
+        /// <summary>A window, no antialiasing, no dynamic shadows, no hardware instancing.</summary>
+        BasicGraphics = 2,
+    }
+
+    /// <summary>The part of the system a native crash most likely came from.</summary>
+    public enum CrashSuspect
+    {
+        Unknown,
+        /// <summary>SDL or the window system.</summary>
+        Window,
+        /// <summary>OpenGL and the graphics driver.</summary>
+        Graphics,
+        /// <summary>OpenAL and the sound server.</summary>
+        Sound,
+    }
+
     /// <summary>Finds and starts the simulator.</summary>
     public static class Simulator
     {
@@ -63,9 +90,10 @@ namespace Riel.Launcher
         /// Keep what the simulator writes to standard error so it can be shown afterwards. A
         /// terminal already shows it; a desktop launcher is the only place it would ever appear.
         /// </param>
-        public static SimulatorRun Start(IReadOnlyList<string> arguments, bool captureErrors)
+        /// <param name="safeMode">What to leave out of this run; nothing, normally.</param>
+        public static SimulatorRun Start(IReadOnlyList<string> arguments, bool captureErrors, SafeMode safeMode = SafeMode.None)
         {
-            return new SimulatorRun(Locate(), arguments ?? Array.Empty<string>(), captureErrors);
+            return new SimulatorRun(Locate(), arguments ?? Array.Empty<string>(), captureErrors, safeMode);
         }
     }
 
@@ -75,14 +103,18 @@ namespace Riel.Launcher
         /// <summary>How much of standard error to keep: the end is where the reason is.</summary>
         private const int KeptErrorLines = 80;
 
+        /// <summary>What createdump says while it writes a crash report; the report itself is read instead.</summary>
+        private const string CreateDumpPrefix = "[createdump]";
+
         private readonly Process process;
         private readonly DateTime startedUtc;
         private readonly Queue<string> errorLines = new Queue<string>();
         private readonly bool captureErrors;
 
-        internal SimulatorRun(string executable, IReadOnlyList<string> arguments, bool captureErrors)
+        internal SimulatorRun(string executable, IReadOnlyList<string> arguments, bool captureErrors, SafeMode safeMode)
         {
             this.captureErrors = captureErrors;
+            SafeMode = safeMode;
 
             ProcessStartInfo startInfo = new ProcessStartInfo(executable)
             {
@@ -94,6 +126,11 @@ namespace Riel.Launcher
                 startInfo.ArgumentList.Add(argument);
             if (captureErrors)
                 startInfo.Environment[LaunchContext.LauncherReportsErrorsVariable] = "1";
+            if (safeMode.HasFlag(SafeMode.NoSound))
+                startInfo.Environment[LaunchContext.NoSoundVariable] = "1";
+            if (safeMode.HasFlag(SafeMode.BasicGraphics))
+                startInfo.Environment[LaunchContext.BasicGraphicsVariable] = "1";
+            CrashReport.Request(startInfo.Environment);
 
             CommandLine = string.Join(' ', new[] { executable }.Concat(arguments.Select(Quote)));
 
@@ -102,7 +139,7 @@ namespace Riel.Launcher
             {
                 process.ErrorDataReceived += (_, e) =>
                 {
-                    if (e.Data == null)
+                    if (e.Data == null || e.Data.StartsWith(CreateDumpPrefix, StringComparison.Ordinal))
                         return;
                     lock (errorLines)
                     {
@@ -128,10 +165,17 @@ namespace Riel.Launcher
             }
             if (captureErrors)
                 process.BeginErrorReadLine();
+            ProcessId = process.Id;
         }
 
         /// <summary>The command, quoted so it can be pasted into a shell to reproduce the run.</summary>
         public string CommandLine { get; }
+
+        /// <summary>What this run leaves out.</summary>
+        public SafeMode SafeMode { get; }
+
+        /// <summary>The simulator's process id, which its crash report and startup trail carry.</summary>
+        public int ProcessId { get; }
 
         /// <summary>Waits for the simulator to exit and works out how it went.</summary>
         public async Task<SimulatorOutcome> WaitAsync(CancellationToken cancellationToken = default)
@@ -159,7 +203,7 @@ namespace Riel.Launcher
                 lock (errorLines)
                     standardError = errorLines.Count > 0 ? string.Join(Environment.NewLine, errorLines) : null;
             }
-            return SimulatorOutcome.Read(process.ExitCode, startedUtc, standardError);
+            return SimulatorOutcome.Read(process.ExitCode, startedUtc, standardError, ProcessId);
         }
 
         public void Dispose()
@@ -181,16 +225,63 @@ namespace Riel.Launcher
         private const string FatalMarker = "FatalException";
         private const int ExcerptLines = 14;
 
-        internal SimulatorOutcome(int exitCode, string logFile, string fatalError, string standardError)
+        internal SimulatorOutcome(int exitCode, string logFile, string fatalError, string standardError,
+            IReadOnlyList<StartupStep> trail = null, CrashReport crash = null)
         {
             ExitCode = exitCode;
             LogFile = logFile;
             FatalError = fatalError;
             StandardError = standardError;
             (CauseType, Cause) = FindCause(fatalError, standardError);
+            Trail = trail ?? Array.Empty<StartupStep>();
+            Crash = crash;
+            Stage = StageAtExit(Trail);
+            Suspect = FindSuspect(crash, Stage);
         }
 
         public int ExitCode { get; }
+
+        /// <summary>
+        /// The signal that ended the simulator, when one did - 11 for a segmentation fault. A
+        /// process killed by a signal reports 128 plus its number as the exit code.
+        /// </summary>
+        public int? Signal => ExitCode > 128 && ExitCode <= 128 + 64 ? ExitCode - 128 : null;
+
+        /// <summary>The signal's name, such as SIGSEGV; null when no signal ended the run.</summary>
+        public string SignalName => Signal switch
+        {
+            null => null,
+            4 => "SIGILL",
+            6 => "SIGABRT",
+            7 => "SIGBUS",
+            8 => "SIGFPE",
+            9 => "SIGKILL",
+            11 => "SIGSEGV",
+            15 => "SIGTERM",
+            int other => "signal " + other.ToString(CultureInfo.InvariantCulture),
+        };
+
+        /// <summary>
+        /// Whether the simulator crashed in native code: killed by one of the signals a fault
+        /// raises, with no .NET exception to explain it. An unhandled exception also ends in
+        /// SIGABRT, but it prints itself first and then it is the exception that says why.
+        /// </summary>
+        public bool CrashedNatively => Signal is 4 or 6 or 7 or 8 or 11 && Cause == null;
+
+        /// <summary>How far the simulator got while starting, oldest step first; empty if it recorded none.</summary>
+        public IReadOnlyList<StartupStep> Trail { get; }
+
+        /// <summary>
+        /// What the simulator was doing when it stopped, going by its startup trail; null when it
+        /// left none. For the steps that run side by side, the one that had not finished wins.
+        /// </summary>
+        public StartupStage? Stage { get; }
+
+        /// <summary>The runtime's report of a native crash, when it wrote one.</summary>
+        public CrashReport Crash { get; }
+
+        /// <summary>The part of the system a native crash most likely came from.</summary>
+        public CrashSuspect Suspect { get; }
 
         /// <summary>The log this run wrote, or null if it never got as far as opening one.</summary>
         public string LogFile { get; }
@@ -226,11 +317,84 @@ namespace Riel.Launcher
         /// </summary>
         public bool Failed => ExitCode != 0 || FatalError != null;
 
-        internal static SimulatorOutcome Read(int exitCode, DateTime startedUtc, string standardError)
+        internal static SimulatorOutcome Read(int exitCode, DateTime startedUtc, string standardError, int processId)
         {
             string logFile = FindLog(startedUtc);
             string fatal = logFile == null ? null : FindFatalError(logFile);
-            return new SimulatorOutcome(exitCode, logFile, fatal, standardError);
+            if (exitCode == 0 && fatal == null)
+                return new SimulatorOutcome(exitCode, logFile, fatal, standardError);
+
+            return new SimulatorOutcome(exitCode, logFile, fatal, standardError,
+                StartupTrail.Read(processId), CrashReport.Find(processId));
+        }
+
+        internal static StartupStage? StageAtExit(IReadOnlyList<StartupStep> trail)
+        {
+            if (trail.Count == 0)
+                return null;
+
+            // Three threads report here once the device exists: the game thread showing the
+            // window, the sound thread and the loader. Whichever of them was still in the middle of
+            // something is the one to blame, the window first since it holds up everything else.
+            bool Reached(StartupStage stage) => trail.Any(step => step.Stage == stage);
+            if (Reached(StartupStage.Running))
+                return StartupStage.Running;
+            if (Reached(StartupStage.GraphicsDeviceReady) && !Reached(StartupStage.FirstFrame))
+                return StartupStage.GraphicsDeviceReady;
+            if (Reached(StartupStage.StartingSound) && !Reached(StartupStage.SoundReady))
+                return StartupStage.StartingSound;
+            if (Reached(StartupStage.Loading))
+                return StartupStage.Loading;
+            return trail
+                .Select(step => step.Stage)
+                .Where(stage => stage != StartupStage.StartingSound && stage != StartupStage.SoundReady)
+                .DefaultIfEmpty(StartupStage.Started)
+                .Max();
+        }
+
+        private static readonly string[] soundLibraries = { "openal", "pipewire", "libspa", "pulse", "asound", "jack" };
+        private static readonly string[] graphicsLibraries =
+        {
+            "nvidia", "libgl", "libegl", "glx", "_dri", "dri_", "gallium", "radeon", "amdgpu", "iris", "i965",
+            "crocus", "nouveau", "swrast", "llvm", "mesa", "zink", "vulkan", "libdrm",
+        };
+        private static readonly string[] windowLibraries = { "libsdl", "libx11", "libxcb", "libxrandr", "libxi.", "wayland", "libdecor" };
+
+        /// <summary>
+        /// Names the likely culprit of a native crash: from the library it happened in when that
+        /// says, then from the managed code that called it, then from the step it happened in.
+        /// </summary>
+        internal static CrashSuspect FindSuspect(CrashReport crash, StartupStage? stage)
+        {
+            string module = crash?.Module?.ToLowerInvariant();
+            if (module != null)
+            {
+                if (soundLibraries.Any(module.Contains))
+                    return CrashSuspect.Sound;
+                if (graphicsLibraries.Any(module.Contains))
+                    return CrashSuspect.Graphics;
+                if (windowLibraries.Any(module.Contains))
+                    return CrashSuspect.Window;
+            }
+
+            string caller = crash?.Caller;
+            if (caller != null)
+            {
+                if (caller.Contains("OpenAL", StringComparison.Ordinal) || caller.Contains(".Sound", StringComparison.Ordinal) || caller.Contains(".Audio.", StringComparison.Ordinal))
+                    return CrashSuspect.Sound;
+                if (caller.StartsWith("Microsoft.Xna.Framework.Graphics.", StringComparison.Ordinal) || caller.StartsWith("MonoGame.OpenGL.", StringComparison.Ordinal))
+                    return CrashSuspect.Graphics;
+                if (caller.Contains(".Sdl", StringComparison.Ordinal))
+                    return CrashSuspect.Window;
+            }
+
+            return stage switch
+            {
+                StartupStage.OpeningWindow => CrashSuspect.Window,
+                StartupStage.CreatingGraphicsDevice or StartupStage.GraphicsDeviceReady or StartupStage.FirstFrame => CrashSuspect.Graphics,
+                StartupStage.StartingSound => CrashSuspect.Sound,
+                _ => CrashSuspect.Unknown,
+            };
         }
 
         /// <summary>

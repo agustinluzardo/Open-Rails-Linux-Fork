@@ -171,6 +171,10 @@ namespace Orts.ActivityRunner.Processes
 
         private void GraphicsPreparingDeviceSettings(object sender, PreparingDeviceSettingsEventArgs e)
         {
+            // This also runs for every later ApplyChanges; only the first time creates the device.
+            if (game.GraphicsDevice == null)
+                StartupTrail.Mark(StartupStage.CreatingGraphicsDevice);
+
             GraphicsDeviceInformation information = e.GraphicsDeviceInformation;
             information.GraphicsProfile = GraphicsProfile.HiDef;
             // This stops ResolveBackBuffer() clearing the back buffer.
@@ -310,6 +314,12 @@ namespace Orts.ActivityRunner.Processes
             FreeTrainSimulator.Common.Info.SystemInfo.SetGraphicAdapterInformation(game.GraphicsDevice.Adapter.Description);
 
             viewport = game.GraphicsDevice.Viewport;
+
+            // The thread matters too: the context belongs to it, and it should be the main one.
+            bool mainThread = FreeTrainSimulator.Common.Native.NativeMethods.GetCurrentWin32ThreadId() == (uint)Environment.ProcessId;
+            StartupTrail.Mark(StartupStage.GraphicsDeviceReady,
+                $"{game.GraphicsDevice.Adapter.Description}; {DisplayDevices.VideoDriver}; {currentScreenMode} {viewport.Width}x{viewport.Height}, " +
+                $"{game.GraphicsDevice.PresentationParameters.MultiSampleCount}x antialiasing; {(mainThread ? "main thread" : "not the main thread")}");
         }
 
         internal void Update(GameTime gameTime)

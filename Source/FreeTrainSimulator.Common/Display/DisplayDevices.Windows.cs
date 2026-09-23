@@ -33,6 +33,9 @@ namespace FreeTrainSimulator.Common.Display
     /// </remarks>
     public static partial class DisplayDevices
     {
+        /// <summary>The window system, for diagnostics; there is only the one here.</summary>
+        public static string VideoDriver => "windows";
+
         private static IReadOnlyList<DisplayDevice> Enumerate()
         {
             List<DisplayDevice> found = new List<DisplayDevice>();

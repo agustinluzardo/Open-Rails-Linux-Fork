@@ -71,6 +71,9 @@ namespace FreeTrainSimulator.Common.Display
             public int Height;
         }
 
+        [DllImport(LibraryName, EntryPoint = "SDL_GetCurrentVideoDriver", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr GetCurrentVideoDriver();
+
         [DllImport(LibraryName, EntryPoint = "SDL_GetNumVideoDisplays", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int GetNumVideoDisplays();
 
@@ -94,6 +97,9 @@ namespace FreeTrainSimulator.Common.Display
 
         [DllImport(LibraryName, EntryPoint = "SDL_GL_SetAttribute", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int GlSetAttribute(GlAttribute attribute, int value);
+
+        [DllImport(LibraryName, EntryPoint = "SDL_GL_LoadLibrary", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int GlLoadLibrary(IntPtr path);
 
         [DllImport(LibraryName, EntryPoint = "SDL_GL_ResetAttributes", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void GlResetAttributes();

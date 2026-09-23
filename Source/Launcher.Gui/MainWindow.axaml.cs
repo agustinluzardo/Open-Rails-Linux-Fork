@@ -435,19 +435,29 @@ namespace Riel.Launcher.Gui
         /// Play disabled, so there is always something on screen saying what is happening - the
         /// failure this launcher exists to prevent is a click that seems to do nothing.
         /// </summary>
-        private async Task Run(IReadOnlyList<string> arguments, string title, RouteItem route)
+        /// <param name="safeMode">What to leave out: set when the error window's retry buttons run it again.</param>
+        private async Task Run(IReadOnlyList<string> arguments, string title, RouteItem route, SafeMode safeMode = SafeMode.None)
         {
             running = true;
             UpdateButtons();
             StatusText.Text = F("Starting {0}…", title);
+            string leftOut = safeMode switch
+            {
+                SafeMode.NoSound => T("without sound"),
+                SafeMode.BasicGraphics => T("with basic graphics"),
+                SafeMode.None => null,
+                _ => T("without sound and with basic graphics"),
+            };
 
             SimulatorOutcome outcome;
             string commandLine;
             try
             {
-                using SimulatorRun run = Simulator.Start(arguments, captureErrors: true);
+                using SimulatorRun run = Simulator.Start(arguments, captureErrors: true, safeMode);
                 commandLine = run.CommandLine;
-                StatusText.Text = F("Running {0}. The simulator window may take a moment to appear.", title);
+                StatusText.Text = leftOut == null
+                    ? F("Running {0}. The simulator window may take a moment to appear.", title)
+                    : F("Running {0} {1}. The simulator window may take a moment to appear.", title, leftOut);
                 outcome = await run.WaitAsync(closing.Token);
             }
             finally
@@ -459,14 +469,18 @@ namespace Riel.Launcher.Gui
 
             if (outcome.Failed)
             {
-                StatusText.Text = T("The simulator stopped because of an error.");
+                StatusText.Text = outcome.CrashedNatively ? T("The simulator crashed.") : T("The simulator stopped because of an error.");
                 string routeProblem = route == null ? null : problems
                     .FirstOrDefault(problem => problem.Kind == "route" && (problem.Path == route.Name || problem.Path == route.Route.Id))?.Reason;
-                await new ErrorWindow(outcome, commandLine, routeProblem).ShowDialog(this);
+                SafeMode? retry = await new ErrorWindow(outcome, commandLine, routeProblem, safeMode).ShowDialog<SafeMode?>(this);
+                if (retry != null)
+                    await Run(arguments, title, route, retry.Value);
             }
             else
             {
-                StatusText.Text = F("Finished {0}.", title);
+                StatusText.Text = leftOut == null
+                    ? F("Finished {0}.", title)
+                    : F("Finished {0} {1}.", title, leftOut);
             }
         }
 
