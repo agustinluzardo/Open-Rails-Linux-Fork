@@ -23,6 +23,7 @@
                         VerticalAlignment="Center" Margin="0,0,8,0" />
           <Button x:Name="ContentButton" Content="{l:T 'Content folders'}" />
           <Button x:Name="DoctorButton" Content="{l:T 'Check this computer'}" />
+          <Button x:Name="SettingsButton" Content="Settings" />
         </StackPanel>
       </Grid>
     </Border>
