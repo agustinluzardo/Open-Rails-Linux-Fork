@@ -98,6 +98,45 @@ namespace Orts.ActivityRunner.Processes
         }
 
         /// <summary>
+        /// Gives an already-active background upload burst a bounded slice of graphics-thread time.
+        /// </summary>
+        /// <remarks>
+        /// During normal gameplay the loader creates OpenGL resources from its worker thread and
+        /// MonoGame marshals those operations back to this thread. With VSync enabled, presentation
+        /// can leave the worker advancing at roughly one resource per displayed frame. Dense MSTS
+        /// tiles can therefore outrun streaming even though the loader itself is not CPU-bound.
+        ///
+        /// Unlike <see cref="Pump"/>, this method returns immediately when no upload is pending at
+        /// entry, so it has effectively zero steady-state cost. Once a burst has started it keeps a
+        /// very small window open for the loader to enqueue the next dependent texture/buffer.
+        /// </remarks>
+        internal static void PumpPending(TimeSpan budget)
+        {
+            if (run == null || !Pending || budget <= TimeSpan.Zero)
+                return;
+
+            long deadline = Stopwatch.GetTimestamp() + (long)(budget.TotalSeconds * Stopwatch.Frequency);
+            var spinner = new SpinWait();
+
+            do
+            {
+                if (Pending)
+                {
+                    run();
+                    spinner.Reset();
+                }
+                else
+                {
+                    // The loader generally enqueues the next upload immediately after the previous
+                    // one completes. Yield briefly instead of sleeping a whole millisecond so a
+                    // 60 Hz VSync frame can service several resources without adding idle latency.
+                    spinner.SpinOnce();
+                }
+            }
+            while (Stopwatch.GetTimestamp() < deadline);
+        }
+
+        /// <summary>
         /// Keeps running queued work for <paramref name="budget"/>, including work queued after
         /// this starts: while a route loads, the loader queues the next texture a moment after the
         /// last one is done.
