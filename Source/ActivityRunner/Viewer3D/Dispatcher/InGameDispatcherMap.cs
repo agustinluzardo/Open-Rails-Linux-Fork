@@ -8,10 +8,12 @@ using FreeTrainSimulator.Graphics.MapView;
 using FreeTrainSimulator.Graphics.MapView.Widgets;
 using FreeTrainSimulator.Graphics.Window;
 using FreeTrainSimulator.Models.Settings;
+using FreeTrainSimulator.Models.Shim;
 
 using Microsoft.Xna.Framework;
 
 using Orts.ActivityRunner.Viewer3D.Dispatcher.PopupWindows;
+using Orts.Formats.Msts;
 using Orts.Simulation;
 using Orts.Simulation.Physics;
 using Orts.Simulation.RollingStocks;
@@ -72,13 +74,13 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
                 viewer.Game.Components.Add(area);
 
                 switchWindow = new SwitchChangeWindow(windows, new Point(50, 50));
-                switchWindow.Initialize();
+                windows.InitializeWindow(switchWindow);
                 signalWindow = new SignalChangeWindow(windows, new Point(50, 50));
-                signalWindow.Initialize();
+                windows.InitializeWindow(signalWindow);
                 signalStateWindow = new SignalStateWindow(windows, new Point(75, 25));
-                signalStateWindow.Initialize();
+                windows.InitializeWindow(signalStateWindow);
                 trainWindow = new TrainInformationWindow(windows, new Point(75, 55));
-                trainWindow.Initialize();
+                windows.InitializeWindow(trainWindow);
                 SetOpen(true);
             }
             catch (Exception error)
@@ -105,9 +107,9 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
 
         public void Update()
         {
-            if (!IsOpen || Environment.TickCount64 < nextTrainUpdate)
+            if (!IsOpen || System.Environment.TickCount64 < nextTrainUpdate)
                 return;
-            nextTrainUpdate = Environment.TickCount64 + 100;
+            nextTrainUpdate = System.Environment.TickCount64 + 100;
 
             Simulator simulator = viewer.Simulator;
             HashSet<int> tracked = new HashSet<int>();
