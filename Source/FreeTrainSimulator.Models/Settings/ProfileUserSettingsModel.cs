@@ -56,7 +56,7 @@ namespace FreeTrainSimulator.Models.Settings
         public bool PauseAtStart { get; set; } = true;
         public bool TcsScripts {  get; set; }
         public int NotificationsTimeout { get; set; } = 1500;
-        public bool Confirmations { get; set; }
+        public bool Confirmations { get; set; } = true;
         public bool Alerter { get; set; }
         public bool AlerterExternal { get; set; }
         public bool SpeedControl { get; set; } = true;
