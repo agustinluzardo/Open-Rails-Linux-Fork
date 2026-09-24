@@ -3,7 +3,8 @@
 ## What you need
 
 - A 64-bit Linux system with a working OpenGL 3.3 driver (Mesa, or NVIDIA's).
-- The .NET 10 runtime.
+- The .NET 10 runtime if you build or install the source-based Arch package. The portable
+  archive below includes it.
 - SDL 2, OpenAL Soft, fontconfig, zlib.
 - For the launcher window: the X11 client libraries every desktop has. Under Wayland it runs
   through XWayland, which KDE, GNOME, Hyprland and Sway all provide.
@@ -14,8 +15,9 @@ Riel is native. Wine is not involved at runtime, and MSTS itself does not have t
 
 ### Dependencies by distribution
 
-Installing the package pulls these in; they are listed for building by hand. The **build** column
-is needed only to compile, the **run** column only to play.
+Installing the source-based Arch package pulls these in; they are listed for building by hand.
+The **build** column is needed only to compile, the **run** column to play that package.
+The portable download includes the .NET runtime instead.
 
 | | build | run |
 | --- | --- | --- |
@@ -37,7 +39,35 @@ Worth having, none required:
   your desktop's own folder picker. Without either, paste the path instead.
 - `mesa-utils` / `mesa-demos`: the `glxinfo` used further down to check the driver.
 
-## Arch Linux
+## Arch Linux: download without compiling
+
+Open the latest successful [Portable Linux package](https://github.com/agustinluzardo/Open-Rails-Linux-Fork/actions/workflows/linux-portable.yml)
+run, download the `riel-linux-x64` artifact and extract its ZIP. Then extract the
+`riel-linux-x64.tar.gz` inside it. In a terminal:
+
+```sh
+cd riel-linux-x64
+./riel gui
+```
+
+The archive includes the .NET runtime required by Riel. You do **not** need the .NET SDK,
+the .NET runtime package, or a NuGet cache to play. Your system still needs SDL 2,
+OpenAL Soft, fontconfig, zlib, and the desktop libraries listed in the **run** column above
+(except `dotnet-runtime-10.0`). Keep the extracted `riel-linux-x64` folder together;
+`./riel` can also run the commands such as `./riel doctor` and `./riel content add`.
+The Actions artifact is generated from `main` and may expire; use a successful recent run.
+This is self-contained rather than Native AOT: the simulator compiles C# scripts and loads
+custom rolling-stock DLLs at runtime, which Native AOT cannot do. Neither mode needs NuGet
+on the computer that runs the downloaded archive.
+
+On a minimal Arch installation, install just the native desktop dependencies:
+
+```sh
+sudo pacman -S --needed sdl2 openal fontconfig zlib libx11 libxcursor libxext \
+    libxfixes libxi libxrandr libice libsm libglvnd
+```
+
+### Build an Arch package from source
 
 ```sh
 git clone https://github.com/agustinluzardo/Open-Rails-Linux-Fork.git

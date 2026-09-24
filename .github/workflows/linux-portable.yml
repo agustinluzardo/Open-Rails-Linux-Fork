@@ -1,0 +1,66 @@
+name: Portable Linux package
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  linux-x64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Nerdbank.GitVersioning reads the repository history.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build, test and publish
+        working-directory: Source
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+          DOTNET_NOLOGO: '1'
+          AVALONIA_TELEMETRY_OPTOUT: '1'
+          NUGET_PACKAGES: ${{ runner.temp }}/riel-nuget
+        run: |
+          set -euo pipefail
+          dotnet test Test/Tests.Orts/Tests.Orts.csproj -c Release
+          dotnet test Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj -c Release
+          for project in \
+            ActivityRunner/ActivityRunner.csproj \
+            Launcher.Cli/Launcher.Cli.csproj \
+            Launcher.Gui/Launcher.Gui.csproj \
+            MultiPlayer.Hub/MultiPlayer.Hub.csproj
+          do
+            dotnet publish "$project" -c Release -r linux-x64 --self-contained true \
+              -o "${RUNNER_TEMP}/riel-publish"
+          done
+      - name: Package and verify without an installed .NET runtime
+        env:
+          DOTNET_ROOT: /nonexistent-dotnet-runtime
+          DOTNET_MULTILEVEL_LOOKUP: '0'
+          XDG_CONFIG_HOME: ${{ runner.temp }}/riel-profile/config
+          XDG_DATA_HOME: ${{ runner.temp }}/riel-profile/data
+          XDG_STATE_HOME: ${{ runner.temp }}/riel-profile/state
+          XDG_CACHE_HOME: ${{ runner.temp }}/riel-profile/cache
+        run: |
+          set -euo pipefail
+          bundle="${RUNNER_TEMP}/riel-linux-x64"
+          mkdir -p "$bundle/app"
+          cp -a "${RUNNER_TEMP}/riel-publish/." "$bundle/app/"
+          install -m 755 packaging/linux/riel-portable "$bundle/riel"
+          find "$bundle/app" -type f \( -name '*.pdb' -o -name '*.dbg' \) -delete
+          if [ -d "$bundle/app/runtimes" ]; then
+            find "$bundle/app/runtimes" -mindepth 1 -maxdepth 1 \
+              ! -name linux-x64 ! -name unix -exec rm -rf {} +
+          fi
+          python3 Source/Tools/TestRoute/make_test_route.py "${RUNNER_TEMP}/riel-test-content"
+          "$bundle/riel" content add Test "${RUNNER_TEMP}/riel-test-content/Train Simulator"
+          "$bundle/riel" content list | grep -F Test
+          tar -czf "${RUNNER_TEMP}/riel-linux-x64.tar.gz" -C "${RUNNER_TEMP}" riel-linux-x64
+          du -h "${RUNNER_TEMP}/riel-linux-x64.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: riel-linux-x64
+          path: ${{ runner.temp }}/riel-linux-x64.tar.gz
+          if-no-files-found: error
