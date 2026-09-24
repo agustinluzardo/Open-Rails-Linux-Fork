@@ -870,7 +870,12 @@ namespace Orts.Simulation.AIs
             AIActionItem newAction = null;
             float rearDist = (float)list[0];
             float frontDist = (float)list[1];
-            uint trackNodeIndex = (uint)list[2];
+
+            // Open Rails used to pass a UInt32 track-node index here. In the current
+            // track model LevelCrossingItem.TrackIndex is an Int32 (and may use -1 as
+            // a sentinel), so unboxing list[2] as UInt32 throws as soon as an AI train
+            // requests its level-crossing horn action. The index is not used by this
+            // action at all, so do not read or convert it.
             float minDist = Math.Min(Math.Abs(rearDist), frontDist);
 
             float[] distances = GetActivationDistances(thisTrain);
