@@ -340,30 +340,26 @@ namespace Orts.ActivityRunner.Processes
             // The updater may be waiting for this thread in turn, to fill a buffer: see GraphicsQueue.
             GraphicsQueue.WaitFor(game.UpdaterProcess);
 
-            // Swap frames and start the next update (non-threaded updater does the whole update).
-            (CurrentFrame, NextFrame) = (NextFrame, CurrentFrame);
-            game.UpdaterProcess.TriggerUpdate(NextFrame, gameTime);
-            game.SystemProcess.TriggerUpdate(gameTime);
-
-            // While a route loads, the loader creates its textures and buffers through this thread,
-            // one at a time. The loading screen only needs a few frames a second, so most of each
-            // frame goes to that instead of to sleeping until the next one - except in the extra
-            // updates MonoGame runs to catch up, which would only fall further behind.
+            // Service loader uploads while no updater frame is active. Pumping after TriggerUpdate
+            // lets unrelated UI/particle GPU work from the updater run concurrently with the frame
+            // currently being drawn; a window resize can then temporarily replace its vertex
+            // buffer while WindowManager is rendering it. Keeping the upload burst in this quiet
+            // point preserves streaming throughput without advancing updater-side graphics work.
             if (game.State is GameStateRunActivity && !gameTime.IsRunningSlowly)
             {
                 GraphicsQueue.Pump(LoadingPumpTime);
             }
             else if (game.State is GameStateViewer3D && !game.LoaderProcess.Finished)
             {
-                // DesktopGL must upload textures/buffers on the graphics thread. With VSync the
-                // present path can otherwise throttle a busy loader to roughly one upload per
-                // displayed frame, allowing the train to outrun world streaming. Give only active
-                // upload bursts a small per-frame slice; when nothing is queued this returns
-                // immediately and does not tax normal rendering.
                 GraphicsQueue.PumpPending(game.UserSettings.VerticalSync
                     ? VSyncStreamingPumpTime
                     : StreamingPumpTime);
             }
+
+            // Swap frames and start the next update (non-threaded updater does the whole update).
+            (CurrentFrame, NextFrame) = (NextFrame, CurrentFrame);
+            game.UpdaterProcess.TriggerUpdate(NextFrame, gameTime);
+            game.SystemProcess.TriggerUpdate(gameTime);
         }
 
         /// <summary>
