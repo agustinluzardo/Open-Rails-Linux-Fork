@@ -7,7 +7,7 @@ on:
 
 jobs:
   linux-x64:
-    runs-on: ubuntu-24.04-arm
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,7 +54,7 @@ jobs:
             find "$bundle/app/runtimes" -mindepth 1 -maxdepth 1 \
               ! -name linux-x64 ! -name unix -exec rm -rf {} +
           fi
-          if [ "${RUNNER_ARCH}" = "X64" ]; then
+          if [ "${RUNNER_OS}" = "Linux" ] && [ "${RUNNER_ARCH}" = "X64" ]; then
             python3 Source/Tools/TestRoute/make_test_route.py "${RUNNER_TEMP}/riel-test-content"
             "$bundle/riel" content add Test "${RUNNER_TEMP}/riel-test-content/Train Simulator"
             "$bundle/riel" content list | grep -F Test
