@@ -241,5 +241,25 @@ namespace FreeTrainSimulator.Models.Settings
         // Append-only: older profile files have no value for this member.
         // The launcher and renderer use the active display instead of a fixed 1024x768 default.
         public bool UseDesktopResolution { get; set; } = true;
+
+        // Append-only compatibility marker. Version 1 repairs profiles created while
+        // confirmations accidentally defaulted to false in the native Linux launcher.
+        public int CompatibilityDefaultsVersion { get; set; }
+
+        [MemoryPackOnDeserialized]
+        private void ApplyCompatibilityDefaults()
+        {
+            if (CompatibilityDefaultsVersion < 1)
+            {
+                Confirmations = true;
+                CompatibilityDefaultsVersion = 1;
+            }
+        }
+
+        [MemoryPackOnSerializing]
+        private void MarkCompatibilityDefaultsApplied()
+        {
+            CompatibilityDefaultsVersion = 1;
+        }
     }
 }
