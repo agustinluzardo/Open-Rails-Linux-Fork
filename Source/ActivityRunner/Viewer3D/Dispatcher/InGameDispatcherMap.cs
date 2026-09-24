@@ -79,7 +79,10 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
                 }));
                 area = ((IXnaMapShellHost)content.ShellHost).Component as ContentArea;
                 area.ResetSize(viewer.Game.Window.ClientBounds.Size, 60);
-                background.DrawOrder = -1;
+                // Draw the map before WindowManager so signal, switch and train
+                // popups remain visible above it, regardless of insertion order.
+                background.DrawOrder = -2;
+                area.DrawOrder = -1;
                 viewer.Game.Components.Add(background);
                 viewer.Game.Components.Add(area);
 
