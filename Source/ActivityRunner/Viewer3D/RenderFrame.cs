@@ -429,16 +429,36 @@ namespace Orts.ActivityRunner.Viewer3D
         /// <param name="flags"></param>
         public void AddAutoPrimitive(Vector3 mstsLocation, float objectRadius, float objectViewingDistance, Material material, RenderPrimitive primitive, RenderPrimitiveGroup group, ref Matrix xnaMatrix, ShapeOptions flags)
         {
-            if (float.IsPositiveInfinity(objectViewingDistance) || (camera != null && camera.InRange(mstsLocation, objectRadius, objectViewingDistance)))
-            {
-                if (camera != null && camera.InFov(mstsLocation, objectRadius))
-                    AddPrimitive(material, primitive, group, ref xnaMatrix, flags);
-            }
+            GetAutoPrimitiveVisibility(mstsLocation, objectRadius, objectViewingDistance, flags, out bool visible, out int shadowMask);
+            AddPreculledPrimitive(material, primitive, group, ref xnaMatrix, flags, visible, shadowMask);
+        }
 
-            if (dynamicShadows && (shadowMapCount > 0) && ((flags & ShapeOptions.ShadowCaster) != 0))
-                for (var shadowMapIndex = 0; shadowMapIndex < shadowMapCount; shadowMapIndex++)
-                    if (IsInShadowMap(shadowMapIndex, mstsLocation, objectRadius, objectViewingDistance))
-                        AddShadowPrimitive(shadowMapIndex, material, primitive, ref xnaMatrix, flags);
+        /// <summary>
+        /// All primitives of one shape LOD share its bounding sphere. Calculate camera and
+        /// shadow-cascade visibility once for that sphere instead of repeating the same
+        /// four shadow tests for every mesh in the shape.
+        /// </summary>
+        public void GetAutoPrimitiveVisibility(Vector3 mstsLocation, float objectRadius, float objectViewingDistance, ShapeOptions flags, out bool visible, out int shadowMask)
+        {
+            visible = (float.IsPositiveInfinity(objectViewingDistance) ||
+                (camera != null && camera.InRange(mstsLocation, objectRadius, objectViewingDistance))) &&
+                camera != null && camera.InFov(mstsLocation, objectRadius);
+
+            shadowMask = 0;
+            if (dynamicShadows && (flags & ShapeOptions.ShadowCaster) != 0)
+                for (int index = 0; index < shadowMapCount; index++)
+                    if (IsInShadowMap(index, mstsLocation, objectRadius, objectViewingDistance))
+                        shadowMask |= 1 << index;
+        }
+
+        public void AddPreculledPrimitive(Material material, RenderPrimitive primitive, RenderPrimitiveGroup group, ref Matrix xnaMatrix, ShapeOptions flags, bool visible, int shadowMask)
+        {
+            if (visible)
+                AddPrimitive(material, primitive, group, ref xnaMatrix, flags);
+            if (shadowMask != 0)
+                for (int index = 0; index < shadowMapCount; index++)
+                    if ((shadowMask & (1 << index)) != 0)
+                        AddShadowPrimitive(index, material, primitive, ref xnaMatrix, flags);
         }
 
         public void AddPrimitive(Material material, RenderPrimitive primitive, RenderPrimitiveGroup group, ref Matrix xnaMatrix)
@@ -491,25 +511,9 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public void Sort()
         {
-            //System.Threading.Tasks.Parallel.For(0, renderItems.Length, (i) =>
-            //{
-            //    foreach (var sequenceMaterial in renderItems[i].Where(kvp => kvp.Value.Count > 1))
-            //    {
-            //        if (sequenceMaterial.Key == DummyBlendedMaterial)
-            //            sequenceMaterial.Value.Sort(renderItemComparer);
-            //    }
-            //});
-
             foreach (var sequence in renderItems)
-            {
-                foreach (var sequenceMaterial in sequence.Where(kvp => kvp.Value.Count > 1))
-                {
-                    if (sequenceMaterial.Key != DummyBlendedMaterial)
-                        continue;
-                    //Debug.WriteLine($"Sorting {sequenceMaterial.ToString()} {sequenceMaterial.Value.Count} items");
-                    sequenceMaterial.Value.Sort(renderItemComparer);
-                }
-            }
+                if (sequence.TryGetValue(DummyBlendedMaterial, out List<RenderItem> blended) && blended.Count > 1)
+                    blended.Sort(renderItemComparer);
         }
 
         private bool IsInShadowMap(int shadowMapIndex, Vector3 mstsLocation, float objectRadius, float objectViewingDistance)
