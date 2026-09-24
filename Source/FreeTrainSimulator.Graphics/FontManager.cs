@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Drawing;
 
 namespace FreeTrainSimulator.Graphics
 {
     public class FontManager
     {
-        private static readonly Dictionary<int, FontManagerInstance> fontManagerCache = new Dictionary<int, FontManagerInstance>();
+        private static readonly ConcurrentDictionary<(string Name, FontStyle Style, float Scale), FontManagerInstance> fontManagerCache = new();
 
         public string FontName { get; }
 
@@ -16,54 +16,27 @@ namespace FreeTrainSimulator.Graphics
 
         public static float ScalingFactor { get; set; } = 1.0f;
 
-        public static FontManagerInstance Exact(string fontName, FontStyle style)
-        {
-            int hash = HashCode.Combine(fontName, style, false);
-            if (!fontManagerCache.TryGetValue(hash, out FontManagerInstance result))
-            {
-                result = new FontManagerInstance(fontName, style);
-                fontManagerCache.Add(hash, result);
-            }
-            return result;
-        }
+        public static FontManagerInstance Exact(string fontName, FontStyle style) => Get(fontName, style, 1f);
 
-        public static FontManagerInstance Exact(FontFamily fontFamily, FontStyle style)
-        {
-            int hash = HashCode.Combine(fontFamily, style, false);
-            if (!fontManagerCache.TryGetValue(hash, out FontManagerInstance result))
-            {
-                result = new FontManagerInstance(fontFamily ?? throw new ArgumentNullException(nameof(fontFamily)), style);
-                fontManagerCache.Add(hash, result);
-            }
-            return result;
-        }
+        public static FontManagerInstance Exact(FontFamily fontFamily, FontStyle style) =>
+            Get((fontFamily ?? throw new ArgumentNullException(nameof(fontFamily))).Name, style, 1f);
 
-        public static FontManagerInstance Scaled(string fontName, FontStyle style)
-        {
-            int hash = HashCode.Combine(fontName, style, true);
-            if (!fontManagerCache.TryGetValue(hash, out FontManagerInstance result))
-            {
-                result = new FontManagerInstance(fontName, style, ScalingFactor);
-                fontManagerCache.Add(hash, result);
-            }
-            return result;
-        }
+        public static FontManagerInstance Scaled(string fontName, FontStyle style) => Get(fontName, style, ScalingFactor);
 
-        public static FontManagerInstance Scaled(FontFamily fontFamily, FontStyle style)
+        public static FontManagerInstance Scaled(FontFamily fontFamily, FontStyle style) =>
+            Get((fontFamily ?? throw new ArgumentNullException(nameof(fontFamily))).Name, style, ScalingFactor);
+
+        private static FontManagerInstance Get(string fontName, FontStyle style, float scale)
         {
-            int hash = HashCode.Combine(fontFamily, style, true);
-            if (!fontManagerCache.TryGetValue(hash, out FontManagerInstance result))
-            {
-                result = new FontManagerInstance(fontFamily ?? throw new ArgumentNullException(nameof(fontFamily)), style, ScalingFactor);
-                fontManagerCache.Add(hash, result);
-            }
-            return result;
+            // A second display may have a different DPI; do not reuse fonts from the first.
+            return fontManagerCache.GetOrAdd((fontName, style, scale),
+                key => new FontManagerInstance(key.Name, key.Style, key.Scale));
         }
     }
 
     public sealed class FontManagerInstance
     {
-        private readonly Dictionary<int, Font> fontCache = new Dictionary<int, Font>();
+        private readonly ConcurrentDictionary<int, Font> fontCache = new();
 
         public string FontName { get; }
 
@@ -92,12 +65,8 @@ namespace FreeTrainSimulator.Graphics
         {
             get
             {
-                if (!fontCache.TryGetValue(size, out Font result))
-                {
-                    result = FontFamily != null ? new Font(FontFamily, (int)Math.Round(size * DpiScale), FontStyle, GraphicsUnit.Pixel) : new Font(FontName, (int)Math.Round(size * DpiScale), FontStyle, GraphicsUnit.Pixel);
-                    fontCache.Add(size, result);
-                }
-                return result;
+                return fontCache.GetOrAdd(size, value => new Font(FontName,
+                    Math.Max(1, (int)Math.Round(value * DpiScale)), FontStyle, GraphicsUnit.Pixel));
             }
         }
 

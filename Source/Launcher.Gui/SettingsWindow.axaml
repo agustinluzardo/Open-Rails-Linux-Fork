@@ -2,17 +2,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Riel.Launcher.Gui.SettingsWindow"
         Title="Riel Settings" Width="900" Height="720" MinWidth="720" MinHeight="560"
-        WindowStartupLocation="CenterOwner" KeyDown="Window_KeyDown">
+        WindowStartupLocation="CenterOwner">
   <Grid RowDefinitions="Auto,*,Auto" Margin="20">
     <StackPanel Grid.Row="0" Spacing="4">
       <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold"/>
       <TextBlock Text="These settings are used by the simulator when you press Play." Opacity="0.7"/>
+      <TextBlock x:Name="StatusText" TextWrapping="Wrap" Foreground="OrangeRed"/>
     </StackPanel>
-    <TabControl Grid.Row="1" Margin="0,16">
+    <TabControl x:Name="SettingsTabs" Grid.Row="1" Margin="0,16">
       <TabItem Header="Controls">
         <Grid RowDefinitions="Auto,*">
           <Border Padding="12" Margin="0,0,0,10" Background="{DynamicResource SystemControlBackgroundAltLowBrush}">
-            <TextBlock Text="Click a key field, then press the key combination you want. The default bindings are the original Open Rails bindings." TextWrapping="Wrap"/>
+            <TextBlock Text="Click a key field, then press the key combination you want. Press Escape to cancel. Defaults are the Riel bindings inherited from Free Train Simulator." TextWrapping="Wrap"/>
           </Border>
           <ScrollViewer Grid.Row="1"><StackPanel x:Name="KeyboardPanel" Spacing="4"/></ScrollViewer>
         </Grid>
@@ -41,7 +42,7 @@
       </TabItem>
     </TabControl>
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button x:Name="ResetKeyboardButton" Content="Reset controls to Open Rails defaults"/>
+      <Button x:Name="ResetKeyboardButton" Content="Reset controls to Riel defaults"/>
       <Button x:Name="CancelButton" Content="Cancel"/><Button x:Name="SaveButton" Classes="accent" Content="Save"/>
     </StackPanel>
   </Grid>

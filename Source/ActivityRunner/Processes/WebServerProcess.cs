@@ -21,6 +21,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -59,6 +60,12 @@ namespace Orts.ActivityRunner.Processes
             cancellationTokenSource.Cancel();
         }
 
+        internal void WaitForExit()
+        {
+            if (thread != null && thread.IsAlive && thread != Thread.CurrentThread)
+                thread.Join();
+        }
+
         private void WebServerThread()
         {
             string contentPath = Path.Combine(RuntimeInfo.ApplicationFolder, "Content", "Web");
@@ -67,6 +74,10 @@ namespace Orts.ActivityRunner.Processes
             {
                 using (EmbedIO.WebServer server = WebServer.CreateWebServer($"http://*:{portNumber}", contentPath))
                     server.RunAsync(cancellationTokenSource.Token).Wait();
+            }
+            catch (AggregateException ex) when (cancellationTokenSource.IsCancellationRequested &&
+                ex.Flatten().InnerExceptions.All(error => error is OperationCanceledException))
+            {
             }
             catch (AggregateException ex)
             {

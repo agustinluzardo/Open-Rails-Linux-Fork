@@ -28,6 +28,7 @@ namespace Riel.Launcher.Gui
         private Button pendingKeyButton;
         private UserCommand pendingCommand;
         private bool hasPendingCommand;
+        private bool settingsLoaded;
 
         public SettingsWindow(ProfileModel profile)
         {
@@ -35,14 +36,28 @@ namespace Riel.Launcher.Gui
             InitializeComponent();
 
             ScreenModeBox.ItemsSource = Enum.GetValues<ScreenMode>();
-            MsaaBox.ItemsSource = new[] { 0, 2, 4, 8 };
+            MsaaBox.ItemsSource = new[] { 0, 2, 4, 8, 16, 32 };
             ShadowResolutionBox.ItemsSource = new[] { 512, 1024, 2048, 4096 };
 
             SaveButton.Click += SaveButton_Click;
             CancelButton.Click += (_, _) => Close();
             ResetKeyboardButton.Click += (_, _) => ResetKeyboard();
 
-            Opened += async (_, _) => await LoadAsync();
+            SetEditingEnabled(false);
+            AddHandler(KeyDownEvent, Window_KeyDown, RoutingStrategies.Tunnel);
+            Opened += async (_, _) =>
+            {
+                try
+                {
+                    await LoadAsync();
+                    settingsLoaded = true;
+                    SetEditingEnabled(true);
+                }
+                catch (Exception error)
+                {
+                    StatusText.Text = $"Could not load settings: {error.Message}";
+                }
+            };
         }
 
         private async Task LoadAsync()
@@ -125,6 +140,7 @@ namespace Riel.Launcher.Gui
                 return;
             }
 
+            CancelKeyCapture();
             pendingKeyButton = button;
             pendingCommand = command;
             hasPendingCommand = true;
@@ -137,8 +153,15 @@ namespace Riel.Launcher.Gui
             if (!hasPendingCommand)
                 return;
 
-            XnaKeys key;
-            if (!TryConvertKey(e.Key, out key) || key == XnaKeys.None)
+            e.Handled = true;
+            if (e.Key == Key.Escape)
+            {
+                CancelKeyCapture();
+                return;
+            }
+            if (e.Key is Key.LeftShift or Key.RightShift or Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt or Key.LWin or Key.RWin)
+                return;
+            if (!TryConvertKey(e.Key, out XnaKeys key) || key == XnaKeys.None)
                 return;
 
             CommonKeyModifiers modifiers = CommonKeyModifiers.None;
@@ -164,6 +187,17 @@ namespace Riel.Launcher.Gui
 
         private static bool TryConvertKey(Avalonia.Input.Key avaloniaKey, out XnaKeys key)
         {
+            key = avaloniaKey switch
+            {
+                Key.Return => XnaKeys.Enter,
+                Key.Capital => XnaKeys.CapsLock,
+                Key.Prior => XnaKeys.PageUp,
+                Key.Next => XnaKeys.PageDown,
+                Key.Snapshot => XnaKeys.PrintScreen,
+                _ => XnaKeys.None
+            };
+            if (key != XnaKeys.None)
+                return true;
             string name = avaloniaKey.ToString();
             if (Enum.TryParse(name, true, out key))
                 return true;
@@ -189,39 +223,67 @@ namespace Riel.Launcher.Gui
 
         private void ResetKeyboard()
         {
-            keyboardSettings = new ProfileKeyboardSettingsModel();
+            if (!settingsLoaded)
+                return;
+            CancelKeyCapture();
+            ProfileKeyboardSettingsModel defaults = new ProfileKeyboardSettingsModel();
+            foreach (UserCommand command in Enum.GetValues<UserCommand>())
+                keyboardSettings.UserCommands[command].UniqueDescriptor = defaults.UserCommands[command].UniqueDescriptor;
             BuildKeyboardList();
+        }
+
+        private void CancelKeyCapture()
+        {
+            if (pendingKeyButton != null)
+                pendingKeyButton.Content = keyboardSettings.UserCommands[pendingCommand].ToString();
+            pendingKeyButton = null;
+            hasPendingCommand = false;
+        }
+
+        private void SetEditingEnabled(bool enabled)
+        {
+            SettingsTabs.IsEnabled = enabled;
+            SaveButton.IsEnabled = enabled;
+            ResetKeyboardButton.IsEnabled = enabled;
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (hasPendingCommand)
+            if (!settingsLoaded || !SaveButton.IsEnabled)
+                return;
+            CancelKeyCapture();
+            SetEditingEnabled(false);
+            StatusText.Text = string.Empty;
+            try
             {
-                hasPendingCommand = false;
-                pendingKeyButton = null;
+
+                userSettings.ScreenMode = ScreenModeBox.SelectedItem is ScreenMode mode ? mode : ScreenMode.WindowedFullscreen;
+                int width = (int)(WidthBox.Value ?? 1024);
+                int height = (int)(HeightBox.Value ?? 768);
+                userSettings.WindowSettings[WindowSetting.Size] = (width, height);
+                userSettings.VerticalSync = VsyncBox.IsChecked == true;
+                userSettings.MultiSamplingCount = MsaaBox.SelectedItem is int msaa ? msaa : 4;
+                userSettings.DynamicShadows = DynamicShadowsBox.IsChecked == true;
+                userSettings.ModelInstancing = ModelInstancingBox.IsChecked == true;
+                userSettings.ShadowAllShapes = ShadowAllShapesBox.IsChecked == true;
+                userSettings.ViewingDistance = (int)(ViewingDistanceBox.Value ?? 2000);
+                userSettings.FarMountainsViewingDistance = (int)(FarMountainsBox.Value ?? 40000);
+                userSettings.FieldOfView = (int)(FovBox.Value ?? 45);
+                userSettings.VisibleDetailLevel = (int)(DetailLevelBox.Value ?? 49);
+                userSettings.AmbientBrightness = (int)(AmbientBox.Value ?? 20);
+                userSettings.ShadowMapResolution = ShadowResolutionBox.SelectedItem is int resolution ? resolution : 1024;
+                userSettings.ShadowMapBlur = ShadowBlurBox.IsChecked == true;
+                userSettings.SignalLightGlow = SignalGlowBox.IsChecked == true;
+
+                await profile.UpdateSettingsModel(keyboardSettings, CancellationToken.None);
+                await profile.UpdateSettingsModel(userSettings, CancellationToken.None);
+                Close();
             }
-
-            userSettings.ScreenMode = ScreenModeBox.SelectedItem is ScreenMode mode ? mode : ScreenMode.WindowedFullscreen;
-            int width = (int)(WidthBox.Value ?? 1024);
-            int height = (int)(HeightBox.Value ?? 768);
-            userSettings.WindowSettings[WindowSetting.Size] = (width, height);
-            userSettings.VerticalSync = VsyncBox.IsChecked == true;
-            userSettings.MultiSamplingCount = MsaaBox.SelectedItem is int msaa ? msaa : 4;
-            userSettings.DynamicShadows = DynamicShadowsBox.IsChecked == true;
-            userSettings.ModelInstancing = ModelInstancingBox.IsChecked == true;
-            userSettings.ShadowAllShapes = ShadowAllShapesBox.IsChecked == true;
-            userSettings.ViewingDistance = (int)(ViewingDistanceBox.Value ?? 2000);
-            userSettings.FarMountainsViewingDistance = (int)(FarMountainsBox.Value ?? 40000);
-            userSettings.FieldOfView = (int)(FovBox.Value ?? 45);
-            userSettings.VisibleDetailLevel = (int)(DetailLevelBox.Value ?? 49);
-            userSettings.AmbientBrightness = (int)(AmbientBox.Value ?? 20);
-            userSettings.ShadowMapResolution = ShadowResolutionBox.SelectedItem is int resolution ? resolution : 1024;
-            userSettings.ShadowMapBlur = ShadowBlurBox.IsChecked == true;
-            userSettings.SignalLightGlow = SignalGlowBox.IsChecked == true;
-
-            await profile.UpdateSettingsModel(keyboardSettings, CancellationToken.None);
-            await profile.UpdateSettingsModel(userSettings, CancellationToken.None);
-            Close();
+            catch (Exception error)
+            {
+                StatusText.Text = $"Could not save settings: {error.Message}";
+                SetEditingEnabled(true);
+            }
         }
     }
 }

@@ -124,8 +124,12 @@ namespace System.Drawing
             };
 
             // GDI+ takes the top of the line; Skia takes the baseline.
-            canvas.DrawText(text, x, y - skiaFont.Metrics.Ascent, skiaFont, paint);
-            DrawTextDecorations(text, font, brush, x, y);
+            foreach (string line in TextLines(text))
+            {
+                canvas.DrawText(line, x, y - skiaFont.Metrics.Ascent, skiaFont, paint);
+                DrawTextDecorations(line, font, brush, x, y);
+                y += skiaFont.Spacing;
+            }
         }
 
         public SizeF MeasureString(string text, Font font)
@@ -136,8 +140,17 @@ namespace System.Drawing
             SKFont skiaFont = font.SkiaFont;
             // The advance width is the right measure for laying text out; the ink bounds would
             // clip the side bearings and make consecutive strings overlap.
-            return new SizeF(skiaFont.MeasureText(text), skiaFont.Spacing);
+            float width = 0;
+            int count = 0;
+            foreach (string line in TextLines(text))
+            {
+                width = Math.Max(width, skiaFont.MeasureText(line));
+                count++;
+            }
+            return new SizeF(width, count * skiaFont.Spacing);
         }
+
+        internal static string[] TextLines(string text) => text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n');
 
         public SizeF MeasureString(string text, Font font, int width) => MeasureString(text, font);
 
@@ -171,10 +184,37 @@ namespace System.Drawing
                     continue;
                 }
 
-                int length = Math.Min(range.Length, text.Length - range.First);
-                string part = text.Substring(range.First, length);
-                float offset = range.First == 0 ? 0 : skiaFont.MeasureText(text.Substring(0, range.First));
-                regions[i] = new Region(new RectangleF(offset, 0, skiaFont.MeasureText(part), skiaFont.Spacing));
+                if (range.First == 0 && range.Length >= text.Length)
+                {
+                    regions[i] = new Region(new RectangleF(layoutRect.Location, MeasureString(text, font)));
+                    continue;
+                }
+                int end = Math.Min(text.Length, range.First + range.Length);
+                int lineStart = 0;
+                int lineNumber = 0;
+                RectangleF bounds = RectangleF.Empty;
+                bool found = false;
+                while (lineStart < text.Length)
+                {
+                    int lineEnd = lineStart;
+                    while (lineEnd < text.Length && text[lineEnd] != '\r' && text[lineEnd] != '\n')
+                        lineEnd++;
+                    int first = Math.Max(lineStart, range.First);
+                    int last = Math.Min(lineEnd, end);
+                    if (first < last)
+                    {
+                        float x = skiaFont.MeasureText(text.Substring(lineStart, first - lineStart));
+                        RectangleF lineBounds = new RectangleF(layoutRect.X + x, layoutRect.Y + lineNumber * skiaFont.Spacing,
+                            skiaFont.MeasureText(text.Substring(first, last - first)), skiaFont.Spacing);
+                        bounds = found ? RectangleF.Union(bounds, lineBounds) : lineBounds;
+                        found = true;
+                    }
+                    lineStart = lineEnd + 1;
+                    if (lineEnd + 1 < text.Length && text[lineEnd] == '\r' && text[lineEnd + 1] == '\n')
+                        lineStart++;
+                    lineNumber++;
+                }
+                regions[i] = new Region(bounds);
             }
             return regions;
         }
@@ -347,8 +387,13 @@ namespace System.Drawing.Drawing2D
                 return;
 
             using SKFont font = SkiaFonts.CreateFont(family.Name, emSize, (FontStyle)style);
-            using SKPath text_path = font.GetTextPath(text, new SKPoint(origin.X, origin.Y - font.Metrics.Ascent));
-            path.AddPath(text_path, SKPathAddMode.Append);
+            float y = origin.Y - font.Metrics.Ascent;
+            foreach (string line in Graphics.TextLines(text))
+            {
+                using SKPath textPath = font.GetTextPath(line, new SKPoint(origin.X, y));
+                path.AddPath(textPath, SKPathAddMode.Append);
+                y += font.Spacing;
+            }
         }
 
         public RectangleF GetBounds()

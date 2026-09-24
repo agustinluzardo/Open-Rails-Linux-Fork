@@ -88,6 +88,7 @@ namespace FreeTrainSimulator.Graphics.Window
             WindowControlLayout windowLayout = new WindowControlLayout(this, borderRect.Width, borderRect.Height);
             _ = Layout(windowLayout);
             windowLayout.Initialize();
+            this.windowLayout?.Dispose();
             this.windowLayout = windowLayout;
         }
 

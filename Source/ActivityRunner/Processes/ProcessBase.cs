@@ -26,7 +26,7 @@ namespace Orts.ActivityRunner.Processes
             this.gameHost = gameHost;
             processState = new ProcessState(name);
             profiler = new Profiler(name);
-            thread = new Thread(ThreadMethod);
+            thread = new Thread(ThreadMethod) { Name = name };
             if (timerPeriod > 0)
             {
                 timerBased = true;
@@ -44,6 +44,9 @@ namespace Orts.ActivityRunner.Processes
             processState.SignalTerminate();
             cancellationTokenSource.Cancel();
         }
+
+        internal bool WaitForExit(int millisecondsTimeout) =>
+            !thread.IsAlive || (thread != Thread.CurrentThread && thread.Join(millisecondsTimeout));
 
         internal virtual void TriggerUpdate(GameTime gameTime)
         {
@@ -73,16 +76,17 @@ namespace Orts.ActivityRunner.Processes
         protected void ThreadMethod()
         {
             profiler.SetThread();
-            Initialize();
-            while (!processState.Terminated)
+            try
             {
-                if (timerBased)
-                    Thread.Sleep(timerPeriod);
-                else
-                    // Wait for a new trigger command
-                    processState.WaitTillStarted();
-                try
+                Initialize();
+                while (!cancellationTokenSource.IsCancellationRequested)
                 {
+                    if (timerBased)
+                        cancellationTokenSource.Token.WaitHandle.WaitOne(timerPeriod);
+                    else
+                        processState.WaitTillStarted();
+                    if (cancellationTokenSource.IsCancellationRequested)
+                        break;
                     try
                     {
                         profiler.Start();
@@ -91,16 +95,22 @@ namespace Orts.ActivityRunner.Processes
                     finally
                     {
                         profiler.Stop();
+                        processState.SignalFinish();
                     }
                 }
-                catch (Exception error) when (!Debugger.IsAttached)
-                {
-                    // Unblock anyone waiting for us, report error and die.
-                    processState.SignalTerminate();
-                    gameHost.ProcessReportError(error);
-                }
-                // Signal finished so RenderProcess can start drawing
-                processState.SignalFinish();
+            }
+            catch (OperationCanceledException) when (cancellationTokenSource.IsCancellationRequested)
+            {
+                // Normal shutdown, including a cancelled loader.
+            }
+            catch (Exception error) when (!Debugger.IsAttached)
+            {
+                gameHost.ProcessReportError(error);
+            }
+            finally
+            {
+                processState.SignalTerminate();
+                Trace.TraceInformation("{0} process exited.", processState.ProcessName);
             }
         }
 

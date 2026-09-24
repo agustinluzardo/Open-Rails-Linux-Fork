@@ -30,6 +30,10 @@ namespace FreeTrainSimulator.Graphics.Window.Controls.Layout
 
         public virtual int CurrentTop => 0;
 
+        internal int ContentBottom => this is ScrollboxControlLayout ? Bounds.Bottom :
+            Controls.Where(control => control.Visible).Select(control => control is ControlLayout layout
+                ? layout.ContentBottom : control.Bounds.Bottom).DefaultIfEmpty(Bounds.Top).Max();
+
         public HorizontalAlignment HorizontalChildAlignment { get; set; } = HorizontalAlignment.Left;
 
         public VerticalAlignment VerticalChildAlignment { get; set; } = VerticalAlignment.Top;
@@ -158,7 +162,7 @@ namespace FreeTrainSimulator.Graphics.Window.Controls.Layout
 
         internal override bool HandleMouseClicked(WindowMouseEvent e)
         {
-            foreach (WindowControl control in Controls.Where(c => c.Bounds.Contains(e.MousePosition)))
+            foreach (WindowControl control in Controls.Where(c => c.Visible && c.Bounds.Contains(e.MousePosition)))
                 if (control.HandleMouseClicked(e))
                     return true;
             return base.HandleMouseClicked(e);
@@ -166,7 +170,7 @@ namespace FreeTrainSimulator.Graphics.Window.Controls.Layout
 
         internal override bool HandleMouseDown(WindowMouseEvent e)
         {
-            foreach (WindowControl control in Controls.Where(c => c.Bounds.Contains(e.MousePosition)))
+            foreach (WindowControl control in Controls.Where(c => c.Visible && c.Bounds.Contains(e.MousePosition)))
                 if (control.HandleMouseDown(e))
                     return true;
             return base.HandleMouseDown(e);
@@ -175,7 +179,7 @@ namespace FreeTrainSimulator.Graphics.Window.Controls.Layout
         internal override bool HandleMouseReleased(WindowMouseEvent e)
         {
             Window.CapturedControl = null;
-            foreach (WindowControl control in Controls.Where(c => c.Bounds.Contains(e.MousePosition)))
+            foreach (WindowControl control in Controls.Where(c => c.Visible && c.Bounds.Contains(e.MousePosition)))
                 if (control.HandleMouseReleased(e))
                     return true;
             return base.HandleMouseReleased(e);
@@ -183,7 +187,7 @@ namespace FreeTrainSimulator.Graphics.Window.Controls.Layout
 
         internal override bool HandleMouseMove(WindowMouseEvent e)
         {
-            foreach (WindowControl control in Controls.Where(c => c.Bounds.Contains(e.MousePosition)))
+            foreach (WindowControl control in Controls.Where(c => c.Visible && c.Bounds.Contains(e.MousePosition)))
                 if (control.HandleMouseMove(e))
                     return true;
             return base.HandleMouseMove(e);
@@ -191,7 +195,7 @@ namespace FreeTrainSimulator.Graphics.Window.Controls.Layout
 
         internal override bool HandleMouseScroll(WindowMouseEvent e)
         {
-            foreach (WindowControl control in Controls.Where(c => c.Bounds.Contains(e.MousePosition)))
+            foreach (WindowControl control in Controls.Where(c => c.Visible && c.Bounds.Contains(e.MousePosition)))
                 if (control.HandleMouseScroll(e))
                     return true;
             return base.HandleMouseScroll(e);
@@ -199,7 +203,7 @@ namespace FreeTrainSimulator.Graphics.Window.Controls.Layout
 
         internal override bool HandleMouseDrag(WindowMouseEvent e)
         {
-            foreach (WindowControl control in Controls.Where(c => c.Bounds.Contains(e.MousePosition) || TestForDragging(c)))
+            foreach (WindowControl control in Controls.Where(c => c.Visible && (c.Bounds.Contains(e.MousePosition) || TestForDragging(c))))
                 if (control.HandleMouseDrag(e))
                     return true;
             return base.HandleMouseDrag(e);

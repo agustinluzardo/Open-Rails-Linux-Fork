@@ -188,23 +188,53 @@ namespace Orts.ActivityRunner.Processes
 
         private bool firstFramePresented;
 
-        protected override async void EndRun()
-        {
-            base.EndRun();
-            RenderProcess.Stop();
-            UpdaterProcess.Stop();
-            LoaderProcess.Stop();
-            SoundProcess.Stop();
-            WebServerProcess.Stop();
-            SystemProcess.Stop();
+        private bool shutdownComplete;
 
-            _ = await UserSettings.Parent.UpdateRuntimeUserSettingsModel(UserSettings, CancellationToken.None).ConfigureAwait(false);
+        protected override void EndRun()
+        {
+            Shutdown();
+            base.EndRun();
+            try
+            {
+                if (UserSettings.Parent != null)
+                    UserSettings.Parent.UpdateRuntimeUserSettingsModel(UserSettings, CancellationToken.None).GetAwaiter().GetResult();
+            }
+            catch (Exception error)
+            {
+                Trace.TraceError("Could not save runtime settings: {0}", error);
+            }
         }
 
-        private void Game_Exiting(object sender, EventArgs e)
+        private void Game_Exiting(object sender, EventArgs e) => Shutdown();
+
+        private void Shutdown()
         {
-            while (State != null)
-                PopState();
+            if (shutdownComplete)
+                return;
+            Trace.TraceInformation("Stopping activity workers.");
+            RenderProcess.Stop();
+            ProcessBase[] workers = { UpdaterProcess, LoaderProcess, SoundProcess, SystemProcess };
+            foreach (ProcessBase worker in workers)
+                worker.Stop();
+            WebServerProcess.Stop();
+
+            // A worker can be waiting on a GL upload: pump the queue on the graphics thread
+            // until it exits, then dispose world content and the audio context.
+            foreach (ProcessBase worker in workers)
+                while (!worker.WaitForExit(1))
+                    GraphicsQueue.RunPending();
+            WebServerProcess.WaitForExit();
+            try
+            {
+                while (State != null)
+                    PopState();
+            }
+            finally
+            {
+                Viewer3D.OpenAL.Shutdown();
+                shutdownComplete = true;
+                Trace.TraceInformation("Activity shutdown complete.");
+            }
         }
 
         internal void PushState(GameState state)
