@@ -103,6 +103,43 @@ namespace Tests.FreeTrainSimulator.Common
         }
 
         [TestMethod]
+        public void ActivityFindsTrafficWithinItsOwnRoute()
+        {
+            string trafficFolder = Path.Combine(root, "ROUTES", "Marias Pass", "TRAFFIC");
+            Directory.CreateDirectory(trafficFolder);
+            string trafficFile = Path.Combine(trafficFolder, "Short Passenger Run (Traffic).TRF");
+            File.WriteAllText(trafficFile, "traffic");
+
+            string activity = Path.Combine(root, "ROUTES", "Marias Pass", "ACTIVITIES", "shrtpass.act");
+            FolderStructure.ContentFolder.RouteFolder route = FolderStructure.RouteFromActivity(activity);
+
+            Assert.AreEqual(root, route.ContentFolder.Folder);
+            Assert.AreEqual("Marias Pass", route.RouteName);
+            Assert.AreEqual(trafficFile, ContentIO.ResolveFile(route.TrafficFile("Short Passenger Run (Traffic)")));
+        }
+
+        [TestMethod]
+        public void OpenRailsActivityFindsItsRouteAndTraffic()
+        {
+            string activity = Path.Combine(root, "ROUTES", "Marias Pass", "ACTIVITIES", "OpenRails", "custom.act");
+            FolderStructure.ContentFolder.RouteFolder route = FolderStructure.RouteFromActivity(activity);
+
+            Assert.AreEqual(root, route.ContentFolder.Folder);
+            Assert.AreEqual("Marias Pass", route.RouteName);
+        }
+
+        [TestMethod]
+        public void RoutePathFindsTheInstallationRoot()
+        {
+            string routePath = Path.Combine(root, "ROUTES", "Marias Pass");
+            FolderStructure.ContentFolder.RouteFolder route = FolderStructure.Route(routePath);
+
+            Assert.AreEqual(root, route.ContentFolder.Folder);
+            Assert.AreEqual("Marias Pass", route.RouteName);
+            Assert.AreEqual(root, FolderStructure.Route(routePath + Path.DirectorySeparatorChar).ContentFolder.Folder);
+        }
+
+        [TestMethod]
         public void ResolvesADirectory()
         {
             Assert.IsTrue(ContentIO.DirectoryExists(Path.Combine(root, "routes", "MARIAS PASS", "textures")));
