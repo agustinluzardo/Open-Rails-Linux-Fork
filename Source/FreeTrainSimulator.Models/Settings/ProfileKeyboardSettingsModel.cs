@@ -254,14 +254,14 @@ namespace FreeTrainSimulator.Models.Settings
             commands[UserCommand.DisplayCarLabels] = new UserCommandModifiableKeyInput(0x41, commands[UserCommand.DisplayNextWindowTab]);
             commands[UserCommand.DisplayCompassWindow] = new UserCommandKeyInput(0x0B);
             commands[UserCommand.DisplayHelpWindow] = new UserCommandModifiableKeyInput(0x3B, commands[UserCommand.DisplayNextWindowTab]);
-            commands[UserCommand.DisplayHUD] = new UserCommandModifiableKeyInput(0x3F, commands[UserCommand.DisplayNextWindowTab]);
+            commands[UserCommand.DisplayHUD] = new UserCommandModifiableKeyInput(0x3F, KeyModifiers.Alt, commands[UserCommand.DisplayNextWindowTab]);
             commands[UserCommand.DisplayHUDScrollLeft] = new UserCommandKeyInput(0x4B, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.DisplayHUDScrollRight] = new UserCommandKeyInput(0x4D, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.DisplayHUDScrollUp] = new UserCommandKeyInput(0x48, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.DisplayHUDScrollDown] = new UserCommandKeyInput(0x50, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.DisplayHUDPageUp] = new UserCommandKeyInput(0x49, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.DisplayHUDPageDown] = new UserCommandKeyInput(0x51, KeyModifiers.Control | KeyModifiers.Shift);
-            commands[UserCommand.DisplayTrainDrivingWindow] = new UserCommandModifiableKeyInput(0x3F, KeyModifiers.Control, commands[UserCommand.DisplayNextWindowTab]);
+            commands[UserCommand.DisplayTrainDrivingWindow] = new UserCommandModifiableKeyInput(0x3F, commands[UserCommand.DisplayNextWindowTab]);
             commands[UserCommand.DisplayMultiPlayerWindow] = new UserCommandKeyInput(0x0A, KeyModifiers.Shift);
             commands[UserCommand.DisplayNextStationWindow] = new UserCommandKeyInput(0x44);
             commands[UserCommand.DisplayStationLabels] = new UserCommandModifiableKeyInput(0x40, commands[UserCommand.DisplayNextWindowTab]);
@@ -311,9 +311,27 @@ namespace FreeTrainSimulator.Models.Settings
         [MemoryPackOnDeserialized]
         private void OnDeserializing()
         {
+            // dev.53 accidentally swapped the traditional Open Rails F5 bindings:
+            // plain F5 opened the debug HUD and Ctrl+F5 opened the driving window.
+            // Migrate only profiles which still contain those exact defaults, preserving
+            // any keyboard layout the user customized deliberately.
+            int oldHudDescriptor = new UserCommandModifiableKeyInput(0x3F, UserCommands[UserCommand.DisplayNextWindowTab]).UniqueDescriptor;
+            int oldDrivingDescriptor = new UserCommandModifiableKeyInput(0x3F, KeyModifiers.Control, UserCommands[UserCommand.DisplayNextWindowTab]).UniqueDescriptor;
+            bool migrateF5Defaults =
+                userCommands[UserCommand.DisplayHUD] == oldHudDescriptor &&
+                userCommands[UserCommand.DisplayTrainDrivingWindow] == oldDrivingDescriptor;
+
             foreach (UserCommand command in EnumExtension.GetValues<UserCommand>())
             {
                 UserCommands[command].UniqueDescriptor = userCommands[command];
+            }
+
+            if (migrateF5Defaults)
+            {
+                UserCommands[UserCommand.DisplayHUD].UniqueDescriptor =
+                    new UserCommandModifiableKeyInput(0x3F, KeyModifiers.Alt, UserCommands[UserCommand.DisplayNextWindowTab]).UniqueDescriptor;
+                UserCommands[UserCommand.DisplayTrainDrivingWindow].UniqueDescriptor =
+                    new UserCommandModifiableKeyInput(0x3F, UserCommands[UserCommand.DisplayNextWindowTab]).UniqueDescriptor;
             }
         }
     }
