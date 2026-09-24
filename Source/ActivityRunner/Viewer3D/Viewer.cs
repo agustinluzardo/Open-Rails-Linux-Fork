@@ -124,6 +124,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private Thread dispatcherThread;
         private Dispatcher.DispatcherWindow dispatcherWindow;
+        private Dispatcher.InGameDispatcherMap dispatcherMap;
 
 #pragma warning disable CA2213 // Disposable fields should be disposed
         private WindowManager<ViewerWindowType> windowManager;
@@ -514,6 +515,8 @@ namespace Orts.ActivityRunner.Viewer3D
             }));
 
             Game.Components.Add(windowManager);
+            if (OperatingSystem.IsLinux())
+                dispatcherMap = new Dispatcher.InGameDispatcherMap(this, mouseInputGameComponent, windowManager);
 
             dataDump = new InfoDisplay(this);
 
@@ -810,6 +813,17 @@ namespace Orts.ActivityRunner.Viewer3D
             UserCommandController.AddEvent(UserCommand.GameResetOutOfControlMode, KeyEventType.KeyPressed, () => _ = new ResetOutOfControlModeCommand(Log));
 
             UserCommandController.AddEvent(UserCommand.GameMultiPlayerDispatcher, KeyEventType.KeyPressed, ToggleDispatcherView);
+            if (dispatcherMap != null)
+            {
+                UserCommandController.AddEvent(CommonUserCommand.VerticalScrollChanged,
+                    (UserCommandArgs args, GameTime _, KeyModifiers modifiers) => dispatcherMap.Scroll(args, modifiers));
+                UserCommandController.AddEvent(CommonUserCommand.PointerDragged,
+                    (UserCommandArgs args, GameTime _, KeyModifiers __) => dispatcherMap.Drag(args));
+                UserCommandController.AddEvent(CommonUserCommand.PointerPressed,
+                    (UserCommandArgs args, GameTime _, KeyModifiers __) => dispatcherMap.Select(args));
+                UserCommandController.AddEvent(CommonUserCommand.AlternatePointerPressed,
+                    (UserCommandArgs args, GameTime _, KeyModifiers __) => dispatcherMap.Change(args));
+            }
             UserCommandController.AddEvent(UserCommand.DebugSoundForm, KeyEventType.KeyPressed, () =>
             {
                 SoundDebugFormEnabled = !SoundDebugFormEnabled;
@@ -928,6 +942,11 @@ namespace Orts.ActivityRunner.Viewer3D
 
             UserCommandController.AddEvent(CommonUserCommand.PointerDown, (UserCommandArgs userCommandArgs, GameTime gameTime, KeyModifiers modifiers) =>
             {
+                if (dispatcherMap?.IsOpen == true)
+                {
+                    userCommandArgs.Handled = true;
+                    return;
+                }
                 PointerCommandArgs pointerCommandArgs = userCommandArgs as PointerCommandArgs;
                 Vector3 nearsource = new Vector3(pointerCommandArgs.Position.X, pointerCommandArgs.Position.Y, 0f);
                 Vector3 farsource = new Vector3(pointerCommandArgs.Position.X, pointerCommandArgs.Position.Y, 1f);
@@ -986,6 +1005,11 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private void ToggleDispatcherView()
         {
+            if (dispatcherMap != null)
+            {
+                dispatcherMap.Toggle();
+                return;
+            }
             if (null == dispatcherThread)
             {
                 dispatcherThread = new Thread(StartDispatcherViewThread);
@@ -1150,6 +1174,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 (Camera as TrackingCamera).SwapCameras();
             }
             Simulator.Update(elapsedTime.ClockSeconds);
+            dispatcherMap?.Update();
             if (PlayerLocomotive.Train.BrakingTime == -2) // We just had a wagon with stuck brakes
             {
                 LoadDefectCarSound(PlayerLocomotive.Train.Cars[-(int)PlayerLocomotive.Train.ContinuousBrakingTime], "BrakesStuck.sms");
@@ -1329,7 +1354,7 @@ namespace Orts.ActivityRunner.Viewer3D
             if (!(Camera is CabCamera) && !(Camera is CabCamera3D) && actualCursor != MouseCursor.Arrow)
                 actualCursor = MouseCursor.Arrow;
 
-            RenderProcess.IsMouseVisible = forceMouseVisible || RealTime < mouseVisibleTillRealTime;
+            RenderProcess.IsMouseVisible = forceMouseVisible || dispatcherMap?.IsOpen == true || RealTime < mouseVisibleTillRealTime;
         }
 
         private static bool IsReverserInNeutral(TrainCar car)
@@ -1464,6 +1489,7 @@ namespace Orts.ActivityRunner.Viewer3D
         {
             World.Unload();
             SaveSettings();
+            dispatcherMap?.Dispose();
             dispatcherWindow?.Close();
             dataDump.Terminate();
         }
@@ -1703,6 +1729,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 if (disposing)
                 {
                     dataDump?.Dispose();
+                    dispatcherMap?.Dispose();
                     dispatcherWindow?.Dispose();
                     // MouseCursor.Arrow and the other built-ins are shared singletons owned by
                     // MonoGame, so nothing here is ours to dispose.
