@@ -175,6 +175,14 @@ namespace FreeTrainSimulator.Graphics.Window
             return result;
         }
 
+        /// <summary>Initializes a window owned by this manager but not stored in its enum array.</summary>
+        public void InitializeWindow(FormBase window)
+        {
+            if (window?.Owner != this)
+                throw new ArgumentException("Window must belong to this manager.", nameof(window));
+            window.Initialize();
+        }
+
         protected void AddUserCommandEvents<T>(UserCommandController<T> userCommandController) where T : Enum
         {
             ArgumentNullException.ThrowIfNull(userCommandController);
