@@ -54,6 +54,17 @@ namespace FreeTrainSimulator.Common.Native
         private static readonly ConcurrentDictionary<string, DirectoryIndex> directoryCache =
             new ConcurrentDictionary<string, DirectoryIndex>(StringComparer.Ordinal);
 
+        // Successful wrong-case resolutions are immutable for the duration of a running
+        // simulation. Caching them avoids repeatedly walking every path segment (and stat'ing
+        // directory timestamps) from render/streaming hot paths. Missing paths are deliberately
+        // not cached so newly added content can still be discovered at runtime.
+        private static readonly ConcurrentDictionary<string, string>[] resolvedPathCache =
+        {
+            new ConcurrentDictionary<string, string>(StringComparer.Ordinal),
+            new ConcurrentDictionary<string, string>(StringComparer.Ordinal),
+            new ConcurrentDictionary<string, string>(StringComparer.Ordinal),
+        };
+
         private static readonly char[] separators = new[] { '\\', '/' };
 
         /// <summary>
@@ -236,6 +247,11 @@ namespace FreeTrainSimulator.Common.Native
                 directoryCache.Clear();
             else
                 directoryCache.TryRemove(Path.TrimEndingDirectorySeparator(Normalize(directory)), out _);
+
+            // Directory invalidation is rare (content editing/installing), so clearing successful
+            // path resolutions as a group keeps correctness simple and cheap.
+            foreach (var cache in resolvedPathCache)
+                cache.Clear();
         }
 
         private enum FileSystemEntry
@@ -269,7 +285,18 @@ namespace FreeTrainSimulator.Common.Native
             if (!CaseSensitiveFileSystem)
                 return null;
 
-            return ResolveSegments(normalized, kind);
+            var cache = resolvedPathCache[(int)kind];
+            if (cache.TryGetValue(normalized, out string cached))
+            {
+                if (Exists(cached, kind))
+                    return cached;
+                cache.TryRemove(normalized, out _);
+            }
+
+            string resolved = ResolveSegments(normalized, kind);
+            if (resolved != null)
+                cache[normalized] = resolved;
+            return resolved;
         }
 
         private static string ResolveSegments(string normalized, FileSystemEntry kind)
