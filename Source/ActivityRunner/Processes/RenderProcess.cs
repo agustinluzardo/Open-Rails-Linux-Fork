@@ -366,6 +366,11 @@ namespace Orts.ActivityRunner.Processes
 
             windowSize.Width = game.UserSettings.WindowSettings[WindowSetting.Size].X;
             windowSize.Height = game.UserSettings.WindowSettings[WindowSetting.Size].Y;
+            if (game.UserSettings.UseDesktopResolution)
+            {
+                (windowSize.Width, windowSize.Height) = DisplayResolution.SizeFor(
+                    currentScreenMode, currentDisplay.Bounds, currentDisplay.WorkingArea);
+            }
 
             // The saved position is a percentage of the free space on the display, so it stays
             // sensible when the resolution changes between sessions.
@@ -378,7 +383,8 @@ namespace Orts.ActivityRunner.Processes
         private void SaveSettings()
         {
             /// Settings which should be persisted in the model, need to be configured also in <see cref="FreeTrainSimulator.Models.Shim.ProfileSettingsExtensions.UpdateRuntimeUserSettingsModel"/>
-            game.UserSettings.WindowSettings[WindowSetting.Size] = (windowSize.Width, windowSize.Height);
+            if (!game.UserSettings.UseDesktopResolution)
+                game.UserSettings.WindowSettings[WindowSetting.Size] = (windowSize.Width, windowSize.Height);
             game.UserSettings.WindowSettings[WindowSetting.Location] = (
                 (int)Math.Max(0, Math.Round(100f * (windowPosition.X - currentDisplay.Bounds.Left) / Math.Max(1, currentDisplay.WorkingArea.Width - windowSize.Width))),
                 (int)Math.Max(0, Math.Round(100.0 * (windowPosition.Y - currentDisplay.Bounds.Top) / Math.Max(1, currentDisplay.WorkingArea.Height - windowSize.Height))));

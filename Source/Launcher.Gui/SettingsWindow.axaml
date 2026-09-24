@@ -1,49 +1,51 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="using:Riel.Launcher.Gui"
         x:Class="Riel.Launcher.Gui.SettingsWindow"
-        Title="Riel Settings" Width="900" Height="720" MinWidth="720" MinHeight="560"
+        Title="Riel Settings" Width="1080" Height="760" MinWidth="860" MinHeight="570"
         WindowStartupLocation="CenterOwner">
   <Grid RowDefinitions="Auto,*,Auto" Margin="20">
     <StackPanel Grid.Row="0" Spacing="4">
-      <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold"/>
-      <TextBlock Text="These settings are used by the simulator when you press Play." Opacity="0.7"/>
+      <TextBlock Text="{l:T 'Settings'}" FontSize="24" FontWeight="SemiBold"/>
+      <TextBlock Text="{l:T 'These settings are used by the simulator when you press Play.'}" Opacity="0.7"/>
       <TextBlock x:Name="StatusText" TextWrapping="Wrap" Foreground="OrangeRed"/>
     </StackPanel>
     <TabControl x:Name="SettingsTabs" Grid.Row="1" Margin="0,16">
-      <TabItem Header="Controls">
+      <TabItem Header="{l:T 'General'}"><ScrollViewer><StackPanel x:Name="GeneralPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Audio'}"><ScrollViewer><StackPanel x:Name="AudioPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Video'}">
+        <ScrollViewer>
+          <StackPanel Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left">
+            <TextBlock Text="{l:T 'Display and resolution'}" FontSize="18" FontWeight="SemiBold" Margin="0,4,0,4"/>
+            <Grid ColumnDefinitions="230,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+              <TextBlock Grid.Row="0" Text="{l:T 'Monitor'}" VerticalAlignment="Center"/><ComboBox Grid.Row="0" Grid.Column="1" x:Name="DisplayBox" MinWidth="350"/>
+              <TextBlock Grid.Row="1" Text="{l:T 'Detected resolution'}" VerticalAlignment="Center"/><TextBlock Grid.Row="1" Grid.Column="1" x:Name="DetectedResolutionText" VerticalAlignment="Center"/>
+              <TextBlock Grid.Row="2" Text="{l:T 'Window mode'}" VerticalAlignment="Center"/><ComboBox Grid.Row="2" Grid.Column="1" x:Name="ScreenModeBox"/>
+              <CheckBox Grid.Row="3" Grid.ColumnSpan="2" x:Name="AutoResolutionBox" Content="{l:T 'Use the selected monitor resolution automatically'}"/>
+              <TextBlock Grid.Row="4" Text="{l:T 'Resolution width'}" VerticalAlignment="Center"/><NumericUpDown Grid.Row="4" Grid.Column="1" x:Name="WidthBox" Minimum="320" Maximum="16384" Increment="1"/>
+              <TextBlock Grid.Row="5" Text="{l:T 'Resolution height'}" VerticalAlignment="Center"/><NumericUpDown Grid.Row="5" Grid.Column="1" x:Name="HeightBox" Minimum="240" Maximum="8640" Increment="1"/>
+            </Grid>
+            <TextBlock Text="{l:T 'Windowed mode uses the available desktop area; fullscreen uses the monitor size.'}" TextWrapping="Wrap" Opacity="0.7"/>
+            <StackPanel x:Name="VideoPanel" Spacing="10"/>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="{l:T 'Simulation'}"><ScrollViewer><StackPanel x:Name="SimulationPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Keyboard'}">
         <Grid RowDefinitions="Auto,*">
-          <Border Padding="12" Margin="0,0,0,10" Background="{DynamicResource SystemControlBackgroundAltLowBrush}">
-            <TextBlock Text="Click a key field, then press the key combination you want. Press Escape to cancel. Defaults are the Riel bindings inherited from Free Train Simulator." TextWrapping="Wrap"/>
-          </Border>
+          <TextBlock Margin="12,8" Text="{l:T 'Click a key, then press a new combination. Escape cancels the capture.'}" TextWrapping="Wrap"/>
           <ScrollViewer Grid.Row="1"><StackPanel x:Name="KeyboardPanel" Spacing="4"/></ScrollViewer>
         </Grid>
       </TabItem>
-      <TabItem Header="Video">
-        <ScrollViewer>
-          <Grid ColumnDefinitions="220,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12" Margin="8">
-            <TextBlock Grid.Row="0" Text="Window mode" VerticalAlignment="Center"/><ComboBox Grid.Row="0" Grid.Column="1" x:Name="ScreenModeBox"/>
-            <TextBlock Grid.Row="1" Text="Resolution width" VerticalAlignment="Center"/><NumericUpDown Grid.Row="1" Grid.Column="1" x:Name="WidthBox" Minimum="640" Maximum="7680" Increment="1"/>
-            <TextBlock Grid.Row="2" Text="Resolution height" VerticalAlignment="Center"/><NumericUpDown Grid.Row="2" Grid.Column="1" x:Name="HeightBox" Minimum="480" Maximum="4320" Increment="1"/>
-            <CheckBox Grid.Row="3" Grid.Column="1" x:Name="VsyncBox" Content="Vertical sync"/>
-            <ComboBox Grid.Row="4" Grid.Column="1" x:Name="MsaaBox"/><TextBlock Grid.Row="4" Text="Multisampling" VerticalAlignment="Center"/>
-            <CheckBox Grid.Row="5" Grid.Column="1" x:Name="DynamicShadowsBox" Content="Dynamic shadows"/>
-            <CheckBox Grid.Row="6" Grid.Column="1" x:Name="ModelInstancingBox" Content="Model instancing"/>
-            <CheckBox Grid.Row="7" Grid.Column="1" x:Name="ShadowAllShapesBox" Content="Cast shadows from all shapes"/>
-            <TextBlock Grid.Row="8" Text="Viewing distance (m)" VerticalAlignment="Center"/><NumericUpDown Grid.Row="8" Grid.Column="1" x:Name="ViewingDistanceBox" Minimum="100" Maximum="100000" Increment="100"/>
-            <TextBlock Grid.Row="9" Text="Far mountains distance (m)" VerticalAlignment="Center"/><NumericUpDown Grid.Row="9" Grid.Column="1" x:Name="FarMountainsBox" Minimum="1000" Maximum="200000" Increment="1000"/>
-            <TextBlock Grid.Row="10" Text="Field of view (degrees)" VerticalAlignment="Center"/><NumericUpDown Grid.Row="10" Grid.Column="1" x:Name="FovBox" Minimum="30" Maximum="120" Increment="1"/>
-            <TextBlock Grid.Row="11" Text="Visible detail level" VerticalAlignment="Center"/><NumericUpDown Grid.Row="11" Grid.Column="1" x:Name="DetailLevelBox" Minimum="0" Maximum="100" Increment="1"/>
-            <TextBlock Grid.Row="12" Text="Ambient brightness" VerticalAlignment="Center"/><NumericUpDown Grid.Row="12" Grid.Column="1" x:Name="AmbientBox" Minimum="0" Maximum="100" Increment="1"/>
-            <TextBlock Grid.Row="13" Text="Shadow map resolution" VerticalAlignment="Center"/><ComboBox Grid.Row="13" Grid.Column="1" x:Name="ShadowResolutionBox"/>
-            <CheckBox Grid.Row="14" Grid.Column="1" x:Name="ShadowBlurBox" Content="Blur shadow maps"/>
-            <CheckBox Grid.Row="15" Grid.Column="1" x:Name="SignalGlowBox" Content="Signal light glow"/>
-          </Grid>
-        </ScrollViewer>
-      </TabItem>
+      <TabItem Header="{l:T 'Data logger'}"><ScrollViewer><StackPanel x:Name="DataPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Evaluation'}"><ScrollViewer><StackPanel x:Name="EvaluationPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Advanced'}"><ScrollViewer><StackPanel x:Name="AdvancedPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
     </TabControl>
-    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button x:Name="ResetKeyboardButton" Content="Reset controls to Riel defaults"/>
-      <Button x:Name="CancelButton" Content="Cancel"/><Button x:Name="SaveButton" Classes="accent" Content="Save"/>
-    </StackPanel>
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+      <Button x:Name="ResetKeyboardButton" Content="{l:T 'Reset controls to Riel defaults'}" HorizontalAlignment="Left"/>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+        <Button x:Name="CancelButton" Content="{l:T 'Cancel'}"/><Button x:Name="SaveButton" Classes="accent" Content="{l:T 'Save'}"/>
+      </StackPanel>
+    </Grid>
   </Grid>
 </Window>

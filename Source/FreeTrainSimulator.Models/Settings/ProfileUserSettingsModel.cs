@@ -237,5 +237,9 @@ namespace FreeTrainSimulator.Models.Settings
         public int ReplayPauseDuration { get; set; }
 
         public bool MultiPlayer { get; set; }
+
+        // Append-only: older profile files have no value for this member.
+        // The launcher and renderer use the active display instead of a fixed 1024x768 default.
+        public bool UseDesktopResolution { get; set; } = true;
     }
 }
