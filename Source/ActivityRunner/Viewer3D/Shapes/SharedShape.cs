@@ -658,6 +658,11 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
                     displayDetailLevel == lodControl.DistanceLevels.Length - 1)
                     objectViewingDistance = float.MaxValue;
 
+                frame.GetAutoPrimitiveVisibility(mstsLocation, distanceDetail.ViewSphereRadius,
+                    objectViewingDistance * lodBias, flags, out bool visible, out int shadowMask);
+                if (!visible && shadowMask == 0)
+                    continue;
+
                 for (var i = 0; i < displayDetail.SubObjects.Length; i++)
                 {
                     var subObject = displayDetail.SubObjects[i];
@@ -682,7 +687,9 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
                         // TODO make shadows depend on shape overrides
 
                         var interior = (flags & ShapeOptions.Interior) != 0;
-                        frame.AddAutoPrimitive(mstsLocation, distanceDetail.ViewSphereRadius, objectViewingDistance * lodBias, shapePrimitive.Material, shapePrimitive, interior ? RenderPrimitiveGroup.Interior : RenderPrimitiveGroup.World, ref xnaMatrix, flags);
+                        frame.AddPreculledPrimitive(shapePrimitive.Material, shapePrimitive,
+                            interior ? RenderPrimitiveGroup.Interior : RenderPrimitiveGroup.World,
+                            ref xnaMatrix, flags, visible, shadowMask);
                     }
                 }
             }
