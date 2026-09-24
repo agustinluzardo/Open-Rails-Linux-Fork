@@ -458,6 +458,11 @@ namespace Orts.ActivityRunner.Viewer3D.PopupWindows
         private void PantographCommand(int pantograph)
         {
             MSTSLocomotive locomotive = Simulator.Instance.PlayerLocomotive;
+            // These keyboard shortcuts exist even when the selected locomotive has
+            // fewer pantographs. Its one-based indexer returns null in that case.
+            if (locomotive?.Pantographs == null || pantograph < 1 || pantograph > locomotive.Pantographs.Count || locomotive.Pantographs[pantograph] == null)
+                return;
+
             pantographKeyInput = locomotive.Pantographs[pantograph].State is PantographState.Up or PantographState.Raising ? FormatStrings.Markers.ArrowUp : FormatStrings.Markers.ArrowDown;
         }
 
