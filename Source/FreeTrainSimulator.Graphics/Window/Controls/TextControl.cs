@@ -49,6 +49,8 @@ namespace FreeTrainSimulator.Graphics.Window.Controls
         protected override void Dispose(bool disposing)
         {
             resourceHolder.Refresh -= RefreshResources;
+            Window.OnWindowOpened -= Window_OnWindowOpened;
+            Window.OnWindowClosed -= Window_OnWindowClosed;
             base.Dispose(disposing);
         }
     }

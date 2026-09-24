@@ -66,7 +66,7 @@ namespace Orts.ActivityRunner.Viewer3D.PopupWindows
 
         private void QuitLabel_OnClick(object sender, MouseClickEventArgs e)
         {
-            (Owner.Game as GameHost).PopState();
+            Owner.Game.Exit();
         }
 
         public override bool Open()

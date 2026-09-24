@@ -167,14 +167,14 @@ namespace FreeTrainSimulator.Graphics.Window.Controls
                 return;
             }
 
-            int longestLineIndex = -1;
+            int longestLineIndex = 0;
             int lineLength = 0;
             clientArea = new Rectangle(0, 0, Bounds.Width - scrollbarSize - 4, Bounds.Height - scrollbarSize - 4);
             if (wordWrap)
             {
                 lines = WrapLines(text, font, clientArea.Width).ToArray();
                 Texture2D texture = textureHolder.PrepareResource(lines[0], font);
-                lineHeight = texture.Height;
+                lineHeight = Math.Max(1, font.Height);
                 lineWidth = clientArea.Width;
                 horizontalScrollSize = -1;
                 clientArea.Height = Bounds.Height;
@@ -191,7 +191,7 @@ namespace FreeTrainSimulator.Graphics.Window.Controls
                     }
                 }
                 Texture2D texture = textureHolder.PrepareResource(lines[longestLineIndex], font);
-                lineHeight = texture.Height;
+                lineHeight = Math.Max(1, font.Height);
                 lineWidth = texture.Width;
                 if (texture.Width < clientArea.Width)
                 {
@@ -215,7 +215,9 @@ namespace FreeTrainSimulator.Graphics.Window.Controls
                 bottomGutterFactor = horizontalScrollSize < 0 ? 1 : 2;
             }
             rightGutterFactor = verticalScrollSize < 0 ? 1 : 2;
-            visibleLines = Bounds.Height / lineHeight;
+            visibleLines = (Math.Max(0, clientArea.Height) + lineHeight - 1) / lineHeight + 1;
+            SetVerticalScrollPosition(verticalScrollPosition);
+            SetHorizontalScrollPosition(horizontalScrollPosition);
         }
 
         internal override bool HandleMouseDown(WindowMouseEvent e)
@@ -266,7 +268,7 @@ namespace FreeTrainSimulator.Graphics.Window.Controls
 
         private void SetHorizontalScrollPosition(int position)
         {
-            position = MathHelper.Clamp(position, 0, horizontalScrollSize);
+            position = MathHelper.Clamp(position, 0, Math.Max(0, horizontalScrollSize));
             horizontalScrollPosition = position;
             horizontalThumbPosition = horizontalScrollSize > 0 ? (Bounds.Width - ((verticalScrollSize > -1 ? 4 : 3) * scrollbarSize)) * horizontalScrollPosition / horizontalScrollSize : 0;
 
@@ -274,7 +276,7 @@ namespace FreeTrainSimulator.Graphics.Window.Controls
 
         private void SetVerticalScrollPosition(int position)
         {
-            position = MathHelper.Clamp(position, 0, verticalScrollSize);
+            position = MathHelper.Clamp(position, 0, Math.Max(0, verticalScrollSize));
             verticalScrollPosition = position;
             verticalThumbPosition = verticalScrollSize > 0 ? (Bounds.Height - ((horizontalScrollSize > -1 ? 4 : 3) * scrollbarSize)) * verticalScrollPosition / verticalScrollSize : 0;
 

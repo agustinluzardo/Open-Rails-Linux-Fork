@@ -65,7 +65,7 @@ namespace Orts.ActivityRunner.Processes
             // Do this here (instead of RenderProcess) because we only want to measure/time the running game.
             if (Game.UserSettings.Profiling)
                 if (Game.UserSettings.ProfilingFrameCount > 0 && ++profileFrames > Game.UserSettings.ProfilingFrameCount || Game.UserSettings.ProfilingTime > 0 && Viewer?.RealTime >= Game.UserSettings.ProfilingTime)
-                    Game.PopState();
+                    Game.Exit();
 
             if (firstFrame)
             {

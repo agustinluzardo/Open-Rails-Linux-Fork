@@ -101,11 +101,20 @@ namespace FreeTrainSimulator.Graphics.Window
 
         private void Resize()
         {
+            Layout();
+            // Open Rails derives its rows from the font height. Grow a fixed-size popup when
+            // the actual Linux font needs more room, without per-window offsets.
+            int requiredHeight = windowLayout.ContentBottom + (int)(4 * Owner.DpiScaling);
+            if (requiredHeight > borderRect.Height)
+            {
+                borderRect.Height = requiredHeight;
+                Layout();
+                UpdateLocation();
+            }
             VertexBuffer tempVertex = windowVertexBuffer;
             windowVertexBuffer = null;
             InitializeBuffers();
             tempVertex?.Dispose();
-            Layout();
         }
 
         protected internal virtual void FocusSet()
@@ -134,8 +143,8 @@ namespace FreeTrainSimulator.Graphics.Window
                 position.Y = (int)Math.Round((Owner.Size.Y - borderRect.Height) / 2f);
             }
             borderRect.Location = position;
-            borderRect.X = MathHelper.Clamp(borderRect.X, 0, Owner.Size.X - borderRect.Width);
-            borderRect.Y = MathHelper.Clamp(borderRect.Y, 0, Owner.Size.Y - borderRect.Height);
+            borderRect.X = MathHelper.Clamp(borderRect.X, 0, Math.Max(0, Owner.Size.X - borderRect.Width));
+            borderRect.Y = MathHelper.Clamp(borderRect.Y, 0, Math.Max(0, Owner.Size.Y - borderRect.Height));
             xnaWorld.Translation = new Vector3(borderRect.X, borderRect.Y, 0);
         }
 
@@ -147,8 +156,8 @@ namespace FreeTrainSimulator.Graphics.Window
                 location = new Point(
                     (int)Math.Round(100.0 * borderRect.X / (Owner.Size.X - borderRect.Width)),
                     (int)Math.Round(100.0 * borderRect.Y / (Owner.Size.Y - borderRect.Height)));
-                borderRect.X = MathHelper.Clamp(borderRect.X, 0, Owner.Size.X - borderRect.Width);
-                borderRect.Y = MathHelper.Clamp(borderRect.Y, 0, Owner.Size.Y - borderRect.Height);
+                borderRect.X = MathHelper.Clamp(borderRect.X, 0, Math.Max(0, Owner.Size.X - borderRect.Width));
+                borderRect.Y = MathHelper.Clamp(borderRect.Y, 0, Math.Max(0, Owner.Size.Y - borderRect.Height));
                 xnaWorld.Translation = new Vector3(borderRect.X, borderRect.Y, 0);
                 CapturedForDragging = true;
             }

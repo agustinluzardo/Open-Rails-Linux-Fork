@@ -154,6 +154,32 @@ namespace Orts.ActivityRunner.Viewer3D
         public const int AL_EAXREVERB_DECAY_HFLIMIT = 0x0017;
 #pragma warning restore CA1707 // Identifiers should not contain underscores
 
+        private static IntPtr audioDevice;
+        private static IntPtr audioContext;
+
+        [DllImport("soft_oal.dll", EntryPoint = "alcDestroyContext", CallingConvention = CallingConvention.Cdecl)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        private static extern void DestroyContext(IntPtr context);
+
+        [DllImport("soft_oal.dll", EntryPoint = "alcCloseDevice", CallingConvention = CallingConvention.Cdecl)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        private static extern byte CloseDevice(IntPtr device);
+
+        public static void Shutdown()
+        {
+            if (audioContext != IntPtr.Zero)
+            {
+                MakeContextCurrent(IntPtr.Zero);
+                DestroyContext(audioContext);
+                audioContext = IntPtr.Zero;
+            }
+            if (audioDevice != IntPtr.Zero)
+            {
+                CloseDevice(audioDevice);
+                audioDevice = IntPtr.Zero;
+            }
+        }
+
         [DllImport("soft_oal.dll", EntryPoint = "alcOpenDevice", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern IntPtr OpenDevice(string deviceName);
@@ -329,20 +355,25 @@ namespace Orts.ActivityRunner.Viewer3D
 
             // The attribute list is read up to a terminating zero, so even an empty one needs it.
             int[] attribs = { 0 };
-            IntPtr device = OpenDevice(null);
+            IntPtr device = audioDevice = OpenDevice(null);
             if (device == IntPtr.Zero)
             {
                 Trace.TraceWarning("No audio device could be opened; the simulator runs without sound.");
                 return "no audio device";
             }
 
-            IntPtr context = CreateContext(device, attribs);
+            IntPtr context = audioContext = CreateContext(device, attribs);
             if (context == IntPtr.Zero)
             {
                 Trace.TraceWarning("The audio device '{0}' would not take a context; the simulator runs without sound.", Marshal.PtrToStringUTF8(GetString(device, ALC_DEVICE_SPECIFIER)));
+                Shutdown();
                 return "no audio context";
             }
-            _ = MakeContextCurrent(context);
+            if (MakeContextCurrent(context) == 0)
+            {
+                Shutdown();
+                return "audio context activation failed";
+            }
 
             // The plain specifier is only "OpenAL Soft"; the full one names the sound server's device.
             string deviceName = Marshal.PtrToStringUTF8(GetString(device, ALC_ALL_DEVICES_SPECIFIER))
