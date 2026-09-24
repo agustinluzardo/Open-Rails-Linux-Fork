@@ -111,10 +111,10 @@ namespace FreeTrainSimulator.Graphics.Window
                 Layout();
                 UpdateLocation();
             }
-            VertexBuffer tempVertex = windowVertexBuffer;
-            windowVertexBuffer = null;
-            InitializeBuffers();
-            tempVertex?.Dispose();
+            // Build the replacement completely before publishing it. The updater and renderer
+            // run concurrently; setting the field to null first creates a real race where
+            // WindowDraw can call DrawIndexedPrimitives with no vertex buffer bound.
+            InitializeBuffers(replaceVertexBuffer: true);
         }
 
         protected internal virtual void FocusSet()
@@ -199,6 +199,12 @@ namespace FreeTrainSimulator.Graphics.Window
 
         internal protected virtual void WindowDraw()
         {
+            // A lazily-created window may become visible while its first graphics resources are
+            // still being marshalled to the DesktopGL thread. Skipping one UI frame is preferable
+            // to terminating the simulator; normal initialized windows never take this path.
+            if (windowVertexBuffer == null || windowIndexBuffer == null)
+                return;
+
             ref readonly Matrix xnaView = ref Owner.XNAView;
             ref readonly Matrix xnaProjection = ref Owner.XNAProjection;
             Matrix wvp = xnaWorld * xnaView * xnaProjection;
@@ -214,9 +220,9 @@ namespace FreeTrainSimulator.Graphics.Window
             }
         }
 
-        private void InitializeBuffers()
+        private void InitializeBuffers(bool replaceVertexBuffer = false)
         {
-            if (windowVertexBuffer == null)
+            if (windowVertexBuffer == null || replaceVertexBuffer)
             {
                 // Edges/corners size. 32px is 1/4th texture image size
                 int gp = Math.Min(24, borderRect.Height / 2);
@@ -242,8 +248,14 @@ namespace FreeTrainSimulator.Graphics.Window
                     new VertexPositionTexture(new Vector3((1 * borderRect.Width) - gp, (1 * borderRect.Height) - 00, 0), new Vector2(0.75f / 2.001f, 1.00f / 1.001f)),
                     new VertexPositionTexture(new Vector3((1 * borderRect.Width) - 00, (1 * borderRect.Height) - 00, 0), new Vector2(1.00f / 2.001f, 1.00f / 1.001f)),
                 };
-                windowVertexBuffer = new VertexBuffer(Owner.GraphicsDevice, typeof(VertexPositionTexture), vertexData.Length, BufferUsage.WriteOnly);
-                windowVertexBuffer.SetData(vertexData);
+                var replacementVertexBuffer = new VertexBuffer(Owner.GraphicsDevice, typeof(VertexPositionTexture), vertexData.Length, BufferUsage.WriteOnly);
+                replacementVertexBuffer.SetData(vertexData);
+
+                // Atomic reference assignment: WindowDraw sees either the old, still-valid buffer
+                // or the fully initialized replacement, never a transient null.
+                VertexBuffer previousVertexBuffer = windowVertexBuffer;
+                windowVertexBuffer = replacementVertexBuffer;
+                previousVertexBuffer?.Dispose();
             }
             if (windowIndexBuffer == null)
             {
