@@ -38,6 +38,7 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
         public Matrix[] XNAMatrices = Array.Empty<Matrix>();  // the positions of the subobjects
 
         public int[] Hierarchy { get; }
+        private readonly int[][] hierarchyChildren;
 
         public override ref readonly WorldPosition WorldPosition => ref positionSource.WorldPosition;
 
@@ -54,6 +55,27 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
                 Hierarchy = SharedShape.LodControls[0].DistanceLevels[0].SubObjects[0].ShapePrimitives[0].Hierarchy;
             else
                 Hierarchy = Array.Empty<int>();
+
+            hierarchyChildren = BuildHierarchyChildren(Hierarchy, XNAMatrices.Length);
+        }
+
+        private static int[][] BuildHierarchyChildren(int[] hierarchy, int matrixCount)
+        {
+            var result = new int[matrixCount][];
+            var lists = new List<int>[matrixCount];
+
+            for (var child = 0; child < hierarchy.Length && child < matrixCount; child++)
+            {
+                int parent = hierarchy[child];
+                if (parent < 0 || parent >= matrixCount)
+                    continue;
+                (lists[parent] ??= new List<int>()).Add(child);
+            }
+
+            for (var parent = 0; parent < matrixCount; parent++)
+                result[parent] = lists[parent]?.ToArray() ?? Array.Empty<int>();
+
+            return result;
         }
 
         public PoseableShape(string path, IWorldPosition positionSource)
@@ -79,10 +101,12 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
             // Animate the given matrix.
             AnimateOneMatrix(iMatrix, key);
 
-            // Animate all child nodes in the hierarchy too.
-            for (var i = 0; i < Hierarchy.Length; i++)
-                if (Hierarchy[i] == iMatrix)
-                    AnimateMatrix(i, key);
+            // The hierarchy never changes after the shape is loaded, so follow the precomputed
+            // child list instead of scanning every matrix for every animated cab control/frame.
+            if (iMatrix < 0 || iMatrix >= hierarchyChildren.Length)
+                return;
+            foreach (int child in hierarchyChildren[iMatrix])
+                AnimateMatrix(child, key);
         }
 
         private protected void AnimateOneMatrix(int iMatrix, double key)
