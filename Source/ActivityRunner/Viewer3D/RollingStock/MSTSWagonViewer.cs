@@ -612,8 +612,8 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
         {
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlPantograph1, KeyEventType.KeyPressed, Pantograph1Command);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlPantograph2, KeyEventType.KeyPressed, Pantograph2Command);
-            Viewer.UserCommandController.RemoveEvent(UserCommand.ControlPantograph3, KeyEventType.KeyPressed, Pantograph1Command);
-            Viewer.UserCommandController.RemoveEvent(UserCommand.ControlPantograph4, KeyEventType.KeyPressed, Pantograph2Command);
+            Viewer.UserCommandController.RemoveEvent(UserCommand.ControlPantograph3, KeyEventType.KeyPressed, Pantograph3Command);
+            Viewer.UserCommandController.RemoveEvent(UserCommand.ControlPantograph4, KeyEventType.KeyPressed, Pantograph4Command);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlDoorLeft, KeyEventType.KeyPressed, ToggleDoorsLeftCommand);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlDoorRight, KeyEventType.KeyPressed, ToggleDoorsRightCommand);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlMirror, KeyEventType.KeyPressed, ToggleMirrorsCommand);
