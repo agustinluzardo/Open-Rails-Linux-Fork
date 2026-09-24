@@ -1266,7 +1266,9 @@ namespace Orts.Simulation
             string playerServiceFileName;
             ServiceFile serviceFile;
 
-            playerServiceFileName = Path.GetFileNameWithoutExtension(exploreConsist);
+            // Already without its extension: stripping again would cut a name with a dot in it,
+            // such as "Cabina 139 (Plaza C.) 1", at the dot.
+            playerServiceFileName = exploreConsist;
             serviceFile = new ServiceFile(playerServiceFileName, playerServiceFileName, PlayerPath);
 
             ConsistFileName = RouteFolder.ContentFolder.ConsistFile(serviceFile.TrainConfig);
@@ -1394,7 +1396,7 @@ namespace Orts.Simulation
             }
             else
             {
-                playerServiceFileName = Path.GetFileNameWithoutExtension(exploreConsist);
+                playerServiceFileName = exploreConsist; // already without its extension
                 srvFile = new ServiceFile(playerServiceFileName, playerServiceFileName, PlayerPath);
             }
             ConsistFileName = RouteFolder.ContentFolder.ConsistFile(srvFile.TrainConfig);
