@@ -213,7 +213,6 @@ namespace Orts.ActivityRunner.Viewer3D
     public class WorldFile : ITileCoordinate
     {
         private const int MinimumInstanceCount = 5;
-        private static readonly HashSet<string> legacyShapeFallbacks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         public List<BaseShape> SceneryObjects { get; } = new List<BaseShape>();
         public List<DynamicTrackViewer> DynamicTrackList { get; } = new List<DynamicTrackViewer>();
@@ -269,6 +268,12 @@ namespace Orts.ActivityRunner.Viewer3D
             // to avoid loop checking for every object this pre-check is performed
             bool containsMovingTable = Simulator.Instance.MovingTables.Where(m => m.WFile.Equals(WFileName, StringComparison.OrdinalIgnoreCase)).Any();
 
+            // Resolve each distinct shape only once per tile. Broken/partial MSTS installs can
+            // reference the same missing asset thousands of times; repeated filesystem probes and
+            // one warning per object cause large streaming stalls without adding diagnostic value.
+            var shapePathCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var missingShapeWarnings = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             // create all the individual scenery objects specified in the WFile
             foreach (var worldObject in WFile.Objects)
             {
@@ -289,32 +294,30 @@ namespace Orts.ActivityRunner.Viewer3D
                 // TransferObj have a FileName but it is not a shape, so we need to avoid sanity-checking it as if it was.
                 var fileNameIsNotShape = (worldObject is TransferObject || worldObject is HazardObject);
 
-                // Determine the file path to the shape file for this scenery object and check it exists as expected.
-                string shapeFilePath = fileNameIsNotShape || string.IsNullOrEmpty(worldObject.FileName) ? null : global ? viewer.Simulator.RouteFolder.ContentFolder.ShapeFile(worldObject.FileName) : viewer.Simulator.RouteFolder.ShapeFile(worldObject.FileName);
-                if (shapeFilePath != null)
+                // Determine the standard MSTS path for the shape. Do not recursively search or use
+                // the route root as a fallback: Open Rails on Windows does not do that either, and
+                // a stray similarly-named file can be a different model.
+                string shapeFilePath = null;
+                if (!fileNameIsNotShape && !string.IsNullOrEmpty(worldObject.FileName))
                 {
-                    shapeFilePath = Path.GetFullPath(shapeFilePath);
-                    if (!ContentIO.FileExists(shapeFilePath) && !global)
+                    string cacheKey = (global ? "G|" : "R|") + worldObject.FileName;
+                    if (!shapePathCache.TryGetValue(cacheKey, out shapeFilePath))
                     {
-                        // A number of legacy MSTS routes ship world shapes in the route root instead
-                        // of the conventional Shapes directory. Windows installations often hide
-                        // this mistake because their content was copied/merged differently; on Unix
-                        // keep the standard location first, then accept the legacy layout explicitly.
-                        string legacyShapePath = Path.GetFullPath(Path.Combine(viewer.Simulator.RouteFolder.CurrentFolder, worldObject.FileName));
-                        if (ContentIO.FileExists(legacyShapePath))
-                        {
-                            shapeFilePath = legacyShapePath;
-                            lock (legacyShapeFallbacks)
-                            {
-                                if (legacyShapeFallbacks.Add(shapeFilePath))
-                                    Trace.TraceInformation("Legacy route layout: using scenery shape {0} from the route root instead of Shapes.", shapeFilePath);
-                            }
-                        }
+                        shapeFilePath = global
+                            ? viewer.Simulator.RouteFolder.ContentFolder.ShapeFile(worldObject.FileName)
+                            : viewer.Simulator.RouteFolder.ShapeFile(worldObject.FileName);
+                        shapeFilePath = Path.GetFullPath(shapeFilePath);
+                        if (!ContentIO.FileExists(shapeFilePath))
+                            shapeFilePath = null;
+                        shapePathCache[cacheKey] = shapeFilePath;
                     }
-                    if (!ContentIO.FileExists(shapeFilePath))
+
+                    if (shapeFilePath == null && missingShapeWarnings.Add(cacheKey))
                     {
-                        Trace.TraceWarning("{0} scenery object {1} with StaticFlags {3:X8} references non-existent {2}", WFileName, worldObject.UiD, shapeFilePath, worldObject.StaticFlags);
-                        shapeFilePath = null;
+                        string expectedPath = Path.GetFullPath(global
+                            ? viewer.Simulator.RouteFolder.ContentFolder.ShapeFile(worldObject.FileName)
+                            : viewer.Simulator.RouteFolder.ShapeFile(worldObject.FileName));
+                        Trace.TraceWarning("{0} references non-existent {1}; further references to this shape in the tile are suppressed.", WFileName, expectedPath);
                     }
                 }
 
