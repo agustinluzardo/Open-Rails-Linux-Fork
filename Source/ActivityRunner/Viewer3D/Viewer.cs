@@ -1265,7 +1265,7 @@ namespace Orts.ActivityRunner.Viewer3D
             if (currentCamera == (currentCamera = Camera) && currentCamera != null)
             {
                 if (fieldOfView != (fieldOfView = Camera.FieldOfView))
-                    (windowManager[ViewerWindowType.NotificationOverlay] as NotificationOverlay).AddNotice(Catalog.GetString($"FOV: {fieldOfView:F0}�"));
+                    (windowManager[ViewerWindowType.NotificationOverlay] as NotificationOverlay).AddNotice(Catalog.GetString($"FOV: {fieldOfView:F0} deg"));
             }
             else
                 fieldOfView = Camera?.FieldOfView ?? 0;
