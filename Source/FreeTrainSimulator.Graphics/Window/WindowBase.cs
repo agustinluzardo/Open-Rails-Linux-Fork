@@ -20,6 +20,7 @@ namespace FreeTrainSimulator.Graphics.Window
         private Matrix xnaWorld;
         private VertexBuffer windowVertexBuffer;
         private IndexBuffer windowIndexBuffer;
+        private readonly object bufferLock = new object();
         private WindowControl inactiveControl;
 
         public bool CloseButton { get; protected set; } = true;
@@ -66,8 +67,7 @@ namespace FreeTrainSimulator.Graphics.Window
                 ControlLayout buttonLine = layout.AddLayoutHorizontal();
                 buttonLine.HorizontalChildAlignment = HorizontalAlignment.Right;
                 buttonLine.VerticalChildAlignment = VerticalAlignment.Top;
-                Label closeLabel = new Label(this, 0, 0, headerFont.Height, headerFont.Height, "❎", HorizontalAlignment.Right, headerFont, Color.White);
-                //❎❌
+                Label closeLabel = new Label(this, 0, 0, headerFont.Height, headerFont.Height, "X", HorizontalAlignment.Center, headerFont, Color.White);
                 closeLabel.OnClick += CloseLabel_OnClick;
                 buttonLine.Add(closeLabel);
             }
@@ -199,24 +199,26 @@ namespace FreeTrainSimulator.Graphics.Window
 
         internal protected virtual void WindowDraw()
         {
-            // A lazily-created window may become visible while its first graphics resources are
-            // still being marshalled to the DesktopGL thread. Skipping one UI frame is preferable
-            // to terminating the simulator; normal initialized windows never take this path.
-            if (windowVertexBuffer == null || windowIndexBuffer == null)
-                return;
-
-            ref readonly Matrix xnaView = ref Owner.XNAView;
-            ref readonly Matrix xnaProjection = ref Owner.XNAProjection;
-            Matrix wvp = xnaWorld * xnaView * xnaProjection;
-            Owner.WindowShader.World = xnaWorld;
-            Owner.WindowShader.WorldViewProjection = wvp;
-
-            foreach (EffectPass pass in Owner.WindowShader.CurrentTechnique.Passes)
+            // Resize can replace and dispose the previous buffer on the updater thread.
+            // Hold the same lock through the draw so it cannot dispose a buffer in use.
+            lock (bufferLock)
             {
-                pass.Apply();
-                Owner.GraphicsDevice.SetVertexBuffer(windowVertexBuffer);
-                Owner.GraphicsDevice.Indices = windowIndexBuffer;
-                Owner.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleStrip, 0, 0, 20);
+                if (windowVertexBuffer == null || windowIndexBuffer == null)
+                    return;
+
+                ref readonly Matrix xnaView = ref Owner.XNAView;
+                ref readonly Matrix xnaProjection = ref Owner.XNAProjection;
+                Matrix wvp = xnaWorld * xnaView * xnaProjection;
+                Owner.WindowShader.World = xnaWorld;
+                Owner.WindowShader.WorldViewProjection = wvp;
+
+                foreach (EffectPass pass in Owner.WindowShader.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    Owner.GraphicsDevice.SetVertexBuffer(windowVertexBuffer);
+                    Owner.GraphicsDevice.Indices = windowIndexBuffer;
+                    Owner.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleStrip, 0, 0, 20);
+                }
             }
         }
 
@@ -251,10 +253,15 @@ namespace FreeTrainSimulator.Graphics.Window
                 var replacementVertexBuffer = new VertexBuffer(Owner.GraphicsDevice, typeof(VertexPositionTexture), vertexData.Length, BufferUsage.WriteOnly);
                 replacementVertexBuffer.SetData(vertexData);
 
-                // Atomic reference assignment: WindowDraw sees either the old, still-valid buffer
-                // or the fully initialized replacement, never a transient null.
-                VertexBuffer previousVertexBuffer = windowVertexBuffer;
-                windowVertexBuffer = replacementVertexBuffer;
+                // Keep the buffer and its geometry transform in step for WindowDraw.
+                VertexBuffer previousVertexBuffer;
+                lock (bufferLock)
+                {
+                    previousVertexBuffer = windowVertexBuffer;
+                    windowVertexBuffer = replacementVertexBuffer;
+                    xnaWorld = Matrix.CreateWorld(new Vector3(borderRect.X, borderRect.Y, 0), -Vector3.UnitZ, Vector3.UnitY);
+                }
+                // Disposal may marshal work to the graphics thread; never do it under the lock.
                 previousVertexBuffer?.Dispose();
             }
             if (windowIndexBuffer == null)
@@ -264,10 +271,16 @@ namespace FreeTrainSimulator.Graphics.Window
                     11, 6, 10, 5, 9, 4, 8,
                     12, 9, 13, 10, 14, 11, 15,
                 };
-                windowIndexBuffer = new IndexBuffer(Owner.GraphicsDevice, IndexElementSize.SixteenBits, indexData.Length, BufferUsage.WriteOnly);
-                windowIndexBuffer.SetData(indexData);
+                var replacementIndexBuffer = new IndexBuffer(Owner.GraphicsDevice, IndexElementSize.SixteenBits, indexData.Length, BufferUsage.WriteOnly);
+                replacementIndexBuffer.SetData(indexData);
+                lock (bufferLock)
+                    windowIndexBuffer = replacementIndexBuffer;
             }
-            xnaWorld = Matrix.CreateWorld(new Vector3(borderRect.X, borderRect.Y, 0), -Vector3.UnitZ, Vector3.UnitY);
+            if (!replaceVertexBuffer)
+            {
+                lock (bufferLock)
+                    xnaWorld = Matrix.CreateWorld(new Vector3(borderRect.X, borderRect.Y, 0), -Vector3.UnitZ, Vector3.UnitY);
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -276,8 +289,17 @@ namespace FreeTrainSimulator.Graphics.Window
             {
                 if (disposing)
                 {
-                    windowVertexBuffer?.Dispose();
-                    windowIndexBuffer?.Dispose();
+                    VertexBuffer previousVertexBuffer;
+                    IndexBuffer previousIndexBuffer;
+                    lock (bufferLock)
+                    {
+                        previousVertexBuffer = windowVertexBuffer;
+                        windowVertexBuffer = null;
+                        previousIndexBuffer = windowIndexBuffer;
+                        windowIndexBuffer = null;
+                    }
+                    previousVertexBuffer?.Dispose();
+                    previousIndexBuffer?.Dispose();
                 }
                 disposedValue = true;
             }
