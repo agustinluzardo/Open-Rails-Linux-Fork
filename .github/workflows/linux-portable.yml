@@ -2,6 +2,8 @@ name: Portable Linux package
 
 on:
   push:
+    branches: [main, codex/window-buffer-and-fov]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
