@@ -2309,14 +2309,32 @@ namespace Orts.Simulation.RollingStocks
             }
             p0.FindCenterLine();
             Vector3 fwd = new Vector3(p0.B[0], p0.B[1], -p0.B[2]);
-            // Check if null vector - The Length() is fine also, but may be more time consuming - By GeorgeS
-            if (fwd.X != 0 && fwd.Y != 0 && fwd.Z != 0)
+            if (float.IsFinite(fwd.Y) && Math.Abs(fwd.Y) > 0.35f &&
+                (lastSteepTrackNode != traveller.TrackNodeIndex || lastSteepTrackSection != traveller.SectionIndex))
+            {
+                Trace.TraceWarning("Unexpected railcar pitch: car {0}, track node {1}, section {2}, wheel fit {3}, center Y {4}",
+                    CarID, traveller.TrackNodeIndex, traveller.SectionIndex, fwd, p0.A[1]);
+                lastSteepTrackNode = traveller.TrackNodeIndex;
+                lastSteepTrackSection = traveller.SectionIndex;
+            }
+            // A level or north/south track has zero components but still needs a unit basis.
+            // Fitted wheel positions can also coincide at a section boundary; retain the
+            // previous orientation in that case instead of sending a singular matrix to
+            // the renderer and the attached cameras.
+            if (fwd.LengthSquared() > 1e-8f && float.IsFinite(fwd.LengthSquared()))
                 fwd.Normalize();
+            else
+                fwd = worldPosition.XNAMatrix.Forward;
             Vector3 side = Vector3.Cross(Vector3.Up, fwd);
-            // Check if null vector - The Length() is fine also, but may be more time consuming - By GeorgeS
-            if (side.X != 0 && side.Y != 0 && side.Z != 0)
+            if (side.LengthSquared() > 1e-8f && float.IsFinite(side.LengthSquared()))
                 side.Normalize();
+            else
+                side = worldPosition.XNAMatrix.Right;
             Vector3 up = Vector3.Cross(fwd, side);
+            if (up.LengthSquared() > 1e-8f && float.IsFinite(up.LengthSquared()))
+                up.Normalize();
+            else
+                up = Vector3.Up;
             Matrix m = Matrix.Identity;
             m.M11 = side.X;
             m.M12 = side.Y;
@@ -2369,6 +2387,9 @@ namespace Orts.Simulation.RollingStocks
                 }
             }
         }
+
+        private int lastSteepTrackNode = -1;
+        private int lastSteepTrackSection = -1;
 
         #region TrackTraveller-based updates
         public float CurrentCurveRadius { get; private set; }

@@ -450,3 +450,174 @@ msgstr "Elegir una carpeta"
 
 msgid "Continue saved game"
 msgstr "Continuar partida guardada"
+
+msgid "Settings"
+msgstr "Configuración"
+
+msgid "These settings are used by the simulator when you press Play."
+msgstr "El simulador usa estos ajustes al pulsar Jugar."
+
+msgid "General"
+msgstr "General"
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Video"
+msgstr "Vídeo"
+
+msgid "Simulation"
+msgstr "Simulación"
+
+msgid "Keyboard"
+msgstr "Teclado"
+
+msgid "Data logger"
+msgstr "Registro de datos"
+
+msgid "Evaluation"
+msgstr "Evaluación"
+
+msgid "Advanced"
+msgstr "Avanzado"
+
+msgid "Display and resolution"
+msgstr "Pantalla y resolución"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Detected resolution"
+msgstr "Resolución detectada"
+
+msgid "Window mode"
+msgstr "Modo de pantalla"
+
+msgid "Use the selected monitor resolution automatically"
+msgstr "Usar automáticamente la resolución del monitor seleccionado"
+
+msgid "Resolution width"
+msgstr "Ancho de resolución"
+
+msgid "Resolution height"
+msgstr "Alto de resolución"
+
+msgid "Windowed mode uses the available desktop area; fullscreen uses the monitor size."
+msgstr "El modo ventana usa el área disponible del escritorio; la pantalla completa usa el tamaño del monitor."
+
+msgid "Click a key, then press a new combination. Escape cancels the capture."
+msgstr "Elegí una tecla y pulsá la nueva combinación. Escape cancela la captura."
+
+msgid "Reset controls to Riel defaults"
+msgstr "Restablecer controles de Riel"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Display {0}: {1} × {2}"
+msgstr "Pantalla {0}: {1} × {2}"
+
+msgid "Primary"
+msgstr "Principal"
+
+msgid "No display detected"
+msgstr "No se detectó ninguna pantalla"
+
+msgid "Driving and units"
+msgstr "Conducción y unidades"
+
+msgid "Sound"
+msgstr "Sonido"
+
+msgid "Rendering"
+msgstr "Renderizado"
+
+msgid "Physics and operations"
+msgstr "Física y operaciones"
+
+msgid "Recording"
+msgstr "Grabación"
+
+msgid "Trip evaluation"
+msgstr "Evaluación del recorrido"
+
+msgid "Network"
+msgstr "Red"
+
+msgid "Diagnostics and replay"
+msgstr "Diagnóstico y repetición"
+
+msgid "Sound Volume Percent"
+msgstr "Volumen del sonido (%)"
+
+msgid "Sound Detail Level"
+msgstr "Detalle del sonido"
+
+msgid "External Sound Pass Thru Percent"
+msgstr "Sonido exterior en cabina (%)"
+
+msgid "Vertical Sync"
+msgstr "Sincronización vertical"
+
+msgid "Multi Sampling Count"
+msgstr "Antialiasing MSAA"
+
+msgid "Dynamic Shadows"
+msgstr "Sombras dinámicas"
+
+msgid "Shadow All Shapes"
+msgstr "Sombras en todos los objetos"
+
+msgid "Model Instancing"
+msgstr "Instancias de modelos"
+
+msgid "Viewing Distance"
+msgstr "Distancia de visión (m)"
+
+msgid "Far Mountains Viewing Distance"
+msgstr "Distancia de montañas (m)"
+
+msgid "Field Of View"
+msgstr "Campo de visión (grados)"
+
+msgid "Ambient Brightness"
+msgstr "Brillo ambiental"
+
+msgid "Shadow Map Resolution"
+msgstr "Resolución de sombras"
+
+msgid "Signal Light Glow"
+msgstr "Brillo de señales"
+
+msgid "Advanced Adhesion"
+msgstr "Adherencia avanzada"
+
+msgid "Weather Dependent Adhesion"
+msgstr "Adherencia según el clima"
+
+msgid "Couplers Break"
+msgstr "Rotura de enganches"
+
+msgid "Simplified Controls"
+msgstr "Controles simplificados"
+
+msgid "Track Gauge"
+msgstr "Ancho de vía (mm)"
+
+msgid "Data Logger"
+msgstr "Registrar datos"
+
+msgid "Evaluation Train Speed"
+msgstr "Evaluar velocidad del tren"
+
+msgid "Evaluation Station Stops"
+msgstr "Evaluar paradas en estaciones"
+
+msgid "Web Server"
+msgstr "Servidor web"
+
+msgid "Profiling"
+msgstr "Medir rendimiento"
