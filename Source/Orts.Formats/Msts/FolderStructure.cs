@@ -290,20 +290,18 @@ namespace Orts.Formats.Msts
 
         public static ContentFolder.RouteFolder Route(string routePath)
         {
+            routePath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(ContentIO.Normalize(routePath)));
             string routeName = Path.GetFileName(routePath);
-            string contentFolder = Path.GetFullPath(Path.Combine(routePath, "..\\.."));
+            string contentFolder = Path.GetDirectoryName(Path.GetDirectoryName(routePath));
             return Content(contentFolder).Route(routeName);
         }
 
         public static ContentFolder.RouteFolder RouteFromActivity(string activityPath)
         {
-            string traversal = "..\\..";
-            if (Path.GetFileName(Path.GetDirectoryName(activityPath)).Equals(OpenRailsSpecificFolder, StringComparison.OrdinalIgnoreCase))
-                traversal = "..\\..\\..";
-            string routePath = Path.GetFullPath(Path.Combine(activityPath, traversal));
-            string routeName = Path.GetFileName(routePath);
-            string contentFolder = Path.GetFullPath(Path.Combine(routePath, "..\\.."));
-            return Content(contentFolder).Route(routeName);
+            string activitiesFolder = Path.GetDirectoryName(Path.GetFullPath(ContentIO.Normalize(activityPath)));
+            if (Path.GetFileName(activitiesFolder).Equals(OpenRailsSpecificFolder, StringComparison.OrdinalIgnoreCase))
+                activitiesFolder = Path.GetDirectoryName(activitiesFolder);
+            return Route(Path.GetDirectoryName(activitiesFolder));
         }
 
         //public static string TrackItemTable => Path.Combine(RouteFolder, RouteName + ".TIT");
