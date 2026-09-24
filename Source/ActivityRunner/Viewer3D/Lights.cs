@@ -762,7 +762,7 @@ namespace Orts.ActivityRunner.Viewer3D
             : base(viewer, null)
         {
             // TODO: This should happen on the loader thread.
-            lightGlowTexture = SharedTextureManager.Get(graphicsDevice, System.IO.Path.Combine(base.viewer.ContentPath, "Lightglow.png"));
+            lightGlowTexture = SharedTextureManager.Get(graphicsDevice, System.IO.Path.Combine(base.viewer.ContentPath, "LightGlow.png"));
             shader = base.viewer.MaterialManager.LightGlowShader;
         }
 
