@@ -1216,7 +1216,9 @@ namespace Orts.Formats.Msts.Models
         {
             block.VerifyID(TokenID.Slerp_Rot);
             Frame = block.ReadInt();
-            quaternion = new Quaternion(block.ReadFloat(), block.ReadFloat(), -block.ReadFloat(), block.ReadFloat());
+            // Keep MSTS coordinates here. The viewer's XnaQuaternion() conversion flips Z once,
+            // matching Open Rails. Flipping it here as well mirrors rotational animations.
+            quaternion = new Quaternion(block.ReadFloat(), block.ReadFloat(), block.ReadFloat(), block.ReadFloat());
             block.VerifyEndOfBlock();
         }
     }
