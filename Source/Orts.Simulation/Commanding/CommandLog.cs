@@ -23,7 +23,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace Orts.Simulation.Commanding
 {
@@ -147,62 +149,146 @@ namespace Orts.Simulation.Commanding
             replayCommandList.RemoveAt(0);    // Remove it from the head of the replay list
         }
 
+        private const int ReplayMagic = 0x524C5250; // "RLRP"
+        private const int ReplayFormatVersion = 1;
+
+        private static IReadOnlyList<FieldInfo> SerializableFields(Type type)
+        {
+            var fields = new List<FieldInfo>();
+            for (Type current = type; current != null && current != typeof(object); current = current.BaseType)
+            {
+                fields.AddRange(current
+                    .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+                    .Where(field => !field.IsStatic && !field.IsNotSerialized));
+            }
+
+            return fields
+                .OrderBy(field => field.DeclaringType?.FullName, StringComparer.Ordinal)
+                .ThenBy(field => field.Name, StringComparer.Ordinal)
+                .ToArray();
+        }
+
+        private static string FieldKey(FieldInfo field) => $"{field.DeclaringType?.FullName}|{field.Name}";
+
         /// <summary>
-        /// Copies the command objects from the log into the file specified, first creating the file.
+        /// Saves the command log using a small versioned replay format.
+        /// BinaryFormatter was removed from modern .NET and must not be used for new replay files.
         /// </summary>
-        /// <param name="filePath"></param>
         public void SaveLog(string filePath)
         {
-            FileStream stream = null;
+            string temporaryFile = filePath + ".tmp";
             try
             {
-                stream = new FileStream(filePath, FileMode.Create);
-#pragma warning disable SYSLIB0011 // Type or member is obsolete
-                BinaryFormatter formatter = new BinaryFormatter();
-#pragma warning restore SYSLIB0011 // Type or member is obsolete
                 // Re-sort based on time as tests show that some commands are deferred.
-                CommandList = new Collection<ICommand>(CommandList.OrderBy(c => c.Time).ToList());
-                formatter.Serialize(stream, CommandList);
-            }
-            catch (IOException)
-            {
-                // Do nothing but warn, ignoring errors.
-                Trace.TraceWarning("SaveLog error writing command log " + filePath);
-            }
-            finally
-            {
-                if (stream != null)
+                CommandList = new Collection<ICommand>(CommandList.OrderBy(command => command.Time).ToList());
+
+                using (var stream = new FileStream(temporaryFile, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (var writer = new BinaryWriter(stream))
                 {
-                    stream.Close();
-                    Trace.WriteLine("\nList of commands to replay saved");
+                    writer.Write(ReplayMagic);
+                    writer.Write(ReplayFormatVersion);
+                    writer.Write(CommandList.Count);
+
+                    foreach (ICommand command in CommandList)
+                    {
+                        Type commandType = command.GetType();
+                        if (commandType.Assembly != typeof(Command).Assembly || !typeof(ICommand).IsAssignableFrom(commandType))
+                            throw new InvalidDataException($"Unsupported replay command type {commandType.FullName}");
+
+                        writer.Write(commandType.FullName ?? throw new InvalidDataException("Replay command has no type name"));
+
+                        IReadOnlyList<FieldInfo> fields = SerializableFields(commandType);
+                        writer.Write(fields.Count);
+                        foreach (FieldInfo field in fields)
+                        {
+                            writer.Write(FieldKey(field));
+                            object value = field.GetValue(command);
+                            writer.Write(JsonSerializer.Serialize(value, field.FieldType));
+                        }
+                    }
+                }
+
+                File.Move(temporaryFile, filePath, true);
+                Trace.WriteLine("\nList of commands to replay saved");
+            }
+            catch (Exception error)
+            {
+                Trace.TraceWarning($"SaveLog error writing command log {filePath}: {error.Message}");
+                try
+                {
+                    if (File.Exists(temporaryFile))
+                        File.Delete(temporaryFile);
+                }
+                catch (IOException)
+                {
+                    // The save-state itself is still valid; replay logging must never crash the game.
                 }
             }
         }
 
         /// <summary>
-        /// Copies the command objects from the file specified into the log, replacing the log's contents.
+        /// Loads a replay written by <see cref="SaveLog"/>.
+        /// Legacy BinaryFormatter replay files are ignored safely; the associated save-state can still be resumed.
         /// </summary>
-        /// <param name="fullFilePath"></param>
         public void LoadLog(string filePath)
         {
-            FileStream stream = null;
+            CommandList = new Collection<ICommand>();
+
             try
             {
-                stream = new FileStream(filePath, FileMode.Open);
-#pragma warning disable SYSLIB0011 // Type or member is obsolete
-                BinaryFormatter formatter = new BinaryFormatter();
-#pragma warning restore SYSLIB0011 // Type or member is obsolete
-                CommandList = (Collection<ICommand>)formatter.Deserialize(stream);
+                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using var reader = new BinaryReader(stream);
+
+                if (reader.ReadInt32() != ReplayMagic)
+                    throw new InvalidDataException("legacy BinaryFormatter replay files are not supported by this build");
+
+                int version = reader.ReadInt32();
+                if (version != ReplayFormatVersion)
+                    throw new InvalidDataException($"unsupported replay format version {version}");
+
+                int commandCount = reader.ReadInt32();
+                if (commandCount < 0 || commandCount > 1_000_000)
+                    throw new InvalidDataException($"invalid replay command count {commandCount}");
+
+                Assembly commandAssembly = typeof(Command).Assembly;
+                for (int commandIndex = 0; commandIndex < commandCount; commandIndex++)
+                {
+                    string typeName = reader.ReadString();
+                    int fieldCount = reader.ReadInt32();
+                    if (fieldCount < 0 || fieldCount > 256)
+                        throw new InvalidDataException($"invalid field count {fieldCount} for {typeName}");
+
+                    Type commandType = commandAssembly.GetType(typeName, throwOnError: false, ignoreCase: false);
+                    bool supportedType = commandType != null &&
+                        !commandType.IsAbstract &&
+                        typeof(ICommand).IsAssignableFrom(commandType);
+
+                    Dictionary<string, FieldInfo> fields = supportedType
+                        ? SerializableFields(commandType).ToDictionary(FieldKey, StringComparer.Ordinal)
+                        : null;
+                    object commandObject = supportedType ? RuntimeHelpers.GetUninitializedObject(commandType) : null;
+
+                    for (int fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
+                    {
+                        string fieldKey = reader.ReadString();
+                        string json = reader.ReadString();
+                        if (fields != null && fields.TryGetValue(fieldKey, out FieldInfo field))
+                        {
+                            object value = JsonSerializer.Deserialize(json, field.FieldType);
+                            field.SetValue(commandObject, value);
+                        }
+                    }
+
+                    if (commandObject is ICommand command)
+                        CommandList.Add(command);
+                    else
+                        Trace.TraceWarning($"Skipped unknown replay command type {typeName}");
+                }
             }
-            catch (IOException)
+            catch (Exception error)
             {
-                // Do nothing but warn, ignoring errors.
-                Trace.TraceWarning("LoadLog error reading command log " + filePath);
-            }
-            finally
-            {
-                if (stream != null)
-                { stream.Close(); }
+                CommandList = new Collection<ICommand>();
+                Trace.TraceWarning($"LoadLog error reading command log {filePath}: {error.Message}");
             }
         }
 
