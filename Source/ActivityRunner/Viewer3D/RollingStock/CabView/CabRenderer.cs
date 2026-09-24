@@ -90,8 +90,16 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.CabView
             ControlMap = new Dictionary<(ControlType, int), CabViewControlRenderer>();
             Dictionary<ControlType, int> count = new Dictionary<ControlType, int>();
             bool firstOne = true;
-            foreach (Simulation.RollingStocks.CabView cabView in car.CabViews)
+            // Walk the cab slots rather than trusting each CabView's own CabViewType: a locomotive with only a
+            // rear-facing cab puts the same CabView in both slots, and Mark/PrepareFrame look renderers up by slot
+            foreach (CabViewType cabViewType in EnumExtension.GetValues<CabViewType>())
             {
+                Simulation.RollingStocks.CabView cabView = car.CabViews[cabViewType];
+                if (cabViewType == CabViewType.Rear && cabView != null && cabView == car.CabViews[CabViewType.Front])
+                {
+                    cabViewControlRenderer[cabViewType] = cabViewControlRenderer[CabViewType.Front];
+                    continue;
+                }
                 if (cabView?.CVFFile != null)
                 {
                     // Loading ACE files, skip displaying ERROR messages
@@ -124,7 +132,6 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.CabView
 
                     var controlSortIndex = 1;  // Controls are drawn atop the cabview and in order they appear in the CVF file.
                                                // This allows the segments of moving-scale meters to be hidden by covers (e.g. TGV-A)
-                    CabViewType cabViewType = cabView.CabViewType;
                     cabViewControlRenderer[cabViewType] = new List<CabViewControlRenderer>();
                     foreach (CabViewControl cvc in cabView.CVFFile.CabViewControls)
                     {
@@ -264,8 +271,9 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.CabView
 
             var controlSortIndex = 1;  // Controls are drawn atop the cabview and in order they appear in the CVF file.
                                        // This allows the segments of moving-scale meters to be hidden by covers (e.g. TGV-A)
+            // The 3D cab's controls apply whichever way the locomotive is driven, so both slots share one list
             CabViewType cabViewType = CabViewType.Rear;
-            cabViewControlRenderer[cabViewType] = new List<CabViewControlRenderer>();
+            cabViewControlRenderer[cabViewType] = cabViewControlRenderer[CabViewType.Front] = new List<CabViewControlRenderer>();
             foreach (CabViewControl cvc in CVFFile.CabViewControls)
             {
                 controlSortIndex++;
@@ -404,7 +412,8 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.CabView
             frame.AddPrimitive(spriteShader2DCabView, this, RenderPrimitiveGroup.Cab, ref scale);
             //frame.AddPrimitive(Materials.SpriteBatchMaterial, this, RenderPrimitiveGroup.Cab, ref _Scale);
 
-            foreach (var cvcr in cabViewControlRenderer[cabViewType])
+            // A cab whose CVF lists no controls has no renderer list
+            foreach (var cvcr in cabViewControlRenderer[cabViewType] ?? [])
             {
                 if (cvcr.control.CabViewpoint == location)
                 {
@@ -477,7 +486,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.CabView
         {
             viewer.TextureManager.Mark(cabTexture);
 
-            foreach (var cvcr in cabViewControlRenderer[locomotive.UsingRearCab ? CabViewType.Rear : CabViewType.Front])
+            foreach (var cvcr in cabViewControlRenderer[locomotive.UsingRearCab ? CabViewType.Rear : CabViewType.Front] ?? [])
                 cvcr.Mark();
         }
 
