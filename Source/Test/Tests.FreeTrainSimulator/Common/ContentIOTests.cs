@@ -88,6 +88,27 @@ namespace Tests.FreeTrainSimulator.Common
         }
 
         [TestMethod]
+        public void FindsFilesInEitherOfTwoFoldersDifferingOnlyInCase()
+        {
+            // An add-on unpacked with Linux tools beside a Wine install leaves both spellings; on
+            // Windows they are one folder, so each file has to be found through either of them.
+            Directory.CreateDirectory(Path.Combine(root, "ROUTES", "Roca", "SHAPES"));
+            Directory.CreateDirectory(Path.Combine(root, "ROUTES", "Roca", "Shapes"));
+            File.WriteAllText(Path.Combine(root, "ROUTES", "Roca", "SHAPES", "Station.s"), "station");
+            File.WriteAllText(Path.Combine(root, "ROUTES", "Roca", "Shapes", "Hilo3869m.s"), "wire");
+
+            foreach (string folder in new[] { "SHAPES", "Shapes", "shapes" })
+            {
+                string wire = ContentIO.ResolveFile(Path.Combine(root, "Routes", "Roca", folder, "Hilo3869m.s"));
+                string station = ContentIO.ResolveFile(Path.Combine(root, "Routes", "Roca", folder, "STATION.S"));
+                Assert.IsNotNull(wire, $"Hilo3869m.s through {folder}");
+                Assert.IsNotNull(station, $"STATION.S through {folder}");
+                Assert.AreEqual("wire", File.ReadAllText(wire));
+                Assert.AreEqual("station", File.ReadAllText(station));
+            }
+        }
+
+        [TestMethod]
         public void ResolvesWindowsSeparators()
         {
             // Exactly what a .w file writes when it names a shape.

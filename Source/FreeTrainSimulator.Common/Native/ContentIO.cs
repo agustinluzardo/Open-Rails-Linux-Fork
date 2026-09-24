@@ -47,7 +47,8 @@ namespace FreeTrainSimulator.Common.Native
         private sealed class DirectoryIndex
         {
             internal DateTime Timestamp { get; init; }
-            internal Dictionary<string, string> Entries { get; init; }
+            // Every name in the directory that matches a key without regard to case
+            internal Dictionary<string, List<string>> Entries { get; init; }
         }
 
         private static readonly ConcurrentDictionary<string, DirectoryIndex> directoryCache =
@@ -294,36 +295,56 @@ namespace FreeTrainSimulator.Common.Native
             if (current.Length == 0)
                 current = root;
 
-            for (int i = 0; i < segments.Length; i++)
-            {
-                bool last = i == segments.Length - 1;
-                string candidate = Path.Combine(current, segments[i]);
-
-                // An exactly matching segment needs no index; only the mismatching ones do.
-                if (last ? Exists(candidate, kind) : Directory.Exists(candidate))
-                {
-                    current = candidate;
-                    continue;
-                }
-
-                string actual = LookupIgnoreCase(current, segments[i]);
-                if (actual == null)
-                    return null;
-
-                current = Path.Combine(current, actual);
-                if (!last && !Directory.Exists(current))
-                    return null;
-            }
-
-            return Exists(current, kind) ? current : null;
+            if (segments.Length == 0)
+                return Exists(current, kind) ? current : null;
+            return ResolveSegment(current, segments, 0, kind);
         }
 
-        private static string LookupIgnoreCase(string directory, string name)
+        /// <summary>
+        /// Resolves <paramref name="segments"/> from <paramref name="index"/> on below
+        /// <paramref name="current"/>, trying every entry whose name matches regardless of case.
+        /// </summary>
+        /// <remarks>
+        /// Content unpacked with Linux tools into an install made under Wine routinely leaves
+        /// SHAPES and Shapes, or GLOBAL and Global, side by side. On Windows those are one folder,
+        /// so a file may sit under either of them; settling on the first match would lose the
+        /// files kept under the other one - half a route's scenery, for instance.
+        /// </remarks>
+        private static string ResolveSegment(string current, string[] segments, int index, FileSystemEntry kind)
+        {
+            bool last = index == segments.Length - 1;
+            string segment = segments[index];
+
+            // An exactly matching segment needs no index; only the mismatching ones do.
+            string candidate = Path.Combine(current, segment);
+            string resolved = ResolveCandidate(candidate, segments, index, last, kind);
+            if (resolved != null)
+                return resolved;
+
+            foreach (string actual in LookupIgnoreCase(current, segment))
+            {
+                if (string.Equals(actual, segment, StringComparison.Ordinal))
+                    continue;
+                resolved = ResolveCandidate(Path.Combine(current, actual), segments, index, last, kind);
+                if (resolved != null)
+                    return resolved;
+            }
+            return null;
+        }
+
+        private static string ResolveCandidate(string candidate, string[] segments, int index, bool last, FileSystemEntry kind)
+        {
+            if (last)
+                return Exists(candidate, kind) ? candidate : null;
+            return Directory.Exists(candidate) ? ResolveSegment(candidate, segments, index + 1, kind) : null;
+        }
+
+        private static IReadOnlyList<string> LookupIgnoreCase(string directory, string name)
         {
             DirectoryIndex index = GetIndex(directory);
             if (index == null)
-                return null;
-            return index.Entries.TryGetValue(name, out string actual) ? actual : null;
+                return Array.Empty<string>();
+            return index.Entries.TryGetValue(name, out List<string> actual) ? actual : Array.Empty<string>();
         }
 
         private static DirectoryIndex GetIndex(string directory)
@@ -344,17 +365,21 @@ namespace FreeTrainSimulator.Common.Native
             if (directoryCache.TryGetValue(directory, out DirectoryIndex cached) && cached.Timestamp == timestamp)
                 return cached;
 
-            Dictionary<string, string> entries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, List<string>> entries = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
             try
             {
                 foreach (string entry in Directory.EnumerateFileSystemEntries(directory))
                 {
                     string name = Path.GetFileName(entry);
-                    // Two entries differing only in case can coexist here; the first one wins,
-                    // which matches how a case insensitive file system would have behaved.
-                    if (!entries.ContainsKey(name))
-                        entries.Add(name, name);
+                    // Two entries differing only in case can coexist here, and both are kept: they
+                    // would have been one folder on the file system the content was made for.
+                    if (entries.TryGetValue(name, out List<string> names))
+                        names.Add(name);
+                    else
+                        entries.Add(name, new List<string> { name });
                 }
+                foreach (List<string> names in entries.Values)
+                    names.Sort(StringComparer.Ordinal);
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
