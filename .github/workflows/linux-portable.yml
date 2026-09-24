@@ -23,9 +23,7 @@ jobs:
           if [ -d .github/asset-upload ]; then
             cat .github/asset-upload/Clouds01.*.b64 | base64 --decode > Source/ActivityRunner/Content/Clouds01.png
             cat .github/asset-upload/SkyDome1.*.b64 | base64 --decode > Source/ActivityRunner/Content/SkyDome1.png
-            printf '%s  %s\\n' \\
-              'ffd570783776572d68f61e5391a1ccb05d3df72069a9856746cfccf2bd7ebb94' 'Source/ActivityRunner/Content/Clouds01.png' \\
-              '4ae672c8b717b30636b5b2f65f534610e8ad3ce7d144ee916b68145ecbf8f772' 'Source/ActivityRunner/Content/SkyDome1.png' | sha256sum --check
+            printf '%s  %s\n' 'ffd570783776572d68f61e5391a1ccb05d3df72069a9856746cfccf2bd7ebb94' 'Source/ActivityRunner/Content/Clouds01.png' '4ae672c8b717b30636b5b2f65f534610e8ad3ce7d144ee916b68145ecbf8f772' 'Source/ActivityRunner/Content/SkyDome1.png' | sha256sum --check
             if [ "${GITHUB_EVENT_NAME}" = push ] && [ "${GITHUB_REF_NAME}" = codex/window-buffer-and-fov ]; then
               git config user.name 'github-actions[bot]'
               git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
