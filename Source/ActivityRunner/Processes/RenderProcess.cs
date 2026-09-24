@@ -350,7 +350,20 @@ namespace Orts.ActivityRunner.Processes
             // frame goes to that instead of to sleeping until the next one - except in the extra
             // updates MonoGame runs to catch up, which would only fall further behind.
             if (game.State is GameStateRunActivity && !gameTime.IsRunningSlowly)
+            {
                 GraphicsQueue.Pump(LoadingPumpTime);
+            }
+            else if (game.State is GameStateViewer3D && !game.LoaderProcess.Finished)
+            {
+                // DesktopGL must upload textures/buffers on the graphics thread. With VSync the
+                // present path can otherwise throttle a busy loader to roughly one upload per
+                // displayed frame, allowing the train to outrun world streaming. Give only active
+                // upload bursts a small per-frame slice; when nothing is queued this returns
+                // immediately and does not tax normal rendering.
+                GraphicsQueue.PumpPending(game.UserSettings.VerticalSync
+                    ? VSyncStreamingPumpTime
+                    : StreamingPumpTime);
+            }
         }
 
         /// <summary>
@@ -358,6 +371,11 @@ namespace Orts.ActivityRunner.Processes
         /// work; the rest is left for drawing the frame.
         /// </summary>
         private static readonly TimeSpan LoadingPumpTime = TimeSpan.FromMilliseconds(70);
+
+        // Background streaming needs only a short burst. VSync gets a little more budget because
+        // that is precisely when MonoGame's normal once-per-present queue service starves most.
+        private static readonly TimeSpan StreamingPumpTime = TimeSpan.FromMilliseconds(1);
+        private static readonly TimeSpan VSyncStreamingPumpTime = TimeSpan.FromMilliseconds(3);
 
         private void LoadSettings()
         {
