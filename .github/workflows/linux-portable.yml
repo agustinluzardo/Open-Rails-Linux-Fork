@@ -2,13 +2,8 @@ name: Portable Linux package
 
 on:
   push:
-    branches: [main, codex/window-buffer-and-fov]
-  pull_request:
     branches: [main]
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   linux-x64:
@@ -17,22 +12,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Nerdbank.GitVersioning reads the repository history.
-      - name: Install supplied default textures and publish the binary assets
-        run: |
-          set -euo pipefail
-          if [ -d .github/asset-upload ]; then
-            cat .github/asset-upload/Clouds01.*.b64 | base64 --decode > Source/ActivityRunner/Content/Clouds01.png
-            cat .github/asset-upload/SkyDome1.*.b64 | base64 --decode > Source/ActivityRunner/Content/SkyDome1.png
-            printf '%s  %s\n' 'ffd570783776572d68f61e5391a1ccb05d3df72069a9856746cfccf2bd7ebb94' 'Source/ActivityRunner/Content/Clouds01.png' '4ae672c8b717b30636b5b2f65f534610e8ad3ce7d144ee916b68145ecbf8f772' 'Source/ActivityRunner/Content/SkyDome1.png' | sha256sum --check
-            if [ "${GITHUB_EVENT_NAME}" = push ] && [ "${GITHUB_REF_NAME}" = codex/window-buffer-and-fov ]; then
-              git config user.name 'github-actions[bot]'
-              git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-              git add Source/ActivityRunner/Content/Clouds01.png Source/ActivityRunner/Content/SkyDome1.png
-              git rm -r -q .github/asset-upload
-              git commit -m 'Add supplied clouds and sky dome to default content'
-              git push origin 'HEAD:refs/heads/codex/window-buffer-and-fov'
-            fi
-          fi
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
