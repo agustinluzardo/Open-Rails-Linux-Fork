@@ -381,3 +381,6 @@ MigrationBackup/
 
 # Shader toolchain scratch: the Wine bridge build and the downloaded HLSL compiler.
 /.build/
+
+# Local release archives built from the publish output
+/dist/
