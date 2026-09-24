@@ -13,7 +13,7 @@ using Orts.Formats.Msts.Parsers;
 
 namespace Orts.Formats.Msts.Models
 {
-    public class ControlType
+    public class ControlType : IEquatable<ControlType>
     {
         public CabViewControlType CabViewControlType { get; }
         public int Id { get; }
@@ -39,6 +39,21 @@ namespace Orts.Formats.Msts.Models
             else
                 if (EnumExtension.GetValue(name, out CabViewControlType controlType))
                 CabViewControlType = controlType;
+        }
+
+        public bool Equals(ControlType other)
+        {
+            return other != null && CabViewControlType == other.CabViewControlType && Id == other.Id;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ControlType other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(CabViewControlType, Id);
         }
 
         public override string ToString()

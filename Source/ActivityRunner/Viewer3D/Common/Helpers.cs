@@ -78,7 +78,15 @@ namespace Orts.ActivityRunner.Viewer3D.Common
 
         public static string GetRouteTextureFile(TextureFlags textureFlags, string textureName)
         {
-            return GetTextureFile(textureFlags, Simulator.Instance.RouteFolder.TexturesFolder, textureName);
+            string routeTexture = GetTextureFile(textureFlags, Simulator.Instance.RouteFolder.TexturesFolder, textureName);
+            if (ContentIO.FileExists(routeTexture))
+                return routeTexture;
+
+            // Global MSTS shapes (track pieces in particular) commonly reference textures
+            // stored in GLOBAL/Textures. Keep the route texture as the primary location, but
+            // fall back to GLOBAL when the route does not provide the requested texture.
+            string globalTexture = GetTextureFile(textureFlags, Simulator.Instance.RouteFolder.ContentFolder.TexturesFolder, textureName);
+            return ContentIO.FileExists(globalTexture) ? globalTexture : routeTexture;
         }
 
         public static string GetTransferTextureFile(string textureName)

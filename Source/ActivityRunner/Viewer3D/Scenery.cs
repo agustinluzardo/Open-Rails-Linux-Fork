@@ -213,6 +213,7 @@ namespace Orts.ActivityRunner.Viewer3D
     public class WorldFile : ITileCoordinate
     {
         private const int MinimumInstanceCount = 5;
+        private static readonly HashSet<string> legacyShapeFallbacks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         public List<BaseShape> SceneryObjects { get; } = new List<BaseShape>();
         public List<DynamicTrackViewer> DynamicTrackList { get; } = new List<DynamicTrackViewer>();
@@ -293,6 +294,23 @@ namespace Orts.ActivityRunner.Viewer3D
                 if (shapeFilePath != null)
                 {
                     shapeFilePath = Path.GetFullPath(shapeFilePath);
+                    if (!ContentIO.FileExists(shapeFilePath) && !global)
+                    {
+                        // A number of legacy MSTS routes ship world shapes in the route root instead
+                        // of the conventional Shapes directory. Windows installations often hide
+                        // this mistake because their content was copied/merged differently; on Unix
+                        // keep the standard location first, then accept the legacy layout explicitly.
+                        string legacyShapePath = Path.GetFullPath(Path.Combine(viewer.Simulator.RouteFolder.CurrentFolder, worldObject.FileName));
+                        if (ContentIO.FileExists(legacyShapePath))
+                        {
+                            shapeFilePath = legacyShapePath;
+                            lock (legacyShapeFallbacks)
+                            {
+                                if (legacyShapeFallbacks.Add(shapeFilePath))
+                                    Trace.TraceInformation("Legacy route layout: using scenery shape {0} from the route root instead of Shapes.", shapeFilePath);
+                            }
+                        }
+                    }
                     if (!ContentIO.FileExists(shapeFilePath))
                     {
                         Trace.TraceWarning("{0} scenery object {1} with StaticFlags {3:X8} references non-existent {2}", WFileName, worldObject.UiD, shapeFilePath, worldObject.StaticFlags);
