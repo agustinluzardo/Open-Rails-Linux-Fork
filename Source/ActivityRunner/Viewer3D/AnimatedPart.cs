@@ -40,6 +40,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         // Current frame of the animation.
         private float AnimationKey;
+        private bool animationKeyInitialized;
 
         // List of the matrices we're animating for this part.
         public ImmutableArray<int> MatrixIndexes { get; private set; } = ImmutableArray<int>.Empty;
@@ -92,7 +93,16 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private void SetFrame(double frame)
         {
-            AnimationKey = (float)frame;
+            float nextAnimationKey = (float)frame;
+
+            // Cab controls spend most frames at exactly the same position. Re-applying the
+            // complete MSTS matrix hierarchy in that case is pure CPU cost and was especially
+            // noticeable once 3D cab controls were fixed on Linux.
+            if (animationKeyInitialized && AnimationKey == nextAnimationKey)
+                return;
+
+            AnimationKey = nextAnimationKey;
+            animationKeyInitialized = true;
             foreach (var matrix in MatrixIndexes)
                 PoseableShape.AnimateMatrix(matrix, AnimationKey);
         }
@@ -120,11 +130,16 @@ namespace Orts.ActivityRunner.Viewer3D
         public void SetFrameWrap(double frame)
         {
             // Wrap the frame around 0-FrameCount without hanging when FrameCount=0.
-            while (FrameCount > 0 && frame < 0)
-                frame += FrameCount;
-            if (frame < 0)
+            if (FrameCount > 0)
+            {
+                frame %= FrameCount;
+                if (frame < 0)
+                    frame += FrameCount;
+            }
+            else
+            {
                 frame = 0;
-            frame %= FrameCount;
+            }
             SetFrame(frame);
         }
 
