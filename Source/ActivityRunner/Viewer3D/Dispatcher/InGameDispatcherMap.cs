@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
+using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Input;
+using FreeTrainSimulator.Graphics;
 using FreeTrainSimulator.Graphics.MapView;
 using FreeTrainSimulator.Graphics.MapView.Widgets;
 using FreeTrainSimulator.Graphics.Window;
@@ -67,6 +69,14 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
                 content = new XnaMapContentFactory().CreateDispatcherContent(viewer.Game, mouse);
                 content.Initialize().GetAwaiter().GetResult();
                 content.InitializeItemVisiblity(settings.ContentTypeVisibility);
+                // Map widgets default to transparent until their palette is installed.
+                content.UpdateWidgetColorSettings(new EnumArray<string, ColorSetting>(new[]
+                {
+                    "CornSilk", "DimGray", "BlueViolet", "LightGray", "Firebrick",
+                    "Crimson", "Olive", "ForestGreen", "DeepPink", "OrangeRed",
+                    "White", "White", "Firebrick", "Navy", "ForestGreen",
+                    "Gold", "Black", "White", "White", "White", "White",
+                }));
                 area = ((IXnaMapShellHost)content.ShellHost).Component as ContentArea;
                 area.ResetSize(viewer.Game.Window.ClientBounds.Size, 60);
                 background.DrawOrder = -1;
