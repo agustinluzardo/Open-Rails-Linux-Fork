@@ -649,7 +649,14 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
                     ? lodControl.DistanceLevels[lodControl.DistanceLevels.Length - 1]
                     : displayDetail;
 
-                distanceDetail.ViewingDistance = float.MaxValue;
+                // Match Open Rails: only extend the lowest LOD when the user explicitly enabled
+                // the extended detail-level view option. FTS had dropped this condition and forced
+                // every shape to an infinite viewing distance, which massively increases CPU-side
+                // render submission and draw calls in dense scenes.
+                float objectViewingDistance = distanceDetail.ViewingDistance;
+                if (viewer.UserSettings.ExtendedDetailLevelView &&
+                    displayDetailLevel == lodControl.DistanceLevels.Length - 1)
+                    objectViewingDistance = float.MaxValue;
 
                 for (var i = 0; i < displayDetail.SubObjects.Length; i++)
                 {
@@ -675,7 +682,7 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
                         // TODO make shadows depend on shape overrides
 
                         var interior = (flags & ShapeOptions.Interior) != 0;
-                        frame.AddAutoPrimitive(mstsLocation, distanceDetail.ViewSphereRadius, distanceDetail.ViewingDistance * lodBias, shapePrimitive.Material, shapePrimitive, interior ? RenderPrimitiveGroup.Interior : RenderPrimitiveGroup.World, ref xnaMatrix, flags);
+                        frame.AddAutoPrimitive(mstsLocation, distanceDetail.ViewSphereRadius, objectViewingDistance * lodBias, shapePrimitive.Material, shapePrimitive, interior ? RenderPrimitiveGroup.Interior : RenderPrimitiveGroup.World, ref xnaMatrix, flags);
                     }
                 }
             }
