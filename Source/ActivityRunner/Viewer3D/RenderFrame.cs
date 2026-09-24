@@ -570,11 +570,9 @@ namespace Orts.ActivityRunner.Viewer3D
                 Trace.WriteLine(string.Empty);
                 logRenderFrame = false;
             }
-            for (int i = 0; i < game.Components.Count; i++)
-            {
-                if ((game.Components[i] is DrawableGameComponent drawableGameComponent) && drawableGameComponent.Enabled)
-                    drawableGameComponent.Draw(gameTime);
-            }
+            // GameHost.Draw calls Game.Draw immediately after this frame; MonoGame draws
+            // its visible components there. Drawing them here submits every popup and
+            // overlay twice and defeats each component's Visible flag.
         }
 
         private void DrawShadows(bool logging)
