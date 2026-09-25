@@ -7352,6 +7352,17 @@ namespace Orts.Simulation.Physics
 
             ControlMode = TrainControlMode.AutoSignal;
             signal.RequestClearSignal(ValidRoutes[Direction.Forward], RoutedForward, 0, false, null);
+            Trace.TraceInformation(
+                "[SignalRequest] Train {0} signal {1}: enabled={2} routeSections={3} block={4} hold={5} aspect={6} tc={7} nextTc={8}.",
+                Number,
+                signal.Index,
+                signal.EnabledTrain == RoutedForward,
+                signal.SignalRoute?.Count ?? 0,
+                signal.BlockState(),
+                signal.HoldState,
+                signal.SignalLR(SignalFunctionType.Normal),
+                signal.TrackCircuitIndex,
+                signal.TrackCircuitNextIndex);
 
             // enable any none-NORMAL signals between front of train and first NORMAL signal
             int firstSectionIndex = PresentPosition[Direction.Forward].RouteListIndex;
