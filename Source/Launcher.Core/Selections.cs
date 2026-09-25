@@ -107,7 +107,10 @@ namespace Riel.Launcher
             return new ProfileSelectionsModel
             {
                 GamePlayAction = GamePlayAction.SingleplayerNewGame,
-                ActivityType = ActivityType.ExploreActivity,
+                // The launcher's Explore tab must use the simulator's real Explorer mode.
+                // ExploreActivity runs the consist through the AI/autopilot initialization path,
+                // which can reject otherwise-valid legacy MSTS paths or place long consists badly.
+                ActivityType = ActivityType.Explorer,
                 FolderName = folder.Name,
                 RouteId = route.Id,
                 PathId = path.Id,
@@ -133,7 +136,20 @@ namespace Riel.Launcher
                     selections.RouteId,
                     selections.ActivityId,
                 },
-                ActivityType.Explorer or ActivityType.ExploreActivity => new[]
+                ActivityType.Explorer => new[]
+                {
+                    "-SingleplayerNewGame",
+                    "-Explorer",
+                    selections.FolderName,
+                    selections.RouteId,
+                    selections.PathId,
+                    selections.WagonSetId,
+                    selections.StartTime.ToString("HH\\:mm", CultureInfo.InvariantCulture),
+                    selections.Season.ToString(),
+                    selections.Weather.ToString(),
+                },
+                // Preserve explicit legacy ExploreActivity selections for backwards compatibility.
+                ActivityType.ExploreActivity => new[]
                 {
                     "-SingleplayerNewGame",
                     "-ExploreActivity",
