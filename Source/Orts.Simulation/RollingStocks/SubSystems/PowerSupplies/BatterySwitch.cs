@@ -47,6 +47,8 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
         public bool CommandButtonOn { get; protected set; }
         public bool CommandButtonOff { get; protected set; }
         public bool On { get; protected set; }
+        protected bool QuickPowerOn;
+        protected bool QuickPowerOff;
 
         public BatterySwitch(MSTSWagon wagon)
         {
@@ -212,6 +214,15 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
                 case ModeType.PushButtons:
                     if (On)
                     {
+                        if (QuickPowerOn)
+                        {
+                            QuickPowerOn = false;
+                            if (CommandButtonOn)
+                            {
+                                CommandButtonOn = false;
+                                Wagon.SignalEvent(TrainEvent.BatterySwitchCommandOff);
+                            }
+                        }
                         if (CommandButtonOff)
                         {
                             if (!Timer.Started)
@@ -236,6 +247,15 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
                     }
                     else
                     {
+                        if (QuickPowerOff)
+                        {
+                            QuickPowerOff = false;
+                            if (CommandButtonOff)
+                            {
+                                CommandButtonOff = false;
+                                Wagon.SignalEvent(TrainEvent.BatterySwitchCommandOff);
+                            }
+                        }
                         if (CommandButtonOn)
                         {
                             if (!Timer.Started)
@@ -311,6 +331,37 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
                     {
                         CommandButtonOff = false;
                         Wagon.SignalEvent(TrainEvent.BatterySwitchCommandOff);
+                    }
+                    break;
+                case PowerSupplyEvent.QuickPowerOn:
+                    switch (Mode)
+                    {
+                        case ModeType.Switch:
+                            CommandSwitch = true;
+                            Wagon.SignalEvent(TrainEvent.BatterySwitchCommandOn);
+                            break;
+                        case ModeType.PushButtons:
+                            CommandButtonOn = true;
+                            Wagon.SignalEvent(TrainEvent.BatterySwitchCommandOn);
+                            QuickPowerOn = true;
+                            QuickPowerOff = false;
+                            break;
+                    }
+                    break;
+
+                case PowerSupplyEvent.QuickPowerOff:
+                    switch (Mode)
+                    {
+                        case ModeType.Switch:
+                            CommandSwitch = false;
+                            Wagon.SignalEvent(TrainEvent.BatterySwitchCommandOff);
+                            break;
+                        case ModeType.PushButtons:
+                            CommandButtonOff = true;
+                            Wagon.SignalEvent(TrainEvent.BatterySwitchCommandOn);
+                            QuickPowerOn = false;
+                            QuickPowerOff = true;
+                            break;
                     }
                     break;
             }
