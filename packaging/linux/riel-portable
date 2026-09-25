@@ -15,14 +15,15 @@ if [ "${1:-}" = "update" ]; then
     stage="$bundle_dir/.riel-update-stage"
     rm -rf -- "$previous"
     mv -- "$app_dir" "$previous"
-    if mv -- "$stage/riel-linux-x64/app" "$app_dir"; then
+    if mv -- "$stage/riel-linux-x64/app" "$app_dir" &&
+       cp -- "$stage/riel-linux-x64/riel" "$bundle_dir/.riel-wrapper-next" &&
+       chmod 755 -- "$bundle_dir/.riel-wrapper-next" &&
+       mv -- "$bundle_dir/.riel-wrapper-next" "$bundle_dir/riel"; then
         # The wrapper stays outside app so this process can finish the swap.
-        cp -- "$stage/riel-linux-x64/riel" "$bundle_dir/.riel-wrapper-next"
-        chmod 755 -- "$bundle_dir/.riel-wrapper-next"
-        mv -- "$bundle_dir/.riel-wrapper-next" "$bundle_dir/riel"
         rm -rf -- "$stage" "$previous"
         echo 'Riel updated. Run ./riel gui to start the new version.'
     else
+        rm -rf -- "$app_dir" "$bundle_dir/.riel-wrapper-next"
         mv -- "$previous" "$app_dir"
         echo 'Update failed; the previous version was restored.' >&2
         exit 1
