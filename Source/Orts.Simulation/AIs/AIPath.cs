@@ -392,10 +392,10 @@ namespace Orts.Simulation.AIs
         /// <returns>The track node index that has been found (or an exception)</returns>
         private static int FindTrackNodeIndex(AIPathNode node)
         {
-            // Open Rails matches PAT path nodes to vector track in X/Z only.
-            // PAT elevations can differ from the loaded track and otherwise
-            // make an entire AI service pick the adjacent line or lose stops.
-            return TrackTraveller.InitializeTraveller(node.Location.SetElevation(0))?.TrackNodeIndex
+            // Open Rails matches PAT nodes in X/Z with a 2.5 m centre-line
+            // capture range. Keep that compatibility separate from stricter
+            // runtime snapping used for live train geometry.
+            return TrackTraveller.InitializePathTraveller(node.Location)?.TrackNodeIndex
                 ?? throw new InvalidDataException($"{node.Location} could not be found in the track database.");
         }
 

@@ -4387,8 +4387,27 @@ namespace Orts.Simulation.Physics
                 TrackCircuitSection section = ValidRoutes[Direction.Forward][routeListIndex[0]].TrackCircuitSection;
                 if (!section.CircuitState.OccupiedByThisTrain(RoutedForward))
                 {
+                    bool occupiedByOtherTrain = section.CircuitState.OccupiedByOtherTrains(RoutedForward);
+                    if (occupiedByOtherTrain)
+                    {
+                        string occupants = string.Join(", ", section.CircuitState.TrainsOccupying()
+                            .Where(item => item?.Train != null && item.Train != this)
+                            .Select(item => $"{item.Train.Number}:{item.Train.Name}:speed={item.Train.SpeedMpS:F1}:control={item.Train.ControlMode}"));
+                        Signal nextSignal = NextSignalObjects[Direction.Forward];
+                        Trace.TraceError($"Unsafe occupied-block entry: train {Number} ({Name}) speed={SpeedMpS:F1} " +
+                            $"entering section {section.Index} ({section.CircuitType}) routeIndex={routeListIndex[0]} " +
+                            $"from={PreviousPosition[Direction.Forward].TrackCircuitSectionIndex} " +
+                            $"to={PresentPosition[Direction.Forward].TrackCircuitSectionIndex} " +
+                            $"dir={ValidRoutes[Direction.Forward][routeListIndex[0]].Direction}, " +
+                            $"reserved={(section.CircuitState.TrainReserved?.Train?.Number.ToString() ?? "none")}, " +
+                            $"signalReserved={section.CircuitState.SignalReserved}, " +
+                            $"nextSignal={(nextSignal?.Index.ToString() ?? "none")}, " +
+                            $"nextAspect={(nextSignal == null ? "none" : GetNextSignalAspect(Direction.Forward).ToString())}, " +
+                            $"authority={EndAuthorities[Direction.Forward].EndAuthorityType}, occupants=[{occupants}]");
+                    }
+
                     section.SetOccupied(RoutedForward, routeListIndex[1]);
-                    if (!simulator.TimetableMode && section.CircuitState.OccupiedByOtherTrains(RoutedForward))
+                    if (!simulator.TimetableMode && occupiedByOtherTrain)
                     {
                         SwitchToNodeControl(section.Index);
                         EndAuthorities[Direction.Forward].EndAuthorityType = EndAuthorityType.TrainAhead;

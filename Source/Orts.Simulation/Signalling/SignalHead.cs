@@ -560,7 +560,7 @@ namespace Orts.Simulation.Signalling
             else
             {
                 SignalIndicationState = SignalType?.GetLeastRestrictiveAspect() ?? SignalAspectState.Clear2;
-                DefaultDrawState(SignalIndicationState);
+                DrawState = DefaultDrawState(SignalIndicationState);
             }
         }
 

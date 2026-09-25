@@ -550,6 +550,21 @@ namespace Orts.Simulation.Track
 
                 if (validPosition)
                 {
+                    if (CircuitState.TrainReserved != null && CircuitState.TrainReserved.Train != train.Train)
+                    {
+                        Trace.TraceError($"Unsafe reservation overwrite: section {Index} ({CircuitType}) " +
+                            $"was reserved by train {CircuitState.TrainReserved.Train.Number} ({CircuitState.TrainReserved.Train.Name}), " +
+                            $"now requested by {train.Train.Number} ({train.Train.Name}); " +
+                            $"request direction={train.Direction}, routeCount={route.Count}");
+                    }
+                    if (CircuitState.OccupiedByOtherTrains(train))
+                    {
+                        string occupants = string.Join(", ", CircuitState.TrainsOccupying()
+                            .Where(item => item?.Train != null && item.Train != train.Train)
+                            .Select(item => $"{item.Train.Number}:{item.Train.Name}:speed={item.Train.SpeedMpS:F1}:control={item.Train.ControlMode}"));
+                        Trace.TraceError($"Unsafe reservation of occupied section: train {train.Train.Number} ({train.Train.Name}) " +
+                            $"requests section {Index} ({CircuitType}), direction={train.Direction}, occupants=[{occupants}]");
+                    }
                     CircuitState.TrainReserved = train;
                 }
 
