@@ -41,7 +41,7 @@ namespace Orts.ActivityRunner.Viewer3D
     {
         public const float MinIntensityPPSPM2 = 0;
         // Default 32 bit version.
-        public const float MaxIntensityPPSPM2 = 0.035f;
+        public const float MaxIntensityPPSPM2 = 0.015f;
         private readonly Viewer viewer;
         private readonly WeatherControl weatherControl;
         private readonly Weather weather;
@@ -178,21 +178,24 @@ namespace Orts.ActivityRunner.Viewer3D
         // IndexBuffer for 32bit process.
         private static IndexBuffer InitIndexBuffer(GraphicsDevice graphicsDevice, int numIndicies)
         {
-            var indices = new uint[numIndicies];
+            Debug.Assert(MaxParticles * VerticiesPerParticle < ushort.MaxValue,
+                "The maximum number of precipitation vertices must fit in a 16-bit index buffer.");
+
+            var indices = new ushort[numIndicies];
             var index = 0;
             for (var i = 0; i < numIndicies; i += IndiciesPerParticle)
             {
-                indices[i] = (uint)index;
-                indices[i + 1] = (uint)(index + 1);
-                indices[i + 2] = (uint)(index + 2);
+                indices[i] = (ushort)index;
+                indices[i + 1] = (ushort)(index + 1);
+                indices[i + 2] = (ushort)(index + 2);
 
-                indices[i + 3] = (uint)(index + 2);
-                indices[i + 4] = (uint)(index + 3);
-                indices[i + 5] = (uint)(index);
+                indices[i + 3] = (ushort)(index + 2);
+                indices[i + 4] = (ushort)(index + 3);
+                indices[i + 5] = (ushort)index;
 
                 index += VerticiesPerParticle;
             }
-            var indexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, numIndicies, BufferUsage.WriteOnly);
+            var indexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.SixteenBits, numIndicies, BufferUsage.WriteOnly);
             indexBuffer.SetData(indices);
             return indexBuffer;
         }
