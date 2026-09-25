@@ -446,10 +446,28 @@ namespace Orts.Simulation.Signalling
                 MergeHeads(signalWorldList, signalHeadList);
 
                 Signals.RemoveAll(item => item == null);
-                //re-index the elements
+                // Re-index the elements after merging multi-head signals.
                 for (int i = 0; i < Signals.Count; i++)
                 {
                     Signals[i].ResetIndex(i);
+                }
+
+                // ScanSection populated TrackItemSignalIndex before MergeHeads().
+                // MergeHeads removes Signal objects and compacts/re-indexes the Signals
+                // list, so every track-item -> signal index after the removed item can
+                // otherwise point at the wrong signal. CreateTrackCircuits consumes this
+                // map immediately afterwards, making the stale indices affect actual
+                // signalling, train authority and AI routing (not just rendering).
+                //
+                // Keep non-signal entries (mileposts) intact and rebuild every signal/
+                // speedpost head from the final compacted Signals list.
+                foreach (Signal signal in Signals)
+                {
+                    foreach (SignalHead head in signal.SignalHeads)
+                    {
+                        if (head.TDBIndex >= 0)
+                            TrackItemSignalIndex[head.TDBIndex] = signal.Index;
+                    }
                 }
             }
             else
