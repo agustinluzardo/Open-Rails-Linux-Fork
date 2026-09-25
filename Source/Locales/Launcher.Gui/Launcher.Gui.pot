@@ -771,3 +771,9 @@ msgstr ""
 
 msgid "Could not start the simulator"
 msgstr ""
+
+msgid "Explore in Activity Mode"
+msgstr ""
+
+msgid "Use Open Rails activity-style exploration. Normal Explore is recommended for most routes."
+msgstr ""
