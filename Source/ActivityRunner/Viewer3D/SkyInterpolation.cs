@@ -29,7 +29,13 @@ namespace Orts.ActivityRunner.Viewer3D
         public int Step1 { get; set; }
         public int Step2 { get; set; }
 
-        private static float DaylightOffsetS; //=> (Program.DebugViewer == null) ? 0f : (float)Program.DebugViewer.DaylightOffsetHrs * 60 * 60;
+        /// <summary>
+        /// Debug-only offset applied to the apparent position of the sun and moon without changing
+        /// simulator clock time. Open Rails exposes this as Alt+Shift+-/+ for inspecting night runs.
+        /// </summary>
+        public int DaylightOffsetHours { get; set; }
+
+        private float DaylightOffsetS => DaylightOffsetHours * 60f * 60f;
 
         internal (Vector3 solarDirection, Vector3 lunarDirection) SetSunAndMoonDirection(Vector3[] solarPosArray, Vector3[] lunarPosArray, double clockTime)
         {
