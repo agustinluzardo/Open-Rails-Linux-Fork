@@ -40,11 +40,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Calc;
+using FreeTrainSimulator.Common.Native;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Models;
