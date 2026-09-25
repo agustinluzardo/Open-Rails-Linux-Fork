@@ -17,6 +17,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Models.Settings;
@@ -99,7 +100,7 @@ namespace Tests.FreeTrainSimulator.Launcher
             {
                 CollectionAssert.AreEqual(
                     new[] { "-SinglePlayerResumeTimetableGame", Path.GetFullPath(save) },
-                    Selections.SavedGameArguments(save, "-SinglePlayerResumeTimetableGame"));
+                    Selections.SavedGameArguments(save, "-SinglePlayerResumeTimetableGame").ToArray());
             }
             finally
             {
