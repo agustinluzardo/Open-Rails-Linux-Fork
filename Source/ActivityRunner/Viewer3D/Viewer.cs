@@ -495,6 +495,10 @@ namespace Orts.ActivityRunner.Viewer3D
             {
                 return new CarOperationsWindow(windowManager, this);
             }));
+            windowManager.SetLazyWindows(ViewerWindowType.TrainForcesWindow, new Lazy<FormBase>(() =>
+            {
+                return new TrainForcesWindow(windowManager, UserSettings.PopupLocations[ViewerWindowType.TrainForcesWindow].ToPoint());
+            }));
             windowManager.SetLazyWindows(ViewerWindowType.TrackMonitorWindow, new Lazy<FormBase>(() =>
             {
                 return new TrackMonitorWindow(windowManager, UserSettings.PopupLocations[ViewerWindowType.TrackMonitorWindow].ToPoint());
@@ -648,6 +652,10 @@ namespace Orts.ActivityRunner.Viewer3D
             UserCommandController.AddEvent(UserCommand.DisplayTrainOperationsWindow, KeyEventType.KeyPressed, (UserCommandArgs userCommandArgs) =>
             {
                 windowManager[ViewerWindowType.TrainOperationsWindow].ToggleVisibility();
+            });
+            UserCommandController.AddEvent(UserCommand.DisplayTrainForcesWindow, KeyEventType.KeyPressed, () =>
+            {
+                windowManager[ViewerWindowType.TrainForcesWindow].ToggleVisibility();
             });
             UserCommandController.AddEvent(UserCommand.DisplayDistributedPowerWindow, KeyEventType.KeyPressed, (UserCommandArgs userCommandArgs) =>
             {

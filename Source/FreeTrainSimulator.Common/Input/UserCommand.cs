@@ -257,6 +257,7 @@ namespace FreeTrainSimulator.Common.Input
         [Description("Display Train Car Operations Window")] DisplayTrainCarOperationsWindow,
         [Description("Debug Daylight Offset Increase")] DebugDaylightOffsetIncrease,
         [Description("Debug Daylight Offset Decrease")] DebugDaylightOffsetDecrease,
+        [Description("Display Train Forces Window")] DisplayTrainForcesWindow,
     }
 
     /// <summary>

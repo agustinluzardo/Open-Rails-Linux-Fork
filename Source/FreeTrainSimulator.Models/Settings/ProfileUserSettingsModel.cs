@@ -100,6 +100,7 @@ namespace FreeTrainSimulator.Models.Settings
             ViewerWindowType.CarIdentifierOverlay => (0, 0),
             ViewerWindowType.LocationsOverlay => (0, 0),
             ViewerWindowType.TrackItemOverlay => (0, 0),
+            ViewerWindowType.TrainForcesWindow => (25, 45),
             _ => throw new System.NotImplementedException(),
         });
 
@@ -127,6 +128,7 @@ namespace FreeTrainSimulator.Models.Settings
             ViewerWindowType.CarIdentifierOverlay => false,
             ViewerWindowType.LocationsOverlay => false,
             ViewerWindowType.TrackItemOverlay => false,
+            ViewerWindowType.TrainForcesWindow => false,
             _ => throw new System.NotImplementedException(),
 
         });
