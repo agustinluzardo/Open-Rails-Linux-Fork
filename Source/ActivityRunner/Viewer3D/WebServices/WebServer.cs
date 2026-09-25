@@ -45,6 +45,7 @@ using Orts.ActivityRunner.Viewer3D.RollingStock;
 using FreeTrainSimulator.Runtime;
 using Orts.Simulation;
 using Orts.Simulation.Commanding;
+using Orts.Simulation.Physics;
 using Orts.Simulation.RollingStocks;
 using Orts.Simulation.RollingStocks.SubSystems.Brakes.MSTS;
 using Orts.Simulation.RollingStocks.SubSystems.PowerSupplies;
