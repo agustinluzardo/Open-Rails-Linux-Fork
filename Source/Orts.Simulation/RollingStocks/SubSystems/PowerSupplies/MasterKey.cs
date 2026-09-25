@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -195,6 +196,11 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
                 }
                 else if ((!On || !Locomotive.LocomotivePowerSupply.LowVoltagePowerSupplyOn) && Locomotive.Headlight > HeadLightState.HeadlightOff)
                 {
+                    if (Locomotive == Simulator.Instance.PlayerLocomotive)
+                        Trace.TraceWarning($"Master key switched off player headlights: key={On}, " +
+                            $"low voltage={Locomotive.LocomotivePowerSupply.LowVoltagePowerSupplyOn}, " +
+                            $"battery={Locomotive.LocomotivePowerSupply.BatterySwitch.On}, " +
+                            $"previous state={Locomotive.Headlight}");
                     Locomotive.Headlight = HeadLightState.HeadlightOff;
                 }
             }

@@ -222,6 +222,10 @@ namespace Orts.ActivityRunner.Viewer3D
 
             // Headlight
 			HeadLightState newTrainHeadlight = locomotive != null ? locomotive.Headlight : Car.Train != null && Car.Train.TrainType != TrainType.Static ? HeadLightState.HeadlightOn : HeadLightState.HeadlightOff;
+            if (Car == Viewer.PlayerLocomotive && TrainHeadlight != newTrainHeadlight)
+                Trace.TraceInformation($"Player headlight visual state: {TrainHeadlight} -> {newTrainHeadlight}, " +
+                    $"battery={((Car as MSTSWagon)?.PowerSupply?.BatteryState)}, " +
+                    $"train={Car.Train?.Number}");
             // Units
 			var locomotiveFlipped = locomotive != null && locomotive.Flipped;
 			var locomotiveReverseCab = mstsLocomotive != null && mstsLocomotive.UsingRearCab;

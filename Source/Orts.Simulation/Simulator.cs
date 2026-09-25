@@ -618,6 +618,8 @@ namespace Orts.Simulation
             if (playerTrain != null)
             {
                 bool validPosition = playerTrain.PostInit();  // place player train after pre-running of AI trains
+                if (!validPosition)
+                    validPosition = ResolveActivityStartDuplicates(playerTrain);
                 TraceActivityPlayerPlacement(playerTrain, validPosition);
                 if (validPosition)
                     PreUpdate = false;
@@ -630,6 +632,35 @@ namespace Orts.Simulation
                     playerTrain.InitializeBrakes();
             }
             return (playerTrain);
+        }
+
+        // A traffic service can start on precisely the same path point as the
+        // activity's player service. During prerun it may still be there at the
+        // activity start, while the player is not yet registered on the track.
+        // Give the player its specified start only for this exact duplicate;
+        // nearby or approaching traffic is left alone.
+        private bool ResolveActivityStartDuplicates(AITrain playerTrain)
+        {
+            List<AITrain> duplicates = Trains.OfType<AITrain>()
+                .Where(train => train != playerTrain && train.TrainType == TrainType.Ai
+                    && train.RearTrackTraveller.TrackNodeIndex == playerTrain.RearTrackTraveller.TrackNodeIndex
+                    && train.RearTrackTraveller.Direction == playerTrain.RearTrackTraveller.Direction
+                    && WorldLocation.GetDistanceSquared(playerTrain.RearLocation, train.RearLocation) < 0.25)
+                .ToList();
+
+            if (duplicates.Count == 0)
+                return false;
+
+            foreach (AITrain duplicate in duplicates)
+            {
+                Trace.TraceWarning($"Removing overlapping activity traffic train {duplicate.Number} ({duplicate.Name}) " +
+                    $"at the player's exact starting position {playerTrain.RearLocation}");
+                duplicate.RemoveTrain();
+            }
+
+            AI.BeforeSnapshot();
+            SignalEnvironment.Update(true);
+            return playerTrain.PostInit();
         }
 
         // The activity player is built before static consists and AI prerunning,
