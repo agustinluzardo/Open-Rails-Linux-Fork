@@ -491,6 +491,10 @@ namespace Orts.ActivityRunner.Viewer3D
             {
                 return new TrainOperationsWindow(windowManager, UserSettings.PopupLocations[ViewerWindowType.TrainOperationsWindow].ToPoint(), this);
             }));
+            windowManager.SetLazyWindows(ViewerWindowType.TrainCarOperationsWindow, new Lazy<FormBase>(() =>
+            {
+                return new TrainCarOperationsWindow(windowManager, UserSettings.PopupLocations[ViewerWindowType.TrainCarOperationsWindow].ToPoint());
+            }));
             windowManager.SetLazyWindows(ViewerWindowType.CarOperationsWindow, new Lazy<FormBase>(() =>
             {
                 return new CarOperationsWindow(windowManager, this);
@@ -648,10 +652,7 @@ namespace Orts.ActivityRunner.Viewer3D
             });
             UserCommandController.AddEvent(UserCommand.DisplayTrainCarOperationsWindow, KeyEventType.KeyPressed, (UserCommandArgs userCommandArgs) =>
             {
-                // Riel's train-operations window already exposes every car and opens the
-                // per-car controls on click. Use it for the Open Rails F9 command until the
-                // newer sprite-based TrainCarOperationsWindow is ported as a separate view.
-                windowManager[ViewerWindowType.TrainOperationsWindow].ToggleVisibility();
+                windowManager[ViewerWindowType.TrainCarOperationsWindow].ToggleVisibility();
             });
             UserCommandController.AddEvent(UserCommand.DisplayTrainOperationsWindow, KeyEventType.KeyPressed, (UserCommandArgs userCommandArgs) =>
             {
