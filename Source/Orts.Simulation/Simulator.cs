@@ -1484,7 +1484,10 @@ namespace Orts.Simulation
                         _ => TrackDirection.Ahead,      // forward ( confirmed on L&PS route )
                     };
                     // FIXME: Where are TSectionDat and TDB from?
-                    TrackTraveller rearTraveller = TrackTraveller.InitializeTraveller(activityObject.Location, consistDirection)
+                    // Open Rails locates static activity consists using X/Z.
+                    // Their ACT elevation is not authoritative for picking a
+                    // track, especially near elevated parallel lines.
+                    TrackTraveller rearTraveller = TrackTraveller.InitializeTraveller(activityObject.Location.SetElevation(0), consistDirection)
                         ?? throw new InvalidDataException($"{activityObject.Location} could not be found in the track database.");
                     train.RearTrackTraveller = rearTraveller;
                     // add wagons in reverse order - ie first wagon is at back of train
