@@ -5372,6 +5372,42 @@ namespace Orts.Simulation.Physics
             // perform node update - forward only
 
             Simulator.Instance.SignalEnvironment.RequestClearNode(RoutedForward, ValidRoutes[Direction.Forward]);
+
+            // Legacy MSTS routes may contain signal topology which is usable through
+            // the train route but is not attached to TrackCircuitSection.EndSignals.
+            // Open Rails normally changes from node to signal control when RequestClearNode
+            // reaches EndSignals. If that link is missing, recover the transition only
+            // after the route has actually been reserved through the next normal signal.
+            if (ControlMode == TrainControlMode.AutoNode && NextSignalObjects[Direction.Forward] != null)
+            {
+                Signal nextSignal = NextSignalObjects[Direction.Forward];
+                int presentRouteIndex = PresentPosition[Direction.Forward].RouteListIndex;
+                int reservedRouteIndex = ValidRoutes[Direction.Forward].GetRouteIndex(
+                    EndAuthorities[Direction.Forward].LastReservedSection, presentRouteIndex);
+                int signalRouteIndex = ValidRoutes[Direction.Forward].GetRouteIndex(
+                    nextSignal.TrackCircuitIndex, presentRouteIndex);
+
+                bool routeClearedToSignal = signalRouteIndex >= 0 && reservedRouteIndex >= signalRouteIndex;
+
+                // Some legacy signals are represented at a section boundary and only their
+                // next track circuit survives the topology conversion. In that case require
+                // that the reservation has reached that next section before recovering.
+                if (!routeClearedToSignal && nextSignal.TrackCircuitNextIndex > 0)
+                {
+                    int nextSignalRouteIndex = ValidRoutes[Direction.Forward].GetRouteIndex(
+                        nextSignal.TrackCircuitNextIndex, presentRouteIndex);
+                    routeClearedToSignal = nextSignalRouteIndex >= 0 && reservedRouteIndex >= nextSignalRouteIndex;
+                }
+
+                if (routeClearedToSignal &&
+                    (nextSignal.EnabledTrain == null || nextSignal.EnabledTrain == RoutedForward))
+                {
+                    Trace.TraceInformation(
+                        "[SignalCompat] Train {0} entering signal control for signal {1}; EndSignals linkage was not used (reserved route index {2}).",
+                        Number, nextSignal.Index, reservedRouteIndex);
+                    SwitchToSignalControl(nextSignal);
+                }
+            }
         }
 
         /// <summary>
