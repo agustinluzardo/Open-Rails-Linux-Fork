@@ -178,7 +178,7 @@ namespace Orts.ActivityRunner.Viewer3D
         // IndexBuffer for 32bit process.
         private static IndexBuffer InitIndexBuffer(GraphicsDevice graphicsDevice, int numIndicies)
         {
-            Debug.Assert(MaxParticles * VerticiesPerParticle < ushort.MaxValue,
+            Debug.Assert((numIndicies / IndiciesPerParticle) * VerticiesPerParticle < ushort.MaxValue,
                 "The maximum number of precipitation vertices must fit in a 16-bit index buffer.");
 
             var indices = new ushort[numIndicies];
