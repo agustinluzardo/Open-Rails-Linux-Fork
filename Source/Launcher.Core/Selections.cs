@@ -246,7 +246,9 @@ namespace Riel.Launcher
 
         public static IReadOnlyList<string> SavedGameArguments(string save, string action)
         {
-            if (action != "-SingleplayerResume" && action != "-SingleplayerReplay" &&
+            if (action != "-SingleplayerResume" &&
+                action != "-SinglePlayerResumeTimetableGame" &&
+                action != "-SingleplayerReplay" &&
                 action != "-SingleplayerReplayFromSave")
                 throw new LauncherException("unsupported saved game action");
             string fullPath = ResumeArguments(save)[1];
