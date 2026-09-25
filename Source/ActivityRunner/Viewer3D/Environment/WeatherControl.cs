@@ -251,7 +251,7 @@ namespace Orts.ActivityRunner.Viewer3D.Environment
                         return;
                     this.viewer.World.Sky.DaylightOffsetHours++;
                     this.viewer.Simulator.Confirmer.Message(ConfirmLevel.None,
-                        this.viewer.Catalog.GetString($"Increased daylight offset to {this.viewer.World.Sky.DaylightOffsetHours:+0;-0;0} h"));
+                        Viewer.Catalog.GetString($"Increased daylight offset to {this.viewer.World.Sky.DaylightOffsetHours:+0;-0;0} h"));
                 });
                 viewer.UserCommandController.AddEvent(UserCommand.DebugDaylightOffsetDecrease, KeyEventType.KeyPressed, () =>
                 {
@@ -259,7 +259,7 @@ namespace Orts.ActivityRunner.Viewer3D.Environment
                         return;
                     this.viewer.World.Sky.DaylightOffsetHours--;
                     this.viewer.Simulator.Confirmer.Message(ConfirmLevel.None,
-                        this.viewer.Catalog.GetString($"Decreased daylight offset to {this.viewer.World.Sky.DaylightOffsetHours:+0;-0;0} h"));
+                        Viewer.Catalog.GetString($"Decreased daylight offset to {this.viewer.World.Sky.DaylightOffsetHours:+0;-0;0} h"));
                 });
             }
 
