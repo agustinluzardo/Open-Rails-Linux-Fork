@@ -97,6 +97,7 @@ namespace Riel.Launcher.Gui
             ConsistList.SelectionChanged += (_, _) => UpdateButtons();
             ConsistList.DoubleTapped += (_, _) => Guarded(Play);
             PathBox.SelectionChanged += (_, _) => UpdateButtons();
+            ExploreActivityModeBox.IsCheckedChanged += (_, _) => UpdateButtons();
             ModeTabs.SelectionChanged += (_, _) => UpdateButtons();
             TimetableBox.SelectionChanged += (_, _) => TimetableChanged();
             TimetableTrainList.SelectionChanged += (_, _) => UpdateButtons();
@@ -461,6 +462,7 @@ namespace Riel.Launcher.Gui
                 TimeBox.Text = saved.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture);
                 SelectChoice(SeasonBox, saved.Season);
                 SelectChoice(WeatherBox, saved.Weather);
+                ExploreActivityModeBox.IsChecked = saved.ActivityType == ActivityType.ExploreActivity;
             }
             else
             {
@@ -514,7 +516,8 @@ namespace Riel.Launcher.Gui
 
             SeasonType season = (SeasonBox.SelectedItem as Choice<SeasonType>)?.Value ?? SeasonType.Summer;
             WeatherType weather = (WeatherBox.SelectedItem as Choice<WeatherType>)?.Value ?? WeatherType.Clear;
-            return (Selections.Explore(route.Folder, route.Route, path.Path, consist.Consist, time, season, weather),
+            bool activityMode = ExploreActivityModeBox.IsChecked == true;
+            return (Selections.Explore(route.Folder, route.Route, path.Path, consist.Consist, time, season, weather, activityMode),
                 $"{route.Name} — {consist.Name}", null);
         }
 
