@@ -979,18 +979,22 @@ namespace FreeTrainSimulator.Runtime.Track
 
                 if (world.SectionGeometry.TryGetValue(section, out SectionGeometry geom) && geom.HasGeometry && sectionLength > 0)
                 {
-                    (_, double offset) = SnapToSection(location, section, geom);
+                    (WorldLocation snapped, double offset) = SnapToSection(location, section, geom);
 
-                    // SnapToSection clamps the offset to [0, sectionLength]. An offset at a
-                    // boundary means the target projects outside this section, so we only
-                    // accept genuinely interior projections.
-                    const double epsilon = 1e-4;
-                    if (offset > epsilon && offset < sectionLength - epsilon)
+                    // Path nodes frequently lie exactly on vector-section boundaries (especially
+                    // around terminal tracks and junctions). Rejecting offsets 0/Length makes
+                    // direction detection fail and fall back to an arbitrary Ahead direction.
+                    // Instead, validate the geometric snap distance and accept boundary points.
+                    double distanceSquared = location.Location.Y == 0
+                        ? WorldLocation.GetDistanceSquared2D(location, snapped)
+                        : WorldLocation.GetDistanceSquared(location, snapped);
+                    double toleranceSquared = WorldLocation.ProximityTolerance * WorldLocation.ProximityTolerance;
+                    if (distanceSquared <= toleranceSquared)
                     {
                         bool targetAhead = forward ? offset >= entryOffset : offset <= entryOffset;
                         if (targetAhead)
                             return (float)(accumulated + Math.Abs(offset - entryOffset));
-                        // Target projects onto this section but behind our entry point.
+                        // Target is on this section but behind our entry point in this direction.
                         return null;
                     }
                 }
