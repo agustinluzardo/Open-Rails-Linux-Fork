@@ -252,7 +252,8 @@ namespace Riel.Launcher
                 action != "-SingleplayerReplayFromSave")
                 throw new LauncherException("unsupported saved game action");
             string fullPath = ResumeArguments(save)[1];
-            if (action != "-SingleplayerResume" && !File.Exists(Path.ChangeExtension(fullPath, ".replay")))
+            bool replayAction = action is "-SingleplayerReplay" or "-SingleplayerReplayFromSave";
+            if (replayAction && !File.Exists(Path.ChangeExtension(fullPath, ".replay")))
                 throw new LauncherException("the selected saved game has no replay log");
             return new[] { action, fullPath };
         }
