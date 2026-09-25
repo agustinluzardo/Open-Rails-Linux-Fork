@@ -72,6 +72,28 @@ namespace Tests.FreeTrainSimulator.Launcher
         }
 
         [TestMethod]
+        public void ExploreFactoryCanExplicitlyUseActivityMode()
+        {
+            // Build only the selection fields that Arguments() needs; this verifies the
+            // launcher can opt in to Open Rails' separate ExploreActivity mode.
+            ProfileSelectionsModel explore = new ProfileSelectionsModel
+            {
+                GamePlayAction = GamePlayAction.SingleplayerNewGame,
+                ActivityType = ActivityType.ExploreActivity,
+                FolderName = "MSTS",
+                RouteId = "EUROPE1",
+                PathId = "Innsbruck-Bludenz",
+                WagonSetId = "freight 1",
+                StartTime = new TimeOnly(8, 5),
+                Season = SeasonType.Autumn,
+                Weather = WeatherType.Rain,
+            };
+            CollectionAssert.AreEqual(
+                new[] { "-SingleplayerNewGame", "-ExploreActivity", "MSTS", "EUROPE1", "Innsbruck-Bludenz", "freight 1", "08:05", "Autumn", "Rain" },
+                Selections.Arguments(explore));
+        }
+
+        [TestMethod]
         public void LegacyExploreActivityStillUsesItsExplicitMode()
         {
             ProfileSelectionsModel explore = new ProfileSelectionsModel
