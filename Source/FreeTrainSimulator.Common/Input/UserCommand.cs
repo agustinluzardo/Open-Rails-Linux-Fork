@@ -254,6 +254,9 @@ namespace FreeTrainSimulator.Common.Input
         [Description("Control Brake Overcharge")] ControlBrakeOvercharge,
         [Description("Control Odometer Show/Hide")] ControlOdoMeterShowHide,
         [Description("Camera Change 3D Cab Viewpoint")] CameraChange3DCabViewPoint,
+        [Description("Display Train Car Operations Window")] DisplayTrainCarOperationsWindow,
+        [Description("Debug Daylight Offset Increase")] DebugDaylightOffsetIncrease,
+        [Description("Debug Daylight Offset Decrease")] DebugDaylightOffsetDecrease,
     }
 
     /// <summary>
