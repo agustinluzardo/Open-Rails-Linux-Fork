@@ -28,6 +28,7 @@
               <MenuItem x:Name="ManualButton" Header="{l:T 'Manual'}" />
               <MenuItem x:Name="TestButton" Header="{l:T 'Test activities'}" />
               <MenuItem x:Name="DoctorButton" Header="{l:T 'Check this computer'}" />
+              <MenuItem x:Name="UpdateButton" Header="{l:T 'Check for updates'}" />
             </MenuItem>
           </Menu>
           <Button x:Name="SettingsButton" Content="{l:T 'Settings'}" />

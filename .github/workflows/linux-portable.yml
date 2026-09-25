@@ -10,6 +10,8 @@ on:
 jobs:
   linux-x64:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,9 +66,22 @@ jobs:
           "$bundle/riel" content add Test "${RUNNER_TEMP}/riel-test-content/Train Simulator"
           "$bundle/riel" content list | grep -F Test
           tar -czf "${RUNNER_TEMP}/riel-linux-x64.tar.gz" -C "${RUNNER_TEMP}" riel-linux-x64
+          (cd "${RUNNER_TEMP}" && zip -qr riel-linux-x64.zip riel-linux-x64)
+          (cd "${RUNNER_TEMP}" && sha256sum riel-linux-x64.zip > riel-linux-x64.zip.sha256)
           du -h "${RUNNER_TEMP}/riel-linux-x64.tar.gz"
       - uses: actions/upload-artifact@v4
         with:
           name: riel-linux-x64
           path: ${{ runner.temp }}/riel-linux-x64.tar.gz
           if-no-files-found: error
+      - name: Publish tested main build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "main-${GITHUB_SHA:0:12}" \
+            "${RUNNER_TEMP}/riel-linux-x64.zip" \
+            "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
+            --prerelease --latest=false --title "Riel main ${GITHUB_SHA:0:12}" \
+            --notes "Portable Linux build of ${GITHUB_SHA}. Includes .NET runtime."

@@ -2,7 +2,33 @@
 # Run Riel from an extracted portable archive, without a system .NET installation.
 set -eu
 
-app_dir=$(CDPATH= cd -- "$(dirname -- "$0")/app" && pwd -P)
+bundle_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+app_dir="$bundle_dir/app"
+
+if [ "${1:-}" = "update" ]; then
+    shift
+    "$app_dir/riel" update "$@"
+    if [ "${1:-}" = "--check" ] || [ ! -f "$bundle_dir/.riel-update-stage/riel-linux-x64/app/riel" ]; then
+        exit 0
+    fi
+    previous="$bundle_dir/.riel-previous"
+    stage="$bundle_dir/.riel-update-stage"
+    rm -rf -- "$previous"
+    mv -- "$app_dir" "$previous"
+    if mv -- "$stage/riel-linux-x64/app" "$app_dir"; then
+        # The wrapper stays outside app so this process can finish the swap.
+        cp -- "$stage/riel-linux-x64/riel" "$bundle_dir/.riel-wrapper-next"
+        chmod 755 -- "$bundle_dir/.riel-wrapper-next"
+        mv -- "$bundle_dir/.riel-wrapper-next" "$bundle_dir/riel"
+        rm -rf -- "$stage" "$previous"
+        echo 'Riel updated. Run ./riel gui to start the new version.'
+    else
+        mv -- "$previous" "$app_dir"
+        echo 'Update failed; the previous version was restored.' >&2
+        exit 1
+    fi
+    exit 0
+fi
 
 if [ "${RIEL_VULKAN:-0}" = "1" ]; then
     export MESA_LOADER_DRIVER_OVERRIDE=zink

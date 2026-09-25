@@ -89,6 +89,7 @@ namespace Riel.Launcher
                 "resume" => Commands.Resume(),
                 "run" => Commands.RunRaw(arguments),
                 "doctor" => await Commands.Doctor(cancellationToken).ConfigureAwait(false),
+                "update" => await Updates.Run(arguments.Contains("--check"), cancellationToken).ConfigureAwait(false),
                 "version" or "--version" or "-v" => Commands.Version(),
                 "help" or "--help" or "-h" => Usage(0),
                 _ => UnknownCommand(command),
@@ -126,6 +127,7 @@ namespace Riel.Launcher
   riel run -- <arguments>            start the simulator with raw arguments
 
   riel doctor                        check that this machine can run the simulator
+  riel update [--check]              install or check the newest tested main build
   riel version                       print the version
 
 Routes, activities, paths and consists are matched on their name, case

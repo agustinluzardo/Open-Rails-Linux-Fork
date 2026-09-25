@@ -18,7 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -116,6 +118,7 @@ namespace Riel.Launcher.Gui
             AddFirstFolderButton.Click += (_, _) => Guarded(() => ManageContent(browseFirst: true));
             UseDetectedButton.Click += (_, _) => Guarded(AddDetected);
             DoctorButton.Click += (_, _) => Guarded(() => new DiagnosticsWindow().ShowDialog(this));
+            UpdateButton.Click += (_, _) => Guarded(() => CheckForUpdates(manual: true));
             SettingsButton.Click += (_, _) => Guarded(ShowSettings);
             ProblemsButton.Click += (_, _) => Guarded(() => Dialogs.Problems(this, problems));
 
@@ -124,6 +127,7 @@ namespace Riel.Launcher.Gui
                 await Reload(restoreSelections: true);
                 if (Program.StartupReportPath != null)
                     await ShowCompletedRun(LaunchSession.ReadReport(Program.StartupReportPath));
+                await CheckForUpdates(manual: false);
             });
             Closed += (_, _) => closing.Cancel();
 
@@ -138,6 +142,67 @@ namespace Riel.Launcher.Gui
             ProfileModel profile = await ((ProfileModel)null).Current(closing.Token);
             SettingsWindow window = new SettingsWindow(profile);
             await window.ShowDialog(this);
+        }
+
+        private async Task CheckForUpdates(bool manual)
+        {
+            string bundle = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, ".."));
+            string cli = Path.Combine(bundle, "app", "riel");
+            string wrapper = Path.Combine(bundle, "riel");
+            if (!File.Exists(cli) || !File.Exists(wrapper))
+            {
+                if (manual)
+                    await Dialogs.Message(this, T("Updates"), T("Updates require the extracted portable package."));
+                return;
+            }
+            try
+            {
+                using Process check = Process.Start(new ProcessStartInfo(cli, "update --check")
+                {
+                    UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true,
+                    WorkingDirectory = bundle,
+                });
+                Task<string> output = check.StandardOutput.ReadToEndAsync(closing.Token);
+                Task<string> errors = check.StandardError.ReadToEndAsync(closing.Token);
+                await check.WaitForExitAsync(closing.Token);
+                string message = (await output).Trim();
+                if (check.ExitCode == 0)
+                {
+                    if (manual)
+                        await Dialogs.Message(this, T("Updates"), T("Riel is up to date."));
+                    return;
+                }
+                if (check.ExitCode != 10)
+                    throw new LauncherException((await errors).Trim());
+
+                if (!await Dialogs.Confirm(this, T("Riel update"), message,
+                    T("Update now"), T("Later")))
+                    return;
+
+                using (Busy(T("Downloading and installing Riel update…")))
+                {
+                    using Process update = Process.Start(new ProcessStartInfo(wrapper, "update")
+                    {
+                        UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true,
+                        WorkingDirectory = bundle,
+                    });
+                    Task<string> updateOutput = update.StandardOutput.ReadToEndAsync(closing.Token);
+                    Task<string> updateErrors = update.StandardError.ReadToEndAsync(closing.Token);
+                    await update.WaitForExitAsync(closing.Token);
+                    if (update.ExitCode != 0)
+                        throw new LauncherException((await updateErrors).Trim());
+                    _ = await updateOutput;
+                }
+                Process.Start(new ProcessStartInfo(wrapper, "gui")
+                {
+                    UseShellExecute = false, WorkingDirectory = bundle,
+                });
+                Close();
+            }
+            catch (Exception) when (!manual && !closing.IsCancellationRequested)
+            {
+                // Network failure on launch is nonfatal. The menu item lets the user retry.
+            }
         }
 
         private async Task ShowTesting()
