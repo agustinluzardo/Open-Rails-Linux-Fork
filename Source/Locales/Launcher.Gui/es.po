@@ -774,3 +774,9 @@ msgstr "Cerrar el lanzador mientras jugás y volver a abrirlo al salir"
 
 msgid "Could not start the simulator"
 msgstr "No se pudo iniciar el simulador"
+
+msgid "Explore in Activity Mode"
+msgstr "Explorar en modo actividad"
+
+msgid "Use Open Rails activity-style exploration. Normal Explore is recommended for most routes."
+msgstr "Usa la exploración al estilo actividad de Open Rails. Para la mayoría de las rutas se recomienda Explorar normal."
