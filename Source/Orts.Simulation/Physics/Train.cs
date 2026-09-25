@@ -9025,6 +9025,7 @@ namespace Orts.Simulation.Physics
                             routeIndex = -1;
                             // jump next subpath, because station stop can't be there
                             activeSubroute++;
+                            activeSubrouteNodeIndex = 0;
                         }
                     }
                 }
@@ -9072,6 +9073,7 @@ namespace Orts.Simulation.Physics
                 else
                 {
                     activeSubrouteNodeIndex = routeIndex;
+                    beginActiveSubroute = activeSubroute;
                 }
 
                 // determine end stop position depending on direction
