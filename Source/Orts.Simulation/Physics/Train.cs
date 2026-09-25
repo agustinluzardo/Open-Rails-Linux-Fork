@@ -8978,7 +8978,8 @@ namespace Orts.Simulation.Physics
 
             foreach (ServiceTrafficItem serviceTraffic in trafficService)
             {
-                bool validStop = CreateStationStop(serviceTraffic.PlatformStartID, serviceTraffic.ArrivalTime, serviceTraffic.DepartTime, clearingDistanceM, ref beginActiveSubroute, ref activeSubrouteNodeIndex);
+                bool validStop = CreateStationStop(serviceTraffic.PlatformStartID, serviceTraffic.ArrivalTime, serviceTraffic.DepartTime,
+                    serviceTraffic.DistanceDownPath, clearingDistanceM, ref beginActiveSubroute, ref activeSubrouteNodeIndex);
                 if (!validStop)
                 {
                     Trace.TraceInformation($"Train {Number} Service {Name}: cannot find platform {serviceTraffic.PlatformStartID}");
@@ -8989,7 +8990,7 @@ namespace Orts.Simulation.Physics
         /// <summary>
         /// Create station stop list
         /// <\summary>
-        private bool CreateStationStop(int platformStartID, int arrivalTime, int departTime, float clearingDistanceM, ref int beginActiveSubroute, ref int activeSubrouteNodeIndex)
+        private bool CreateStationStop(int platformStartID, int arrivalTime, int departTime, float distanceDownPath, float clearingDistanceM, ref int beginActiveSubroute, ref int activeSubrouteNodeIndex)
         {
             int activeSubroute = beginActiveSubroute;
             bool terminalStation = false;
@@ -9092,11 +9093,40 @@ namespace Orts.Simulation.Physics
                         $"searched subroutes {beginActiveSubroute}-{Math.Min(activeSubroute, TCRoute.TCRouteSubpaths.Count - 1)}");
                     return false;
                 }
-                else
+
+                // MSTS service files also store the expected distance along the path for
+                // every station. Some legacy activities contain a stale PlatformStartID
+                // for the origin (often a neighbouring platform), while DistanceDownPath
+                // still points to the correct early stop. Without this guard, the stale
+                // platform can be found tens of kilometres later after a reversal/loop;
+                // that advances beginActiveSubroute and makes every following station
+                // disappear from the route.
+                //
+                // Only guard the first station, where there is no prior accepted stop to
+                // disambiguate sequence. If the expected distance lies clearly inside the
+                // earlier subroute(s), reject a match from a later subroute instead of
+                // poisoning the rest of the station list.
+                if (StationStops.Count == 0 && activeSubroute > beginActiveSubroute && distanceDownPath >= 0)
                 {
-                    activeSubrouteNodeIndex = routeIndex;
-                    beginActiveSubroute = activeSubroute;
+                    float distanceBeforeMatchedSubroute = 0;
+                    for (int subroute = beginActiveSubroute; subroute < activeSubroute; subroute++)
+                    {
+                        foreach (TrackCircuitRouteElement element in TCRoute.TCRouteSubpaths[subroute])
+                            distanceBeforeMatchedSubroute += element.TrackCircuitSection.Length;
+                    }
+
+                    float sequenceTolerance = Math.Max(500f, clearingDistanceM * 4f);
+                    if (distanceDownPath + sequenceTolerance < distanceBeforeMatchedSubroute)
+                    {
+                        Trace.TraceWarning($"Train {Number} Service {Name} : ignoring origin platform {platformStartID} " +
+                            $"mapped to subroute {activeSubroute}; service distance {distanceDownPath:F1}m lies before " +
+                            $"that subroute ({distanceBeforeMatchedSubroute:F1}m). Keeping subroute {beginActiveSubroute}.");
+                        return false;
+                    }
                 }
+
+                activeSubrouteNodeIndex = routeIndex;
+                beginActiveSubroute = activeSubroute;
 
                 // determine end stop position depending on direction
                 TrackCircuitRouteElement routeElement = route[routeIndex];
