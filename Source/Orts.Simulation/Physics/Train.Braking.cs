@@ -33,6 +33,30 @@ namespace Orts.Simulation.Physics
         }
 
         /// Initializes brakes also if Speed != 0; directly used by keyboard command
+        internal void ReinitializeBrakesFromUserCommand()
+        {
+            double pressureBefore = BrakeSystem.EqualReservoirPressurePSIorInHg;
+
+            UnconditionalInitializeBrakes();
+
+            double pressureAfter = BrakeSystem.EqualReservoirPressurePSIorInHg;
+            TrainEvent soundEvent = pressureAfter > pressureBefore + 0.01
+                ? TrainEvent.TrainBrakePressureIncrease
+                : pressureAfter < pressureBefore - 0.01
+                    ? TrainEvent.TrainBrakePressureDecrease
+                    : TrainEvent.TrainBrakeChange;
+
+            Trace.TraceInformation(
+                "[BrakeSound] User brake initialization: equal reservoir {0:F2} -> {1:F2} PSI, event={2}.",
+                pressureBefore, pressureAfter, soundEvent);
+
+            // The unconditional reset changes brake pressures instantaneously, bypassing
+            // the normal controller transitions which emit MSTS discrete sound events.
+            // Re-emit the corresponding brake event so legacy SMS files can play their
+            // charging/application sound after a manual Initialize Brakes command.
+            SignalEvent(soundEvent);
+        }
+
         internal void UnconditionalInitializeBrakes()
         {
             if (simulator.UserSettings.SimplifiedControls && LeadLocomotiveIndex >= 0) // If brake and control set to simple, and a locomotive present, then set all cars to same brake system as the locomotive
