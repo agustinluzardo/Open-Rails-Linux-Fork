@@ -134,6 +134,8 @@ namespace FreeTrainSimulator.Models.Settings
             commands[UserCommand.ControlDieselPlayer] = new UserCommandKeyInput(0x15, KeyModifiers.Shift);
             commands[UserCommand.ControlDoorLeft] = new UserCommandKeyInput(0x10);
             commands[UserCommand.ControlDoorRight] = new UserCommandKeyInput(0x10, KeyModifiers.Shift);
+            commands[UserCommand.ControlWindowLeft] = new UserCommandKeyInput(0x10, KeyModifiers.Control);
+            commands[UserCommand.ControlWindowRight] = new UserCommandKeyInput(0x10, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.ControlDynamicBrakeDecrease] = new UserCommandKeyInput(0x33);
             commands[UserCommand.ControlDynamicBrakeIncrease] = new UserCommandKeyInput(0x34);
             commands[UserCommand.ControlElectricTrainSupply] = new UserCommandKeyInput(0x30, KeyModifiers.Alt);
