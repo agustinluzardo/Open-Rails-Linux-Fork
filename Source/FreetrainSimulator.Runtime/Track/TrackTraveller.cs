@@ -24,6 +24,10 @@ namespace FreeTrainSimulator.Runtime.Track
     /// </summary>
     public readonly record struct TrackTraveller : ISaveStateApi<TrackTravellerSaveState>
     {
+        // Open Rails' legacy Traveller uses a 2.5 m centre-line capture range
+        // and accepts path points up to 0.5 m beyond section ends.
+        private const double MstsPathCaptureTolerance = 2.5;
+
         /// <summary>The <see cref="VectorNode"/> (track node) the traveller is currently on, or <see langword="null"/> if not on track.</summary>
         public VectorNode CurrentNode { get; private init; }
 
@@ -213,11 +217,22 @@ namespace FreeTrainSimulator.Runtime.Track
         /// or road (<see cref="TrackDataBaseType.Road"/>) geometry.</param>
         /// <returns>A new <see cref="TrackTraveller"/> on the found section, or <see langword="null"/> if none was found.</returns>
         public static TrackTraveller? InitializeTraveller(in WorldLocation location, TrackDirection direction, TrackDataBaseType trackDataBaseType = TrackDataBaseType.Rail)
+            => InitializeTraveller(location, direction, WorldLocation.ProximityTolerance, trackDataBaseType);
+
+        /// <summary>
+        /// Places an MSTS path point on track using the same 2.5 m centre-line capture
+        /// range used by Open Rails' legacy Traveller. This deliberately applies only
+        /// to authored path nodes; normal runtime snapping retains the stricter 1 m tolerance.
+        /// </summary>
+        public static TrackTraveller? InitializePathTraveller(in WorldLocation location, TrackDirection direction = TrackDirection.Ahead, TrackDataBaseType trackDataBaseType = TrackDataBaseType.Rail)
+            => InitializeTraveller(location.SetElevation(0), direction, MstsPathCaptureTolerance, trackDataBaseType);
+
+        private static TrackTraveller? InitializeTraveller(in WorldLocation location, TrackDirection direction, double captureTolerance, TrackDataBaseType trackDataBaseType)
         {
             SectionGeometry bestGeometry = null;
             WorldLocation bestSnapped = WorldLocation.None;
             double bestOffset = 0.0;
-            double bestDistSq = WorldLocation.ProximityTolerance * WorldLocation.ProximityTolerance;
+            double bestDistSq = captureTolerance * captureTolerance;
 
             TrackWorld world = TrackWorld.Instance;
             MapContentType contentType = trackDataBaseType == TrackDataBaseType.Road ? MapContentType.Roads : MapContentType.Tracks;
@@ -225,7 +240,8 @@ namespace FreeTrainSimulator.Runtime.Track
             if (bucket == null)
                 return null;
 
-            int tileRadius = WorldLocation.IsNearTileBoundary(location) ? 1 : 0;
+            int tileRadius = Math.Abs(location.Location.X) > Tile.TileSizeOver2 - captureTolerance ||
+                Math.Abs(location.Location.Z) > Tile.TileSizeOver2 - captureTolerance ? 1 : 0;
             foreach (VectorSectionNode section in bucket.BoundingBox(location.Tile, tileRadius).Cast<VectorSectionNode>())
             {
                 if (!world.SectionGeometry.TryGetValue(section, out SectionGeometry sectionGeometry) || !sectionGeometry.HasGeometry)
@@ -235,7 +251,14 @@ namespace FreeTrainSimulator.Runtime.Track
                 double distSq = location.Location.Y == 0
                     ? WorldLocation.GetDistanceSquared2D(location, snapped)
                     : WorldLocation.GetDistanceSquared(location, snapped);
-                if (distSq < bestDistSq)
+
+                // Open Rails scans track nodes in database order. Explicit tie-breaking
+                // prevents tile-index enumeration order from selecting a different parallel line.
+                bool better = distSq < bestDistSq - 1e-9;
+                bool tie = Math.Abs(distSq - bestDistSq) <= 1e-9;
+                if (better || (tie && bestGeometry != null &&
+                    (sectionGeometry.Node.NodeIndex < bestGeometry.Node.NodeIndex ||
+                     sectionGeometry.Node.NodeIndex == bestGeometry.Node.NodeIndex && sectionGeometry.SectionIndex < bestGeometry.SectionIndex)))
                 {
                     bestDistSq = distSq;
                     bestGeometry = sectionGeometry;
@@ -273,7 +296,7 @@ namespace FreeTrainSimulator.Runtime.Track
             // MSTS PAT nodes use horizontal coordinates for track selection.
             // The nearest-section lookup avoids allocating and sorting all
             // neighbouring tracks for each of hundreds of activity trains.
-            TrackTraveller? nearest = InitializeTraveller(startLocation.SetElevation(0), TrackDirection.Ahead, trackDataBaseType);
+            TrackTraveller? nearest = InitializePathTraveller(startLocation, TrackDirection.Ahead, trackDataBaseType);
             if (!nearest.HasValue)
                 throw new InvalidDataException($"{startLocation} could not be found in the track database.");
 
@@ -286,8 +309,8 @@ namespace FreeTrainSimulator.Runtime.Track
             // point by its horizontal position; its stored elevation is not
             // necessarily the elevation of the track database.
             WorldLocation nextPlanar = nextLocation.SetElevation(0);
-            float? fwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: true, float.MaxValue);
-            float? bwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: false, float.MaxValue);
+            float? fwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: true, float.MaxValue, MstsPathCaptureTolerance);
+            float? bwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: false, float.MaxValue, MstsPathCaptureTolerance);
             if (bwDist.HasValue && (!fwDist.HasValue || bwDist.Value < fwDist.Value))
                 return candidate.Reverse();
             return candidate;
@@ -912,7 +935,7 @@ namespace FreeTrainSimulator.Runtime.Track
         /// making it robust for imprecise locations (e.g., .pat path nodes that may be several
         /// metres off track).
         /// </summary>
-        private float? WalkDistanceToLocation(in WorldLocation location, bool forward, float maxDistance)
+        private float? WalkDistanceToLocation(in WorldLocation location, bool forward, float maxDistance, double captureTolerance = WorldLocation.ProximityTolerance)
         {
             TrackWorld world = TrackWorld.Instance;
             TrackDatabase trackDatabase = ResolveDatabase(TrackDataBaseType);
@@ -938,7 +961,7 @@ namespace FreeTrainSimulator.Runtime.Track
                     double distanceSquared = location.Location.Y == 0
                         ? WorldLocation.GetDistanceSquared2D(location, snapped)
                         : WorldLocation.GetDistanceSquared(location, snapped);
-                    double toleranceSquared = WorldLocation.ProximityTolerance * WorldLocation.ProximityTolerance;
+                    double toleranceSquared = captureTolerance * captureTolerance;
                     if (distanceSquared <= toleranceSquared)
                     {
                         bool targetAhead = forward ? offset >= entryOffset : offset <= entryOffset;
