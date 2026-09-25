@@ -107,6 +107,7 @@ namespace Riel.Launcher.Gui
             PlayButton.Click += (_, _) => Guarded(Play);
             ResumeButton.Click += (_, _) => Guarded(Resume);
             ContentButton.Click += (_, _) => Guarded(() => ManageContent(browseFirst: false));
+            TestButton.Click += (_, _) => Guarded(ShowTesting);
             AddFirstFolderButton.Click += (_, _) => Guarded(() => ManageContent(browseFirst: true));
             UseDetectedButton.Click += (_, _) => Guarded(AddDetected);
             DoctorButton.Click += (_, _) => Guarded(() => new DiagnosticsWindow().ShowDialog(this));
@@ -132,6 +133,17 @@ namespace Riel.Launcher.Gui
             ProfileModel profile = await ((ProfileModel)null).Current(closing.Token);
             SettingsWindow window = new SettingsWindow(profile);
             await window.ShowDialog(this);
+        }
+
+        private async Task ShowTesting()
+        {
+            if (content == null)
+                return;
+
+            ProfileModel profile = await ((ProfileModel)null).Current(closing.Token);
+            ProfileUserSettingsModel settings = await profile.LoadSettingsModel<ProfileUserSettingsModel>(closing.Token)
+                ?? new ProfileUserSettingsModel();
+            await new TestingWindow(content, settings).ShowDialog(this);
         }
 
         // ----------------------------------------------------------------------------- content
