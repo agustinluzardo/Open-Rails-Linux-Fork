@@ -638,6 +638,13 @@ namespace Orts.ActivityRunner.Viewer3D
             {
                 windowManager[ViewerWindowType.SwitchWindow].ToggleVisibility();
             });
+            UserCommandController.AddEvent(UserCommand.DisplayTrainCarOperationsWindow, KeyEventType.KeyPressed, (UserCommandArgs userCommandArgs) =>
+            {
+                // Riel's train-operations window already exposes every car and opens the
+                // per-car controls on click. Use it for the Open Rails F9 command until the
+                // newer sprite-based TrainCarOperationsWindow is ported as a separate view.
+                windowManager[ViewerWindowType.TrainOperationsWindow].ToggleVisibility();
+            });
             UserCommandController.AddEvent(UserCommand.DisplayTrainOperationsWindow, KeyEventType.KeyPressed, (UserCommandArgs userCommandArgs) =>
             {
                 windowManager[ViewerWindowType.TrainOperationsWindow].ToggleVisibility();
