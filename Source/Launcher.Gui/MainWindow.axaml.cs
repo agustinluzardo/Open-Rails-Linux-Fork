@@ -33,6 +33,8 @@ using FreeTrainSimulator.Models.Imported.ImportHandler;
 using FreeTrainSimulator.Models.Settings;
 using FreeTrainSimulator.Models.Shim;
 
+using Riel.Launcher;
+
 using static Riel.Launcher.Gui.Translation;
 
 namespace Riel.Launcher.Gui
@@ -97,7 +99,12 @@ namespace Riel.Launcher.Gui
             SettingsButton.Click += (_, _) => Guarded(ShowSettings);
             ProblemsButton.Click += (_, _) => Guarded(() => Dialogs.Problems(this, problems));
 
-            Opened += (_, _) => Guarded(() => Reload(restoreSelections: true));
+            Opened += (_, _) => Guarded(async () =>
+            {
+                await Reload(restoreSelections: true);
+                if (Program.StartupReportPath != null)
+                    await ShowCompletedRun(LaunchSession.ReadReport(Program.StartupReportPath));
+            });
             Closed += (_, _) => closing.Cancel();
 
             DarkSwitch.IsChecked = Appearance.Dark;
@@ -446,6 +453,15 @@ namespace Riel.Launcher.Gui
         /// <param name="safeMode">What to leave out: set when the error window's retry buttons run it again.</param>
         private async Task Run(IReadOnlyList<string> arguments, string title, RouteItem route, SafeMode safeMode = SafeMode.None)
         {
+            ProfileModel profile = await ((ProfileModel)null).Current(closing.Token);
+            ProfileUserSettingsModel settings = await profile.LoadSettingsModel<ProfileUserSettingsModel>(closing.Token);
+            if (settings.CloseLauncherWhilePlaying)
+            {
+                LaunchSession.Start(arguments, title, route?.Route.Id, route?.Folder.Name, safeMode);
+                Close();
+                return;
+            }
+
             running = true;
             UpdateButtons();
             StatusText.Text = F("Starting {0}…", title);
@@ -490,6 +506,27 @@ namespace Riel.Launcher.Gui
                     ? F("Finished {0}.", title)
                     : F("Finished {0} {1}.", title, leftOut);
             }
+        }
+
+        private async Task ShowCompletedRun(LaunchSession.Report report)
+        {
+            if (report.StartError != null)
+            {
+                await Dialogs.Message(this, T("Could not start the simulator"), report.StartError);
+                return;
+            }
+
+            SimulatorOutcome outcome = SimulatorOutcome.ReadCompletedRun(report.ExitCode,
+                report.StartedUtc, report.StandardError, report.ProcessId);
+            RouteItem route = routes.FirstOrDefault(item =>
+                item.Route.Id == report.Request.RouteId && item.Folder.Name == report.Request.FolderName);
+            string routeProblem = route == null ? null : problems
+                .FirstOrDefault(problem => problem.Kind == "route" &&
+                    (problem.Path == route.Name || problem.Path == route.Route.Id))?.Reason;
+            SafeMode? retry = await new ErrorWindow(outcome, report.CommandLine,
+                routeProblem, report.Request.SafeMode).ShowDialog<SafeMode?>(this);
+            if (retry != null)
+                await Run(report.Request.Arguments, report.Request.Title, route, retry.Value);
         }
 
         // ------------------------------------------------------------------------------ helpers

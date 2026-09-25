@@ -118,6 +118,7 @@ namespace Riel.Launcher.Gui
         private void BuildOptions()
         {
             AddGroup(GeneralPanel, "Driving and units");
+            AddOptions(GeneralPanel, "CloseLauncherWhilePlaying");
             AddOptions(GeneralPanel, "PressureUnit", "MeasurementUnit", "Alerter", "AlerterExternal", "SpeedControl",
                 "Confirmations", "GraduatedRelease", "RetainersOnAllCars", "BrakePipeChargingRate", "PauseAtStart",
                 "OdometerShortDistances", "VibrationLevel", "NotificationsTimeout", "TcsScripts", "PerformanceTuner", "PerformanceTunerTarget");

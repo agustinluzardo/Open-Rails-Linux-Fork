@@ -6,7 +6,7 @@
 		<AssemblyTitle>Riel Simulator</AssemblyTitle>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 		<OutputPath>..\..\Program</OutputPath>
-		<ApplicationIcon>..\FTS.ico</ApplicationIcon>
+		<ApplicationIcon>..\Riel.ico</ApplicationIcon>
 		<RootNamespace>Orts.ActivityRunner</RootNamespace>
 		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 	</PropertyGroup>
@@ -49,6 +49,7 @@
 	  <EmbeddedResource Remove="Viewer3D\Debugging\DebugViewerForm.resx" />
 	</ItemGroup>
 	<ItemGroup>
+		<EmbeddedResource Include="..\Launcher.Gui\Assets\riel.png" LogicalName="Riel.WindowIcon.png" />
 		<None Update="Content\*.bmp">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

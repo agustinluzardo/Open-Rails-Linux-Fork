@@ -26,8 +26,14 @@ namespace Riel.Launcher.Gui
         [STAThread]
         private static int Main(string[] args)
         {
+            if (args.Length == 2 && args[0] == "--supervise")
+                return LaunchSession.Supervise(args[1]);
+            if (args.Length == 2 && args[0] == "--run-report")
+                StartupReportPath = args[1];
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
+
+        internal static string StartupReportPath { get; private set; }
 
         /// <summary>Also the entry point Avalonia's designer looks for.</summary>
         public static AppBuilder BuildAvaloniaApp()

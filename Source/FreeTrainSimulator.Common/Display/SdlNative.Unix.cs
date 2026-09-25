@@ -74,6 +74,16 @@ namespace FreeTrainSimulator.Common.Display
         [DllImport(LibraryName, EntryPoint = "SDL_GetCurrentVideoDriver", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr GetCurrentVideoDriver();
 
+        [DllImport(LibraryName, EntryPoint = "SDL_CreateRGBSurfaceFrom", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr CreateRgbSurfaceFrom(IntPtr pixels, int width, int height,
+            int depth, int pitch, uint redMask, uint greenMask, uint blueMask, uint alphaMask);
+
+        [DllImport(LibraryName, EntryPoint = "SDL_SetWindowIcon", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void SetWindowIcon(IntPtr window, IntPtr surface);
+
+        [DllImport(LibraryName, EntryPoint = "SDL_FreeSurface", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void FreeSurface(IntPtr surface);
+
         [DllImport(LibraryName, EntryPoint = "SDL_GetNumVideoDisplays", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int GetNumVideoDisplays();
 

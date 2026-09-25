@@ -71,6 +71,7 @@ namespace FreeTrainSimulator.Models.Settings
             _ => throw new System.NotImplementedException(),
         });
         public ScreenMode ScreenMode { get; set; } = ScreenMode.WindowedFullscreen;
+        public bool CloseLauncherWhilePlaying { get; set; }
         public int WindowScreen { get; set; } = -1;
         #endregion
 

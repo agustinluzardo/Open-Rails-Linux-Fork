@@ -621,3 +621,9 @@ msgstr "Servidor web"
 
 msgid "Profiling"
 msgstr "Medir rendimiento"
+
+msgid "Close Launcher While Playing"
+msgstr "Cerrar el lanzador mientras jugás y volver a abrirlo al salir"
+
+msgid "Could not start the simulator"
+msgstr "No se pudo iniciar el simulador"

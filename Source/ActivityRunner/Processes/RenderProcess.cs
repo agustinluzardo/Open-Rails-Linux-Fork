@@ -310,6 +310,21 @@ namespace Orts.ActivityRunner.Processes
             game.Window.Position = windowPosition;
             SetScreenMode(currentScreenMode);
 
+#if RIEL_UNIX
+            if (OperatingSystem.IsLinux())
+            {
+                try
+                {
+                    using var icon = typeof(RenderProcess).Assembly.GetManifestResourceStream("Riel.WindowIcon.png");
+                    GameWindowIcon.Set(game.Window.Handle, icon);
+                }
+                catch (Exception error)
+                {
+                    Trace.TraceWarning($"Could not set the Riel window icon: {error.Message}");
+                }
+            }
+#endif
+
             RenderPrimitive.SetGraphicsDevice(game.GraphicsDevice);
             FreeTrainSimulator.Common.Info.SystemInfo.SetGraphicAdapterInformation(game.GraphicsDevice.Adapter.Description);
 

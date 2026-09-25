@@ -177,6 +177,9 @@ namespace Riel.Launcher
         /// <summary>The simulator's process id, which its crash report and startup trail carry.</summary>
         public int ProcessId { get; }
 
+        /// <summary>Earliest log time attributable to this run.</summary>
+        public DateTime StartedUtc => startedUtc;
+
         /// <summary>Waits for the simulator to exit and works out how it went.</summary>
         public async Task<SimulatorOutcome> WaitAsync(CancellationToken cancellationToken = default)
         {
@@ -327,6 +330,10 @@ namespace Riel.Launcher
             return new SimulatorOutcome(exitCode, logFile, fatal, standardError,
                 StartupTrail.Read(processId), CrashReport.Find(processId));
         }
+
+        /// <summary>Reconstructs a completed run after the graphical launcher restarts.</summary>
+        public static SimulatorOutcome ReadCompletedRun(int exitCode, DateTime startedUtc, string standardError, int processId)
+            => Read(exitCode, startedUtc, standardError, processId);
 
         internal static StartupStage? StageAtExit(IReadOnlyList<StartupStep> trail)
         {
