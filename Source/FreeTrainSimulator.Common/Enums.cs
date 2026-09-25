@@ -1326,6 +1326,7 @@ namespace FreeTrainSimulator.Common
         TrackItemOverlay,
         // Appended for serialized ViewerWindowType compatibility.
         TrainForcesWindow,
+        SignallingDebugWindow,
     }
 
     public enum FourCharAcronym
