@@ -2,7 +2,7 @@ name: Portable Linux package
 
 on:
   push:
-    branches: [main, claude/magical-dijkstra-0slhlk, codex/window-buffer-and-fov]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
