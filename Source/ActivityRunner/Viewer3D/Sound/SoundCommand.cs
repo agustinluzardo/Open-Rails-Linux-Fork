@@ -40,6 +40,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
 
 using FreeTrainSimulator.Common.Calc;
 
@@ -183,11 +185,45 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
                 fileIndex = StaticRandom.Next(Files.Length);
             }
 
-            ImmutableArray<string> pathArray = ImmutableArray.Create(
-                Simulator.Instance.RouteFolder.SoundFolder,
-                SoundStream.SoundSource.SMSFolder,
-                Simulator.Instance.RouteFolder.ContentFolder.SoundFolder);
-            return FolderStructure.FindFileFromFolders(pathArray, Files[fileIndex]) ?? string.Empty;
+            // Train sounds belong to the SMS package first.  Looking in Route/Sound
+            // before the SMS directory can select the wrong same-named sample, and legacy
+            // add-ons frequently keep referenced WAVs in a nearby subfolder of the vehicle.
+            ImmutableArray<string> pathArray = SoundStream.SoundSource.Car != null
+                ? ImmutableArray.Create(
+                    SoundStream.SoundSource.SMSFolder,
+                    Simulator.Instance.RouteFolder.SoundFolder,
+                    Simulator.Instance.RouteFolder.ContentFolder.SoundFolder)
+                : ImmutableArray.Create(
+                    Simulator.Instance.RouteFolder.SoundFolder,
+                    SoundStream.SoundSource.SMSFolder,
+                    Simulator.Instance.RouteFolder.ContentFolder.SoundFolder);
+
+            string resolved = FolderStructure.FindFileFromFolders(pathArray, Files[fileIndex]);
+            if (resolved != null)
+                return resolved;
+
+            // Compatibility fallback for MSTS stock authored on case-insensitive Windows:
+            // some SMS files name only the WAV while the file is in another sound subfolder
+            // of the same vehicle.  Keep the fallback local to that vehicle so we never steal
+            // a sample from another trainset.
+            if (SoundStream.SoundSource.Car != null && !string.IsNullOrEmpty(SoundStream.SoundSource.SMSFolder))
+            {
+                string vehicleFolder = Path.GetDirectoryName(ContentIO.Normalize(SoundStream.SoundSource.SMSFolder));
+                if (!string.IsNullOrEmpty(vehicleFolder))
+                {
+                    string requestedName = Path.GetFileName(ContentIO.Normalize(Files[fileIndex]));
+                    string localMatch = ContentIO.EnumerateFiles(vehicleFolder, requestedName, 3).FirstOrDefault();
+                    if (!string.IsNullOrEmpty(localMatch))
+                    {
+                        Trace.TraceInformation(
+                            "[SoundPath] Resolved {0} from vehicle-local fallback {1}.",
+                            Files[fileIndex], localMatch);
+                        return localMatch;
+                    }
+                }
+            }
+
+            return string.Empty;
         }
     }
 
