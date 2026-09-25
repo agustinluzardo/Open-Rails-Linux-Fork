@@ -116,21 +116,27 @@ namespace Orts.ActivityRunner.Processes
                 return;
 
             long deadline = Stopwatch.GetTimestamp() + (long)(budget.TotalSeconds * Stopwatch.Frequency);
-            var spinner = new SpinWait();
+            // Do not spend the entire upload budget spinning when the loader has no
+            // follow-up work: on a 60 Hz display that can burn ~18% of a CPU core.
+            // A short idle grace still lets consecutive resource uploads share a frame.
+            long idleGrace = Math.Max(1, Stopwatch.Frequency / 4000); // 0.25 ms
+            long idleSince = 0;
 
             do
             {
                 if (Pending)
                 {
                     run();
-                    spinner.Reset();
+                    idleSince = 0;
                 }
                 else
                 {
-                    // The loader generally enqueues the next upload immediately after the previous
-                    // one completes. Yield briefly instead of sleeping a whole millisecond so a
-                    // 60 Hz VSync frame can service several resources without adding idle latency.
-                    spinner.SpinOnce();
+                    long now = Stopwatch.GetTimestamp();
+                    if (idleSince == 0)
+                        idleSince = now;
+                    else if (now - idleSince >= idleGrace)
+                        break;
+                    Thread.Yield();
                 }
             }
             while (Stopwatch.GetTimestamp() < deadline);
