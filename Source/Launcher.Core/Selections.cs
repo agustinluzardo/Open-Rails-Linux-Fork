@@ -165,8 +165,8 @@ namespace Riel.Launcher
             };
         }
 
-        /// <summary>The newest saved game, or null when there is none to continue.</summary>
-        public static string LatestSave()
+        /// <summary>Saved games in the same folder the simulator writes to, newest first.</summary>
+        public static IReadOnlyList<FileInfo> SavedGames()
         {
             try
             {
@@ -174,21 +174,32 @@ namespace Riel.Launcher
                 return saves.Exists
                     ? saves.EnumerateFiles("*" + FileNameExtensions.SaveFile)
                         .OrderByDescending(file => file.LastWriteTimeUtc)
-                        .Select(file => file.FullName)
-                        .FirstOrDefault()
-                    : null;
+                        .ToArray()
+                    : Array.Empty<FileInfo>();
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
-                return null;
+                return Array.Empty<FileInfo>();
             }
+        }
+
+        /// <summary>The newest saved game, or null when there is none to continue.</summary>
+        public static string LatestSave() => SavedGames().FirstOrDefault()?.FullName;
+
+        /// <summary>The simulator's command line for continuing the chosen saved game.</summary>
+        public static IReadOnlyList<string> ResumeArguments(string save)
+        {
+            if (string.IsNullOrWhiteSpace(save) || !File.Exists(save) ||
+                !string.Equals(Path.GetExtension(save), FileNameExtensions.SaveFile, StringComparison.OrdinalIgnoreCase))
+                throw new LauncherException("the selected saved game is no longer available");
+            return new[] { "-SingleplayerResume", Path.GetFullPath(save) };
         }
 
         /// <summary>The simulator's command line for continuing the newest save.</summary>
         public static IReadOnlyList<string> ResumeArguments()
         {
             string save = LatestSave() ?? throw new LauncherException("there is no saved game to continue");
-            return new[] { "-SingleplayerResume", save };
+            return ResumeArguments(save);
         }
     }
 }

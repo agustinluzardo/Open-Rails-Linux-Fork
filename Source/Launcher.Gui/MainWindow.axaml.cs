@@ -442,7 +442,9 @@ namespace Riel.Launcher.Gui
         {
             if (running)
                 return;
-            await Run(Selections.ResumeArguments(), T("the saved game"), null);
+            string save = await new SavedGamesWindow().ShowDialog<string>(this);
+            if (save != null)
+                await Run(Selections.ResumeArguments(save), System.IO.Path.GetFileNameWithoutExtension(save), null);
         }
 
         /// <summary>

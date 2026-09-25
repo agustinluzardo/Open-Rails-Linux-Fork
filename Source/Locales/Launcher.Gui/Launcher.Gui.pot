@@ -450,3 +450,15 @@ msgstr ""
 
 msgid "Continue saved game"
 msgstr ""
+
+msgid "Choose a saved game"
+msgstr ""
+
+msgid "Select the exact save to continue. Newest saves are shown first."
+msgstr ""
+
+msgid "No preview available"
+msgstr ""
+
+msgid "Continue"
+msgstr ""

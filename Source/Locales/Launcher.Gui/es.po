@@ -451,6 +451,18 @@ msgstr "Elegir una carpeta"
 msgid "Continue saved game"
 msgstr "Continuar partida guardada"
 
+msgid "Choose a saved game"
+msgstr "Elegir una partida guardada"
+
+msgid "Select the exact save to continue. Newest saves are shown first."
+msgstr "Elegí la partida que querés continuar. Las más recientes aparecen primero."
+
+msgid "No preview available"
+msgstr "No hay vista previa disponible"
+
+msgid "Continue"
+msgstr "Continuar"
+
 msgid "Settings"
 msgstr "Configuración"
 

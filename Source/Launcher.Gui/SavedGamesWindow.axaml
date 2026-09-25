@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="using:Riel.Launcher.Gui"
+        x:Class="Riel.Launcher.Gui.SavedGamesWindow"
+        Title="{l:T 'Choose a saved game'}" Icon="/Assets/riel.png"
+        Width="880" Height="570" MinWidth="610" MinHeight="400"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+  <DockPanel Margin="24,20">
+    <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,14">
+      <TextBlock Classes="heading" Text="{l:T 'Choose a saved game'}" />
+      <TextBlock Classes="secondary" TextWrapping="Wrap"
+                 Text="{l:T 'Select the exact save to continue. Newest saves are shown first.'}" />
+    </StackPanel>
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"
+                Spacing="8" Margin="0,14,0,0">
+      <Button x:Name="CancelButton" Content="{l:T 'Cancel'}" IsCancel="True" MinWidth="95" />
+      <Button x:Name="ContinueButton" Content="{l:T 'Continue'}" Classes="accent"
+              IsDefault="True" MinWidth="115" IsEnabled="False" />
+    </StackPanel>
+    <Grid ColumnDefinitions="*,270" ColumnSpacing="16">
+      <ListBox x:Name="SaveList" Grid.Column="0">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="l:SavedGameItem">
+            <StackPanel Margin="2,5" Spacing="3">
+              <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+              <TextBlock Text="{Binding SavedAt}" Classes="secondary" />
+              <TextBlock Text="{Binding FileName}" Classes="secondary small" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <StackPanel Grid.Column="1" Spacing="10">
+        <Border Classes="panel" Height="190">
+          <Grid>
+            <Image x:Name="Screenshot" Stretch="Uniform" IsVisible="False" />
+            <TextBlock x:Name="NoScreenshot" Text="{l:T 'No preview available'}"
+                       Classes="secondary" VerticalAlignment="Center" HorizontalAlignment="Center" />
+          </Grid>
+        </Border>
+        <TextBlock x:Name="SelectedFile" Classes="secondary small" TextWrapping="Wrap" />
+      </StackPanel>
+    </Grid>
+  </DockPanel>
+</Window>
