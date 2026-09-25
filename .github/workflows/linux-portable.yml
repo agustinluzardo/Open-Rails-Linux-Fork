@@ -37,6 +37,10 @@ jobs:
             dotnet publish "$project" -c Release -r linux-x64 --self-contained true \
               -o "${RUNNER_TEMP}/riel-publish"
           done
+          # Nothing from this build step needs to be exported to later steps.
+          # A build tool can leave non-environment text in GitHub's command file;
+          # GitHub rejects the entire successful step when it parses that text.
+          : > "$GITHUB_ENV"
       - name: Package and verify without an installed .NET runtime
         env:
           DOTNET_ROOT: /nonexistent-dotnet-runtime
