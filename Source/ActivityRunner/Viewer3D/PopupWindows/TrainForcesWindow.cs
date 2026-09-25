@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Graphics;
 using FreeTrainSimulator.Common.DebugInfo;
 using FreeTrainSimulator.Graphics.Window;
 using FreeTrainSimulator.Graphics.Window.Controls;
