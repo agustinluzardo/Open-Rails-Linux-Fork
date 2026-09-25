@@ -2256,6 +2256,19 @@ namespace Orts.Simulation.Physics
             if (validPosition)
             {
                 InitializeSignals(false);     // Get signal information - only if train has route //
+
+                // A train which is already in AutoSignal at startup must actively request
+                // its first signal.  Relying on a later mode transition leaves the first
+                // normal signal disabled (and therefore at STOP) indefinitely.
+                if (ControlMode == TrainControlMode.AutoSignal && NextSignalObjects[Direction.Forward] != null &&
+                    NextSignalObjects[Direction.Forward].EnabledTrain != RoutedForward)
+                {
+                    Trace.TraceInformation(
+                        "[SignalInit] Train {0} requesting initial signal {1} after signal discovery.",
+                        Number, NextSignalObjects[Direction.Forward].Index);
+                    NextSignalObjects[Direction.Forward].RequestClearSignal(ValidRoutes[Direction.Forward], RoutedForward, 0, false, null);
+                }
+
                 if (TrainType != TrainType.Static)
                     TrainDeadlockInfo.CheckDeadlock(ValidRoutes[Direction.Forward], Number);    // Check deadlock against all other trains (not for static trains)
                 if (TCRoute != null)
