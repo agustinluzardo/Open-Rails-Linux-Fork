@@ -19,7 +19,7 @@ along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <html lang="en">
 <head>
-	<title>OR: Heads Up Display (HUD) - Common Page</title>
+	<title>Riel · HUD</title>
 	<meta charset="utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1"><!-- adds zooming for mobiles -->
 	<link rel="shortcut icon" type="image/png" href="/or_logo.png"><!-- This icon appears in the page's tab and its bookmark. -->
@@ -28,7 +28,7 @@ along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 	<script src="index.js"></script>
 </head>
 
-<body onload="setInterval (ApiHeadUpDisplay, 5000)">
+<body onload="ApiHeadUpDisplay(); setInterval(ApiHeadUpDisplay, 1000)">
   <ul>
 	<li><a id="common">Common</a></li>
 	<li><a id="consist">Consist</a></li>
@@ -42,7 +42,7 @@ along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 	<li><a id="debug">Debug</a></li>
   </ul>
   <div id=menu><a href="/">Back to Menu</a></div>
-  <h2>Open Rails - Head Up Display</h2>
+  <h2>Riel - Head Up Display</h2>
   <br><div id="HUDCommon"></div>
   <br><h2 id="ExtraHeading"></h2>
   <br><div id="HUDExtra"></div>

@@ -19,7 +19,7 @@ along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <html lang="en">
 <head>
-	<title>OR: Cab Controls</title>
+	<title>Riel · Controles de cabina</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1"><!-- adds zooming for mobiles -->
 	<link rel="shortcut icon" type="image/png" href="/or_logo.png"><!-- This icon appears in the page's tab and its bookmark. -->
@@ -61,23 +61,23 @@ along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 				<label for="direction">Direction/Reverser (-1 - +1)</label>
 			</div>
 			<div class="control">
-				<input id="train_brake" type="range" step="10" value="0" min="0" max="100" onchange="sendValue(this.value/100, 'THROTTLE')" />
-				<label for="train_brake">Throttle/Regulator (0 - 100)</label>
+				<input id="throttle" type="range" step="1" value="0" min="0" max="100" onchange="sendValue(this.value/100, 'THROTTLE')" />
+				<label for="throttle">Throttle/Regulator (0 - 100)</label>
 			</div>
 			<div class="control">
-				<input id="train_brake" type="range" step="1" value="0" min="0" max="1" onchange="sendValue(this.value, 'HORN')" />
+				<input id="horn" type="range" step="1" value="0" min="0" max="1" onchange="sendValue(this.value, 'HORN')" />
 				<label for="train_brake">Horn (0 - 1)</label>
 			</div>
 			<div class="control">
-				<input id="train_brake" type="range" step="1" value="0" min="0" max="1" onchange="sendValue(this.value, 'BELL')" />
+				<input id="bell" type="range" step="1" value="0" min="0" max="1" onchange="sendValue(this.value, 'BELL')" />
 				<label for="train_brake">Bell (0 - 1)</label>
 			</div>
 			<div class="control">
-				<input id="train_brake" type="range" step="1" value="0" min="0" max="3" onchange="sendValue(this.value, 'FRONT_HLIGHT')" />
+				<input id="headlight" type="range" step="1" value="1" min="1" max="3" onchange="sendValue(this.value, 'FRONT_HLIGHT')" />
 				<label for="train_brake">Front Headlight (0 - 3)</label>
 			</div>
 			<div class="control">
-				<input id="train_brake" type="range" step="1" value="0" min="0" max="1" onchange="sendValue(this.value, 'PANTOGRAPH')" />
+				<input id="pantograph" type="range" step="1" value="0" min="0" max="1" onchange="sendValue(this.value, 'PANTOGRAPH')" />
 				<label for="train_brake">Pantograph (0 - 1)</label>
 			</div>
 		</div>

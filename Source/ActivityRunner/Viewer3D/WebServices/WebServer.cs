@@ -33,6 +33,7 @@ using EmbedIO.Routing;
 using EmbedIO.WebApi;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.DebugInfo;
 using FreeTrainSimulator.Common.Input;
 using FreeTrainSimulator.Common.Position;
 
@@ -268,11 +269,86 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
 
         private HudApiTable ApiHUD_ProcessTable(int pageNo)
         {
-            return new HudApiTable()
+            DetailInfoBase[] providers = pageNo switch
             {
-                nRows = 0,
-                nCols = 0,
-                values = null,
+                0 => new[] { viewer.DetailInfo[DetailInfoType.GameDetails], viewer.DetailInfo[DetailInfoType.TrainDetails] },
+                1 => new[] { viewer.DetailInfo[DetailInfoType.ConsistDetails] },
+                2 => new[] { viewer.DetailInfo[DetailInfoType.LocomotiveDetails] },
+                3 => new[] { viewer.DetailInfo[DetailInfoType.DistributedPowerDetails] },
+                4 => new[] { viewer.DetailInfo[DetailInfoType.PowerSupplyDetails] },
+                5 => new[] { viewer.DetailInfo[DetailInfoType.LocomotiveBrake], viewer.DetailInfo[DetailInfoType.BrakeDetails] },
+                6 => new[] { viewer.DetailInfo[DetailInfoType.LocomotiveForce], viewer.DetailInfo[DetailInfoType.ForceDetails] },
+                7 => new[] { viewer.DetailInfo[DetailInfoType.DispatcherDetails] },
+                8 => new[] { viewer.DetailInfo[DetailInfoType.WeatherDetails] },
+                9 => new[] { viewer.DetailInfo[DetailInfoType.GraphicDetails] },
+                _ => Array.Empty<DetailInfoBase>(),
+            };
+            return BuildHudTable(providers);
+        }
+
+        private static HudApiTable BuildHudTable(IEnumerable<DetailInfoBase> providers)
+        {
+            var groups = new List<(List<InformationDictionary> Columns, List<string> Keys)>();
+
+            foreach (DetailInfoBase provider in providers.Where(provider => provider != null))
+            {
+                var columns = new List<InformationDictionary>();
+                DetailInfoBase column = provider;
+                int safety = 0;
+                do
+                {
+                    InformationDictionary details = column.DetailInfo;
+                    columns.Add(details);
+                    column = column.NextColumn;
+                }
+                while (column != null && ++safety < Math.Max(1, provider.MultiColumnCount));
+
+                var keys = new List<string>();
+                foreach (InformationDictionary details in columns)
+                    foreach (string key in details.Keys)
+                        if (!keys.Contains(key, StringComparer.Ordinal))
+                            keys.Add(key);
+
+                if (keys.Count > 0)
+                    groups.Add((columns, keys));
+            }
+
+            int columnCount = groups.Count == 0 ? 0 : groups.Max(group => group.Columns.Count);
+            var values = new List<string>();
+            int rowCount = 0;
+
+            foreach ((List<InformationDictionary> columns, List<string> keys) in groups)
+            {
+                foreach (string key in keys)
+                {
+                    for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
+                    {
+                        if (columnIndex >= columns.Count)
+                        {
+                            values.Add(null);
+                            continue;
+                        }
+
+                        InformationDictionary details = columns[columnIndex];
+                        if (columnIndex == 0)
+                        {
+                            string value = details[key];
+                            values.Add(string.IsNullOrEmpty(value) ? key : $"{key}\t{value}");
+                        }
+                        else
+                        {
+                            values.Add(details[key]);
+                        }
+                    }
+                    rowCount++;
+                }
+            }
+
+            return new HudApiTable
+            {
+                nRows = rowCount,
+                nCols = columnCount,
+                values = values.ToArray(),
             };
         }
         #endregion
@@ -310,7 +386,66 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
         [Route(HttpVerbs.Get, "/CABCONTROLS")]
         public IEnumerable<ControlValue> CabControls()
         {
-            return ((MSTSLocomotiveViewer)viewer.PlayerLocomotiveViewer).GetWebControlValueList();
+            return viewer.PlayerLocomotiveViewer is MSTSLocomotiveViewer locomotiveViewer && locomotiveViewer.CabRenderer != null
+                ? locomotiveViewer.GetWebControlValueList()
+                : Array.Empty<ControlValue>();
+        }
+
+        public sealed class ControlValuePost
+        {
+            public string TypeName { get; set; }
+            public int ControlIndex { get; set; }
+            public double Value { get; set; }
+        }
+
+        [Route(HttpVerbs.Post, "/CABCONTROLS")]
+        public async Task CabControlsSet()
+        {
+            IEnumerable<ControlValuePost> controls = await HttpContext.GetRequestDataAsync<IEnumerable<ControlValuePost>>(
+                WebServer.DeserializationCallback<IEnumerable<ControlValuePost>>).ConfigureAwait(false);
+            if (controls == null)
+                return;
+
+            foreach (ControlValuePost control in controls)
+            {
+                string type = control.TypeName?.Trim().ToUpperInvariant();
+                switch (type)
+                {
+                    case "THROTTLE":
+                        viewer.UserCommandController.Send(AnalogUserCommand.Throttle, (float)Math.Clamp(control.Value * 100.0, 0.0, 100.0));
+                        break;
+                    case "TRAIN_BRAKE":
+                        viewer.UserCommandController.Send(AnalogUserCommand.TrainBrake, (float)Math.Clamp(control.Value * 100.0, 0.0, 100.0));
+                        break;
+                    case "DIRECTION":
+                        viewer.UserCommandController.Send(AnalogUserCommand.Direction, (float)Math.Clamp(control.Value * 100.0, -100.0, 100.0));
+                        break;
+                    case "FRONT_HLIGHT":
+                        viewer.UserCommandController.Send(AnalogUserCommand.Light, (int)Math.Clamp(Math.Round(control.Value), 1, 3));
+                        break;
+                    case "WIPERS":
+                        viewer.UserCommandController.Send(AnalogUserCommand.Wiper, control.Value > 0.5 ? 2 : 1);
+                        break;
+                    case "HORN":
+                        viewer.UserCommandController.Send(UserCommand.ControlHorn,
+                            control.Value > 0.5 ? KeyEventType.KeyPressed : KeyEventType.KeyReleased);
+                        break;
+                    case "BELL":
+                        viewer.UserCommandController.Send(UserCommand.ControlBell,
+                            control.Value > 0.5 ? KeyEventType.KeyPressed : KeyEventType.KeyReleased);
+                        break;
+                    case "PANTOGRAPH":
+                        if (viewer.PlayerLocomotive?.Pantographs?.Count > 0)
+                        {
+                            bool requestedUp = control.Value > 0.5;
+                            PantographState state = viewer.PlayerLocomotive.Pantographs[1].State;
+                            bool currentlyUp = state is PantographState.Up or PantographState.Raising;
+                            if (requestedUp != currentlyUp)
+                                viewer.UserCommandController.Send(UserCommand.ControlPantograph1, KeyEventType.KeyPressed);
+                        }
+                        break;
+                }
+            }
         }
         #endregion
 

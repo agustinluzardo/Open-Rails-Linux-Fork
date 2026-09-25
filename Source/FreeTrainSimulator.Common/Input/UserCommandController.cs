@@ -274,6 +274,14 @@ namespace FreeTrainSimulator.Common.Input
             controllerInputCommand[command]?.Invoke(ControllerCommandArgs.Empty);
         }
 
+        /// <summary>
+        /// Dispatches an analog command through the same handlers used by RailDriver and other external controls.
+        /// </summary>
+        public void Send<TValue>(AnalogUserCommand command, TValue value)
+        {
+            Trigger(command, new UserCommandArgs<TValue> { Value = value }, new GameTime());
+        }
+
         public void AddControllerInputEvent(CommandControllerInput command, Action<ControllerCommandArgs> action)
         {
             controllerInputCommand[command] += action;
