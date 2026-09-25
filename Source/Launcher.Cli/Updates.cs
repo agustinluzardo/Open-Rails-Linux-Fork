@@ -86,7 +86,26 @@ namespace Riel.Launcher
                         throw new LauncherException("Update archive exceeds 400 MB.");
                     await using Stream input = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
                     await using FileStream output = File.Create(archive);
-                    await input.CopyToAsync(output, cancellationToken).ConfigureAwait(false);
+                    byte[] buffer = new byte[131072];
+                    long received = 0;
+                    int lastPercent = -1;
+                    int count;
+                    while ((count = await input.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+                    {
+                        received += count;
+                        if (received > 400_000_000)
+                            throw new LauncherException("Update archive exceeds 400 MB.");
+                        await output.WriteAsync(buffer.AsMemory(0, count), cancellationToken).ConfigureAwait(false);
+                        if (response.Content.Headers.ContentLength is long length && length > 0)
+                        {
+                            int percent = (int)(received * 100 / length);
+                            if (percent / 5 != lastPercent / 5)
+                            {
+                                Console.WriteLine("PROGRESS " + percent);
+                                lastPercent = percent;
+                            }
+                        }
+                    }
                 }
                 await using (FileStream stream = File.OpenRead(archive))
                 {

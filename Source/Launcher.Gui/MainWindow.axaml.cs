@@ -186,12 +186,26 @@ namespace Riel.Launcher.Gui
                         UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true,
                         WorkingDirectory = bundle,
                     });
-                    Task<string> updateOutput = update.StandardOutput.ReadToEndAsync(closing.Token);
                     Task<string> updateErrors = update.StandardError.ReadToEndAsync(closing.Token);
+                    string line;
+                    while ((line = await update.StandardOutput.ReadLineAsync(closing.Token)) != null)
+                    {
+                        if (line.StartsWith("PROGRESS ", StringComparison.Ordinal) &&
+                            int.TryParse(line.AsSpan(9), out int percent))
+                        {
+                            BusyProgress.IsIndeterminate = false;
+                            BusyProgress.Value = percent;
+                            BusyText.Text = F("Downloading Riel… {0}%", percent);
+                        }
+                        else if (line.Contains("Finishing installation", StringComparison.Ordinal))
+                        {
+                            BusyProgress.IsIndeterminate = true;
+                            BusyText.Text = T("Installing Riel update…");
+                        }
+                    }
                     await update.WaitForExitAsync(closing.Token);
                     if (update.ExitCode != 0)
                         throw new LauncherException((await updateErrors).Trim());
-                    _ = await updateOutput;
                 }
                 Process.Start(new ProcessStartInfo(wrapper, "gui")
                 {
