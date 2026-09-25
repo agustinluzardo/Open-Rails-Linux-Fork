@@ -258,59 +258,6 @@ namespace FreeTrainSimulator.Runtime.Track
         }
 
         /// <summary>
-        /// Returns all candidate travellers within proximity tolerance of <paramref name="location"/>,
-        /// one per unique <see cref="VectorNode"/>, ordered by distance (closest first).
-        /// Used when <see cref="InitializeTraveller(in WorldLocation, TrackDirection, TrackDataBaseType)"/>
-        /// picks the wrong node near a junction boundary and a fallback search through alternative
-        /// nodes is needed.
-        /// </summary>
-        /// <param name="location">The world location to search from.</param>
-        /// <param name="direction">The initial direction of travel on each found node.</param>
-        /// <param name="trackDataBaseType">Whether to search rail or road geometry.</param>
-        /// <returns>An ordered list of candidates (closest first), possibly empty.</returns>
-        private static IReadOnlyList<TrackTraveller> FindAllCandidates(in WorldLocation location, TrackDirection direction, TrackDataBaseType trackDataBaseType = TrackDataBaseType.Rail)
-        {
-            Dictionary<VectorNode, (SectionGeometry geometry, WorldLocation snapped, double offset, double distSq)> bestPerNode = new Dictionary<VectorNode, (SectionGeometry geometry, WorldLocation snapped, double offset, double distSq)>(ReferenceEqualityComparer.Instance);
-            double maxDistSq = WorldLocation.ProximityTolerance * WorldLocation.ProximityTolerance;
-
-            TrackWorld world = TrackWorld.Instance;
-            MapContentType contentType = trackDataBaseType == TrackDataBaseType.Road ? MapContentType.Roads : MapContentType.Tracks;
-            ITileIndexedList<ITileCoordinate> bucket = world.ContentByTile[contentType];
-            if (bucket == null)
-                return Array.Empty<TrackTraveller>();
-
-            int tileRadius = WorldLocation.IsNearTileBoundary(location) ? 1 : 0;
-            foreach (VectorSectionNode section in bucket.BoundingBox(location.Tile, tileRadius).Cast<VectorSectionNode>())
-            {
-                if (!world.SectionGeometry.TryGetValue(section, out SectionGeometry sectionGeometry) || !sectionGeometry.HasGeometry)
-                    continue;
-
-                (WorldLocation snapped, double offset) = SnapToSection(location, section, sectionGeometry);
-                // Open Rails projects MSTS path starts onto the horizontal
-                // track layout. Path node heights are often only approximate.
-                double distSq = WorldLocation.GetDistanceSquared2D(location, snapped);
-                if (distSq < maxDistSq)
-                {
-                    VectorNode parentNode = sectionGeometry.Node;
-                    if (!bestPerNode.TryGetValue(parentNode, out var existing) || distSq < existing.distSq)
-                        bestPerNode[parentNode] = (sectionGeometry, snapped, offset, distSq);
-                }
-            }
-
-            return bestPerNode.OrderBy(kv => kv.Value.distSq)
-                .Select(kv => new TrackTraveller(trackDataBaseType)
-                {
-                    CurrentNode = kv.Value.geometry.Node,
-                    SectionIndex = kv.Value.geometry.SectionIndex,
-                    CurrentSectionGeometry = ResolveGeometry(kv.Value.geometry.Node, kv.Value.geometry.SectionIndex),
-                    SectionOffset = kv.Value.offset,
-                    Location = kv.Value.snapped,
-                    Direction = direction,
-                })
-                .ToList();
-        }
-
-        /// <summary>
         /// Creates a new <see cref="TrackTraveller"/> at <paramref name="startLocation"/> oriented toward
         /// <paramref name="nextLocation"/>. The nearest track node is retained, as in Open Rails;
         /// both travel directions are evaluated using a walk-based projection (see
@@ -323,15 +270,18 @@ namespace FreeTrainSimulator.Runtime.Track
         /// <exception cref="InvalidDataException">Thrown when <paramref name="startLocation"/> cannot be found in the track database.</exception>
         public static TrackTraveller InitializeDirectedTraveller(in WorldLocation startLocation, in WorldLocation nextLocation, TrackDataBaseType trackDataBaseType = TrackDataBaseType.Rail)
         {
-            IReadOnlyList<TrackTraveller> candidates = FindAllCandidates(startLocation, TrackDirection.Ahead, trackDataBaseType);
-            if (candidates.Count == 0)
+            // MSTS PAT nodes use horizontal coordinates for track selection.
+            // The nearest-section lookup avoids allocating and sorting all
+            // neighbouring tracks for each of hundreds of activity trains.
+            TrackTraveller? nearest = InitializeTraveller(startLocation.SetElevation(0), TrackDirection.Ahead, trackDataBaseType);
+            if (!nearest.HasValue)
                 throw new InvalidDataException($"{startLocation} could not be found in the track database.");
 
             // Selecting another candidate merely because it can reach the next
             // node can move a train to an adjacent parallel track at a junction.
             // Open Rails places the rear on the nearest track, then chooses its
             // direction using the following path point.
-            TrackTraveller candidate = candidates[0];
+            TrackTraveller candidate = nearest.Value;
             float? fwDist = candidate.WalkDistanceToLocation(nextLocation, forward: true, float.MaxValue);
             float? bwDist = candidate.WalkDistanceToLocation(nextLocation, forward: false, float.MaxValue);
             if (bwDist.HasValue && (!fwDist.HasValue || bwDist.Value < fwDist.Value))
