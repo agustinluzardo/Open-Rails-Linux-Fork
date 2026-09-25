@@ -82,6 +82,11 @@ namespace Orts.ActivityRunner.Viewer3D
         public int MoonPhase { get; private set; }
         public Vector3 SolarDirection { get; private set; }
         public Vector3 LunarDirection { get; private set; }
+        public int DaylightOffsetHours
+        {
+            get => SkyInterpolation.DaylightOffsetHours;
+            set => SkyInterpolation.DaylightOffsetHours = Math.Clamp(value, -12, 12);
+        }
         public double Latitude { get; private set; } // Latitude of current route in radians. -pi/2 = south pole, 0 = equator, pi/2 = north pole.
         public double Longitude { get; private set; } // Longitude of current route in radians. -pi = west of prime, 0 = prime, pi = east of prime.
 
