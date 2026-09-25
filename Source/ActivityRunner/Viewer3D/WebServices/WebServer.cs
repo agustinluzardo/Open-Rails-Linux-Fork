@@ -33,6 +33,7 @@ using EmbedIO.Routing;
 using EmbedIO.WebApi;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Input;
 using FreeTrainSimulator.Common.Position;
 
 using Microsoft.Xna.Framework;
@@ -454,6 +455,122 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                 CanUncoupleAfter = index < count - 1 && !viewer.Simulator.TimetableMode,
             };
         }
+        #endregion
+
+
+        #region /API/SWITCHPANEL
+        public sealed class SwitchPanelControlInfo
+        {
+            public string Command { get; init; }
+            public string Label { get; init; }
+            public string State { get; init; }
+            public bool Momentary { get; init; }
+        }
+
+        public sealed class SwitchPanelRequest
+        {
+            public string Command { get; set; }
+            public string Event { get; set; }
+        }
+
+        private static readonly HashSet<UserCommand> WebSwitchCommands = new HashSet<UserCommand>
+        {
+            UserCommand.ControlHeadlightIncrease,
+            UserCommand.ControlHeadlightDecrease,
+            UserCommand.ControlLight,
+            UserCommand.ControlWiper,
+            UserCommand.ControlHorn,
+            UserCommand.ControlBellToggle,
+            UserCommand.ControlAlerter,
+            UserCommand.ControlEmergencyPushButton,
+            UserCommand.ControlSanderToggle,
+            UserCommand.ControlSander,
+            UserCommand.ControlPantograph1,
+            UserCommand.ControlPantograph2,
+            UserCommand.ControlPantograph3,
+            UserCommand.ControlPantograph4,
+            UserCommand.ControlDoorLeft,
+            UserCommand.ControlDoorRight,
+            UserCommand.ControlBatterySwitchClose,
+            UserCommand.ControlBatterySwitchOpen,
+            UserCommand.ControlMasterKey,
+            UserCommand.ControlCircuitBreakerClosingOrder,
+            UserCommand.ControlCircuitBreakerOpeningOrder,
+            UserCommand.GameSwitchManualMode,
+            UserCommand.GameResetOutOfControlMode,
+        };
+
+        [Route(HttpVerbs.Get, "/SWITCHPANEL")]
+        public IEnumerable<SwitchPanelControlInfo> SwitchPanel()
+        {
+            MSTSLocomotive locomotive = viewer.PlayerLocomotive;
+            if (locomotive == null)
+                return Array.Empty<SwitchPanelControlInfo>();
+
+            var controls = new List<SwitchPanelControlInfo>
+            {
+                Control(UserCommand.ControlHeadlightIncrease, "Faros +", locomotive.Headlight.ToString()),
+                Control(UserCommand.ControlHeadlightDecrease, "Faros −", locomotive.Headlight.ToString()),
+                Control(UserCommand.ControlLight, "Luz de cabina", OnOff(locomotive.CabLightOn)),
+                Control(UserCommand.ControlWiper, "Limpiaparabrisas", OnOff(locomotive.Wiper)),
+                Control(UserCommand.ControlHorn, "Bocina", OnOff(locomotive.Horn), true),
+                Control(UserCommand.ControlBellToggle, "Campana", OnOff(locomotive.Bell)),
+                Control(UserCommand.ControlAlerter, "Alerter", OnOff(locomotive.TrainControlSystem?.AlerterButtonPressed == true), true),
+                Control(UserCommand.ControlEmergencyPushButton, "Emergencia", OnOff(locomotive.EmergencyButtonPressed)),
+                Control(UserCommand.ControlSanderToggle, "Arenero", OnOff(locomotive.Sander)),
+                Control(UserCommand.ControlDoorLeft, "Puertas izquierdas", string.Empty),
+                Control(UserCommand.ControlDoorRight, "Puertas derechas", string.Empty),
+                Control(UserCommand.ControlMasterKey, "Master key", OnOff(locomotive.LocomotivePowerSupply?.MasterKey?.On == true)),
+                Control(UserCommand.ControlBatterySwitchClose, "Conectar batería", OnOff(locomotive.LocomotivePowerSupply?.BatterySwitch?.On == true)),
+                Control(UserCommand.ControlBatterySwitchOpen, "Desconectar batería", OnOff(locomotive.LocomotivePowerSupply?.BatterySwitch?.On == true)),
+                Control(UserCommand.GameSwitchManualMode, "Modo de control", viewer.PlayerTrain?.ControlMode.ToString() ?? string.Empty),
+                Control(UserCommand.GameResetOutOfControlMode, "Reset Out of Control", viewer.PlayerTrain?.OutOfControlReason.ToString() ?? string.Empty),
+            };
+
+            for (int i = 1; i <= Math.Min(4, locomotive.Pantographs.Count); i++)
+            {
+                UserCommand command = i switch
+                {
+                    1 => UserCommand.ControlPantograph1,
+                    2 => UserCommand.ControlPantograph2,
+                    3 => UserCommand.ControlPantograph3,
+                    _ => UserCommand.ControlPantograph4,
+                };
+                controls.Add(Control(command, $"Pantógrafo {i}", locomotive.Pantographs[i]?.State.ToString() ?? string.Empty));
+            }
+
+            if (locomotive is MSTSElectricLocomotive electric)
+            {
+                string breaker = electric.ElectricPowerSupply?.CircuitBreaker?.State.ToString() ?? string.Empty;
+                controls.Add(Control(UserCommand.ControlCircuitBreakerClosingOrder, "Cerrar disyuntor", breaker));
+                controls.Add(Control(UserCommand.ControlCircuitBreakerOpeningOrder, "Abrir disyuntor", breaker));
+            }
+
+            controls.Add(Control(UserCommand.ControlSander, "Arenero momentáneo", OnOff(locomotive.Sander), true));
+            return controls;
+        }
+
+        [Route(HttpVerbs.Post, "/SWITCHPANEL")]
+        public async Task<IEnumerable<SwitchPanelControlInfo>> SetSwitchPanelControl()
+        {
+            SwitchPanelRequest request = await HttpContext.GetRequestDataAsync<SwitchPanelRequest>(
+                WebServer.DeserializationCallback<SwitchPanelRequest>).ConfigureAwait(false);
+
+            if (request != null && Enum.TryParse(request.Command, true, out UserCommand command) && WebSwitchCommands.Contains(command))
+            {
+                KeyEventType eventType = string.Equals(request.Event, "released", StringComparison.OrdinalIgnoreCase)
+                    ? KeyEventType.KeyReleased
+                    : KeyEventType.KeyPressed;
+                viewer.UserCommandController.Send(command, eventType);
+            }
+
+            return SwitchPanel();
+        }
+
+        private static SwitchPanelControlInfo Control(UserCommand command, string label, string state, bool momentary = false)
+            => new SwitchPanelControlInfo { Command = command.ToString(), Label = label, State = state, Momentary = momentary };
+
+        private static string OnOff(bool value) => value ? "On" : "Off";
         #endregion
 
         #region /API/TIME

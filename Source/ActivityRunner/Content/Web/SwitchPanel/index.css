@@ -1,0 +1,7 @@
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#111;color:#eee}
+body{margin:0;padding:18px;max-width:1000px;margin-inline:auto}header{border-bottom:1px solid #333;margin-bottom:14px}
+h1{margin:.2rem 0}p{color:#aaa}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px}
+.control{display:flex;flex-direction:column;gap:5px;border:1px solid #333;border-radius:10px;background:#1a1a1a;padding:10px}
+button{font:inherit;border:1px solid #555;border-radius:7px;background:#292929;color:#eee;padding:10px;cursor:pointer}
+button:active{background:#31506c}.state{font-size:.8rem;color:#aaa;min-height:1.1rem}
+#connection{position:fixed;right:14px;bottom:12px;background:#222;border:1px solid #444;padding:6px 10px;border-radius:8px;color:#aaa;font-size:.8rem}

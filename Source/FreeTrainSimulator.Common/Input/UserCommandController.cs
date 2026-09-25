@@ -133,6 +133,15 @@ namespace FreeTrainSimulator.Common.Input
         #endregion
 
         #region user-defined (key) events
+        /// <summary>
+        /// Dispatches a configured user command through the same layered handlers used by keyboard input.
+        /// External controllers such as the web switch panel use this instead of duplicating simulator commands.
+        /// </summary>
+        public void Send(T userCommand, KeyEventType keyEventType)
+        {
+            Trigger(userCommand, keyEventType, UserCommandArgs.Empty, new GameTime());
+        }
+
         public void AddEvent(T userCommand, KeyEventType keyEventType, Action<UserCommandArgs, GameTime> action)
         {
             configurableUserCommands[userCommand, keyEventType] += action;
