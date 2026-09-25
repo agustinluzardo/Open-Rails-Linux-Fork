@@ -126,9 +126,13 @@ namespace Riel.Launcher.Gui
                     if (string.IsNullOrWhiteSpace(train))
                         train = T("Unknown train");
                     string path = state.Path ?? state.ProfileSelections?.PathId ?? state.ProfileSelections?.ActivityId;
+                    string timetable = state.ProfileSelections?.ActivityType == FreeTrainSimulator.Common.ActivityType.TimeTable
+                        ? state.ProfileSelections?.TimetableName ?? state.ProfileSelections?.TimetableSet
+                        : null;
                     string when = TimeSpan.FromSeconds(state.GameTime).ToString(@"hh\:mm\:ss", CultureInfo.CurrentCulture);
                     item.Summary = $"{routeName} · {train} · {when}";
                     item.Details = $"{T("Route")}: {routeName}\n{T("Train")}: {train}\n" +
+                        (string.IsNullOrWhiteSpace(timetable) ? string.Empty : $"{T("Timetable")}: {timetable}\n") +
                         (string.IsNullOrWhiteSpace(path) ? string.Empty : $"{T("Path")}: {path}\n") +
                         $"{T("Game time")}: {when}\n{T("Save version")}: {state.GameVersion}";
                     item.CanResume = state.Valid != false;
