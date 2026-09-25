@@ -67,6 +67,7 @@ namespace Orts.Simulation.Signalling
 
         private int updateStart;
         private int updateStep;
+        private bool signalDiagnosticLogged;
 
         public List<PlatformDetails> PlatformDetailsList { get; } = new List<PlatformDetails>();
         public Dictionary<int, int> PlatformXRefList { get; } = new Dictionary<int, int>();
@@ -414,7 +415,71 @@ namespace Orts.Simulation.Signalling
             }
             updateStart += updateStep;
             if (updateStart >= Signals.Count)
+            {
                 updateStart = 0;
+                if (!signalDiagnosticLogged)
+                {
+                    TraceSignalDiagnostic();
+                    signalDiagnosticLogged = true;
+                }
+            }
+        }
+
+        private void TraceSignalDiagnostic()
+        {
+            int normalSignals = 0;
+            int enabledSignals = 0;
+            int enabledWithRoute = 0;
+            int invalidCircuit = 0;
+            int invalidNextCircuit = 0;
+            int blockClear = 0;
+            int blockOccupied = 0;
+            int blockObstructed = 0;
+            int aspectStop = 0;
+            int aspectProceed = 0;
+
+            foreach (Signal signal in Signals)
+            {
+                if (!signal.SignalNormal())
+                    continue;
+
+                normalSignals++;
+
+                if (signal.EnabledTrain != null)
+                {
+                    enabledSignals++;
+                    if (signal.SignalRoute?.Count > 0)
+                        enabledWithRoute++;
+                }
+
+                if (signal.TrackCircuitIndex < 0)
+                    invalidCircuit++;
+                if (signal.TrackCircuitNextIndex < 0)
+                    invalidNextCircuit++;
+
+                switch (signal.BlockState())
+                {
+                    case SignalBlockState.Clear:
+                        blockClear++;
+                        break;
+                    case SignalBlockState.Occupied:
+                        blockOccupied++;
+                        break;
+                    case SignalBlockState.Jn_Obstructed:
+                        blockObstructed++;
+                        break;
+                }
+
+                if (signal.SignalMR(SignalFunctionType.Normal) == SignalAspectState.Stop)
+                    aspectStop++;
+                else
+                    aspectProceed++;
+            }
+
+            Trace.TraceInformation(
+                "[SignalDiag] normal={0} enabled={1} enabledWithRoute={2} stop={3} proceed={4} blockClear={5} occupied={6} obstructed={7} invalidTC={8} invalidNextTC={9}",
+                normalSignals, enabledSignals, enabledWithRoute, aspectStop, aspectProceed,
+                blockClear, blockOccupied, blockObstructed, invalidCircuit, invalidNextCircuit);
         }
 
         /// <summary></summary>
