@@ -316,6 +316,7 @@ namespace FreeTrainSimulator.Models.Settings
         {
             foreach (UserCommand command in EnumExtension.GetValues<UserCommand>())
             {
+                UserCommands[command] ??= new UserCommandKeyInput(0);
                 userCommands[command] = UserCommands[command].UniqueDescriptor;
             }
         }
