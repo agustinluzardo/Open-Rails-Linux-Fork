@@ -310,6 +310,9 @@ namespace FreeTrainSimulator.Common
         // Freight Load
         FreightLoad,
         CabRadio,
+        // Appended for serialized CabControl compatibility.
+        WindowLeft,
+        WindowRight,
     }
     #endregion
 
@@ -588,6 +591,10 @@ namespace FreeTrainSimulator.Common
         CruiseControlAlert1,
 
         MPCChangePosition,
+
+        // Appended for serialized TrainEvent compatibility.
+        WindowOpening,
+        WindowClosing,
     }
 
     public enum PowerSupplyEvent
