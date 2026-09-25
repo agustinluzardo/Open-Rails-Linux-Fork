@@ -618,6 +618,7 @@ namespace Orts.Simulation
             if (playerTrain != null)
             {
                 bool validPosition = playerTrain.PostInit();  // place player train after pre-running of AI trains
+                TraceActivityPlayerPlacement(playerTrain, validPosition);
                 if (validPosition)
                     PreUpdate = false;
                 if (playerTrain.InitialSpeed > 0 && playerTrain.MovementState != AiMovementState.StationStop)
@@ -629,6 +630,44 @@ namespace Orts.Simulation
                     playerTrain.InitializeBrakes();
             }
             return (playerTrain);
+        }
+
+        // The activity player is built before static consists and AI prerunning,
+        // but only occupies the track after both. Record the trains that are
+        // actually nearby at that point when a route still cannot be placed.
+        private void TraceActivityPlayerPlacement(AITrain playerTrain, bool validPosition)
+        {
+            if (validPosition)
+                return;
+
+            string nearbyTrains = string.Join("; ", Trains
+                .Where(train => train != playerTrain)
+                .Select(train => new
+                {
+                    Train = train,
+                    DistanceSquared = new[]
+                    {
+                        WorldLocation.GetDistanceSquared2D(playerTrain.FrontLocation, train.FrontLocation),
+                        WorldLocation.GetDistanceSquared2D(playerTrain.FrontLocation, train.RearLocation),
+                        WorldLocation.GetDistanceSquared2D(playerTrain.RearLocation, train.FrontLocation),
+                        WorldLocation.GetDistanceSquared2D(playerTrain.RearLocation, train.RearLocation),
+                    }.Min(),
+                })
+                .Where(item => item.DistanceSquared < 500 * 500)
+                .OrderBy(item => item.DistanceSquared)
+                .Take(12)
+                .Select(item => $"{item.Train.Number} ({item.Train.Name}, {item.Train.TrainType}, " +
+                    $"{Math.Sqrt(item.DistanceSquared):F1}m from an end, " +
+                    $"sections {item.Train.PresentPosition[Direction.Backward].TrackCircuitSectionIndex}/" +
+                    $"{item.Train.PresentPosition[Direction.Forward].TrackCircuitSectionIndex}, " +
+                    $"rear {item.Train.RearLocation}, front {item.Train.FrontLocation})"));
+
+            Trace.TraceError($"Activity player train could not occupy its starting track: " +
+                $"activity '{ActivityModel?.Name}', path '{PathName}', " +
+                $"player sections {playerTrain.PresentPosition[Direction.Backward].TrackCircuitSectionIndex}/" +
+                $"{playerTrain.PresentPosition[Direction.Forward].TrackCircuitSectionIndex}, " +
+                $"rear {playerTrain.RearLocation}, front {playerTrain.FrontLocation}; " +
+                $"nearby trains: {(nearbyTrains.Length == 0 ? "none" : nearbyTrains)}");
         }
 
 
