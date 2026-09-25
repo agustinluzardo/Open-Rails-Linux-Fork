@@ -198,6 +198,10 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             Viewer.UserCommandController.AddEvent(UserCommand.ControlSteamHeatDecrease, KeyEventType.KeyReleased, locomotive.StopSteamHeatDecrease, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlBailOff, KeyEventType.KeyPressed, BailOffOnCommand, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlBailOff, KeyEventType.KeyReleased, BailOffOffCommand, true);
+            Viewer.UserCommandController.AddEvent(UserCommand.ControlBrakeQuickRelease, KeyEventType.KeyPressed, QuickReleaseOnCommand, true);
+            Viewer.UserCommandController.AddEvent(UserCommand.ControlBrakeQuickRelease, KeyEventType.KeyReleased, QuickReleaseOffCommand, true);
+            Viewer.UserCommandController.AddEvent(UserCommand.ControlBrakeOvercharge, KeyEventType.KeyPressed, BrakeOverchargeOnCommand, true);
+            Viewer.UserCommandController.AddEvent(UserCommand.ControlBrakeOvercharge, KeyEventType.KeyReleased, BrakeOverchargeOffCommand, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlInitializeBrakes, KeyEventType.KeyPressed, InitializeBrakesCommand, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlHandbrakeNone, KeyEventType.KeyPressed, HandbrakeNoneCommand, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlHandbrakeFull, KeyEventType.KeyPressed, HandbrakeFullCommand, true);
@@ -228,6 +232,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             Viewer.UserCommandController.AddEvent(UserCommand.ControlImmediateRefill, KeyEventType.KeyPressed, ImmediateRefill, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlImmediateRefill, KeyEventType.KeyReleased, StopImmediateRefilling, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlWaterScoop, KeyEventType.KeyPressed, ToggleWaterScoopCommand, true);
+            Viewer.UserCommandController.AddEvent(UserCommand.ControlOdoMeterShowHide, KeyEventType.KeyPressed, ToggleOdometerCommand, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlOdoMeterReset, KeyEventType.KeyPressed, ResetOdometerOnCommand, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlOdoMeterReset, KeyEventType.KeyReleased, ResetOdometerOffCommand, true);
             Viewer.UserCommandController.AddEvent(UserCommand.ControlOdoMeterDirection, KeyEventType.KeyPressed, ToggleOdometerDirectionCommand, true);
@@ -303,6 +308,10 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlSteamHeatDecrease, KeyEventType.KeyReleased, locomotive.StopSteamHeatDecrease);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlBailOff, KeyEventType.KeyPressed, BailOffOnCommand);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlBailOff, KeyEventType.KeyReleased, BailOffOffCommand);
+            Viewer.UserCommandController.RemoveEvent(UserCommand.ControlBrakeQuickRelease, KeyEventType.KeyPressed, QuickReleaseOnCommand);
+            Viewer.UserCommandController.RemoveEvent(UserCommand.ControlBrakeQuickRelease, KeyEventType.KeyReleased, QuickReleaseOffCommand);
+            Viewer.UserCommandController.RemoveEvent(UserCommand.ControlBrakeOvercharge, KeyEventType.KeyPressed, BrakeOverchargeOnCommand);
+            Viewer.UserCommandController.RemoveEvent(UserCommand.ControlBrakeOvercharge, KeyEventType.KeyReleased, BrakeOverchargeOffCommand);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlInitializeBrakes, KeyEventType.KeyPressed, InitializeBrakesCommand);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlHandbrakeNone, KeyEventType.KeyPressed, HandbrakeNoneCommand);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlHandbrakeFull, KeyEventType.KeyPressed, HandbrakeFullCommand);
@@ -333,6 +342,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlImmediateRefill, KeyEventType.KeyPressed, ImmediateRefill);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlImmediateRefill, KeyEventType.KeyReleased, StopImmediateRefilling);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlWaterScoop, KeyEventType.KeyPressed, ToggleWaterScoopCommand);
+            Viewer.UserCommandController.RemoveEvent(UserCommand.ControlOdoMeterShowHide, KeyEventType.KeyPressed, ToggleOdometerCommand);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlOdoMeterReset, KeyEventType.KeyPressed, ResetOdometerOnCommand);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlOdoMeterReset, KeyEventType.KeyReleased, ResetOdometerOffCommand);
             Viewer.UserCommandController.RemoveEvent(UserCommand.ControlOdoMeterDirection, KeyEventType.KeyPressed, ToggleOdometerDirectionCommand);
@@ -380,6 +390,10 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
         }
         private void BailOffOnCommand() => _ = new BailOffCommand(Viewer.Log, true);
         private void BailOffOffCommand() => _ = new BailOffCommand(Viewer.Log, false);
+        private void QuickReleaseOnCommand() => _ = new QuickReleaseCommand(Viewer.Log, true);
+        private void QuickReleaseOffCommand() => _ = new QuickReleaseCommand(Viewer.Log, false);
+        private void BrakeOverchargeOnCommand() => _ = new BrakeOverchargeCommand(Viewer.Log, true);
+        private void BrakeOverchargeOffCommand() => _ = new BrakeOverchargeCommand(Viewer.Log, false);
         private void InitializeBrakesCommand() => _ = new InitializeBrakesCommand(Viewer.Log);
         private void HandbrakeNoneCommand() => _ = new HandbrakeCommand(Viewer.Log, false);
         private void HandbrakeFullCommand() => _ = new HandbrakeCommand(Viewer.Log, true);
@@ -431,6 +445,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
         }
         private void ToggleCabLightCommand() => _ = new ToggleCabLightCommand(Viewer.Log);
         private void ToggleWaterScoopCommand() => _ = new ToggleWaterScoopCommand(Viewer.Log);
+        private void ToggleOdometerCommand() => _ = new ToggleOdometerCommand(Viewer.Log);
         private void ResetOdometerOnCommand() => _ = new ResetOdometerCommand(Viewer.Log, true);
         private void ResetOdometerOffCommand() => _ = new ResetOdometerCommand(Viewer.Log, false);
         private void ToggleOdometerDirectionCommand() => _ = new ToggleOdometerDirectionCommand(Viewer.Log);

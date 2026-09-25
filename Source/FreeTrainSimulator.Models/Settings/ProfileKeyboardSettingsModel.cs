@@ -90,6 +90,7 @@ namespace FreeTrainSimulator.Models.Settings
             commands[UserCommand.CameraScrollLeft] = new UserCommandModifiableKeyInput(0x4B, KeyModifiers.Alt);
             commands[UserCommand.CameraScrollRight] = new UserCommandModifiableKeyInput(0x4D, KeyModifiers.Alt);
             commands[UserCommand.CameraChangePassengerViewPoint] = new UserCommandKeyInput(0x06, KeyModifiers.Shift);
+            commands[UserCommand.CameraChange3DCabViewPoint] = new UserCommandKeyInput(0x02, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.CameraToggleLetterboxCab] = new UserCommandKeyInput(0x02, KeyModifiers.Control);
             commands[UserCommand.CameraToggleShowCab] = new UserCommandKeyInput(0x02, KeyModifiers.Shift);
             commands[UserCommand.CameraTrackside] = new UserCommandKeyInput(0x05);
@@ -104,6 +105,8 @@ namespace FreeTrainSimulator.Models.Settings
             commands[UserCommand.ControlAIFireReset] = new UserCommandKeyInput(0x23, KeyModifiers.Control | KeyModifiers.Alt);
             commands[UserCommand.ControlAlerter] = new UserCommandKeyInput(0x2C);
             commands[UserCommand.ControlBailOff] = new UserCommandKeyInput(0x35);
+            commands[UserCommand.ControlBrakeQuickRelease] = new UserCommandKeyInput(0x35, KeyModifiers.Control);
+            commands[UserCommand.ControlBrakeOvercharge] = new UserCommandKeyInput(0x35, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.ControlBatterySwitchClose] = new UserCommandKeyInput(0x52);
             commands[UserCommand.ControlBatterySwitchOpen] = new UserCommandKeyInput(0x52, KeyModifiers.Control);
             commands[UserCommand.ControlBell] = new UserCommandKeyInput(0x30);
@@ -173,7 +176,10 @@ namespace FreeTrainSimulator.Models.Settings
             commands[UserCommand.ControlPantograph2] = new UserCommandKeyInput(0x19, KeyModifiers.Shift);
             commands[UserCommand.ControlPantograph3] = new UserCommandKeyInput(0x19, KeyModifiers.Control);
             commands[UserCommand.ControlPantograph4] = new UserCommandKeyInput(0x19, KeyModifiers.Shift | KeyModifiers.Control);
-            commands[UserCommand.ControlOdoMeterDisplayMode] = new UserCommandKeyInput(0x2C, KeyModifiers.Shift);
+            // Open Rails uses Shift+Z for odometer show/hide. Keep Riel's extra short/long
+            // display mode on Alt+Shift+Z so fresh profiles do not have a collision.
+            commands[UserCommand.ControlOdoMeterShowHide] = new UserCommandKeyInput(0x2C, KeyModifiers.Shift);
+            commands[UserCommand.ControlOdoMeterDisplayMode] = new UserCommandKeyInput(0x2C, KeyModifiers.Alt | KeyModifiers.Shift);
             commands[UserCommand.ControlOdoMeterReset] = new UserCommandKeyInput(0x2C, KeyModifiers.Control);
             commands[UserCommand.ControlOdoMeterDirection] = new UserCommandKeyInput(0x2C, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.ControlRefill] = new UserCommandKeyInput(0x14);

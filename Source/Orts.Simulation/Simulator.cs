@@ -700,6 +700,7 @@ namespace Orts.Simulation
                 VacuumExhausterCommand.Receiver = dieselLocomotive;
             }
 
+            ToggleOdometerCommand.Receiver = PlayerLocomotive;
             ResetOdometerCommand.Receiver = PlayerLocomotive;
             ToggleOdometerDirectionCommand.Receiver = PlayerLocomotive;
             SanderCommand.Receiver = PlayerLocomotive;

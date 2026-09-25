@@ -249,6 +249,11 @@ namespace FreeTrainSimulator.Common.Input
         [Description("Control DP More")] ControlDistributedIncrease,
         [Description("Control DP Less")] ControlDistributedPowerDecrease,
 
+        // Restored Open Rails controls. Kept at the end so existing serialized command IDs remain stable.
+        [Description("Control Brake Quick Release")] ControlBrakeQuickRelease,
+        [Description("Control Brake Overcharge")] ControlBrakeOvercharge,
+        [Description("Control Odometer Show/Hide")] ControlOdoMeterShowHide,
+        [Description("Camera Change 3D Cab Viewpoint")] CameraChange3DCabViewPoint,
     }
 
     /// <summary>

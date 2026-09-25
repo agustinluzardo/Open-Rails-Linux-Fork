@@ -69,6 +69,11 @@ namespace Orts.ActivityRunner.Viewer3D
                 viewer.UserCommandController.AddEvent(UserCommand.CameraZoomOut, KeyEventType.KeyReleased, () => viewer.Camera.ZoomCommandEnd());
                 viewer.UserCommandController.AddEvent(UserCommand.CameraToggleLetterboxCab, KeyEventType.KeyPressed, () => viewer.Camera.ToggleLetterboxCab());
                 viewer.UserCommandController.AddEvent(UserCommand.CameraChangePassengerViewPoint, KeyEventType.KeyPressed, () => viewer.Camera.ChangePassengerViewPoint());
+                viewer.UserCommandController.AddEvent(UserCommand.CameraChange3DCabViewPoint, KeyEventType.KeyPressed, () =>
+                {
+                    if (viewer.Camera is CabCamera3D)
+                        _ = new CameraChange3DCabViewPointCommand(viewer.Log);
+                });
                 viewer.UserCommandController.AddEvent(UserCommand.CameraScrollLeft, KeyEventType.KeyDown, (GameTime gameTime) => viewer.Camera.Scroll(false, gameTime));
                 viewer.UserCommandController.AddEvent(UserCommand.CameraScrollRight, KeyEventType.KeyDown, (GameTime gameTime) => viewer.Camera.Scroll(true, gameTime));
 
@@ -2173,6 +2178,25 @@ namespace Orts.ActivityRunner.Viewer3D
                     startViewPointRotationYRadians = viewPointRotationYRadians;
                 }
             }
+        }
+
+        public void Change3DCabViewPoint(TrainCar car)
+        {
+            if (car?.CabViewpoints == null || car.CabViewpoints.Count == 0)
+                return;
+
+            actViewPoint++;
+            if (actViewPoint >= car.CabViewpoints.Count)
+                actViewPoint = 0;
+            SetCameraCar(car);
+        }
+
+        public void SwitchSideCameraCar(TrainCar car)
+        {
+            if (car == null)
+                return;
+            attachedLocation.X = -attachedLocation.X;
+            rotationYRadians = -rotationYRadians;
         }
 
         public void ChangeCab(TrainCar newCar)
