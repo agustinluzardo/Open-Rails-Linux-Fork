@@ -1875,6 +1875,36 @@ namespace Orts.Simulation.Signalling
                 }
             }
 
+            // The migrated TrackTraveller/TrackCircuit topology can occasionally leave a
+            // signal with a static TrackCircuitNextIndex which does not occur in the train's
+            // actual route (notably around split/merged signal heads and junction boundaries).
+            // In that case the old code disabled the signal immediately, leaving the train
+            // permanently facing STOP even though its route itself is valid.
+            //
+            // Do not force a permissive aspect here.  Recover only the start of the signal
+            // route from the train's authoritative route: find the circuit containing this
+            // signal and use its immediate successor.  CheckRouteState below still performs
+            // the normal occupancy, junction alignment, reservation, deadlock and SIGSCR
+            // checks before any aspect may clear.
+            if (foundFirstSection < 0 && firstIndex >= 0)
+            {
+                for (int i = firstIndex; i + 1 < routePart.Count; i++)
+                {
+                    TrackCircuitRouteElement signalElement = routePart[i];
+                    if (signalElement.TrackCircuitSection.Index != TrackCircuitIndex)
+                        continue;
+
+                    foundFirstSection = i + 1;
+                    TrainRouteIndex = foundFirstSection;
+
+                    Trace.TraceInformation(
+                        "[SignalRoute] Signal {0} train {1}: configured next TC {2} is not in the train route; using route successor TC {3} after signal TC {4}.",
+                        Index, train.Train.Number, TrackCircuitNextIndex,
+                        routePart[foundFirstSection].TrackCircuitSection.Index, TrackCircuitIndex);
+                    break;
+                }
+            }
+
             if (foundFirstSection < 0)
             {
                 EnabledTrain = null;
