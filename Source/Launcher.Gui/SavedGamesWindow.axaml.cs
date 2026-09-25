@@ -45,6 +45,7 @@ namespace Riel.Launcher.Gui
         }
         public string Details { get; set; } = T("Reading save details…");
         public bool CanResume { get; set; } = true;
+        public string ResumeAction { get; set; } = "-SingleplayerResume";
         public bool DetailsLoaded { get; set; }
         public string Name
         {
@@ -131,6 +132,11 @@ namespace Riel.Launcher.Gui
                         (string.IsNullOrWhiteSpace(path) ? string.Empty : $"{T("Path")}: {path}\n") +
                         $"{T("Game time")}: {when}\n{T("Save version")}: {state.GameVersion}";
                     item.CanResume = state.Valid != false;
+                    item.ResumeAction = state.ProfileSelections?.ActivityType == FreeTrainSimulator.Common.ActivityType.TimeTable ||
+                        state.ProfileSelections?.GamePlayAction == FreeTrainSimulator.Common.GamePlayAction.SinglePlayerTimetableGame ||
+                        state.ProfileSelections?.GamePlayAction == FreeTrainSimulator.Common.GamePlayAction.SinglePlayerResumeTimetableGame
+                        ? "-SinglePlayerResumeTimetableGame"
+                        : "-SingleplayerResume";
                     if (state.Valid == false)
                         item.Details += "\n" + T("This save is incomplete and cannot be continued.");
                 }
@@ -186,7 +192,7 @@ namespace Riel.Launcher.Gui
         private void Accept()
         {
             if (SaveList.SelectedItem is SavedGameItem chosen && chosen.CanResume)
-                Close(new SavedGameChoice(chosen.File.FullName, "-SingleplayerResume"));
+                Close(new SavedGameChoice(chosen.File.FullName, chosen.ResumeAction));
         }
 
         private void ChooseReplay(string action)
