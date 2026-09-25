@@ -146,7 +146,7 @@ namespace Riel.Launcher.Gui
             if (empty)
                 ShowDetectedInstallation();
 
-            hasSave = Selections.LatestSave() != null;
+            hasSave = Selections.HasSavesOrDeletedSaves();
             ShowProblems();
             ApplyRouteFilter();
 
@@ -442,7 +442,9 @@ namespace Riel.Launcher.Gui
         {
             if (running)
                 return;
-            string save = await new SavedGamesWindow().ShowDialog<string>(this);
+            string save = await new SavedGamesWindow(routes).ShowDialog<string>(this);
+            hasSave = Selections.HasSavesOrDeletedSaves();
+            UpdateButtons();
             if (save != null)
                 await Run(Selections.ResumeArguments(save), System.IO.Path.GetFileNameWithoutExtension(save), null);
         }
@@ -489,7 +491,7 @@ namespace Riel.Launcher.Gui
             finally
             {
                 running = false;
-                hasSave = Selections.LatestSave() != null;
+                hasSave = Selections.HasSavesOrDeletedSaves();
                 UpdateButtons();
             }
 

@@ -463,6 +463,60 @@ msgstr "No hay vista previa disponible"
 msgid "Continue"
 msgstr "Continuar"
 
+msgid "Select a save to see its route, train, game time and screenshot."
+msgstr "Elegí una partida para ver su ruta, tren, hora de juego y captura."
+
+msgid "Delete save"
+msgstr "Eliminar partida"
+
+msgid "Restore deleted saves"
+msgstr "Restaurar partidas eliminadas"
+
+msgid "Reading save details…"
+msgstr "Leyendo los datos de la partida…"
+
+msgid "Unknown route"
+msgstr "Ruta desconocida"
+
+msgid "Unknown train"
+msgstr "Tren desconocido"
+
+msgid "Game time"
+msgstr "Hora de juego"
+
+msgid "Save version"
+msgstr "Versión del guardado"
+
+msgid "This save is incomplete and cannot be continued."
+msgstr "Esta partida está incompleta y no se puede continuar."
+
+msgid "Save details unavailable"
+msgstr "No se pudieron leer los datos de la partida"
+
+msgid "Could not read this save: {0}"
+msgstr "No se pudo leer esta partida: {0}"
+
+msgid "Delete saved game?"
+msgstr "¿Eliminar esta partida?"
+
+msgid "Move {0} and its screenshot and replay to Deleted Saves? You can restore them later."
+msgstr "¿Mover {0}, su captura y su repetición a Partidas eliminadas? Podés restaurarlos después."
+
+msgid "A deleted save with the same name already exists. Restore it first."
+msgstr "Ya existe una partida eliminada con el mismo nombre. Restaurala primero."
+
+msgid "Could not delete saved game"
+msgstr "No se pudo eliminar la partida"
+
+msgid "Saves restored"
+msgstr "Partidas restauradas"
+
+msgid "Restored {0} files."
+msgstr "Se restauraron {0} archivos."
+
+msgid "Could not restore saved games"
+msgstr "No se pudieron restaurar las partidas"
+
 msgid "Settings"
 msgstr "Configuración"
 

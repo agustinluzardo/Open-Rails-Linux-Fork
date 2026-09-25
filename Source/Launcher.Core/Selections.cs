@@ -186,6 +186,22 @@ namespace Riel.Launcher
         /// <summary>The newest saved game, or null when there is none to continue.</summary>
         public static string LatestSave() => SavedGames().FirstOrDefault()?.FullName;
 
+        /// <summary>Whether the save picker should be available, including for restoring deleted saves.</summary>
+        public static bool HasSavesOrDeletedSaves()
+        {
+            if (LatestSave() != null)
+                return true;
+            try
+            {
+                return Directory.Exists(RuntimeInfo.DeletedSaveFolder) &&
+                    Directory.EnumerateFiles(RuntimeInfo.DeletedSaveFolder).Any();
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+
         /// <summary>The simulator's command line for continuing the chosen saved game.</summary>
         public static IReadOnlyList<string> ResumeArguments(string save)
         {

@@ -462,3 +462,57 @@ msgstr ""
 
 msgid "Continue"
 msgstr ""
+
+msgid "Select a save to see its route, train, game time and screenshot."
+msgstr ""
+
+msgid "Delete save"
+msgstr ""
+
+msgid "Restore deleted saves"
+msgstr ""
+
+msgid "Reading save details…"
+msgstr ""
+
+msgid "Unknown route"
+msgstr ""
+
+msgid "Unknown train"
+msgstr ""
+
+msgid "Game time"
+msgstr ""
+
+msgid "Save version"
+msgstr ""
+
+msgid "This save is incomplete and cannot be continued."
+msgstr ""
+
+msgid "Save details unavailable"
+msgstr ""
+
+msgid "Could not read this save: {0}"
+msgstr ""
+
+msgid "Delete saved game?"
+msgstr ""
+
+msgid "Move {0} and its screenshot and replay to Deleted Saves? You can restore them later."
+msgstr ""
+
+msgid "A deleted save with the same name already exists. Restore it first."
+msgstr ""
+
+msgid "Could not delete saved game"
+msgstr ""
+
+msgid "Saves restored"
+msgstr ""
+
+msgid "Restored {0} files."
+msgstr ""
+
+msgid "Could not restore saved games"
+msgstr ""
