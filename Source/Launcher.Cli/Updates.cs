@@ -16,7 +16,7 @@ namespace Riel.Launcher
     /// <summary>Installs only a tested, checksummed portable build from the main release channel.</summary>
     internal static class Updates
     {
-        private const string Releases = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/releases?per_page=10";
+        private const string Releases = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/releases?per_page=100";
         private const string ArchiveName = "riel-linux-x64.zip";
 
         internal static async Task<int> Run(bool checkOnly, CancellationToken cancellationToken)
@@ -28,8 +28,13 @@ namespace Riel.Launcher
             using HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd("Riel-Updater/1.0");
             using JsonDocument releases = JsonDocument.Parse(await client.GetStringAsync(Releases, cancellationToken).ConfigureAwait(false));
-            JsonElement release = releases.RootElement.EnumerateArray().FirstOrDefault(item =>
-                !item.GetProperty("draft").GetBoolean() && item.GetProperty("tag_name").GetString().StartsWith("main-", StringComparison.Ordinal));
+            // GitHub's release list can use the tag's creation time, which need
+            // not match publishing order for commits authored outside GitHub.
+            JsonElement release = releases.RootElement.EnumerateArray()
+                .Where(item => !item.GetProperty("draft").GetBoolean() &&
+                    item.GetProperty("tag_name").GetString().StartsWith("main-", StringComparison.Ordinal))
+                .OrderByDescending(item => item.GetProperty("published_at").GetDateTimeOffset())
+                .FirstOrDefault();
             if (release.ValueKind == JsonValueKind.Undefined)
                 throw new LauncherException("No tested main release is available yet.");
 
