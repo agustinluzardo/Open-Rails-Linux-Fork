@@ -27,6 +27,7 @@ namespace FreeTrainSimulator.Runtime.Track
         // Open Rails' legacy Traveller uses a 2.5 m centre-line capture range
         // and accepts path points up to 0.5 m beyond section ends.
         private const double MstsPathCaptureTolerance = 2.5;
+        private const double MstsPathEndpointMargin = 0.5;
 
         /// <summary>The <see cref="VectorNode"/> (track node) the traveller is currently on, or <see langword="null"/> if not on track.</summary>
         public VectorNode CurrentNode { get; private init; }
@@ -217,7 +218,7 @@ namespace FreeTrainSimulator.Runtime.Track
         /// or road (<see cref="TrackDataBaseType.Road"/>) geometry.</param>
         /// <returns>A new <see cref="TrackTraveller"/> on the found section, or <see langword="null"/> if none was found.</returns>
         public static TrackTraveller? InitializeTraveller(in WorldLocation location, TrackDirection direction, TrackDataBaseType trackDataBaseType = TrackDataBaseType.Rail)
-            => InitializeTraveller(location, direction, WorldLocation.ProximityTolerance, trackDataBaseType);
+            => InitializeTraveller(location, direction, WorldLocation.ProximityTolerance, WorldLocation.ProximityTolerance, trackDataBaseType);
 
         /// <summary>
         /// Places an MSTS path point on track using the same 2.5 m centre-line capture
@@ -225,9 +226,9 @@ namespace FreeTrainSimulator.Runtime.Track
         /// to authored path nodes; normal runtime snapping retains the stricter 1 m tolerance.
         /// </summary>
         public static TrackTraveller? InitializePathTraveller(in WorldLocation location, TrackDirection direction = TrackDirection.Ahead, TrackDataBaseType trackDataBaseType = TrackDataBaseType.Rail)
-            => InitializeTraveller(location.SetElevation(0), direction, MstsPathCaptureTolerance, trackDataBaseType);
+            => InitializeTraveller(location.SetElevation(0), direction, MstsPathCaptureTolerance, MstsPathEndpointMargin, trackDataBaseType);
 
-        private static TrackTraveller? InitializeTraveller(in WorldLocation location, TrackDirection direction, double captureTolerance, TrackDataBaseType trackDataBaseType)
+        private static TrackTraveller? InitializeTraveller(in WorldLocation location, TrackDirection direction, double captureTolerance, double endpointMargin, TrackDataBaseType trackDataBaseType)
         {
             SectionGeometry bestGeometry = null;
             WorldLocation bestSnapped = WorldLocation.None;
@@ -247,10 +248,9 @@ namespace FreeTrainSimulator.Runtime.Track
                 if (!world.SectionGeometry.TryGetValue(section, out SectionGeometry sectionGeometry) || !sectionGeometry.HasGeometry)
                     continue;
 
-                (WorldLocation snapped, double offset) = SnapToSection(location, section, sectionGeometry);
-                double distSq = location.Location.Y == 0
-                    ? WorldLocation.GetDistanceSquared2D(location, snapped)
-                    : WorldLocation.GetDistanceSquared(location, snapped);
+                if (!TrySnapWithinCapture(location, section, sectionGeometry, captureTolerance, endpointMargin,
+                    out WorldLocation snapped, out double offset, out double distSq))
+                    continue;
 
                 // Open Rails scans track nodes in database order. Explicit tie-breaking
                 // prevents tile-index enumeration order from selecting a different parallel line.
@@ -309,8 +309,8 @@ namespace FreeTrainSimulator.Runtime.Track
             // point by its horizontal position; its stored elevation is not
             // necessarily the elevation of the track database.
             WorldLocation nextPlanar = nextLocation.SetElevation(0);
-            float? fwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: true, float.MaxValue, MstsPathCaptureTolerance);
-            float? bwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: false, float.MaxValue, MstsPathCaptureTolerance);
+            float? fwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: true, float.MaxValue, MstsPathCaptureTolerance, MstsPathEndpointMargin);
+            float? bwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: false, float.MaxValue, MstsPathCaptureTolerance, MstsPathEndpointMargin);
             if (bwDist.HasValue && (!fwDist.HasValue || bwDist.Value < fwDist.Value))
                 return candidate.Reverse();
             return candidate;
@@ -935,7 +935,8 @@ namespace FreeTrainSimulator.Runtime.Track
         /// making it robust for imprecise locations (e.g., .pat path nodes that may be several
         /// metres off track).
         /// </summary>
-        private float? WalkDistanceToLocation(in WorldLocation location, bool forward, float maxDistance, double captureTolerance = WorldLocation.ProximityTolerance)
+        private float? WalkDistanceToLocation(in WorldLocation location, bool forward, float maxDistance,
+            double captureTolerance = WorldLocation.ProximityTolerance, double endpointMargin = WorldLocation.ProximityTolerance)
         {
             TrackWorld world = TrackWorld.Instance;
             TrackDatabase trackDatabase = ResolveDatabase(TrackDataBaseType);
@@ -952,17 +953,8 @@ namespace FreeTrainSimulator.Runtime.Track
 
                 if (world.SectionGeometry.TryGetValue(section, out SectionGeometry geom) && geom.HasGeometry && sectionLength > 0)
                 {
-                    (WorldLocation snapped, double offset) = SnapToSection(location, section, geom);
-
-                    // Path nodes frequently lie exactly on vector-section boundaries (especially
-                    // around terminal tracks and junctions). Rejecting offsets 0/Length makes
-                    // direction detection fail and fall back to an arbitrary Ahead direction.
-                    // Instead, validate the geometric snap distance and accept boundary points.
-                    double distanceSquared = location.Location.Y == 0
-                        ? WorldLocation.GetDistanceSquared2D(location, snapped)
-                        : WorldLocation.GetDistanceSquared(location, snapped);
-                    double toleranceSquared = captureTolerance * captureTolerance;
-                    if (distanceSquared <= toleranceSquared)
+                    if (TrySnapWithinCapture(location, section, geom, captureTolerance, endpointMargin,
+                        out _, out double offset, out _))
                     {
                         bool targetAhead = forward ? offset >= entryOffset : offset <= entryOffset;
                         if (targetAhead)
@@ -1009,6 +1001,72 @@ namespace FreeTrainSimulator.Runtime.Track
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Open Rails-compatible horizontal capture test. The lateral capture range and the
+        /// longitudinal endpoint margin are deliberately separate: legacy MSTS path points
+        /// may be 2.5 m off the centre line, but only 0.5 m beyond a section end.
+        /// </summary>
+        private static bool TrySnapWithinCapture(in WorldLocation location, VectorSectionNode section, SectionGeometry geometry,
+            double captureTolerance, double endpointMargin, out WorldLocation snapped, out double offset, out double distanceSquared)
+        {
+            snapped = WorldLocation.None;
+            offset = 0;
+            distanceSquared = double.NaN;
+
+            if (geometry == null || !geometry.HasGeometry)
+                return false;
+
+            if (geometry.Curved)
+            {
+                Vector3 centerToPoint = WorldLocation.GetDistanceVector(geometry.ArcCenter, location);
+                centerToPoint.Y = 0;
+                double radiusDistance = centerToPoint.Length();
+                if (radiusDistance < 1e-9 || geometry.Radius <= 0)
+                    return false;
+
+                double radialError = radiusDistance - geometry.Radius;
+                if (Math.Abs(radialError) > captureTolerance)
+                    return false;
+
+                double dotU = Vector3.Dot(centerToPoint, geometry.U);
+                double dotV = Vector3.Dot(centerToPoint, geometry.V);
+                double angle = Math.Atan2(dotV, dotU);
+                double absArc = Math.Abs(geometry.ArcAngle);
+                double endpointAngle = endpointMargin / geometry.Radius;
+                if (angle < -endpointAngle || angle > absArc + endpointAngle)
+                    return false;
+
+                double clampedAngle = Math.Clamp(angle, 0, absArc);
+                offset = clampedAngle * geometry.Radius;
+                snapped = WorldLocation.PointAlongArc(section.Location, section.EndLocation,
+                    geometry.ArcAngle, geometry.Radius, offset);
+                distanceSquared = radialError * radialError;
+                return distanceSquared <= captureTolerance * captureTolerance;
+            }
+
+            Vector3 segment = WorldLocation.GetDistanceVector(section.Location, section.EndLocation);
+            Vector3 toPoint = WorldLocation.GetDistanceVector(section.Location, location);
+            segment.Y = 0;
+            toPoint.Y = 0;
+            double planarLengthSquared = segment.LengthSquared();
+            if (planarLengthSquared < 1e-12 || geometry.Length <= 0)
+                return false;
+
+            double t = Vector3.Dot(toPoint, segment) / planarLengthSquared;
+            double longitudinal = t * geometry.Length;
+            if (longitudinal < -endpointMargin || longitudinal > geometry.Length + endpointMargin)
+                return false;
+
+            Vector3 perpendicular = toPoint - (float)t * segment;
+            distanceSquared = perpendicular.LengthSquared();
+            if (distanceSquared > captureTolerance * captureTolerance)
+                return false;
+
+            offset = Math.Clamp(longitudinal, 0, geometry.Length);
+            snapped = WorldLocation.PointAlongDirection(section.Location, section.EndLocation, offset);
+            return true;
         }
 
         // Walks sections in the given direction, matching the target traveller by node reference and section index.
