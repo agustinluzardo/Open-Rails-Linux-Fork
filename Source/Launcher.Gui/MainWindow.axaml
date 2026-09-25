@@ -85,7 +85,7 @@
             </TabItem>
 
             <TabItem Header="{l:T 'Explore'}">
-              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" Margin="0,12,0,0">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto" Margin="0,12,0,0">
                 <TextBlock Grid.Row="0" Text="{l:T 'Path'}" VerticalAlignment="Center" Margin="0,0,16,0" />
                 <ComboBox Grid.Row="0" Grid.Column="1" x:Name="PathBox" HorizontalAlignment="Stretch" />
 
@@ -115,6 +115,11 @@
 
                 <TextBlock Grid.Row="5" Text="{l:T 'Weather'}" VerticalAlignment="Center" Margin="0,12,16,0" />
                 <ComboBox Grid.Row="5" Grid.Column="1" x:Name="WeatherBox" MinWidth="180" Margin="0,12,0,0" />
+
+                <CheckBox Grid.Row="6" Grid.Column="1" x:Name="ExploreActivityModeBox"
+                          Margin="0,12,0,0"
+                          Content="{l:T 'Explore in Activity Mode'}"
+                          ToolTip.Tip="{l:T 'Use Open Rails activity-style exploration. Normal Explore is recommended for most routes.'}" />
               </Grid>
             </TabItem>
             <TabItem Header="{l:T 'Timetable'}">
