@@ -273,7 +273,8 @@ namespace FreeTrainSimulator.Models.Settings
             commands[UserCommand.DisplayStationLabels] = new UserCommandModifiableKeyInput(0x40, commands[UserCommand.DisplayNextWindowTab]);
             commands[UserCommand.DisplaySwitchWindow] = new UserCommandKeyInput(0x42);
             commands[UserCommand.DisplayTrackMonitorWindow] = new UserCommandModifiableKeyInput(0x3E, commands[UserCommand.DisplayNextWindowTab]);
-            commands[UserCommand.DisplayTrainOperationsWindow] = new UserCommandKeyInput(0x43);
+            commands[UserCommand.DisplayTrainCarOperationsWindow] = new UserCommandKeyInput(0x43);
+            commands[UserCommand.DisplayTrainOperationsWindow] = new UserCommandKeyInput(0x43, KeyModifiers.Control | KeyModifiers.Alt);
             commands[UserCommand.DisplayDistributedPowerWindow] = new UserCommandModifiableKeyInput(0x3F, KeyModifiers.Alt, commands[UserCommand.DisplayNextWindowTab]);
             commands[UserCommand.DisplayEOTListWindow] = new UserCommandKeyInput(0x43, KeyModifiers.Control);
 
