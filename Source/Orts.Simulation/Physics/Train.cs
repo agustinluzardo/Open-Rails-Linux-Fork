@@ -3638,8 +3638,11 @@ namespace Orts.Simulation.Physics
         /// <summary>
         /// Calculate initial position
         /// </summary>
+        internal string InitialPlacementFailureReason { get; private set; }
+
         internal virtual TrackCircuitPartialPathRoute CalculateInitialTrainPosition()
         {
+            InitialPlacementFailureReason = null;
 
             // calculate train length
 
@@ -3697,6 +3700,7 @@ namespace Orts.Simulation.Physics
             if (!section.CanPlaceTrain(this, offset, remLength))
             {
                 sectionsClear = false;
+                RecordInitialPlacementBlocker(section);
             }
 
             while (remLength > 0 && sectionAvailable)
@@ -3715,6 +3719,7 @@ namespace Orts.Simulation.Physics
                         if (!section.CanPlaceTrain(this, offset, remLength))
                         {
                             sectionsClear = false;
+                            RecordInitialPlacementBlocker(section);
                         }
                         offset = 0.0f;
                     }
@@ -3722,6 +3727,7 @@ namespace Orts.Simulation.Physics
                     {
                         Trace.TraceWarning($"No sufficient track to place train {Number} , service name {Name} ");
                         sectionAvailable = false;
+                        InitialPlacementFailureReason ??= $"route ends at section {section.Index} before the entire train fits";
                     }
                 }
 
@@ -3735,6 +3741,19 @@ namespace Orts.Simulation.Physics
             }
 
             return tempRoute;
+        }
+
+        private void RecordInitialPlacementBlocker(TrackCircuitSection section)
+        {
+            if (InitialPlacementFailureReason != null)
+                return;
+
+            var occupiedBy = string.Join(",", section.CircuitState.OccupationState.Keys
+                .Select(occupant => occupant.Train.Number).Distinct().OrderBy(number => number));
+            var reservedBy = section.CircuitState.TrainReserved?.Train.Number.ToString() ?? "none";
+            InitialPlacementFailureReason = $"section {section.Index} ({section.CircuitType}), " +
+                $"occupied by [{occupiedBy}], reserved by {reservedBy}, " +
+                $"claims {section.CircuitState.TrainClaimed.Count}, deadlock trap {section.DeadlockTraps.ContainsKey(Number)}";
         }
 
         // Set initial train route
@@ -9067,7 +9086,9 @@ namespace Orts.Simulation.Physics
 
                 if (routeIndex < 0)
                 {
-                    Trace.TraceWarning($"Train {Number} Service {Name} : platform {platformStartID} is not on route");
+                    Trace.TraceWarning($"Train {Number} Service {Name} : platform {platformStartID} is not on route; " +
+                        $"platform sections {platform.TCSectionIndex[0]}/{platform.TCSectionIndex[^1]}, " +
+                        $"searched subroutes {beginActiveSubroute}-{Math.Min(activeSubroute, TCRoute.TCRouteSubpaths.Count - 1)}");
                     return false;
                 }
                 else

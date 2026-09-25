@@ -686,6 +686,8 @@ namespace Orts.Simulation
                 .OrderBy(item => item.DistanceSquared)
                 .Take(12)
                 .Select(item => $"{item.Train.Number} ({item.Train.Name}, {item.Train.TrainType}, " +
+                    $"speed {item.Train.SpeedMpS:F1}m/s, " +
+                    (item.Train is AITrain aiTrain ? $"AI state {aiTrain.MovementState}, " : "") +
                     $"{Math.Sqrt(item.DistanceSquared):F1}m from an end, " +
                     $"sections {item.Train.PresentPosition[Direction.Backward].TrackCircuitSectionIndex}/" +
                     $"{item.Train.PresentPosition[Direction.Forward].TrackCircuitSectionIndex}, " +

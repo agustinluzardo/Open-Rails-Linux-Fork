@@ -889,7 +889,8 @@ namespace Orts.Simulation.AIs
                 if (train.ActualWaitTimeS > 900)   // tried for 15 mins
                 {
                     TimeSpan timeStart = new TimeSpan((long)(Math.Pow(10, 7) * train.StartTime.Value));
-                    Trace.TraceWarning("Cannot place AI train {0} ({1}) at time {2}", train.Name, train.Number, timeStart.ToString());
+                    Trace.TraceWarning("Cannot place AI train {0} ({1}) at time {2}: {3}",
+                        train.Name, train.Number, timeStart.ToString(), train.InitialPlacementFailureReason ?? "post-init rejected position");
                 }
                 else
                 {
