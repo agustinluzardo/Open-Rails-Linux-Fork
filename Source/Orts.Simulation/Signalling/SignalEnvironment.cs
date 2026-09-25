@@ -129,7 +129,7 @@ namespace Orts.Simulation.Signalling
             string scriptPath = SignalConfig.Tags.TryGetValue("ScriptFilesPath", out string path) ? path : Path.GetDirectoryName(Simulator.Instance.RouteFolder.SignalConfigurationFile);
             SignalScriptProcessing.Initialize(new SignalScripts(scriptPath, SignalConfig.ScriptFiles, SignalConfig.SignalTypes));
 
-            ConcurrentBag<SignalWorldInfo> signalWorldList = new ConcurrentBag<SignalWorldInfo>();
+            List<SignalWorldInfo> signalWorldList = new List<SignalWorldInfo>();
             ConcurrentDictionary<int, SignalWorldInfo> signalWorldLookup = new ConcurrentDictionary<int, SignalWorldInfo>();
             ConcurrentDictionary<int, uint> platformSidesList = new ConcurrentDictionary<int, uint>();
             ConcurrentDictionary<int, int> speedPostWorldLookup = new ConcurrentDictionary<int, int>();
@@ -279,7 +279,7 @@ namespace Orts.Simulation.Signalling
         /// <summary>
         /// Read all world files to get signal flags
         /// </summary>
-        private void BuildSignalWorld(string worldPath, SignalConfigurationModel sigcfg, ConcurrentBag<SignalWorldInfo> signalWorldList,
+        private void BuildSignalWorld(string worldPath, SignalConfigurationModel sigcfg, List<SignalWorldInfo> signalWorldList,
             ConcurrentDictionary<int, SignalWorldInfo> signalWorldLookup, ConcurrentDictionary<int, SpeedpostWorldInfo> speedpostWorldList, ConcurrentDictionary<int, int> speedpostLookup, ConcurrentDictionary<int, uint> platformSidesList, CancellationToken token)
         {
             HashSet<TokenID> Tokens = new HashSet<TokenID>
@@ -292,94 +292,93 @@ namespace Orts.Simulation.Signalling
 
             int speedPostIndex = 0;
 
-            Parallel.ForEach(ContentIO.EnumerateFiles(worldPath, "w-??????+??????.w"), new ParallelOptions() { MaxDegreeOfParallelism = System.Environment.ProcessorCount, CancellationToken = token },
-                (fileName) =>
+            // Open Rails processes world files sequentially. This matters for legacy routes
+            // containing duplicate TrItem references: the first valid world object wins
+            // deterministically instead of depending on a parallel TryAdd race.
+            foreach (string fileName in ContentIO.EnumerateFiles(worldPath, "*.w"))
+            {
+                if (token.IsCancellationRequested)
+                    return;
+
+                // Legal MSTS world tile file names are 17 characters long.
+                if (Path.GetFileName(fileName).Length != 17)
+                    continue;
+
+                try
                 {
-                    try
+                    WorldFile worldFile = new WorldFile(fileName, Tokens);
+                    bool extendedWFileRead = false;
+
+                    foreach (WorldObject worldObject in worldFile.Objects)
                     {
-
-                        WorldFile worldFile = new WorldFile(fileName, Tokens);
-                        // loop through all signals
-                        bool extendedWFileRead = false;
-                        foreach (WorldObject worldObject in worldFile.Objects)
+                        if (worldObject is SignalObject signalObject && signalObject.SignalUnits != null)
                         {
-                            if (worldObject is SignalObject signalObject && signalObject.SignalUnits != null)//SignalUnits may be null if this has no unit, will ignore it and treat it as static in scenary.cs
+                            // Match Open Rails validation: reject a signal if any referenced
+                            // TDB item is missing or is not on the same/adjacent world tile.
+                            bool invalid = false;
+                            foreach (SignalUnit signalUnit in signalObject.SignalUnits)
                             {
-                                //check if signalheads are on same or adjacent tile as signal itself - otherwise there is an invalid match
-                                bool invalid = false;
-                                foreach (SignalUnit signalUnit in signalObject.SignalUnits)
+                                if (signalUnit.TrackItem < 0 || signalUnit.TrackItem >= trackDatabase.TrackItems.Length)
                                 {
-                                    Tile delta = trackDatabase.TrackItems[signalUnit.TrackItem].Location.Tile - worldObject.WorldPosition.Tile;
-                                    if (signalUnit.TrackItem >= trackDatabase.TrackItems.Length || Math.Abs(delta.X) > 1 || Math.Abs(delta.Z) > 1)
-                                    {
-                                        Trace.TraceWarning($"Signal referenced in .w file {worldObject.WorldPosition.Tile} as TrItem {signalUnit.TrackItem} not present in .tdb file ");
-                                        invalid = true;
-                                        break;
-                                    }
+                                    Trace.TraceWarning($"Signal referenced in .w file {worldObject.WorldPosition.Tile} as TrItem {signalUnit.TrackItem} not present in .tdb file");
+                                    invalid = true;
+                                    break;
                                 }
-                                if (invalid)
-                                    continue;
 
-                                // if valid, add signal
-                                SignalWorldInfo signalWorldInfo = new SignalWorldInfo(signalObject, sigcfg);
-                                signalWorldList.Add(signalWorldInfo);
-                                foreach (KeyValuePair<int, int> reference in signalWorldInfo.HeadReference)
+                                Tile itemTile = trackDatabase.TrackItems[signalUnit.TrackItem].Location.Tile;
+                                Tile delta = itemTile - worldObject.WorldPosition.Tile;
+                                if (Math.Abs(delta.X) > 1 || Math.Abs(delta.Z) > 1)
                                 {
-                                    if (!signalWorldLookup.TryAdd(reference.Key, signalWorldInfo))
-                                        Trace.TraceWarning($"Key {reference.Key} already exists for SignalWorldInfo");
+                                    Trace.TraceWarning($"Signal referenced in .w file {worldObject.WorldPosition.Tile} as TrItem {signalUnit.TrackItem} not matching .tdb tile location {itemTile}");
+                                    invalid = true;
+                                    break;
                                 }
                             }
-                            else if (worldObject is SpeedPostObject speedPostObj)
-                            {
-                                int index = Interlocked.Increment(ref speedPostIndex);
-                                speedpostWorldList.TryAdd(index, new SpeedpostWorldInfo(speedPostObj));
-                                foreach (int trItemId in speedPostObj.TrackItemIds.TrackDbItems)
-                                {
-                                    speedpostLookup.TryAdd(trItemId, index);
-                                }
-                            }
-                            else if (worldObject is PlatformObject platformObject)
-                            {
-                                platformSidesList.TryAdd(platformObject.TrackItemIds.TrackDbItems[0], platformObject.PlatformData);
-                                platformSidesList.TryAdd(platformObject.TrackItemIds.TrackDbItems[1], platformObject.PlatformData);
-                            }
-                            else if (worldObject is PickupObject pickupObject && pickupObject.PickupType == PickupType.Container)
-                            {
-                                if (!extendedWFileRead)
-                                {
-                                    string orWorldFile = Path.Combine(worldPath, FolderStructure.OpenRailsSpecificFolder, Path.GetFileName(fileName));
-                                    if (ContentIO.FileExists(orWorldFile))
-                                    {
-                                        // We have an OR-specific addition to world file
-                                        worldFile.InsertORSpecificData(orWorldFile, Tokens);
-                                        extendedWFileRead = true;
-                                    }
-                                }
-                                World.ContainerHandlingStation containerStation = Simulator.Instance.ContainerManager.CreateContainerStation(worldObject.WorldPosition, pickupObject.TrackItemIds.TrackDbItems[0], pickupObject);
-                                Simulator.Instance.ContainerManager.ContainerStations.Add(pickupObject.TrackItemIds.TrackDbItems[0], containerStation);
+                            if (invalid)
+                                continue;
 
-                                //if (worldObject.QDirection != null && worldObject.Position != null)
-                                //{
-                                //    var MSTSPosition = worldObject.Position;
-                                //    var MSTSQuaternion = worldObject.QDirection;
-                                //    var XNAQuaternion = new Quaternion((float)MSTSQuaternion.A, (float)MSTSQuaternion.B, -(float)MSTSQuaternion.C, (float)MSTSQuaternion.D);
-                                //    var XNAPosition = new Vector3((float)MSTSPosition.X, (float)MSTSPosition.Y, -(float)MSTSPosition.Z);
-                                //    var worldMatrix = new WorldPosition(worldFile.TileX, worldFile.TileZ, XNAPosition, XNAQuaternion);
-                                //    var containerStation = Simulator.ContainerManager.CreateContainerStation(worldMatrix, from tid in pickupObject.TrackItemIds.TrackDbItems where tid.db == 0 select tid.dbID, pickupObject);
-                                //    Simulator.Instance.ContainerManager.ContainerHandlingItems.Add(pickupObject.TrackItemIds.TrackDbItems[0], containerStation);
-                                //}
-                                //else
-                                //{
-                                //    Trace.TraceWarning($"Container station {worldObject.UiD} within .w file {worldFile.TileX} {worldFile.TileZ} is missing Matrix3x3 and QDirection");
-                                //}
+                            SignalWorldInfo signalWorldInfo = new SignalWorldInfo(signalObject, sigcfg);
+                            signalWorldList.Add(signalWorldInfo);
+                            foreach (KeyValuePair<int, int> reference in signalWorldInfo.HeadReference)
+                            {
+                                // Same rule as Open Rails SignalRefList: retain the first mapping.
+                                signalWorldLookup.TryAdd(reference.Key, signalWorldInfo);
                             }
                         }
+                        else if (worldObject is SpeedPostObject speedPostObj)
+                        {
+                            int index = ++speedPostIndex;
+                            speedpostWorldList.TryAdd(index, new SpeedpostWorldInfo(speedPostObj));
+                            foreach (int trItemId in speedPostObj.TrackItemIds.TrackDbItems)
+                                speedpostLookup.TryAdd(trItemId, index);
+                        }
+                        else if (worldObject is PlatformObject platformObject)
+                        {
+                            platformSidesList.TryAdd(platformObject.TrackItemIds.TrackDbItems[0], platformObject.PlatformData);
+                            platformSidesList.TryAdd(platformObject.TrackItemIds.TrackDbItems[1], platformObject.PlatformData);
+                        }
+                        else if (worldObject is PickupObject pickupObject && pickupObject.PickupType == PickupType.Container)
+                        {
+                            if (!extendedWFileRead)
+                            {
+                                string orWorldFile = Path.Combine(worldPath, FolderStructure.OpenRailsSpecificFolder, Path.GetFileName(fileName));
+                                if (ContentIO.FileExists(orWorldFile))
+                                {
+                                    worldFile.InsertORSpecificData(orWorldFile, Tokens);
+                                    extendedWFileRead = true;
+                                }
+                            }
+                            World.ContainerHandlingStation containerStation = Simulator.Instance.ContainerManager.CreateContainerStation(worldObject.WorldPosition, pickupObject.TrackItemIds.TrackDbItems[0], pickupObject);
+                            Simulator.Instance.ContainerManager.ContainerStations.Add(pickupObject.TrackItemIds.TrackDbItems[0], containerStation);
+                        }
                     }
-                    catch (FileLoadException error)
-                    {
-                        Trace.WriteLine(error);
-                    }
-                });
+                }
+                catch (FileLoadException error)
+                {
+                    Trace.WriteLine(error);
+                }
+            }
+
             Trace.TraceInformation("Loading WorldFiles for Signal World");
         }
 
@@ -420,7 +419,7 @@ namespace Orts.Simulation.Signalling
         /// <summary></summary>
         /// Build signal list from TDB
         /// </summary>
-        private void BuildSignalList(Dictionary<int, int> platformList, ConcurrentBag<SignalWorldInfo> signalWorldList)
+        private void BuildSignalList(Dictionary<int, int> platformList, List<SignalWorldInfo> signalWorldList)
         {
 
             //  Determine the number of signals in the track Objects list
@@ -661,7 +660,7 @@ namespace Orts.Simulation.Signalling
         /// <summary>
         /// Merge Heads
         /// </summary>
-        private void MergeHeads(ConcurrentBag<SignalWorldInfo> signalWorldList, Dictionary<int, Signal> signalHeadList)
+        private void MergeHeads(List<SignalWorldInfo> signalWorldList, Dictionary<int, Signal> signalHeadList)
         {
             foreach (SignalWorldInfo signalWorldInfo in signalWorldList)
             {
