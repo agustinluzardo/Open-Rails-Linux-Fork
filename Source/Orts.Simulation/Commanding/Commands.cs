@@ -644,7 +644,7 @@ namespace Orts.Simulation.Commanding
 
         public override void Redo()
         {
-            Receiver.UnconditionalInitializeBrakes();
+            Receiver.ReinitializeBrakesFromUserCommand();
         }
     }
 
