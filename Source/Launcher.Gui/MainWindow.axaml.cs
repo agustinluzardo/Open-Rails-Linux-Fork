@@ -93,6 +93,7 @@ namespace Riel.Launcher.Gui
             ActivityList.SelectionChanged += (_, _) => ActivityChanged();
             ActivityList.DoubleTapped += (_, _) => Guarded(Play);
             ConsistFilter.TextChanged += (_, _) => ApplyConsistFilter();
+            LocomotiveBox.SelectionChanged += (_, _) => ApplyConsistFilter();
             ConsistList.SelectionChanged += (_, _) => UpdateButtons();
             ConsistList.DoubleTapped += (_, _) => Guarded(Play);
             PathBox.SelectionChanged += (_, _) => UpdateButtons();
@@ -296,6 +297,7 @@ namespace Riel.Launcher.Gui
                 RouteDescription.Text = string.Empty;
                 ActivityList.ItemsSource = null;
                 PathBox.ItemsSource = null;
+                LocomotiveBox.ItemsSource = null;
                 TimetableBox.ItemsSource = null;
                 TimetableTrainList.ItemsSource = null;
                 ActivityDescription.Text = string.Empty;
@@ -324,6 +326,19 @@ namespace Riel.Launcher.Gui
                 consists = wagonSets.Select(wagonSet => new ConsistItem(wagonSet))
                     .OrderBy(consist => consist.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
                 consistsFolder = item.Folder;
+
+                List<Choice<string>> locomotives = new List<Choice<string>>
+                {
+                    new Choice<string>(null, T("All locomotives"))
+                };
+                locomotives.AddRange(consists
+                    .Where(consist => !string.IsNullOrWhiteSpace(consist.LocomotiveReference))
+                    .GroupBy(consist => consist.LocomotiveReference, StringComparer.OrdinalIgnoreCase)
+                    .Select(group => new Choice<string>(group.Key,
+                        group.Select(consist => consist.LocomotiveName).FirstOrDefault(name => !string.IsNullOrWhiteSpace(name)) ?? group.Key))
+                    .OrderBy(choice => choice.Name, StringComparer.CurrentCultureIgnoreCase));
+                LocomotiveBox.ItemsSource = locomotives;
+                LocomotiveBox.SelectedIndex = 0;
                 ApplyConsistFilter();
             }
 
@@ -382,11 +397,16 @@ namespace Riel.Launcher.Gui
         private void ApplyConsistFilter()
         {
             string filter = ConsistFilter.Text?.Trim() ?? string.Empty;
+            string locomotive = (LocomotiveBox.SelectedItem as Choice<string>)?.Value;
             ConsistItem selected = ConsistList.SelectedItem as ConsistItem;
 
-            List<ConsistItem> shown = filter.Length == 0
-                ? consists
-                : consists.Where(consist => consist.Name.Contains(filter, StringComparison.CurrentCultureIgnoreCase)).ToList();
+            IEnumerable<ConsistItem> filtered = consists;
+            if (!string.IsNullOrWhiteSpace(locomotive))
+                filtered = filtered.Where(consist => string.Equals(consist.LocomotiveReference, locomotive, StringComparison.OrdinalIgnoreCase));
+            if (filter.Length > 0)
+                filtered = filtered.Where(consist => consist.Name.Contains(filter, StringComparison.CurrentCultureIgnoreCase));
+
+            List<ConsistItem> shown = filtered.ToList();
             ConsistList.ItemsSource = shown;
             ConsistList.SelectedItem = selected != null && shown.Contains(selected) ? selected : shown.FirstOrDefault();
             UpdateButtons();
@@ -426,6 +446,13 @@ namespace Riel.Launcher.Gui
                 PathBox.SelectedItem = (PathBox.ItemsSource as IEnumerable<PathItem>)?
                     .FirstOrDefault(path => string.Equals(path.Path.Id, saved.PathId, StringComparison.OrdinalIgnoreCase)) ?? PathBox.SelectedItem;
                 ConsistItem consist = consists.FirstOrDefault(item => string.Equals(item.Consist.Id, saved.WagonSetId, StringComparison.OrdinalIgnoreCase));
+                string locomotiveId = saved.LocomotiveId ?? consist?.LocomotiveReference;
+                if (!string.IsNullOrWhiteSpace(locomotiveId))
+                {
+                    LocomotiveBox.SelectedItem = (LocomotiveBox.ItemsSource as IEnumerable<Choice<string>>)?
+                        .FirstOrDefault(choice => string.Equals(choice.Value, locomotiveId, StringComparison.OrdinalIgnoreCase))
+                        ?? LocomotiveBox.SelectedItem;
+                }
                 if (consist != null)
                 {
                     ConsistList.SelectedItem = consist;
