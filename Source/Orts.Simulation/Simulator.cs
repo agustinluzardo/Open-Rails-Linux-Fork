@@ -713,6 +713,8 @@ namespace Orts.Simulation
             ToggleDoorsLeftCommand.Receiver = PlayerLocomotive;
             ToggleDoorsRightCommand.Receiver = PlayerLocomotive;
             ToggleMirrorsCommand.Receiver = PlayerLocomotive;
+            ToggleWindowLeftCommand.Receiver = PlayerLocomotive;
+            ToggleWindowRightCommand.Receiver = PlayerLocomotive;
             CabRadioCommand.Receiver = PlayerLocomotive;
             ToggleHelpersEngineCommand.Receiver = PlayerLocomotive;
             BatterySwitchCommand.Receiver = PlayerLocomotive.LocomotivePowerSupply;
