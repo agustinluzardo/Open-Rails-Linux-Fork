@@ -75,12 +75,18 @@ namespace Orts.ActivityRunner.Viewer3D.PopupWindows
             {
                 ControlLayout line = scroll.AddLayoutHorizontalLineOfText();
                 line.Add(new Label(this, carWidth, line.RemainingHeight, car.CarID));
-                line.Add(Label total = new Label(this, forceWidth, line.RemainingHeight, null, HorizontalAlignment.Right));
-                line.Add(Label motive = new Label(this, forceWidth, line.RemainingHeight, null, HorizontalAlignment.Right));
-                line.Add(Label brake = new Label(this, forceWidth, line.RemainingHeight, null, HorizontalAlignment.Right));
-                line.Add(Label coupler = new Label(this, forceWidth, line.RemainingHeight, null, HorizontalAlignment.Right));
-                line.Add(Label slack = new Label(this, slackWidth, line.RemainingHeight, null, HorizontalAlignment.Right));
-                line.Add(Label derail = new Label(this, derailWidth, line.RemainingHeight, null, HorizontalAlignment.Right));
+                Label total = new Label(this, forceWidth, line.RemainingHeight, null, HorizontalAlignment.Right);
+                Label motive = new Label(this, forceWidth, line.RemainingHeight, null, HorizontalAlignment.Right);
+                Label brake = new Label(this, forceWidth, line.RemainingHeight, null, HorizontalAlignment.Right);
+                Label coupler = new Label(this, forceWidth, line.RemainingHeight, null, HorizontalAlignment.Right);
+                Label slack = new Label(this, slackWidth, line.RemainingHeight, null, HorizontalAlignment.Right);
+                Label derail = new Label(this, derailWidth, line.RemainingHeight, null, HorizontalAlignment.Right);
+                line.Add(total);
+                line.Add(motive);
+                line.Add(brake);
+                line.Add(coupler);
+                line.Add(slack);
+                line.Add(derail);
                 rows.Add(new ForceRow(car, total, motive, brake, coupler, slack, derail));
             }
 
