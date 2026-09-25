@@ -406,11 +406,14 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
             if (controls == null)
                 return;
 
-            foreach (ControlValuePost control in controls)
+            ControlValuePost[] pendingControls = controls.ToArray();
+            viewer.EnqueueWebCommand(() =>
             {
-                string type = control.TypeName?.Trim().ToUpperInvariant();
-                switch (type)
+                foreach (ControlValuePost control in pendingControls)
                 {
+                    string type = control.TypeName?.Trim().ToUpperInvariant();
+                    switch (type)
+                    {
                     case "THROTTLE":
                         viewer.UserCommandController.Send(AnalogUserCommand.Throttle, (float)Math.Clamp(control.Value * 100.0, 0.0, 100.0));
                         break;
@@ -444,8 +447,9 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                                 viewer.UserCommandController.Send(UserCommand.ControlPantograph1, KeyEventType.KeyPressed);
                         }
                         break;
+                    }
                 }
-            }
+            });
         }
         #endregion
 
@@ -523,43 +527,52 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
             if (train == null || request == null || request.Index < 0 || request.Index >= train.Cars.Count)
                 return TrainCarOperations();
 
-            TrainCar car = train.Cars[request.Index];
-            MSTSWagon wagon = car as MSTSWagon;
-            MSTSLocomotive locomotive = car as MSTSLocomotive;
-
-            switch (request.Action)
+            int carIndex = request.Index;
+            string action = request.Action;
+            viewer.EnqueueWebCommand(() =>
             {
-                case "handbrake" when wagon != null && wagon.HandBrakePresent:
-                    _ = new WagonHandbrakeCommand(viewer.Log, wagon, car.BrakeSystem.HandbrakePercent == 0);
-                    break;
-                case "power" when locomotive != null:
-                    _ = new PowerCommand(viewer.Log, locomotive, !locomotive.LocomotivePowerSupply.MainPowerSupplyOn);
-                    break;
-                case "mu" when locomotive != null:
-                    _ = new ToggleMUCommand(viewer.Log, locomotive, locomotive.RemoteControlGroup == RemoteControlGroup.Unconnected);
-                    break;
-                case "battery" when wagon?.PowerSupply != null:
-                    _ = new ToggleBatterySwitchCommand(viewer.Log, wagon, !wagon.PowerSupply.BatterySwitch.On);
-                    break;
-                case "ets" when wagon?.PowerSupply != null:
-                    _ = new ConnectElectricTrainSupplyCableCommand(viewer.Log, wagon, !wagon.PowerSupply.FrontElectricTrainSupplyCableConnected);
-                    break;
-                case "hose" when wagon != null:
-                    _ = new WagonBrakeHoseConnectCommand(viewer.Log, wagon, !wagon.BrakeSystem.FrontBrakeHoseConnected);
-                    break;
-                case "front-angle" when wagon != null:
-                    _ = new ToggleAngleCockACommand(viewer.Log, wagon, !wagon.BrakeSystem.AngleCockAOpen);
-                    break;
-                case "rear-angle" when wagon != null:
-                    _ = new ToggleAngleCockBCommand(viewer.Log, wagon, !wagon.BrakeSystem.AngleCockBOpen);
-                    break;
-                case "bleed" when wagon != null && car.BrakeSystem is SingleTransferPipe:
-                    _ = new ToggleBleedOffValveCommand(viewer.Log, wagon, !wagon.BrakeSystem.BleedOffValveOpen);
-                    break;
-                case "uncouple" when request.Index < train.Cars.Count - 1 && !viewer.Simulator.TimetableMode:
-                    _ = new UncoupleCommand(viewer.Log, request.Index);
-                    break;
-            }
+                Train currentTrain = viewer.PlayerTrain;
+                if (currentTrain == null || carIndex < 0 || carIndex >= currentTrain.Cars.Count)
+                    return;
+
+                TrainCar car = currentTrain.Cars[carIndex];
+                MSTSWagon wagon = car as MSTSWagon;
+                MSTSLocomotive locomotive = car as MSTSLocomotive;
+
+                switch (action)
+                {
+                    case "handbrake" when wagon != null && wagon.HandBrakePresent:
+                        _ = new WagonHandbrakeCommand(viewer.Log, wagon, car.BrakeSystem.HandbrakePercent == 0);
+                        break;
+                    case "power" when locomotive != null:
+                        _ = new PowerCommand(viewer.Log, locomotive, !locomotive.LocomotivePowerSupply.MainPowerSupplyOn);
+                        break;
+                    case "mu" when locomotive != null:
+                        _ = new ToggleMUCommand(viewer.Log, locomotive, locomotive.RemoteControlGroup == RemoteControlGroup.Unconnected);
+                        break;
+                    case "battery" when wagon?.PowerSupply != null:
+                        _ = new ToggleBatterySwitchCommand(viewer.Log, wagon, !wagon.PowerSupply.BatterySwitch.On);
+                        break;
+                    case "ets" when wagon?.PowerSupply != null:
+                        _ = new ConnectElectricTrainSupplyCableCommand(viewer.Log, wagon, !wagon.PowerSupply.FrontElectricTrainSupplyCableConnected);
+                        break;
+                    case "hose" when wagon != null:
+                        _ = new WagonBrakeHoseConnectCommand(viewer.Log, wagon, !wagon.BrakeSystem.FrontBrakeHoseConnected);
+                        break;
+                    case "front-angle" when wagon != null:
+                        _ = new ToggleAngleCockACommand(viewer.Log, wagon, !wagon.BrakeSystem.AngleCockAOpen);
+                        break;
+                    case "rear-angle" when wagon != null:
+                        _ = new ToggleAngleCockBCommand(viewer.Log, wagon, !wagon.BrakeSystem.AngleCockBOpen);
+                        break;
+                    case "bleed" when wagon != null && car.BrakeSystem is SingleTransferPipe:
+                        _ = new ToggleBleedOffValveCommand(viewer.Log, wagon, !wagon.BrakeSystem.BleedOffValveOpen);
+                        break;
+                    case "uncouple" when carIndex < currentTrain.Cars.Count - 1 && !viewer.Simulator.TimetableMode:
+                        _ = new UncoupleCommand(viewer.Log, carIndex);
+                        break;
+                }
+            });
 
             return TrainCarOperations();
         }
@@ -697,7 +710,7 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                 KeyEventType eventType = string.Equals(request.Event, "released", StringComparison.OrdinalIgnoreCase)
                     ? KeyEventType.KeyReleased
                     : KeyEventType.KeyPressed;
-                viewer.UserCommandController.Send(command, eventType);
+                viewer.EnqueueWebCommand(() => viewer.UserCommandController.Send(command, eventType));
             }
 
             return SwitchPanel();

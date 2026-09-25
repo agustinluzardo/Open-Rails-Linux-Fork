@@ -18,6 +18,7 @@
 // This file is the responsibility of the 3D & Environment Team.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -122,6 +123,13 @@ namespace Orts.ActivityRunner.Viewer3D
         /// </summary>
         public double RealTime { get; private set; }
         internal WebServices.ActivityEventFeed ActivityEventFeed { get; } = new WebServices.ActivityEventFeed();
+        private readonly ConcurrentQueue<Action> webCommandQueue = new ConcurrentQueue<Action>();
+
+        internal void EnqueueWebCommand(Action action)
+        {
+            if (action != null)
+                webCommandQueue.Enqueue(action);
+        }
 
         private Thread dispatcherThread;
         private Dispatcher.DispatcherWindow dispatcherWindow;
@@ -1167,6 +1175,9 @@ namespace Orts.ActivityRunner.Viewer3D
             ElapsedTime elapsedTime = new ElapsedTime(Simulator.GetElapsedClockSeconds(elapsedRealTime), elapsedRealTime);
 
             HandleUserInput(elapsedTime);
+            while (webCommandQueue.TryDequeue(out Action webCommand))
+                webCommand();
+
             // We need to do it also here, because passing from manual to auto a ReverseFormation may be needed
             if (Camera is TrackingCamera && Camera.AttachedCar != null && Camera.AttachedCar.Train != null && Camera.AttachedCar.Train.FormationReversed)
             {
