@@ -131,12 +131,35 @@ namespace Orts.Formats.Msts.Models
         {
             stf.MustMatchBlockStart();
             stf.ParseBlock(new STFReader.TokenProcessor[] {
-                new STFReader.TokenProcessor("externalcam", ()=>{ ExternalCam = stf.ReadBoolBlock(true); }),
-                new STFReader.TokenProcessor("cabcam", ()=>{ CabCam = stf.ReadBoolBlock(true); }),
-                new STFReader.TokenProcessor("passengercam", ()=>{ PassengerCam = stf.ReadBoolBlock(true); }),
+                new STFReader.TokenProcessor("externalcam", ()=>{ ExternalCam = ReadLegacyCameraFlag(stf); }),
+                new STFReader.TokenProcessor("cabcam", ()=>{ CabCam = ReadLegacyCameraFlag(stf); }),
+                new STFReader.TokenProcessor("passengercam", ()=>{ PassengerCam = ReadLegacyCameraFlag(stf); }),
                 new STFReader.TokenProcessor("distance", ()=>{ Distance = stf.ReadFloatBlock(STFReader.Units.Distance, Distance); }),
                 new STFReader.TokenProcessor("tracktype", ()=>{ TrackType = stf.ReadIntBlock(null); }),
             });
+        }
+
+        private static bool ReadLegacyCameraFlag(STFReader stf)
+        {
+            // Some MSTS add-ons use bare camera flags (e.g. "ExternalCam PassengerCam")
+            // instead of "ExternalCam ( 1 )". ReadBoolBlock consumes the following token
+            // in that case, which can swallow PassengerCam/CabCam and desynchronise the
+            // rest of the SMS block. Treat a bare flag as true without consuming its
+            // neighbour, while preserving normal block syntax.
+            string token = stf.ReadItem();
+            if (token != "(")
+            {
+                stf.StepBackOneItem();
+                return true;
+            }
+
+            string value = stf.ReadItem();
+            if (value == ")")
+                return true;
+
+            bool result = !string.Equals(value, "false", StringComparison.OrdinalIgnoreCase) && value != "0";
+            stf.SkipRestOfBlock();
+            return result;
         }
 
         // for precompiled sound sources for activity sound
