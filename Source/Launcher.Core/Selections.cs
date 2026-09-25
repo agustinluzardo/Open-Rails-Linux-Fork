@@ -99,7 +99,7 @@ namespace Riel.Launcher
         }
 
         public static ProfileSelectionsModel Explore(FolderModel folder, RouteModelHeader route, PathModelHeader path, WagonSetModel consist,
-            TimeOnly startTime, SeasonType season, WeatherType weather)
+            TimeOnly startTime, SeasonType season, WeatherType weather, bool activityMode = false)
         {
             ArgumentNullException.ThrowIfNull(folder);
             ArgumentNullException.ThrowIfNull(route);
@@ -112,7 +112,7 @@ namespace Riel.Launcher
                 // The launcher's Explore tab must use the simulator's real Explorer mode.
                 // ExploreActivity runs the consist through the AI/autopilot initialization path,
                 // which can reject otherwise-valid legacy MSTS paths or place long consists badly.
-                ActivityType = ActivityType.Explorer,
+                ActivityType = activityMode ? ActivityType.ExploreActivity : ActivityType.Explorer,
                 FolderName = folder.Name,
                 RouteId = route.Id,
                 PathId = path.Id,
