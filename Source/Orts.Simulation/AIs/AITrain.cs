@@ -345,6 +345,20 @@ namespace Orts.Simulation.AIs
                 }
 
                 InitializeSignals(false);           // Get signal information
+
+                // Initial AI placement may start directly in AutoSignal without passing
+                // through SwitchToSignalControl().  Explicitly request the first signal
+                // after the route and signal list are known; RequestClearSignal still
+                // enforces holds, occupancy, junctions, reservations and deadlocks.
+                if (ControlMode == TrainControlMode.AutoSignal && NextSignalObjects[Direction.Forward] != null &&
+                    NextSignalObjects[Direction.Forward].EnabledTrain != RoutedForward)
+                {
+                    Trace.TraceInformation(
+                        "[SignalInit] AI train {0} requesting initial signal {1} after placement.",
+                        Number, NextSignalObjects[Direction.Forward].Index);
+                    NextSignalObjects[Direction.Forward].RequestClearSignal(ValidRoutes[Direction.Forward], RoutedForward, 0, false, null);
+                }
+
                 if (IsActualPlayerTrain)
                     TrainDeadlockInfo.CheckDeadlock(ValidRoutes[Direction.Forward], Number);
                 TCRoute.SetReversalOffset(Length, false);  // set reversal information for first subpath
