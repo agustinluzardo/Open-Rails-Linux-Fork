@@ -282,8 +282,12 @@ namespace FreeTrainSimulator.Runtime.Track
             // Open Rails places the rear on the nearest track, then chooses its
             // direction using the following path point.
             TrackTraveller candidate = nearest.Value;
-            float? fwDist = candidate.WalkDistanceToLocation(nextLocation, forward: true, float.MaxValue);
-            float? bwDist = candidate.WalkDistanceToLocation(nextLocation, forward: false, float.MaxValue);
+            // As with the first PAT node, Open Rails finds the following path
+            // point by its horizontal position; its stored elevation is not
+            // necessarily the elevation of the track database.
+            WorldLocation nextPlanar = nextLocation.SetElevation(0);
+            float? fwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: true, float.MaxValue);
+            float? bwDist = candidate.WalkDistanceToLocation(nextPlanar, forward: false, float.MaxValue);
             if (bwDist.HasValue && (!fwDist.HasValue || bwDist.Value < fwDist.Value))
                 return candidate.Reverse();
             return candidate;
@@ -1150,23 +1154,39 @@ namespace FreeTrainSimulator.Runtime.Track
             Vector3 d = WorldLocation.GetDistanceVector(start, end);   // end − start
             Vector3 q = WorldLocation.GetDistanceVector(start, query); // query − start
             double dX = d.X, dY = d.Y, dZ = d.Z;
+            bool planar = query.Location.Y == 0;
             double lenSq = dX * dX + dY * dY + dZ * dZ;
             if (lenSq <= 0.0)
                 return (start, 0.0);
-            double dot = (double)q.X * dX + (double)q.Y * dY + (double)q.Z * dZ;
+            // A zero-height PAT location requests a horizontal lookup. Using
+            // its artificial Y=0 in the 3D dot product shifts the projected
+            // position on a sloping, elevated section (and can put two starts
+            // at the same section boundary). Retain the real 3D section length
+            // for the resulting traveller offset and world position.
+            double projectionLengthSq = planar ? dX * dX + dZ * dZ : lenSq;
+            if (projectionLengthSq <= 0.0)
+                return (start, 0.0);
+            double dot = (double)q.X * dX + (double)q.Z * dZ;
+            if (!planar)
+                dot += (double)q.Y * dY;
             if (dot <= 0.0)
                 return (start, 0.0);
-            if (dot >= lenSq)
+            if (dot >= projectionLengthSq)
                 return (end, Math.Sqrt(lenSq));
-            double offset = dot / Math.Sqrt(lenSq);
+            double offset = dot / projectionLengthSq * Math.Sqrt(lenSq);
             return (WorldLocation.PointAlongDirection(start, end, offset), offset);
         }
 
         private static (WorldLocation snapped, double offset) SnapToCurvedSection(VectorSectionNode section, SectionGeometry geom, in WorldLocation query)
         {
             Vector3 qFromCenter = WorldLocation.GetDistanceVector(geom.ArcCenter, query);
-            double dotU = (double)qFromCenter.X * geom.U.X + (double)qFromCenter.Y * geom.U.Y + (double)qFromCenter.Z * geom.U.Z;
-            double dotV = (double)qFromCenter.X * geom.V.X + (double)qFromCenter.Y * geom.V.Y + (double)qFromCenter.Z * geom.V.Z;
+            double dotU = (double)qFromCenter.X * geom.U.X + (double)qFromCenter.Z * geom.U.Z;
+            double dotV = (double)qFromCenter.X * geom.V.X + (double)qFromCenter.Z * geom.V.Z;
+            if (query.Location.Y != 0)
+            {
+                dotU += (double)qFromCenter.Y * geom.U.Y;
+                dotV += (double)qFromCenter.Y * geom.V.Y;
+            }
             double angular = Math.Clamp(Math.Atan2(dotV, dotU), 0.0, Math.Abs(geom.ArcAngle));
             double arcLengthMetres = angular * geom.Radius;
             return (WorldLocation.PointAlongArc(section.Location, section.EndLocation, geom.ArcAngle, geom.Radius, arcLengthMetres), arcLengthMetres);

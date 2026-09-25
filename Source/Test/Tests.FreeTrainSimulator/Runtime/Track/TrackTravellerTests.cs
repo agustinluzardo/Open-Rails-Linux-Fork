@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Reflection;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Position;
@@ -17,6 +18,23 @@ namespace Tests.FreeTrainSimulator.Runtime.Track
     [TestClass]
     public class TrackTravellerTests
     {
+        [TestMethod]
+        public void ZeroHeightPathPointProjectsToItsHorizontalPositionOnElevatedGrade()
+        {
+            // PAT points are looked up in X/Z by Open Rails. On a graded track,
+            // their artificial zero elevation must not move them along the rail.
+            WorldLocation start = new WorldLocation(0, 0, 0, 100, 0);
+            WorldLocation end = new WorldLocation(0, 0, 100, 110, 0);
+            WorldLocation pathPoint = new WorldLocation(0, 0, 40, 0, 0);
+            MethodInfo snap = typeof(TrackTraveller).GetMethod("SnapToStraightSection", BindingFlags.NonPublic | BindingFlags.Static);
+
+            (WorldLocation position, double offset) = ((WorldLocation, double))snap.Invoke(null, new object[] { start, end, pathPoint });
+
+            Assert.AreEqual(40, position.Location.X, 0.01, "Horizontal path position must be preserved");
+            Assert.AreEqual(104, position.Location.Y, 0.01, "The snapped train stays on the elevated rail");
+            Assert.AreEqual(Math.Sqrt(10100) * 0.4, offset, 0.01, "The traveller offset uses the real length of the grade");
+        }
+
         private static TrackWorld CreateEmptyTrackWorld()
         {
             return (TrackWorld)Activator.CreateInstance(
