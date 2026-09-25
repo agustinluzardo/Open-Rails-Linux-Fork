@@ -121,6 +121,7 @@ namespace Orts.ActivityRunner.Viewer3D
         /// Monotonically increasing time value (in seconds) for the game/viewer. Starts at 0 and only ever increases, at real-time.
         /// </summary>
         public double RealTime { get; private set; }
+        internal WebServices.ActivityEventFeed ActivityEventFeed { get; } = new WebServices.ActivityEventFeed();
 
         private Thread dispatcherThread;
         private Dispatcher.DispatcherWindow dispatcherWindow;
@@ -359,6 +360,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private void ActivityRun_OnEventTriggered(object sender, ActivityEventArgs e)
         {
+            ActivityEventFeed.Add(e.TriggeredEvent.ActivityEvent.Name, e.TriggeredEvent.ActivityEvent.Outcomes?.DisplayMessage);
             (windowManager[ViewerWindowType.ActivityWindow] as PopupWindows.ActivityWindow).OpenFromEvent(e.TriggeredEvent);
         }
 
