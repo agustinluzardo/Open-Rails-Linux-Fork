@@ -31,7 +31,9 @@ namespace Orts.ActivityRunner.Viewer3D.Primitives
 
         protected virtual VertexPositionTexture[] GetVertices(GameHost game)
         {
-            var dd = (float)Material.TextureWidth / 2;
+            // The Riel loading icon is stored at 256 px for crisp rendering, but
+            // should occupy the same screen area as the previous 64 px icon.
+            var dd = Math.Min(Material.TextureWidth, 64) / 2f;
             return new[] {
                     new VertexPositionTexture(new Vector3(-dd - 0.5f, +dd + 0.5f, -3), new Vector2(0, 0)),
                     new VertexPositionTexture(new Vector3(+dd - 0.5f, +dd + 0.5f, -3), new Vector2(1, 0)),
