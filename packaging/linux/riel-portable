@@ -2,10 +2,37 @@
 # Run Riel from an extracted portable archive, without a system .NET installation.
 set -eu
 
-bundle_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+# Resolve the real wrapper location before deriving app/. This matters when the
+# portable bundle is installed under /opt and exposed through /usr/local/bin/riel.
+self=$(readlink -f -- "$0" 2>/dev/null || true)
+if [ -z "$self" ]; then
+    self="$0"
+fi
+bundle_dir=$(CDPATH= cd -- "$(dirname -- "$self")" && pwd -P)
 app_dir="$bundle_dir/app"
 
 if [ "${1:-}" = "update" ]; then
+    check_only=0
+    for argument in "$@"; do
+        if [ "$argument" = "--check" ]; then
+            check_only=1
+            break
+        fi
+    done
+
+    # A system-wide /opt installation is normally root-owned. Keep normal runs
+    # unprivileged, but ask polkit for elevation only when an actual update must
+    # replace those files. Checks never need administrator privileges.
+    if [ "$check_only" -eq 0 ] && [ "$(id -u)" -ne 0 ] && \
+       { [ ! -w "$bundle_dir" ] || [ ! -w "$app_dir" ]; }; then
+        if command -v pkexec >/dev/null 2>&1; then
+            exec pkexec "$bundle_dir/riel" "$@"
+        fi
+        echo "Riel is installed in a system directory and needs administrator privileges to update." >&2
+        echo "Run: sudo '$bundle_dir/riel' update" >&2
+        exit 77
+    fi
+
     shift
     "$app_dir/riel" update "$@"
     if [ "${1:-}" = "--check" ] || [ ! -f "$bundle_dir/.riel-update-stage/riel-linux-x64/app/riel" ]; then
@@ -21,7 +48,7 @@ if [ "${1:-}" = "update" ]; then
        mv -- "$bundle_dir/.riel-wrapper-next" "$bundle_dir/riel"; then
         # The wrapper stays outside app so this process can finish the swap.
         rm -rf -- "$stage" "$previous"
-        echo 'Riel updated. Run ./riel gui to start the new version.'
+        echo 'Riel updated. Run riel gui to start the new version.'
     else
         rm -rf -- "$app_dir" "$bundle_dir/.riel-wrapper-next"
         mv -- "$previous" "$app_dir"
