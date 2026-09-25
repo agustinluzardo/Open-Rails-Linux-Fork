@@ -156,9 +156,17 @@ namespace Orts.ActivityRunner.Viewer3D
             foreach (var lightPrimitive in LightPrimitives)
                 lightPrimitive.PrepareFrame(frame, elapsedTime);
 
-            Vector3 mstsLocation = (positionSource.WorldPosition.Tile - Viewer.Camera.Tile).TileVector();
-            Matrix xnaDTileTranslation = Matrix.CreateTranslation(mstsLocation.XnaVector());  // object is offset from camera this many tiles
-            xnaDTileTranslation = MatrixExtension.Multiply(positionSource.WorldPosition.XNAMatrix,xnaDTileTranslation);
+            Vector3 tileTranslation = (positionSource.WorldPosition.Tile - Viewer.Camera.Tile).TileVector();
+            Matrix xnaDTileTranslation = Matrix.CreateTranslation(tileTranslation.XnaVector());  // object is offset from camera this many tiles
+            xnaDTileTranslation = MatrixExtension.Multiply(positionSource.WorldPosition.XNAMatrix, xnaDTileTranslation);
+
+            // Match Open Rails: visibility must be tested against the actual transformed
+            // car position, not just the coarse tile offset. Using only the tile offset
+            // makes glow lights pop in/out while the projected light cone remains active.
+            Vector3 mstsLocation = new Vector3(
+                xnaDTileTranslation.Translation.X,
+                xnaDTileTranslation.Translation.Y,
+                -xnaDTileTranslation.Translation.Z);
 
             float objectRadius = 20; // Even more arbitrary.
             float objectViewingDistance = Viewer.UserSettings.ViewingDistance; // Arbitrary.
