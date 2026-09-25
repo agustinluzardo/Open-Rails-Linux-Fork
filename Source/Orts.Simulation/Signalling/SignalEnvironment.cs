@@ -465,6 +465,10 @@ namespace Orts.Simulation.Signalling
                 {
                     foreach (SignalHead head in signal.SignalHeads)
                     {
+                        // Open Rails restores both sides of the relationship after
+                        // compacting merged signals: the track item points to the new
+                        // signal index and the head points back to the surviving signal.
+                        head.ResetMain(signal);
                         if (head.TDBIndex >= 0)
                             TrackItemSignalIndex[head.TDBIndex] = signal.Index;
                     }
