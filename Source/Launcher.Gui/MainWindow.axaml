@@ -22,6 +22,7 @@
           <ToggleSwitch x:Name="DarkSwitch" OnContent="{l:T 'Dark'}" OffContent="{l:T 'Dark'}"
                         VerticalAlignment="Center" Margin="0,0,8,0" />
           <Button x:Name="ContentButton" Content="{l:T 'Content folders'}" />
+          <Button x:Name="ManualButton" Content="{l:T 'Manual'}" />
           <Button x:Name="TestButton" Content="{l:T 'Test activities'}" />
           <Button x:Name="DoctorButton" Content="{l:T 'Check this computer'}" />
           <Button x:Name="SettingsButton" Content="Settings" />
