@@ -39,6 +39,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -58,6 +59,12 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
 {
     public class TrackSoundSource : SoundSourceBase
     {
+        // Every carriage asks for the same route track sounds. Resolving absent
+        // files (and writing two warnings for each) for hundreds of AI cars is
+        // especially expensive on case-sensitive content directories.
+        private static readonly ConcurrentDictionary<string, string> trackSoundFiles =
+            new(StringComparer.OrdinalIgnoreCase);
+
         private int prevTrackSoundType = -1;
         private int curTrackSoundType = -1;
         public SoundSource ActiveInSource { get; private set; }
@@ -99,14 +106,19 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
             if (filename == null)
                 return;
 
-            ImmutableArray<string> pathArray = ImmutableArray.Create(
-                viewer.Simulator.RouteFolder.SoundFolder, viewer.Simulator.RouteFolder.ContentFolder.SoundFolder);
-            string fullPath = FolderStructure.FindFileFromFolders(pathArray, filename);
-            if (fullPath == null)
+            string routeSoundFolder = viewer.Simulator.RouteFolder.SoundFolder;
+            string contentSoundFolder = viewer.Simulator.RouteFolder.ContentFolder.SoundFolder;
+            string key = string.Concat(routeSoundFolder, "\0", contentSoundFolder, "\0", filename);
+            string fullPath = trackSoundFiles.GetOrAdd(key, _ =>
             {
-                Trace.TraceWarning("Skipped missing track sound {0}", filename);
+                ImmutableArray<string> folders = ImmutableArray.Create(routeSoundFolder, contentSoundFolder);
+                string found = FolderStructure.FindFileFromFolders(folders, filename);
+                if (found == null)
+                    Trace.TraceWarning("Skipped missing track sound {0}", filename);
+                return found ?? string.Empty;
+            });
+            if (fullPath.Length == 0)
                 return;
-            }
             if (insideSound)
                 inSources.Add(new SoundSource(Car, TrainCar, fullPath));
             else
@@ -406,4 +418,3 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
         }
     }
 }
-
