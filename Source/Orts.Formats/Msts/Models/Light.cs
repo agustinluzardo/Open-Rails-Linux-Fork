@@ -74,6 +74,62 @@ namespace Orts.Formats.Msts.Models
     }
 
     /// <summary>
+    /// A set of conditions controlling when a light is enabled.
+    /// MSTS permits multiple Conditions blocks per light; they are alternatives.
+    /// </summary>
+    public class LightCondition
+    {
+        public LightHeadlightCondition Headlight { get; private set; }
+        public LightUnitCondition Unit { get; private set; }
+        public LightPenaltyCondition Penalty { get; private set; }
+        public LightControlCondition Control { get; private set; }
+        public LightServiceCondition Service { get; private set; }
+        public LightTimeOfDayCondition TimeOfDay { get; private set; }
+        public LightWeatherCondition Weather { get; private set; }
+        public LightCouplingCondition Coupling { get; private set; }
+        public LightBatteryCondition Battery { get; private set; }
+
+        internal LightCondition(STFReader stf)
+        {
+            stf.MustMatchBlockStart();
+            stf.ParseBlock(new[] {
+                new STFReader.TokenProcessor("headlight", ()=>{ Headlight = (LightHeadlightCondition)stf.ReadIntBlock(null); }),
+                new STFReader.TokenProcessor("unit", ()=>{ Unit = (LightUnitCondition)stf.ReadIntBlock(null); }),
+                new STFReader.TokenProcessor("penalty", ()=>{ Penalty = (LightPenaltyCondition)stf.ReadIntBlock(null); }),
+                new STFReader.TokenProcessor("control", ()=>{ Control = (LightControlCondition)stf.ReadIntBlock(null); }),
+                new STFReader.TokenProcessor("service", ()=>{ Service = (LightServiceCondition)stf.ReadIntBlock(null); }),
+                new STFReader.TokenProcessor("timeofday", ()=>{ TimeOfDay = (LightTimeOfDayCondition)stf.ReadIntBlock(null); }),
+                new STFReader.TokenProcessor("weather", ()=>{ Weather = (LightWeatherCondition)stf.ReadIntBlock(null); }),
+                new STFReader.TokenProcessor("coupling", ()=>{ Coupling = (LightCouplingCondition)stf.ReadIntBlock(null); }),
+                new STFReader.TokenProcessor("ortsbattery", ()=>{ Battery = (LightBatteryCondition)stf.ReadIntBlock(null); }),
+            });
+        }
+
+        internal LightCondition(LightCondition source, bool reverse)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+
+            Headlight = source.Headlight;
+            Unit = source.Unit;
+            Penalty = source.Penalty;
+            Control = source.Control;
+            Service = source.Service;
+            TimeOfDay = source.TimeOfDay;
+            Weather = source.Weather;
+            Coupling = source.Coupling;
+            Battery = source.Battery;
+
+            if (reverse)
+            {
+                if (Unit == LightUnitCondition.First)
+                    Unit = LightUnitCondition.FirstRev;
+                else if (Unit == LightUnitCondition.Last)
+                    Unit = LightUnitCondition.LastRev;
+            }
+        }
+    }
+
+    /// <summary>
     /// The Light class encapsulates the data for each Light object 
     /// in the Lights block of an ENG/WAG file. 
     /// </summary>
@@ -90,6 +146,9 @@ namespace Orts.Formats.Msts.Models
         public LightWeatherCondition Weather { get; private set; }
         public LightCouplingCondition Coupling { get; private set; }
         public LightBatteryCondition Battery { get; private set; }
+#pragma warning disable CA1002 // Do not expose generic lists
+        public List<LightCondition> Conditions { get; } = new List<LightCondition>();
+#pragma warning restore CA1002 // Do not expose generic lists
         public bool Cycle { get; private set; }
         public float FadeIn { get; private set; }
         public float FadeOut { get; private set; }
@@ -103,17 +162,21 @@ namespace Orts.Formats.Msts.Models
             stf.MustMatchBlockStart();
             stf.ParseBlock(new[] {
                 new STFReader.TokenProcessor("type", ()=>{ Type = (LightType)stf.ReadIntBlock(null); }),
-                new STFReader.TokenProcessor("conditions", ()=>{ stf.MustMatchBlockStart(); stf.ParseBlock(new[] {
-                    new STFReader.TokenProcessor("headlight", ()=>{ Headlight = (LightHeadlightCondition)stf.ReadIntBlock(null); }),
-                    new STFReader.TokenProcessor("unit", ()=>{ Unit = (LightUnitCondition)stf.ReadIntBlock(null); }),
-                    new STFReader.TokenProcessor("penalty", ()=>{ Penalty = (LightPenaltyCondition)stf.ReadIntBlock(null); }),
-                    new STFReader.TokenProcessor("control", ()=>{ Control = (LightControlCondition)stf.ReadIntBlock(null); }),
-                    new STFReader.TokenProcessor("service", ()=>{ Service = (LightServiceCondition)stf.ReadIntBlock(null); }),
-                    new STFReader.TokenProcessor("timeofday", ()=>{ TimeOfDay = (LightTimeOfDayCondition)stf.ReadIntBlock(null); }),
-                    new STFReader.TokenProcessor("weather", ()=>{ Weather = (LightWeatherCondition)stf.ReadIntBlock(null); }),
-                    new STFReader.TokenProcessor("coupling", ()=>{ Coupling = (LightCouplingCondition)stf.ReadIntBlock(null); }),
-                    new STFReader.TokenProcessor("ortsbattery", ()=>{ Battery = (LightBatteryCondition)stf.ReadIntBlock(null); }),
-                });}),
+                new STFReader.TokenProcessor("conditions", ()=>{
+                    LightCondition condition = new LightCondition(stf);
+                    Conditions.Add(condition);
+                    // Preserve the legacy single-condition properties for callers that still use them.
+                    // As before, they represent the last Conditions block read.
+                    Headlight = condition.Headlight;
+                    Unit = condition.Unit;
+                    Penalty = condition.Penalty;
+                    Control = condition.Control;
+                    Service = condition.Service;
+                    TimeOfDay = condition.TimeOfDay;
+                    Weather = condition.Weather;
+                    Coupling = condition.Coupling;
+                    Battery = condition.Battery;
+                }),
                 new STFReader.TokenProcessor("cycle", ()=>{ Cycle = 0 != stf.ReadIntBlock(null); }),
                 new STFReader.TokenProcessor("fadein", ()=>{ FadeIn = stf.ReadFloatBlock(STFReader.Units.None, null); }),
                 new STFReader.TokenProcessor("fadeout", ()=>{ FadeOut = stf.ReadFloatBlock(STFReader.Units.None, null); }),
@@ -154,6 +217,8 @@ namespace Orts.Formats.Msts.Models
             FadeOut = source.FadeOut;
             foreach (LightState state in source.States)
                 States.Add(new LightState(state, reverse));
+            foreach (LightCondition condition in source.Conditions)
+                Conditions.Add(new LightCondition(condition, reverse));
 
             if (reverse)
             {
