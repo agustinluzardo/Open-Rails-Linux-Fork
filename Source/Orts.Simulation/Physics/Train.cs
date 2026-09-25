@@ -9118,10 +9118,67 @@ namespace Orts.Simulation.Physics
                     float sequenceTolerance = Math.Max(500f, clearingDistanceM * 4f);
                     if (distanceDownPath + sequenceTolerance < distanceBeforeMatchedSubroute)
                     {
-                        Trace.TraceWarning($"Train {Number} Service {Name} : ignoring origin platform {platformStartID} " +
-                            $"mapped to subroute {activeSubroute}; service distance {distanceDownPath:F1}m lies before " +
-                            $"that subroute ({distanceBeforeMatchedSubroute:F1}m). Keeping subroute {beginActiveSubroute}.");
-                        return false;
+                        // The service's platform reference is stale for this path. Before
+                        // dropping the stop, try another platform belonging to the same
+                        // station which actually lies on the origin subroute. This mirrors
+                        // what MSTS content authors commonly intended when a service was
+                        // moved from one neighbouring terminal track to another.
+                        int originalPlatformStartID = platformStartID;
+                        int replacementPlatformIndex = -1;
+                        int replacementRouteIndex = int.MaxValue;
+
+                        if (!string.IsNullOrEmpty(platform.Name) &&
+                            Simulator.Instance.SignalEnvironment.StationXRefList.TryGetValue(platform.Name, out List<int> stationPlatforms))
+                        {
+                            TrackCircuitPartialPathRoute originRoute = TCRoute.TCRouteSubpaths[beginActiveSubroute];
+
+                            foreach (int candidatePlatformIndex in stationPlatforms.Distinct())
+                            {
+                                if (candidatePlatformIndex == platformIndex)
+                                    continue;
+
+                                PlatformDetails candidate = Simulator.Instance.SignalEnvironment.PlatformDetailsList[candidatePlatformIndex];
+                                if (candidate.TCSectionIndex.Count == 0)
+                                    continue;
+
+                                int candidateRouteIndex = -1;
+                                foreach (int candidateSection in candidate.TCSectionIndex)
+                                {
+                                    int indexOnRoute = originRoute.GetRouteIndex(candidateSection, 0);
+                                    if (indexOnRoute >= 0 && (candidateRouteIndex < 0 || indexOnRoute < candidateRouteIndex))
+                                        candidateRouteIndex = indexOnRoute;
+                                }
+
+                                if (candidateRouteIndex >= 0 && candidateRouteIndex < replacementRouteIndex)
+                                {
+                                    replacementPlatformIndex = candidatePlatformIndex;
+                                    replacementRouteIndex = candidateRouteIndex;
+                                }
+                            }
+                        }
+
+                        if (replacementPlatformIndex >= 0)
+                        {
+                            platformIndex = replacementPlatformIndex;
+                            platform = Simulator.Instance.SignalEnvironment.PlatformDetailsList[platformIndex];
+                            platformStartID = platform.PlatformReference[SignalLocation.NearEnd];
+                            activeSubroute = beginActiveSubroute;
+                            route = TCRoute.TCRouteSubpaths[activeSubroute];
+                            routeIndex = replacementRouteIndex;
+                            sectionIndex = route[routeIndex].TrackCircuitSection.Index;
+
+                            Trace.TraceWarning($"Train {Number} Service {Name} : origin platform {originalPlatformStartID} " +
+                                $"belongs to a later subroute despite service distance {distanceDownPath:F1}m; " +
+                                $"using platform {platformStartID} at station '{platform.Name}' on subroute {activeSubroute} instead.");
+                        }
+                        else
+                        {
+                            Trace.TraceWarning($"Train {Number} Service {Name} : ignoring origin platform {originalPlatformStartID} " +
+                                $"mapped to subroute {activeSubroute}; service distance {distanceDownPath:F1}m lies before " +
+                                $"that subroute ({distanceBeforeMatchedSubroute:F1}m), and no platform for station " +
+                                $"'{platform.Name}' is present on subroute {beginActiveSubroute}.");
+                            return false;
+                        }
                     }
                 }
 
