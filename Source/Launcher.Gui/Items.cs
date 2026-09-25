@@ -111,9 +111,9 @@ namespace Riel.Launcher.Gui
         public WagonSetModel Consist { get; }
         public string Name => string.IsNullOrWhiteSpace(Consist.Name) ? Consist.Id : Consist.Name;
         public string LocomotiveReference => Consist.Locomotive?.Reference;
-        public string LocomotiveName => string.IsNullOrWhiteSpace(Consist.Locomotive?.Description)
+        public string LocomotiveName => string.IsNullOrWhiteSpace(Consist.Locomotive?.Name)
             ? Consist.Locomotive?.Reference
-            : Consist.Locomotive.Description;
+            : Consist.Locomotive.Name;
         public string Detail => Translation.Count(Consist.TrainCars.Length, "{0} vehicle", "{0} vehicles");
     }
 
