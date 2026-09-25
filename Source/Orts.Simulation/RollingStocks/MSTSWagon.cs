@@ -92,6 +92,21 @@ namespace Orts.Simulation.RollingStocks
         public ScriptedPassengerCarPowerSupply PassengerCarPowerSupply => PowerSupply as ScriptedPassengerCarPowerSupply;
         public Doors Doors { get; }
         public bool MirrorOpen { get; private set; }
+
+        public enum WindowState
+        {
+            Closed,
+            Closing,
+            Opening,
+            Open,
+        }
+
+        public const int LeftWindowFrontIndex = 0;
+        public const int RightWindowFrontIndex = 1;
+        public const int LeftWindowRearIndex = 2;
+        public const int RightWindowRearIndex = 3;
+        public WindowState[] WindowStates { get; } = new WindowState[4];
+
         public bool UnloadingPartsOpen { get; set; }
         private bool waitForAnimationReady; // delay counter to start loading/unliading is on;
         private bool rollerBearing; // Has roller bearings
@@ -3408,6 +3423,18 @@ namespace Orts.Simulation.RollingStocks
                 SignalEvent(TrainEvent.MirrorClose);
             if (simulator.PlayerLocomotive == this)
                 simulator.Confirmer.Confirm(CabControl.Mirror, MirrorOpen ? CabSetting.On : CabSetting.Off);
+        }
+
+        public void ToggleWindow(bool rear, bool left)
+        {
+            int index = (left ? 0 : 1) + 2 * (rear ? 1 : 0);
+            bool open = WindowStates[index] is WindowState.Closed or WindowState.Closing;
+            WindowStates[index] = open ? WindowState.Opening : WindowState.Closing;
+            SignalEvent(open ? TrainEvent.WindowOpening : TrainEvent.WindowClosing);
+
+            if (simulator.PlayerLocomotive == this)
+                simulator.Confirmer.Confirm(left ^ rear ? CabControl.WindowLeft : CabControl.WindowRight,
+                    open ? CabSetting.On : CabSetting.Off);
         }
 
         public void FindControlActiveLocomotive()
