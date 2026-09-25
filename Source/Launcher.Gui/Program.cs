@@ -29,7 +29,10 @@ namespace Riel.Launcher.Gui
             if (args.Length == 2 && args[0] == "--supervise")
                 return LaunchSession.Supervise(args[1]);
             if (args.Length == 2 && args[0] == "--run-report")
+            {
                 StartupReportPath = args[1];
+                args = Array.Empty<string>();
+            }
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
 

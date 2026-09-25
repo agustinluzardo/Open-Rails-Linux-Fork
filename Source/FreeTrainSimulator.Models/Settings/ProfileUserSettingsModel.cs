@@ -71,7 +71,6 @@ namespace FreeTrainSimulator.Models.Settings
             _ => throw new System.NotImplementedException(),
         });
         public ScreenMode ScreenMode { get; set; } = ScreenMode.WindowedFullscreen;
-        public bool CloseLauncherWhilePlaying { get; set; }
         public int WindowScreen { get; set; } = -1;
         #endregion
 
@@ -246,6 +245,9 @@ namespace FreeTrainSimulator.Models.Settings
         // Append-only compatibility marker. Version 1 repairs profiles created while
         // confirmations accidentally defaulted to false in the native Linux launcher.
         public int CompatibilityDefaultsVersion { get; set; }
+
+        // Append-only: controls the launcher's lifetime without changing saved simulator options.
+        public bool CloseLauncherWhilePlaying { get; set; }
 
         [MemoryPackOnDeserialized]
         private void ApplyCompatibilityDefaults()
