@@ -116,6 +116,7 @@ namespace Riel.Launcher
                 FolderName = folder.Name,
                 RouteId = route.Id,
                 PathId = path.Id,
+                LocomotiveId = consist.Locomotive?.Reference,
                 WagonSetId = consist.Id,
                 StartTime = startTime,
                 Season = season,
