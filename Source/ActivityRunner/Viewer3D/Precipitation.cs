@@ -158,6 +158,8 @@ namespace Orts.ActivityRunner.Viewer3D
         private float particlesToEmit;
         private float timeParticlesLastEmitted;
         private int drawCounter;
+        private bool emissionDiagnosticLogged;
+        private bool drawDiagnosticLogged;
 
         public PrecipitationPrimitive(GraphicsDevice graphicsDevice)
         {
@@ -172,10 +174,18 @@ namespace Orts.ActivityRunner.Viewer3D
             IndexBuffer = InitIndexBuffer(graphicsDevice, MaxParticles * IndiciesPerParticle);
             heights = new HeightCache(8);
             // This Trace command is used to show how much memory is used.
-            Trace.TraceInformation(string.Format(System.Globalization.CultureInfo.CurrentCulture, "Allocation for {0:N0} particles:\n\n  {1,13:N0} B RAM vertex data\n  {2,13:N0} B RAM index data (temporary)\n  {1,13:N0} B VRAM DynamicVertexBuffer\n  {2,13:N0} B VRAM IndexBuffer", MaxParticles, Marshal.SizeOf<ParticleVertex>() * MaxParticles * VerticiesPerParticle, sizeof(uint) * MaxParticles * IndiciesPerParticle));
+            Trace.TraceInformation(string.Format(System.Globalization.CultureInfo.CurrentCulture, "Allocation for {0:N0} particles:\n\n  {1,13:N0} B RAM vertex data\n  {2,13:N0} B RAM index data (temporary)\n  {1,13:N0} B VRAM DynamicVertexBuffer\n  {2,13:N0} B VRAM IndexBuffer", MaxParticles, Marshal.SizeOf<ParticleVertex>() * MaxParticles * VerticiesPerParticle, sizeof(ushort) * MaxParticles * IndiciesPerParticle));
         }
 
-        // IndexBuffer for 32bit process.
+        private void VertexBuffer_ContentLost()
+        {
+            // Match Open Rails: DesktopGL can invalidate dynamic buffers without the
+            // precipitation object being recreated. Re-upload the complete CPU-side
+            // particle array before drawing so rain/snow does not silently disappear.
+            VertexBuffer.SetData(0, Vertices, 0, Vertices.Length, VertexStride, SetDataOptions.NoOverwrite);
+        }
+
+        // IndexBuffer uses 16-bit indices; MaxParticles is deliberately capped to fit.
         private static IndexBuffer InitIndexBuffer(GraphicsDevice graphicsDevice, int numIndicies)
         {
             Debug.Assert((numIndicies / IndiciesPerParticle) * VerticiesPerParticle < ushort.MaxValue,
@@ -249,6 +259,8 @@ namespace Orts.ActivityRunner.Viewer3D
             firstActiveParticle = firstNewParticle = firstFreeParticle = firstRetiredParticle = 0;
             particlesToEmit = timeParticlesLastEmitted = 0;
             drawCounter = 0;
+            emissionDiagnosticLogged = false;
+            drawDiagnosticLogged = false;
         }
 
         public void DynamicUpdate(WeatherControl weatherControl, Weather weather, Viewer viewer, ref Vector3 wind)
@@ -310,7 +322,15 @@ namespace Orts.ActivityRunner.Viewer3D
             }
 
             if (numParticlesAdded > 0)
+            {
                 timeParticlesLastEmitted = currentTime;
+                if (!emissionDiagnosticLogged)
+                {
+                    Trace.TraceInformation("[Precipitation] emitted {0} particles at intensity {1:F6}; duration={2:F3}s active={3} new={4} free={5}",
+                        numParticlesAdded, particlesPerSecondPerM2, particleDuration, firstActiveParticle, firstNewParticle, firstFreeParticle);
+                    emissionDiagnosticLogged = true;
+                }
+            }
 
             particlesToEmit = particlesToEmit - (int)particlesToEmit;
         }
@@ -340,11 +360,23 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public override void Draw()
         {
+            if (VertexBuffer.IsContentLost)
+            {
+                Trace.TraceWarning("[Precipitation] DynamicVertexBuffer content lost; restoring particle vertices.");
+                VertexBuffer_ContentLost();
+            }
+
             if (firstNewParticle != firstFreeParticle)
                 AddNewParticlesToVertexBuffer();
 
             if (HasParticlesToRender())
             {
+                if (!drawDiagnosticLogged)
+                {
+                    Trace.TraceInformation("[Precipitation] drawing particles; active={0} new={1} free={2}, vertexBuffer={3}, indexBuffer={4}",
+                        firstActiveParticle, firstNewParticle, firstFreeParticle, VertexBuffer.VertexCount, IndexBuffer.IndexCount);
+                    drawDiagnosticLogged = true;
+                }
                 graphicsDevice.Indices = IndexBuffer;
                 graphicsDevice.SetVertexBuffer(VertexBuffer);
 
@@ -403,13 +435,15 @@ namespace Orts.ActivityRunner.Viewer3D
                 {
                     Trace.TraceWarning("Precipitation indexes are out of bounds:  x = {0}, z = {1}, Location.X = {2}, Location.Z = {3}, BlockSize = {4}, HeightDimensionX = {5}, HeightDimensionZ = {6}",
                         x, z, location.Location.X, location.Location.Z, BlockSize, tile.Height.GetLength(0), tile.Height.GetLength(1));
+                    // Clamp each axis independently. The previous else-if chain only
+                    // corrected one axis when both coordinates were outside the tile.
                     if (x >= xSize)
                         x = xSize - 1;
-                    else if (z >= zSize)
+                    if (z >= zSize)
                         z = zSize - 1;
-                    else if (x < 0)
+                    if (x < 0)
                         x = 0;
-                    else
+                    if (z < 0)
                         z = 0;
                 }
                 // If we don't have it cached, load it.
@@ -464,6 +498,9 @@ namespace Orts.ActivityRunner.Viewer3D
                 dynamicPrecipitationTexture[11 - i] = SharedTextureManager.Get(base.viewer.Game.GraphicsDevice, System.IO.Path.Combine(base.viewer.ContentPath, path));
             }
             shader = base.viewer.MaterialManager.PrecipitationShader;
+            Trace.TraceInformation("[Precipitation] textures loaded: rain={0}x{1}, snow={2}x{3}, shader={4}",
+                rainTexture?.Width ?? 0, rainTexture?.Height ?? 0, snowTexture?.Width ?? 0, snowTexture?.Height ?? 0,
+                shader?.CurrentTechnique?.Name ?? "<loaded>");
         }
 
         public override void SetState(Material previousMaterial)
