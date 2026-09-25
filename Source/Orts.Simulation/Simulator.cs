@@ -634,12 +634,10 @@ namespace Orts.Simulation
 
         // The activity player is built before static consists and AI prerunning,
         // but only occupies the track after both. Record the trains that are
-        // actually nearby at that point when a route still cannot be placed.
+        // actually nearby at that point, including when circuit placement succeeds
+        // but two physical consists appear on top of each other.
         private void TraceActivityPlayerPlacement(AITrain playerTrain, bool validPosition)
         {
-            if (validPosition)
-                return;
-
             string nearbyTrains = string.Join("; ", Trains
                 .Where(train => train != playerTrain)
                 .Select(train => new
@@ -662,12 +660,16 @@ namespace Orts.Simulation
                     $"{item.Train.PresentPosition[Direction.Forward].TrackCircuitSectionIndex}, " +
                     $"rear {item.Train.RearLocation}, front {item.Train.FrontLocation})"));
 
-            Trace.TraceError($"Activity player train could not occupy its starting track: " +
+            string placement = $"Activity player train placement {(validPosition ? "succeeded" : "failed")}: " +
                 $"activity '{ActivityModel?.Name}', path '{PathName}', " +
                 $"player sections {playerTrain.PresentPosition[Direction.Backward].TrackCircuitSectionIndex}/" +
                 $"{playerTrain.PresentPosition[Direction.Forward].TrackCircuitSectionIndex}, " +
                 $"rear {playerTrain.RearLocation}, front {playerTrain.FrontLocation}; " +
-                $"nearby trains: {(nearbyTrains.Length == 0 ? "none" : nearbyTrains)}");
+                $"nearby trains: {(nearbyTrains.Length == 0 ? "none" : nearbyTrains)}";
+            if (validPosition)
+                Trace.TraceInformation(placement);
+            else
+                Trace.TraceError(placement);
         }
 
 
