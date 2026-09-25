@@ -109,6 +109,9 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
 
         public virtual void Initialize()
         {
+            // DelayS is parsed from the ENG file after construction. Configure the timer
+            // here, matching Open Rails, so manual master keys use the parsed delay.
+            Timer.Setup(DelayS);
         }
 
         /// <summary>
