@@ -5,6 +5,7 @@ using System.Threading;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Input;
+using FreeTrainSimulator.Common.Position;
 using FreeTrainSimulator.Graphics;
 using FreeTrainSimulator.Graphics.MapView;
 using FreeTrainSimulator.Graphics.MapView.Widgets;
@@ -42,6 +43,17 @@ namespace Orts.ActivityRunner.Viewer3D.Dispatcher
         private long nextTrainUpdate;
 
         public bool IsOpen => area?.Visible == true;
+
+        public bool TryGetSelectedLocation(out WorldLocation location)
+        {
+            if (IsOpen && content.SelectedInfrastructureLocation is WorldLocation selected)
+            {
+                location = selected;
+                return true;
+            }
+            location = default;
+            return false;
+        }
 
         public InGameDispatcherMap(Viewer viewer, MouseInputGameComponent mouse, WindowManager windows)
         {

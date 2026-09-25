@@ -204,6 +204,10 @@ namespace FreeTrainSimulator.Graphics.MapView
 
         public ISignal SignalSelected => (nearestDispatchItem as Widgets.SignalTrackItem)?.Signal;
         public IJunction SwitchSelected => (nearestDispatchItem as ActiveJunctionSegment)?.Junction;
+        public WorldLocation? SelectedInfrastructureLocation =>
+            SignalSelected != null || SwitchSelected != null
+                ? PointD.ToWorldLocation(nearestDispatchItem.Location, 8)
+                : null;
         public ITrain TrainSelected => nearestTrain?.Train;
 
         private void AddTrackSegments()

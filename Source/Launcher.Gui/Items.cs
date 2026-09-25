@@ -114,6 +114,30 @@ namespace Riel.Launcher.Gui
     }
 
     /// <summary>A choice in a drop down that stands for an enum value.</summary>
+    public sealed class TimetableItem
+    {
+        public TimetableItem(TimetableModel model) => Model = model;
+        public TimetableModel Model { get; }
+        public override string ToString() => string.IsNullOrWhiteSpace(Model.Name) ? Model.Id : Model.Name;
+    }
+
+    public sealed class TimetableTrainItem
+    {
+        public TimetableTrainItem(TimetableTrainModel model) => Model = model;
+        public TimetableTrainModel Model { get; }
+        public string Name => Model.Name;
+        public string Summary => $"{Model.Group} · {Model.StartTime:HH:mm} · {Model.WagonSet} · {Model.Path}";
+    }
+
+    public sealed class WeatherFileItem
+    {
+        public WeatherFileItem(WeatherModelHeader model) => Model = model;
+        public WeatherModelHeader Model { get; }
+        public override string ToString() => Model == null ? Translation.T("Default weather") :
+            string.IsNullOrWhiteSpace(Model.Name) ? Model.Id : Model.Name;
+    }
+
+    /// <summary>A choice in a drop down that stands for an enum value.</summary>
     public sealed class Choice<T>
     {
         public Choice(T value, string name)

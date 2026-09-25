@@ -6,12 +6,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
 
 using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Models.Imported.State;
@@ -22,6 +24,8 @@ using static Riel.Launcher.Gui.Translation;
 
 namespace Riel.Launcher.Gui
 {
+    public sealed record SavedGameChoice(string File, string Action);
+
     public sealed class SavedGameItem : INotifyPropertyChanged
     {
         public SavedGameItem(FileInfo file) => File = file;
@@ -72,8 +76,13 @@ namespace Riel.Launcher.Gui
             SaveList.SelectionChanged += (_, _) => ShowSelection();
             SaveList.DoubleTapped += (_, _) => Accept();
             ContinueButton.Click += (_, _) => Accept();
+            ReplayStartButton.Click += (_, _) => ChooseReplay("-SingleplayerReplay");
+            ReplayPreviousButton.Click += (_, _) => ChooseReplay("-SingleplayerReplayFromSave");
             DeleteButton.Click += async (_, _) => await DeleteSelected();
+            DeleteInvalidButton.Click += async (_, _) => await DeleteInvalid();
             RestoreButton.Click += async (_, _) => await RestoreDeleted();
+            ImportButton.Click += async (_, _) => await ImportSavePack();
+            ExportButton.Click += async (_, _) => await ExportSavePack();
             CancelButton.Click += (_, _) => Close(null);
             Opened += async (_, _) => await LoadDetails();
             Closed += (_, _) =>
@@ -149,6 +158,11 @@ namespace Riel.Launcher.Gui
             SavedGameItem chosen = SaveList.SelectedItem as SavedGameItem;
             ContinueButton.IsEnabled = chosen?.CanResume == true;
             DeleteButton.IsEnabled = chosen != null;
+            ExportButton.IsEnabled = chosen != null;
+            bool replay = chosen != null && File.Exists(Path.ChangeExtension(chosen.File.FullName, ".replay"));
+            ReplayStartButton.IsEnabled = replay;
+            ReplayPreviousButton.IsEnabled = replay && chosen.CanResume;
+            DeleteInvalidButton.IsEnabled = saves.Any(item => item.DetailsLoaded && !item.CanResume);
             SelectedDetails.Text = chosen?.Details ?? string.Empty;
             SelectedFile.Text = chosen?.File.FullName ?? string.Empty;
 
@@ -172,7 +186,27 @@ namespace Riel.Launcher.Gui
         private void Accept()
         {
             if (SaveList.SelectedItem is SavedGameItem chosen && chosen.CanResume)
-                Close(chosen.File.FullName);
+                Close(new SavedGameChoice(chosen.File.FullName, "-SingleplayerResume"));
+        }
+
+        private void ChooseReplay(string action)
+        {
+            if (SaveList.SelectedItem is SavedGameItem chosen &&
+                File.Exists(Path.ChangeExtension(chosen.File.FullName, ".replay")))
+                Close(new SavedGameChoice(chosen.File.FullName, action));
+        }
+
+        private async Task DeleteInvalid()
+        {
+            SavedGameItem[] invalid = saves.Where(item => item.DetailsLoaded && !item.CanResume).ToArray();
+            if (invalid.Length == 0 || !await Dialogs.Confirm(this, T("Delete invalid saves?"),
+                F("Move {0} invalid saves to Deleted Saves?", invalid.Length), T("Delete invalid saves"), T("Cancel")))
+                return;
+            foreach (SavedGameItem item in invalid)
+                await MoveToDeleted(item);
+            RefreshSaves();
+            RefreshRestoreButton();
+            ShowSelection();
         }
 
         private async Task DeleteSelected()
@@ -184,6 +218,13 @@ namespace Riel.Launcher.Gui
                 T("Delete save"), T("Cancel")))
                 return;
 
+            await MoveToDeleted(chosen);
+            RefreshSaves();
+            RefreshRestoreButton();
+        }
+
+        private async Task MoveToDeleted(SavedGameItem chosen)
+        {
             try
             {
                 string target = RuntimeInfo.DeletedSaveFolder;
@@ -200,12 +241,82 @@ namespace Riel.Launcher.Gui
                 // Move the save last: a failed companion move cannot hide a playable save.
                 foreach (string file in files)
                     File.Move(file, Path.Combine(target, Path.GetFileName(file)));
-                RefreshSaves();
-                RefreshRestoreButton();
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
                 await Dialogs.Message(this, T("Could not delete saved game"), ex.Message);
+            }
+        }
+
+        private async Task ExportSavePack()
+        {
+            if (SaveList.SelectedItem is not SavedGameItem chosen)
+                return;
+            try
+            {
+                Directory.CreateDirectory(RuntimeInfo.SavePackFolder);
+                string destination = Path.Combine(RuntimeInfo.SavePackFolder,
+                    Path.GetFileNameWithoutExtension(chosen.File.Name) + ".ORSavePack");
+                string[] files = Directory.EnumerateFiles(RuntimeInfo.UserDataFolder,
+                    Path.GetFileNameWithoutExtension(chosen.File.Name) + ".*")
+                    .Where(file => Path.GetFileNameWithoutExtension(file) == Path.GetFileNameWithoutExtension(chosen.File.Name) ||
+                        Path.GetFileName(file) == Path.GetFileNameWithoutExtension(chosen.File.Name) + ".evaluation.txt")
+                    .ToArray();
+                if (File.Exists(destination) && !await Dialogs.Confirm(this, T("Replace save pack?"),
+                    F("A save pack named {0} already exists. Replace it?", Path.GetFileName(destination)),
+                    T("Replace"), T("Cancel")))
+                    return;
+                string temporary = destination + ".tmp";
+                try
+                {
+                    if (File.Exists(temporary))
+                        File.Delete(temporary);
+                    using (ZipArchive archive = ZipFile.Open(temporary, ZipArchiveMode.Create))
+                        foreach (string file in files)
+                            archive.CreateEntryFromFile(file, Path.GetFileName(file));
+                    File.Move(temporary, destination, overwrite: true);
+                }
+                finally
+                {
+                    if (File.Exists(temporary))
+                        File.Delete(temporary);
+                }
+                await Dialogs.Message(this, T("Save pack exported"), destination);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                await Dialogs.Message(this, T("Could not export save pack"), ex.Message);
+            }
+        }
+
+        private async Task ImportSavePack()
+        {
+            IReadOnlyList<IStorageFile> picked = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = T("Import save pack"), AllowMultiple = false,
+                FileTypeFilter = new[] { new FilePickerFileType("Open Rails Save Pack") { Patterns = new[] { "*.ORSavePack" } } },
+            });
+            string selected = picked.FirstOrDefault()?.TryGetLocalPath();
+            if (selected == null)
+                return;
+            try
+            {
+                using ZipArchive archive = ZipFile.OpenRead(selected);
+                ZipArchiveEntry[] entries = archive.Entries.Where(entry => entry.Name.Length > 0).ToArray();
+                if (entries.Length == 0 || !entries.Any(entry => entry.Name.EndsWith(".save", StringComparison.OrdinalIgnoreCase)) ||
+                    entries.Select(entry => entry.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != entries.Length ||
+                    entries.Any(entry => entry.FullName != entry.Name || entry.Name is "." or ".." ||
+                        entry.Name.Contains('/') || entry.Name.Contains('\\') ||
+                        File.Exists(Path.Combine(RuntimeInfo.UserDataFolder, entry.Name))))
+                    throw new InvalidDataException(T("The pack is empty, contains unsafe paths, or would overwrite an existing save."));
+                foreach (ZipArchiveEntry entry in entries)
+                    entry.ExtractToFile(Path.Combine(RuntimeInfo.UserDataFolder, entry.Name));
+                RefreshSaves();
+                await LoadDetails();
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is InvalidDataException)
+            {
+                await Dialogs.Message(this, T("Could not import save pack"), ex.Message);
             }
         }
 

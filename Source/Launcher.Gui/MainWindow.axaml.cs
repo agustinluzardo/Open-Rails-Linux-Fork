@@ -46,6 +46,7 @@ namespace Riel.Launcher.Gui
     {
         private const int ActivityTab = 0;
         private const int ExploreTab = 1;
+        private const int TimetableTab = 2;
 
         private readonly CancellationTokenSource closing = new CancellationTokenSource();
 
@@ -75,6 +76,12 @@ namespace Riel.Launcher.Gui
             WeatherBox.ItemsSource = Enum.GetValues<WeatherType>().Select(weather => new Choice<WeatherType>(weather, Names.Weather(weather))).ToList();
             SelectChoice(SeasonBox, SeasonType.Summer);
             SelectChoice(WeatherBox, WeatherType.Clear);
+            TimetableSeasonBox.ItemsSource = Enum.GetValues<SeasonType>().Select(season => new Choice<SeasonType>(season, Names.Season(season))).ToList();
+            TimetableWeatherBox.ItemsSource = Enum.GetValues<WeatherType>().Select(weather => new Choice<WeatherType>(weather, Names.Weather(weather))).ToList();
+            TimetableDayBox.ItemsSource = Enum.GetValues<DayOfWeek>().Select(day => new Choice<DayOfWeek>(day, T(day.ToString()))).ToList();
+            SelectChoice(TimetableSeasonBox, SeasonType.Summer);
+            SelectChoice(TimetableWeatherBox, WeatherType.Clear);
+            SelectChoice(TimetableDayBox, DayOfWeek.Monday);
 
             RouteFilter.TextChanged += (_, _) => ApplyRouteFilter();
             RouteList.SelectionChanged += (_, _) =>
@@ -89,6 +96,13 @@ namespace Riel.Launcher.Gui
             ConsistList.DoubleTapped += (_, _) => Guarded(Play);
             PathBox.SelectionChanged += (_, _) => UpdateButtons();
             ModeTabs.SelectionChanged += (_, _) => UpdateButtons();
+            TimetableBox.SelectionChanged += (_, _) => TimetableChanged();
+            TimetableTrainList.SelectionChanged += (_, _) => UpdateButtons();
+            TimetableTrainList.DoubleTapped += (_, _) => Guarded(Play);
+            TimetableDayBox.SelectionChanged += (_, _) => UpdateButtons();
+            TimetableSeasonBox.SelectionChanged += (_, _) => UpdateButtons();
+            TimetableWeatherBox.SelectionChanged += (_, _) => UpdateButtons();
+            TimetableWeatherFileBox.SelectionChanged += (_, _) => UpdateButtons();
 
             PlayButton.Click += (_, _) => Guarded(Play);
             ResumeButton.Click += (_, _) => Guarded(Resume);
@@ -267,6 +281,8 @@ namespace Riel.Launcher.Gui
                 RouteDescription.Text = string.Empty;
                 ActivityList.ItemsSource = null;
                 PathBox.ItemsSource = null;
+                TimetableBox.ItemsSource = null;
+                TimetableTrainList.ItemsSource = null;
                 ActivityDescription.Text = string.Empty;
                 NoActivities.IsVisible = false;
                 UpdateButtons();
@@ -278,8 +294,12 @@ namespace Riel.Launcher.Gui
 
             Task<ImmutableArray<ActivityModelHeader>> activitiesTask = item.Route.GetActivities(closing.Token);
             Task<ImmutableArray<PathModelHeader>> pathsTask = item.Route.GetPaths(closing.Token);
+            Task<ImmutableArray<TimetableModel>> timetablesTask = item.Route.GetTimetables(closing.Token);
+            Task<ImmutableArray<WeatherModelHeader>> weatherFilesTask = item.Route.GetWeatherFiles(closing.Token);
             ImmutableArray<ActivityModelHeader> activities = await activitiesTask;
             ImmutableArray<PathModelHeader> paths = await pathsTask;
+            ImmutableArray<TimetableModel> timetables = await timetablesTask;
+            ImmutableArray<WeatherModelHeader> weatherFiles = await weatherFilesTask;
 
             if (item.Folder != consistsFolder)
             {
@@ -316,10 +336,26 @@ namespace Riel.Launcher.Gui
             PathBox.ItemsSource = pathItems;
             PathBox.SelectedIndex = pathItems.Count > 0 ? 0 : -1;
 
+            TimetableBox.ItemsSource = timetables.Select(model => new TimetableItem(model))
+                .OrderBy(model => model.ToString(), StringComparer.CurrentCultureIgnoreCase).ToList();
+            TimetableBox.SelectedIndex = timetables.Length > 0 ? 0 : -1;
+            TimetableWeatherFileBox.ItemsSource = new[] { new WeatherFileItem(null) }
+                .Concat(weatherFiles.Select(model => new WeatherFileItem(model))).ToList();
+            TimetableWeatherFileBox.SelectedIndex = 0;
+
             if (activityItems.Count == 0 && ModeTabs.SelectedIndex == ActivityTab)
                 ModeTabs.SelectedIndex = ExploreTab;
 
             ActivityChanged();
+        }
+
+        private void TimetableChanged()
+        {
+            TimetableTrainList.ItemsSource = (TimetableBox.SelectedItem as TimetableItem)?.Model.TimetableTrains
+                .Select(model => new TimetableTrainItem(model))
+                .OrderBy(model => model.Model.Group).ThenBy(model => model.Model.StartTime).ToList();
+            TimetableTrainList.SelectedIndex = TimetableTrainList.ItemsSource is IList<TimetableTrainItem> trains && trains.Count > 0 ? 0 : -1;
+            UpdateButtons();
         }
 
         private void ActivityChanged()
@@ -355,7 +391,21 @@ namespace Riel.Launcher.Gui
             if (route == null)
                 return;
 
-            if (saved.ActivityType is ActivityType.Explorer or ActivityType.ExploreActivity)
+            if (saved.ActivityType == ActivityType.TimeTable)
+            {
+                ModeTabs.SelectedIndex = TimetableTab;
+                TimetableBox.SelectedItem = (TimetableBox.ItemsSource as IEnumerable<TimetableItem>)?
+                    .FirstOrDefault(item => string.Equals(item.Model.Id, saved.TimetableSet, StringComparison.OrdinalIgnoreCase));
+                TimetableTrainList.SelectedItem = (TimetableTrainList.ItemsSource as IEnumerable<TimetableTrainItem>)?
+                    .FirstOrDefault(item => string.Equals(item.Model.Group, saved.TimetableName, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(item.Model.Id, saved.TimetableTrain, StringComparison.OrdinalIgnoreCase));
+                SelectChoice(TimetableDayBox, saved.TimetableDay);
+                SelectChoice(TimetableSeasonBox, saved.Season);
+                SelectChoice(TimetableWeatherBox, saved.Weather);
+                TimetableWeatherFileBox.SelectedItem = (TimetableWeatherFileBox.ItemsSource as IEnumerable<WeatherFileItem>)?
+                    .FirstOrDefault(item => item.Model?.Id == saved.WeatherChanges) ?? TimetableWeatherFileBox.SelectedItem;
+            }
+            else if (saved.ActivityType is ActivityType.Explorer or ActivityType.ExploreActivity)
             {
                 ModeTabs.SelectedIndex = ExploreTab;
                 PathBox.SelectedItem = (PathBox.ItemsSource as IEnumerable<PathItem>)?
@@ -397,6 +447,20 @@ namespace Riel.Launcher.Gui
                 if (ActivityList.SelectedItem is not ActivityItem activity)
                     return (null, null, T("Choose an activity, or explore the route instead."));
                 return (Selections.Activity(route.Folder, route.Route, activity.Activity), $"{route.Name} — {activity.Name}", null);
+            }
+
+            if (ModeTabs.SelectedIndex == TimetableTab)
+            {
+                if (TimetableBox.SelectedItem is not TimetableItem timetable)
+                    return (null, null, T("Choose a timetable set."));
+                if (TimetableTrainList.SelectedItem is not TimetableTrainItem train)
+                    return (null, null, T("Choose a timetable train."));
+                DayOfWeek day = (TimetableDayBox.SelectedItem as Choice<DayOfWeek>)?.Value ?? DayOfWeek.Monday;
+                SeasonType timetableSeason = (TimetableSeasonBox.SelectedItem as Choice<SeasonType>)?.Value ?? SeasonType.Summer;
+                WeatherType timetableWeather = (TimetableWeatherBox.SelectedItem as Choice<WeatherType>)?.Value ?? WeatherType.Clear;
+                WeatherModelHeader weatherFile = (TimetableWeatherFileBox.SelectedItem as WeatherFileItem)?.Model;
+                return (Selections.Timetable(route.Folder, route.Route, timetable.Model, train.Model, day,
+                    timetableSeason, timetableWeather, weatherFile), $"{route.Name} — {train.Name}", null);
             }
 
             if (PathBox.SelectedItem is not PathItem path)
@@ -442,11 +506,12 @@ namespace Riel.Launcher.Gui
         {
             if (running)
                 return;
-            string save = await new SavedGamesWindow(routes).ShowDialog<string>(this);
+            SavedGameChoice choice = await new SavedGamesWindow(routes).ShowDialog<SavedGameChoice>(this);
             hasSave = Selections.HasSavesOrDeletedSaves();
             UpdateButtons();
-            if (save != null)
-                await Run(Selections.ResumeArguments(save), System.IO.Path.GetFileNameWithoutExtension(save), null);
+            if (choice != null)
+                await Run(Selections.SavedGameArguments(choice.File, choice.Action),
+                    System.IO.Path.GetFileNameWithoutExtension(choice.File), null);
         }
 
         /// <summary>

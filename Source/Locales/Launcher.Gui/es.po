@@ -517,6 +517,87 @@ msgstr "Se restauraron {0} archivos."
 msgid "Could not restore saved games"
 msgstr "No se pudieron restaurar las partidas"
 
+msgid "Timetable"
+msgstr "Horarios"
+
+msgid "Timetable set"
+msgstr "Conjunto de horarios"
+
+msgid "Day"
+msgstr "Día"
+
+msgid "Default weather"
+msgstr "Clima predeterminado"
+
+msgid "Choose a timetable set."
+msgstr "Elegí un conjunto de horarios."
+
+msgid "Choose a timetable train."
+msgstr "Elegí un tren del horario."
+
+msgid "Monday"
+msgstr "Lunes"
+
+msgid "Tuesday"
+msgstr "Martes"
+
+msgid "Wednesday"
+msgstr "Miércoles"
+
+msgid "Thursday"
+msgstr "Jueves"
+
+msgid "Friday"
+msgstr "Viernes"
+
+msgid "Saturday"
+msgstr "Sábado"
+
+msgid "Sunday"
+msgstr "Domingo"
+
+msgid "Delete invalid saves"
+msgstr "Eliminar partidas inválidas"
+
+msgid "Delete invalid saves?"
+msgstr "¿Eliminar las partidas inválidas?"
+
+msgid "Move {0} invalid saves to Deleted Saves?"
+msgstr "¿Mover {0} partidas inválidas a Partidas eliminadas?"
+
+msgid "Replay from previous save"
+msgstr "Repetir desde la partida anterior"
+
+msgid "Replay from start"
+msgstr "Repetir desde el inicio"
+
+msgid "Import save pack"
+msgstr "Importar paquete de partida"
+
+msgid "Export save pack"
+msgstr "Exportar paquete de partida"
+
+msgid "Replace save pack?"
+msgstr "¿Reemplazar el paquete?"
+
+msgid "A save pack named {0} already exists. Replace it?"
+msgstr "Ya existe un paquete llamado {0}. ¿Reemplazarlo?"
+
+msgid "Replace"
+msgstr "Reemplazar"
+
+msgid "Save pack exported"
+msgstr "Paquete de partida exportado"
+
+msgid "Could not export save pack"
+msgstr "No se pudo exportar el paquete de partida"
+
+msgid "Could not import save pack"
+msgstr "No se pudo importar el paquete de partida"
+
+msgid "The pack is empty, contains unsafe paths, or would overwrite an existing save."
+msgstr "El paquete está vacío, tiene rutas inseguras o sobrescribiría una partida existente."
+
 msgid "Settings"
 msgstr "Configuración"
 

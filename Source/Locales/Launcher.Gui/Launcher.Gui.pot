@@ -516,3 +516,258 @@ msgstr ""
 
 msgid "Could not restore saved games"
 msgstr ""
+
+msgid "Timetable"
+msgstr ""
+
+msgid "Timetable set"
+msgstr ""
+
+msgid "Day"
+msgstr ""
+
+msgid "Default weather"
+msgstr ""
+
+msgid "Choose a timetable set."
+msgstr ""
+
+msgid "Choose a timetable train."
+msgstr ""
+
+msgid "Monday"
+msgstr ""
+
+msgid "Tuesday"
+msgstr ""
+
+msgid "Wednesday"
+msgstr ""
+
+msgid "Thursday"
+msgstr ""
+
+msgid "Friday"
+msgstr ""
+
+msgid "Saturday"
+msgstr ""
+
+msgid "Sunday"
+msgstr ""
+
+msgid "Delete invalid saves"
+msgstr ""
+
+msgid "Delete invalid saves?"
+msgstr ""
+
+msgid "Move {0} invalid saves to Deleted Saves?"
+msgstr ""
+
+msgid "Replay from previous save"
+msgstr ""
+
+msgid "Replay from start"
+msgstr ""
+
+msgid "Import save pack"
+msgstr ""
+
+msgid "Export save pack"
+msgstr ""
+
+msgid "Replace save pack?"
+msgstr ""
+
+msgid "A save pack named {0} already exists. Replace it?"
+msgstr ""
+
+msgid "Replace"
+msgstr ""
+
+msgid "Save pack exported"
+msgstr ""
+
+msgid "Could not export save pack"
+msgstr ""
+
+msgid "Could not import save pack"
+msgstr ""
+
+msgid "The pack is empty, contains unsafe paths, or would overwrite an existing save."
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "These settings are used by the simulator when you press Play."
+msgstr ""
+
+msgid "General"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Video"
+msgstr ""
+
+msgid "Simulation"
+msgstr ""
+
+msgid "Keyboard"
+msgstr ""
+
+msgid "Data logger"
+msgstr ""
+
+msgid "Evaluation"
+msgstr ""
+
+msgid "Advanced"
+msgstr ""
+
+msgid "Display and resolution"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Detected resolution"
+msgstr ""
+
+msgid "Window mode"
+msgstr ""
+
+msgid "Use the selected monitor resolution automatically"
+msgstr ""
+
+msgid "Resolution width"
+msgstr ""
+
+msgid "Resolution height"
+msgstr ""
+
+msgid "Windowed mode uses the available desktop area; fullscreen uses the monitor size."
+msgstr ""
+
+msgid "Click a key, then press a new combination. Escape cancels the capture."
+msgstr ""
+
+msgid "Reset controls to Riel defaults"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Display {0}: {1} × {2}"
+msgstr ""
+
+msgid "Primary"
+msgstr ""
+
+msgid "No display detected"
+msgstr ""
+
+msgid "Driving and units"
+msgstr ""
+
+msgid "Sound"
+msgstr ""
+
+msgid "Rendering"
+msgstr ""
+
+msgid "Physics and operations"
+msgstr ""
+
+msgid "Recording"
+msgstr ""
+
+msgid "Trip evaluation"
+msgstr ""
+
+msgid "Network"
+msgstr ""
+
+msgid "Diagnostics and replay"
+msgstr ""
+
+msgid "Sound Volume Percent"
+msgstr ""
+
+msgid "Sound Detail Level"
+msgstr ""
+
+msgid "External Sound Pass Thru Percent"
+msgstr ""
+
+msgid "Vertical Sync"
+msgstr ""
+
+msgid "Multi Sampling Count"
+msgstr ""
+
+msgid "Dynamic Shadows"
+msgstr ""
+
+msgid "Shadow All Shapes"
+msgstr ""
+
+msgid "Model Instancing"
+msgstr ""
+
+msgid "Viewing Distance"
+msgstr ""
+
+msgid "Far Mountains Viewing Distance"
+msgstr ""
+
+msgid "Field Of View"
+msgstr ""
+
+msgid "Ambient Brightness"
+msgstr ""
+
+msgid "Shadow Map Resolution"
+msgstr ""
+
+msgid "Signal Light Glow"
+msgstr ""
+
+msgid "Advanced Adhesion"
+msgstr ""
+
+msgid "Weather Dependent Adhesion"
+msgstr ""
+
+msgid "Couplers Break"
+msgstr ""
+
+msgid "Simplified Controls"
+msgstr ""
+
+msgid "Track Gauge"
+msgstr ""
+
+msgid "Data Logger"
+msgstr ""
+
+msgid "Evaluation Train Speed"
+msgstr ""
+
+msgid "Evaluation Station Stops"
+msgstr ""
+
+msgid "Web Server"
+msgstr ""
+
+msgid "Profiling"
+msgstr ""
+
+msgid "Close Launcher While Playing"
+msgstr ""
+
+msgid "Could not start the simulator"
+msgstr ""

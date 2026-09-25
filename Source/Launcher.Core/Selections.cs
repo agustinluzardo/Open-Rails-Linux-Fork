@@ -73,6 +73,8 @@ namespace Riel.Launcher
                 {
                     ActivityType.Activity => !string.IsNullOrEmpty(selections.ActivityId),
                     ActivityType.Explorer or ActivityType.ExploreActivity => !string.IsNullOrEmpty(selections.PathId) && !string.IsNullOrEmpty(selections.WagonSetId),
+                    ActivityType.TimeTable => !string.IsNullOrEmpty(selections.TimetableSet) &&
+                        !string.IsNullOrEmpty(selections.TimetableName) && !string.IsNullOrEmpty(selections.TimetableTrain),
                     _ => false,
                 };
         }
@@ -121,6 +123,29 @@ namespace Riel.Launcher
             };
         }
 
+        public static ProfileSelectionsModel Timetable(FolderModel folder, RouteModelHeader route, TimetableModel timetable,
+            TimetableTrainModel train, DayOfWeek day, SeasonType season, WeatherType weather, WeatherModelHeader weatherFile)
+        {
+            ArgumentNullException.ThrowIfNull(folder);
+            ArgumentNullException.ThrowIfNull(route);
+            ArgumentNullException.ThrowIfNull(timetable);
+            ArgumentNullException.ThrowIfNull(train);
+            return new ProfileSelectionsModel
+            {
+                GamePlayAction = GamePlayAction.SinglePlayerTimetableGame,
+                ActivityType = ActivityType.TimeTable,
+                FolderName = folder.Name,
+                RouteId = route.Id,
+                TimetableSet = timetable.Id,
+                TimetableName = train.Group,
+                TimetableTrain = train.Id,
+                TimetableDay = day,
+                Season = season,
+                Weather = weather,
+                WeatherChanges = weatherFile?.Id,
+            };
+        }
+
         /// <summary>The simulator's command line for <paramref name="selections"/>.</summary>
         public static string[] Arguments(ProfileSelectionsModel selections)
         {
@@ -161,6 +186,14 @@ namespace Riel.Launcher
                     selections.Season.ToString(),
                     selections.Weather.ToString(),
                 },
+                ActivityType.TimeTable => new[]
+                {
+                    "-SinglePlayerTimetableGame", "-TimeTable",
+                    selections.FolderName, selections.RouteId, selections.TimetableSet,
+                    selections.TimetableName, selections.TimetableTrain,
+                    selections.TimetableDay.ToString(), selections.Season.ToString(), selections.Weather.ToString(),
+                }.Concat(string.IsNullOrEmpty(selections.WeatherChanges)
+                    ? Array.Empty<string>() : new[] { selections.WeatherChanges }).ToArray(),
                 _ => throw new LauncherException($"cannot start a {selections.ActivityType} selection"),
             };
         }
@@ -209,6 +242,17 @@ namespace Riel.Launcher
                 !string.Equals(Path.GetExtension(save), FileNameExtensions.SaveFile, StringComparison.OrdinalIgnoreCase))
                 throw new LauncherException("the selected saved game is no longer available");
             return new[] { "-SingleplayerResume", Path.GetFullPath(save) };
+        }
+
+        public static IReadOnlyList<string> SavedGameArguments(string save, string action)
+        {
+            if (action != "-SingleplayerResume" && action != "-SingleplayerReplay" &&
+                action != "-SingleplayerReplayFromSave")
+                throw new LauncherException("unsupported saved game action");
+            string fullPath = ResumeArguments(save)[1];
+            if (action != "-SingleplayerResume" && !File.Exists(Path.ChangeExtension(fullPath, ".replay")))
+                throw new LauncherException("the selected saved game has no replay log");
+            return new[] { action, fullPath };
         }
 
         /// <summary>The simulator's command line for continuing the newest save.</summary>

@@ -111,6 +111,32 @@
                 <ComboBox Grid.Row="4" Grid.Column="1" x:Name="WeatherBox" MinWidth="180" Margin="0,12,0,0" />
               </Grid>
             </TabItem>
+            <TabItem Header="{l:T 'Timetable'}">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" Margin="0,12,0,0">
+                <TextBlock Text="{l:T 'Timetable set'}" VerticalAlignment="Center" Margin="0,0,14,0" />
+                <ComboBox x:Name="TimetableBox" Grid.Column="1" HorizontalAlignment="Stretch" />
+                <TextBlock Grid.Row="1" Text="{l:T 'Train'}" VerticalAlignment="Center" Margin="0,12,14,0" />
+                <ListBox x:Name="TimetableTrainList" Grid.Row="2" Grid.Column="1" Margin="0,12,0,0">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="l:TimetableTrainItem">
+                      <StackPanel Spacing="2" Margin="0,3">
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Summary}" Classes="secondary small" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Grid.Row="3" Text="{l:T 'Day'}" VerticalAlignment="Center" Margin="0,12,14,0" />
+                <ComboBox x:Name="TimetableDayBox" Grid.Row="3" Grid.Column="1" Margin="0,12,0,0" />
+                <TextBlock Grid.Row="4" Text="{l:T 'Season'}" VerticalAlignment="Center" Margin="0,12,14,0" />
+                <ComboBox x:Name="TimetableSeasonBox" Grid.Row="4" Grid.Column="1" Margin="0,12,0,0" />
+                <TextBlock Grid.Row="5" Text="{l:T 'Weather'}" VerticalAlignment="Center" Margin="0,12,14,0" />
+                <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+                  <ComboBox x:Name="TimetableWeatherBox" MinWidth="155" />
+                  <ComboBox x:Name="TimetableWeatherFileBox" MinWidth="190" />
+                </StackPanel>
+              </Grid>
+            </TabItem>
           </TabControl>
         </DockPanel>
       </Grid>

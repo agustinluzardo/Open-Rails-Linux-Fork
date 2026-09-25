@@ -831,16 +831,14 @@ namespace Orts.ActivityRunner.Viewer3D
             });
             UserCommandController.AddEvent(UserCommand.CameraJumpSeeSwitch, KeyEventType.KeyPressed, () =>
             {
-                //TODO 20220322 select items in new dispatcher 
-                //if (Program.DebugViewer != null && Program.DebugViewer.Enabled && (Program.DebugViewer.SwitchPickedItem != null || Program.DebugViewer.SignalPickedItem != null))
-                //{
-                //    WorldLocation location = Program.DebugViewer.SwitchPickedItem?.Item != null ? Program.DebugViewer.SwitchPickedItem.Item.UiD.Location.ChangeElevation(8) : Program.DebugViewer.SignalPickedItem.Item.Location.ChangeElevation(8);
-                //    if (FreeRoamCameraList.Count == 0)
-                //        _ = new UseFreeRoamCameraCommand(Log);
-                //    FreeRoamCamera.SetLocation(location);
-                //    //FreeRoamCamera
-                //    FreeRoamCamera.Activate();
-                //}
+                if (dispatcherMap?.TryGetSelectedLocation(out var location) == true)
+                {
+                    CheckReplaying();
+                    if (FreeRoamCameraList.Count == 0)
+                        _ = new UseFreeRoamCameraCommand(Log);
+                    FreeRoamCamera.SetLocation(location);
+                    FreeRoamCamera.Activate();
+                }
             });
             UserCommandController.AddEvent(UserCommand.DebugDumpKeymap, KeyEventType.KeyPressed, () =>
             {
