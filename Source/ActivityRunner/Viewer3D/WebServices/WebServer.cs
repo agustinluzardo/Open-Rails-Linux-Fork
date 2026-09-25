@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +43,9 @@ using Newtonsoft.Json.Serialization;
 using Orts.ActivityRunner.Viewer3D.RollingStock;
 using FreeTrainSimulator.Runtime;
 using Orts.Simulation;
+using Orts.Simulation.Commanding;
+using Orts.Simulation.RollingStocks;
+using Orts.Simulation.RollingStocks.SubSystems.Brakes.MSTS;
 using Orts.Simulation.RollingStocks.SubSystems.PowerSupplies;
 
 namespace Orts.ActivityRunner.Viewer3D.WebServices
@@ -96,6 +100,12 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                     ContractResolver = new XnaFriendlyResolver()
                 })).ConfigureAwait(false);
             }
+        }
+
+        internal static async Task<T> DeserializationCallback<T>(IHttpContext context)
+        {
+            using (TextReader text = context.OpenRequestText())
+                return JsonConvert.DeserializeObject<T>(await text.ReadToEndAsync().ConfigureAwait(false));
         }
 
         /// <summary>
@@ -299,6 +309,150 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
         public IEnumerable<ControlValue> CabControls()
         {
             return ((MSTSLocomotiveViewer)viewer.PlayerLocomotiveViewer).GetWebControlValueList();
+        }
+        #endregion
+
+
+        #region /API/ACTIVITYEVENTS
+        public sealed class ActivityEventsData
+        {
+            public string Name { get; init; }
+            public string Description { get; init; }
+            public string Briefing { get; init; }
+            public ActivityEventFeed.Entry[] Events { get; init; }
+        }
+
+        [Route(HttpVerbs.Get, "/ACTIVITYEVENTS")]
+        public ActivityEventsData ActivityEvents()
+        {
+            var activity = viewer.Simulator.ActivityModel;
+            return new ActivityEventsData
+            {
+                Name = activity?.Name ?? string.Empty,
+                Description = activity?.Description ?? string.Empty,
+                Briefing = activity?.Briefing ?? string.Empty,
+                Events = viewer.ActivityEventFeed.Snapshot(),
+            };
+        }
+        #endregion
+
+        #region /API/TRAINCAROPERATIONS
+        public sealed class TrainCarOperationInfo
+        {
+            public int Index { get; init; }
+            public string CarId { get; init; }
+            public string Kind { get; init; }
+            public bool HandbrakeAvailable { get; init; }
+            public bool HandbrakeOn { get; init; }
+            public bool PowerAvailable { get; init; }
+            public bool PowerOn { get; init; }
+            public bool MuAvailable { get; init; }
+            public bool MuConnected { get; init; }
+            public bool BatteryAvailable { get; init; }
+            public bool BatteryOn { get; init; }
+            public bool EtsAvailable { get; init; }
+            public bool EtsConnected { get; init; }
+            public bool FrontBrakeHoseConnected { get; init; }
+            public bool FrontAngleCockOpen { get; init; }
+            public bool RearAngleCockOpen { get; init; }
+            public bool BleedAvailable { get; init; }
+            public bool BleedOpen { get; init; }
+            public bool CanUncoupleAfter { get; init; }
+        }
+
+        public sealed class TrainCarOperationRequest
+        {
+            public int Index { get; set; }
+            public string Action { get; set; }
+        }
+
+        [Route(HttpVerbs.Get, "/TRAINCAROPERATIONS")]
+        public IEnumerable<TrainCarOperationInfo> TrainCarOperations()
+        {
+            Train train = viewer.PlayerTrain;
+            if (train == null)
+                return Array.Empty<TrainCarOperationInfo>();
+
+            return train.Cars.Select((car, index) => DescribeCar(car, index, train.Cars.Count)).ToArray();
+        }
+
+        [Route(HttpVerbs.Post, "/TRAINCAROPERATIONS")]
+        public async Task<IEnumerable<TrainCarOperationInfo>> SetTrainCarOperation()
+        {
+            TrainCarOperationRequest request = await HttpContext.GetRequestDataAsync<TrainCarOperationRequest>(
+                WebServer.DeserializationCallback<TrainCarOperationRequest>).ConfigureAwait(false);
+
+            Train train = viewer.PlayerTrain;
+            if (train == null || request == null || request.Index < 0 || request.Index >= train.Cars.Count)
+                return TrainCarOperations();
+
+            TrainCar car = train.Cars[request.Index];
+            MSTSWagon wagon = car as MSTSWagon;
+            MSTSLocomotive locomotive = car as MSTSLocomotive;
+
+            switch (request.Action)
+            {
+                case "handbrake" when wagon != null && wagon.HandBrakePresent:
+                    _ = new WagonHandbrakeCommand(viewer.Log, wagon, car.BrakeSystem.HandbrakePercent == 0);
+                    break;
+                case "power" when locomotive != null:
+                    _ = new PowerCommand(viewer.Log, locomotive, !locomotive.LocomotivePowerSupply.MainPowerSupplyOn);
+                    break;
+                case "mu" when locomotive != null:
+                    _ = new ToggleMUCommand(viewer.Log, locomotive, locomotive.RemoteControlGroup == RemoteControlGroup.Unconnected);
+                    break;
+                case "battery" when wagon?.PowerSupply != null:
+                    _ = new ToggleBatterySwitchCommand(viewer.Log, wagon, !wagon.PowerSupply.BatterySwitch.On);
+                    break;
+                case "ets" when wagon?.PowerSupply != null:
+                    _ = new ConnectElectricTrainSupplyCableCommand(viewer.Log, wagon, !wagon.PowerSupply.FrontElectricTrainSupplyCableConnected);
+                    break;
+                case "hose" when wagon != null:
+                    _ = new WagonBrakeHoseConnectCommand(viewer.Log, wagon, !wagon.BrakeSystem.FrontBrakeHoseConnected);
+                    break;
+                case "front-angle" when wagon != null:
+                    _ = new ToggleAngleCockACommand(viewer.Log, wagon, !wagon.BrakeSystem.AngleCockAOpen);
+                    break;
+                case "rear-angle" when wagon != null:
+                    _ = new ToggleAngleCockBCommand(viewer.Log, wagon, !wagon.BrakeSystem.AngleCockBOpen);
+                    break;
+                case "bleed" when wagon != null && car.BrakeSystem is SingleTransferPipe:
+                    _ = new ToggleBleedOffValveCommand(viewer.Log, wagon, !wagon.BrakeSystem.BleedOffValveOpen);
+                    break;
+                case "uncouple" when request.Index < train.Cars.Count - 1 && !viewer.Simulator.TimetableMode:
+                    _ = new UncoupleCommand(viewer.Log, request.Index);
+                    break;
+            }
+
+            return TrainCarOperations();
+        }
+
+        private TrainCarOperationInfo DescribeCar(TrainCar car, int index, int count)
+        {
+            MSTSWagon wagon = car as MSTSWagon;
+            MSTSLocomotive locomotive = car as MSTSLocomotive;
+            return new TrainCarOperationInfo
+            {
+                Index = index,
+                CarId = car.CarID,
+                Kind = locomotive == null ? wagon?.WagonType.ToString() ?? car.GetType().Name : locomotive.EngineType.ToString(),
+                HandbrakeAvailable = wagon?.HandBrakePresent == true,
+                HandbrakeOn = car.BrakeSystem.HandbrakePercent > 0,
+                PowerAvailable = locomotive is MSTSElectricLocomotive or MSTSDieselLocomotive,
+                PowerOn = locomotive?.LocomotivePowerSupply?.MainPowerSupplyOn == true,
+                MuAvailable = locomotive is MSTSElectricLocomotive or MSTSDieselLocomotive,
+                MuConnected = locomotive != null && locomotive.RemoteControlGroup != RemoteControlGroup.Unconnected,
+                BatteryAvailable = wagon?.PowerSupply != null,
+                BatteryOn = wagon?.PowerSupply?.BatterySwitch.On == true,
+                EtsAvailable = count > 1 && wagon?.PowerSupply != null,
+                EtsConnected = wagon?.PowerSupply?.FrontElectricTrainSupplyCableConnected == true,
+                FrontBrakeHoseConnected = car.BrakeSystem.FrontBrakeHoseConnected,
+                FrontAngleCockOpen = car.BrakeSystem.AngleCockAOpen,
+                RearAngleCockOpen = car.BrakeSystem.AngleCockBOpen,
+                BleedAvailable = car.BrakeSystem is SingleTransferPipe,
+                BleedOpen = wagon?.BrakeSystem.BleedOffValveOpen == true,
+                CanUncoupleAfter = index < count - 1 && !viewer.Simulator.TimetableMode,
+            };
         }
         #endregion
 
