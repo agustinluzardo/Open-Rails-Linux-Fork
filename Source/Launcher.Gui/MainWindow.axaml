@@ -85,12 +85,15 @@
             </TabItem>
 
             <TabItem Header="{l:T 'Explore'}">
-              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*,Auto,Auto,Auto" Margin="0,12,0,0">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" Margin="0,12,0,0">
                 <TextBlock Grid.Row="0" Text="{l:T 'Path'}" VerticalAlignment="Center" Margin="0,0,16,0" />
                 <ComboBox Grid.Row="0" Grid.Column="1" x:Name="PathBox" HorizontalAlignment="Stretch" />
 
-                <TextBlock Grid.Row="1" Text="{l:T 'Train'}" VerticalAlignment="Top" Margin="0,18,16,0" />
-                <DockPanel Grid.Row="1" Grid.Column="1" Margin="0,12,0,0">
+                <TextBlock Grid.Row="1" Text="{l:T 'Locomotive'}" VerticalAlignment="Center" Margin="0,12,16,0" />
+                <ComboBox Grid.Row="1" Grid.Column="1" x:Name="LocomotiveBox" HorizontalAlignment="Stretch" Margin="0,12,0,0" />
+
+                <TextBlock Grid.Row="2" Text="{l:T 'Train'}" VerticalAlignment="Top" Margin="0,18,16,0" />
+                <DockPanel Grid.Row="2" Grid.Column="1" Margin="0,12,0,0">
                   <TextBox DockPanel.Dock="Top" x:Name="ConsistFilter" PlaceholderText="{l:T 'Search trains'}" Margin="0,0,0,6" />
                   <ListBox x:Name="ConsistList" MinHeight="120">
                     <ListBox.ItemTemplate>
@@ -104,14 +107,14 @@
                   </ListBox>
                 </DockPanel>
 
-                <TextBlock Grid.Row="2" Text="{l:T 'Time'}" VerticalAlignment="Center" Margin="0,12,16,0" />
-                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TimeBox" Text="12:00" Width="110" HorizontalAlignment="Left" Margin="0,12,0,0" />
+                <TextBlock Grid.Row="3" Text="{l:T 'Time'}" VerticalAlignment="Center" Margin="0,12,16,0" />
+                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TimeBox" Text="12:00" Width="110" HorizontalAlignment="Left" Margin="0,12,0,0" />
 
-                <TextBlock Grid.Row="3" Text="{l:T 'Season'}" VerticalAlignment="Center" Margin="0,12,16,0" />
-                <ComboBox Grid.Row="3" Grid.Column="1" x:Name="SeasonBox" MinWidth="180" Margin="0,12,0,0" />
+                <TextBlock Grid.Row="4" Text="{l:T 'Season'}" VerticalAlignment="Center" Margin="0,12,16,0" />
+                <ComboBox Grid.Row="4" Grid.Column="1" x:Name="SeasonBox" MinWidth="180" Margin="0,12,0,0" />
 
-                <TextBlock Grid.Row="4" Text="{l:T 'Weather'}" VerticalAlignment="Center" Margin="0,12,16,0" />
-                <ComboBox Grid.Row="4" Grid.Column="1" x:Name="WeatherBox" MinWidth="180" Margin="0,12,0,0" />
+                <TextBlock Grid.Row="5" Text="{l:T 'Weather'}" VerticalAlignment="Center" Margin="0,12,16,0" />
+                <ComboBox Grid.Row="5" Grid.Column="1" x:Name="WeatherBox" MinWidth="180" Margin="0,12,0,0" />
               </Grid>
             </TabItem>
             <TabItem Header="{l:T 'Timetable'}">
