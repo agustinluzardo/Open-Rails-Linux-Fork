@@ -127,7 +127,7 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
 
         public void HandleEvent(PowerSupplyEvent evt, int id)
         {
-            if (id < Count)
+            if (id >= MinPantoID && id <= Count)
             {
                 this[id].HandleEvent(evt);
             }

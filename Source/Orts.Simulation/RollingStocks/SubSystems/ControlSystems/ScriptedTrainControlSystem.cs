@@ -179,9 +179,23 @@ namespace Orts.Simulation.RollingStocks.SubSystems.ControlSystems
         {
             if (!activated)
             {
-                if (Simulator.UserSettings.TcsScripts && !string.IsNullOrEmpty(scriptName) && !scriptName.Equals("MSTS", StringComparison.OrdinalIgnoreCase))
+                bool customScriptRequested = !string.IsNullOrEmpty(scriptName) && !scriptName.Equals("MSTS", StringComparison.OrdinalIgnoreCase);
+                if (customScriptRequested)
                 {
-                    script = Simulator.ScriptManager.Load(Path.Combine(Path.GetDirectoryName(Locomotive.WagFilePath), "Script"), scriptName) as TrainControlSystem;
+                    if (Simulator.UserSettings.TcsScripts)
+                    {
+                        script = Simulator.ScriptManager.Load(Path.Combine(Path.GetDirectoryName(Locomotive.WagFilePath), "Script"), scriptName) as TrainControlSystem;
+                    }
+                    else
+                    {
+                        // A locomotive explicitly requests a custom TCS script, but the user disabled
+                        // TCS scripts. Do not silently replace it with the generic MSTS TCS: that can
+                        // apply an unexpected penalty/emergency brake and makes the launcher option
+                        // appear to have no effect.
+                        DisableRestrictions();
+                        activated = true;
+                        return;
+                    }
                 }
 
                 if (parametersFileName != null)
@@ -832,7 +846,7 @@ namespace Orts.Simulation.RollingStocks.SubSystems.ControlSystems
             return new ScriptedTrainControlSystemSaveState()
             {
                 ScriptName = scriptName,
-                ScriptState = string.IsNullOrEmpty(scriptName) ? ReadOnlySequence<byte>.Empty : await script.Snapshot().ConfigureAwait(false),
+                ScriptState = script == null ? ReadOnlySequence<byte>.Empty : await script.Snapshot().ConfigureAwait(false),
             };
         }
 
@@ -843,7 +857,8 @@ namespace Orts.Simulation.RollingStocks.SubSystems.ControlSystems
             if (!string.IsNullOrEmpty(scriptName))
             {
                 Initialize();
-                await script.Restore(saveState.ScriptState).ConfigureAwait(false);
+                if (script != null)
+                    await script.Restore(saveState.ScriptState).ConfigureAwait(false);
             }
         }
     }

@@ -407,28 +407,27 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
         private void HeadlightIncreaseCommand()
         {
             _ = new HeadlightCommand(Viewer.Log, true);
-            MultiPlayerManager.Broadcast(new TrainEventMessage()
-            {
-                TrainEvent = MSTSWagon.Headlight switch
-                {
-                    HeadLightState.HeadlightDimmed => TrainEvent.HeadlightDim,
-                    HeadLightState.HeadlightOn => TrainEvent.HeadlightOn,
-                    _ => TrainEvent.HeadlightOff,
-                }
-            });
+            SignalHeadlightState();
         }
         private void HeadlightDecreaseCommand()
         {
             _ = new HeadlightCommand(Viewer.Log, false);
-            MultiPlayerManager.Broadcast(new TrainEventMessage()
+            SignalHeadlightState();
+        }
+        private void SignalHeadlightState()
+        {
+            TrainEvent trainEvent = locomotive.Headlight switch
             {
-                TrainEvent = MSTSWagon.Headlight switch
-                {
-                    HeadLightState.HeadlightOff => TrainEvent.HeadlightOff,
-                    HeadLightState.HeadlightDimmed => TrainEvent.HeadlightDim,
-                    _ => TrainEvent.HeadlightOn,
-                }
-            });
+                HeadLightState.HeadlightOff => TrainEvent.HeadlightOff,
+                HeadLightState.HeadlightDimmed => TrainEvent.HeadlightDim,
+                _ => TrainEvent.HeadlightOn,
+            };
+
+            // The headlight state itself drives the LightViewer, but also emit the concrete
+            // state event locally. Previously only multiplayer peers received this event,
+            // which left local event-driven light/sound content out of sync.
+            locomotive.SignalEvent(trainEvent);
+            MultiPlayerManager.Broadcast(new TrainEventMessage() { TrainEvent = trainEvent });
         }
         private void ToggleCabLightCommand() => _ = new ToggleCabLightCommand(Viewer.Log);
         private void ToggleWaterScoopCommand() => _ = new ToggleWaterScoopCommand(Viewer.Log);
@@ -492,22 +491,27 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
         {
             if (commandArgs is UserCommandArgs<int> switchCommandArgs)
             {
-                // changing Headlight more than one step at a time doesn't work for some reason
-                if (locomotive.Headlight < HeadLightState.HeadlightOn)
+                // RailDriver reports 1 = off, 2 = dim, 3 = full. The old code advanced the
+                // headlight one step and immediately moved it back again, so the switch could
+                // appear to do nothing.
+                HeadLightState requestedState = switchCommandArgs.Value switch
                 {
-                    locomotive.Headlight = locomotive.Headlight.Next();
-                }
-                if (locomotive.Headlight > HeadLightState.HeadlightOff)
+                    <= 1 => HeadLightState.HeadlightOff,
+                    2 => HeadLightState.HeadlightDimmed,
+                    _ => HeadLightState.HeadlightOn,
+                };
+
+                if (locomotive.Headlight == requestedState)
+                    return;
+
+                locomotive.Headlight = requestedState;
+                Viewer.Simulator.Confirmer?.Confirm(CabControl.Headlight, requestedState switch
                 {
-                    locomotive.Headlight = locomotive.Headlight.Previous();
-                }
-                locomotive.SignalEvent(locomotive.Headlight switch
-                {
-                    HeadLightState.HeadlightOff => TrainEvent.HeadlightOff,
-                    HeadLightState.HeadlightDimmed => TrainEvent.HeadlightDim,
-                    HeadLightState.HeadlightOn => TrainEvent.HeadlightOn,
-                    _ => throw new NotImplementedException()
+                    HeadLightState.HeadlightOff => CabSetting.Off,
+                    HeadLightState.HeadlightDimmed => CabSetting.Neutral,
+                    _ => CabSetting.On,
                 });
+                SignalHeadlightState();
                 locomotive.SignalEvent(TrainEvent.LightSwitchToggle);
             }
         }
