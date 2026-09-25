@@ -11305,7 +11305,7 @@ namespace Orts.Simulation.Physics
                 switch (carSide)
                 {
                     case DoorSide.Left:
-                        return wagon.Doors[DoorSide.Right].State;
+                        return wagon.Doors[DoorSide.Left].State;
                     case DoorSide.Right:
                         return wagon.Doors[DoorSide.Right].State;
                     default:
