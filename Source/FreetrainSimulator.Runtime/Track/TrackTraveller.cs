@@ -286,9 +286,9 @@ namespace FreeTrainSimulator.Runtime.Track
                     continue;
 
                 (WorldLocation snapped, double offset) = SnapToSection(location, section, sectionGeometry);
-                double distSq = location.Location.Y == 0
-                    ? WorldLocation.GetDistanceSquared2D(location, snapped)
-                    : WorldLocation.GetDistanceSquared(location, snapped);
+                // Open Rails projects MSTS path starts onto the horizontal
+                // track layout. Path node heights are often only approximate.
+                double distSq = WorldLocation.GetDistanceSquared2D(location, snapped);
                 if (distSq < maxDistSq)
                 {
                     VectorNode parentNode = sectionGeometry.Node;
@@ -312,8 +312,8 @@ namespace FreeTrainSimulator.Runtime.Track
 
         /// <summary>
         /// Creates a new <see cref="TrackTraveller"/> at <paramref name="startLocation"/> oriented toward
-        /// <paramref name="nextLocation"/>.  All nearby <see cref="VectorNode"/> candidates are tried;
-        /// for each, both travel directions are evaluated using a walk-based projection (see
+        /// <paramref name="nextLocation"/>. The nearest track node is retained, as in Open Rails;
+        /// both travel directions are evaluated using a walk-based projection (see
         /// <see cref="WalkDistanceToLocation"/>) which is robust for imprecise path node locations.
         /// </summary>
         /// <param name="startLocation">The world location where the traveller is placed.</param>
@@ -327,20 +327,16 @@ namespace FreeTrainSimulator.Runtime.Track
             if (candidates.Count == 0)
                 throw new InvalidDataException($"{startLocation} could not be found in the track database.");
 
-            foreach (TrackTraveller candidate in candidates)
-            {
-                float? fwDist = candidate.WalkDistanceToLocation(nextLocation, forward: true, float.MaxValue);
-                float? bwDist = candidate.WalkDistanceToLocation(nextLocation, forward: false, float.MaxValue);
-
-                // Prefer forward when both directions reach the target and forward is shorter (or equal).
-                if (fwDist.HasValue && (!bwDist.HasValue || fwDist.Value <= bwDist.Value))
-                    return candidate;
-                if (bwDist.HasValue)
-                    return candidate.Reverse();
-            }
-
-            // No candidate can reach nextLocation — fall back to the closest candidate facing forward.
-            return candidates[0];
+            // Selecting another candidate merely because it can reach the next
+            // node can move a train to an adjacent parallel track at a junction.
+            // Open Rails places the rear on the nearest track, then chooses its
+            // direction using the following path point.
+            TrackTraveller candidate = candidates[0];
+            float? fwDist = candidate.WalkDistanceToLocation(nextLocation, forward: true, float.MaxValue);
+            float? bwDist = candidate.WalkDistanceToLocation(nextLocation, forward: false, float.MaxValue);
+            if (bwDist.HasValue && (!fwDist.HasValue || bwDist.Value < fwDist.Value))
+                return candidate.Reverse();
+            return candidate;
         }
 
         /// <summary>
@@ -1228,4 +1224,3 @@ namespace FreeTrainSimulator.Runtime.Track
 
     }
 }
-

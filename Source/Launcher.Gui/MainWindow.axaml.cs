@@ -112,6 +112,7 @@ namespace Riel.Launcher.Gui
             PlayButton.Click += (_, _) => Guarded(Play);
             ResumeButton.Click += (_, _) => Guarded(Resume);
             ContentButton.Click += (_, _) => Guarded(() => ManageContent(browseFirst: false));
+            ToolsButton.Click += (_, _) => ToolsButton.ContextMenu.Open(ToolsButton);
             GetContentButton.Click += (_, _) => SystemInfo.OpenBrowser("https://www.openrails.org/download/content/");
             ManualButton.Click += (_, _) => SystemInfo.OpenBrowser("https://www.openrails.org/learn/documents/");
             TestButton.Click += (_, _) => Guarded(ShowTesting);

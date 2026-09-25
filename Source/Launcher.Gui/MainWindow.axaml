@@ -22,15 +22,17 @@
           <ToggleSwitch x:Name="DarkSwitch" OnContent="{l:T 'Dark'}" OffContent="{l:T 'Dark'}"
                         VerticalAlignment="Center" Margin="0,0,8,0" />
           <Button x:Name="ContentButton" Content="{l:T 'Content folders'}" />
-          <Menu VerticalAlignment="Center">
-            <MenuItem Header="{l:T 'Tools'}">
-              <MenuItem x:Name="GetContentButton" Header="{l:T 'Get content'}" />
-              <MenuItem x:Name="ManualButton" Header="{l:T 'Manual'}" />
-              <MenuItem x:Name="TestButton" Header="{l:T 'Test activities'}" />
-              <MenuItem x:Name="DoctorButton" Header="{l:T 'Check this computer'}" />
-              <MenuItem x:Name="UpdateButton" Header="{l:T 'Check for updates'}" />
-            </MenuItem>
-          </Menu>
+          <Button x:Name="ToolsButton" Content="{l:T 'Tools'}">
+            <Button.ContextMenu>
+              <ContextMenu>
+                <MenuItem x:Name="GetContentButton" Header="{l:T 'Get content'}" />
+                <MenuItem x:Name="ManualButton" Header="{l:T 'Manual'}" />
+                <MenuItem x:Name="TestButton" Header="{l:T 'Test activities'}" />
+                <MenuItem x:Name="DoctorButton" Header="{l:T 'Check this computer'}" />
+                <MenuItem x:Name="UpdateButton" Header="{l:T 'Check for updates'}" />
+              </ContextMenu>
+            </Button.ContextMenu>
+          </Button>
           <Button x:Name="SettingsButton" Content="{l:T 'Settings'}" />
         </StackPanel>
       </Grid>

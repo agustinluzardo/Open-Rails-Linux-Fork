@@ -392,7 +392,8 @@ namespace Orts.Simulation.AIs
         /// <returns>The track node index that has been found (or an exception)</returns>
         private static int FindTrackNodeIndex(AIPathNode node)
         {
-            return TrackTraveller.InitializeTraveller(node.Location)?.TrackNodeIndex ?? -1;
+            return TrackTraveller.InitializeTraveller(node.Location)?.TrackNodeIndex
+                ?? throw new InvalidDataException($"{node.Location} could not be found in the track database.");
         }
 
         /// <summary>
