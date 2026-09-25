@@ -232,6 +232,8 @@ namespace FreeTrainSimulator.Models.Settings
 
             commands[UserCommand.DebugClockBackwards] = new UserCommandKeyInput(0x0C);
             commands[UserCommand.DebugClockForwards] = new UserCommandKeyInput(0x0D);
+            commands[UserCommand.DebugDaylightOffsetDecrease] = new UserCommandKeyInput(0x0C, KeyModifiers.Shift | KeyModifiers.Alt);
+            commands[UserCommand.DebugDaylightOffsetIncrease] = new UserCommandKeyInput(0x0D, KeyModifiers.Shift | KeyModifiers.Alt);
             commands[UserCommand.DebugDumpKeymap] = new UserCommandKeyInput(0x3B, KeyModifiers.Alt);
             commands[UserCommand.DebugFogDecrease] = new UserCommandKeyInput(0x0C, KeyModifiers.Shift);
             commands[UserCommand.DebugFogIncrease] = new UserCommandKeyInput(0x0D, KeyModifiers.Shift);
