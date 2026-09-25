@@ -243,6 +243,24 @@ namespace Orts.ActivityRunner.Viewer3D.Environment
                 // Shift the clock forwards or backwards at 1h-per-second.
                 viewer.UserCommandController.AddEvent(UserCommand.DebugClockForwards, KeyEventType.KeyDown, (gameTime) => this.viewer.Simulator.ClockTime += gameTime.ElapsedGameTime.TotalSeconds * 3600);
                 viewer.UserCommandController.AddEvent(UserCommand.DebugClockBackwards, KeyEventType.KeyDown, (gameTime) => this.viewer.Simulator.ClockTime -= gameTime.ElapsedGameTime.TotalSeconds * 3600);
+
+                // Match Open Rails: adjust apparent daylight without changing game time.
+                viewer.UserCommandController.AddEvent(UserCommand.DebugDaylightOffsetIncrease, KeyEventType.KeyPressed, () =>
+                {
+                    if (this.viewer.World?.Sky == null || this.viewer.World.Sky.DaylightOffsetHours >= 12)
+                        return;
+                    this.viewer.World.Sky.DaylightOffsetHours++;
+                    this.viewer.Simulator.Confirmer.Message(ConfirmLevel.None,
+                        this.viewer.Catalog.GetString($"Increased daylight offset to {this.viewer.World.Sky.DaylightOffsetHours:+0;-0;0} h"));
+                });
+                viewer.UserCommandController.AddEvent(UserCommand.DebugDaylightOffsetDecrease, KeyEventType.KeyPressed, () =>
+                {
+                    if (this.viewer.World?.Sky == null || this.viewer.World.Sky.DaylightOffsetHours <= -12)
+                        return;
+                    this.viewer.World.Sky.DaylightOffsetHours--;
+                    this.viewer.Simulator.Confirmer.Message(ConfirmLevel.None,
+                        this.viewer.Catalog.GetString($"Decreased daylight offset to {this.viewer.World.Sky.DaylightOffsetHours:+0;-0;0} h"));
+                });
             }
 
             // If we're a multiplayer server, send out the new overcastFactor, pricipitationIntensity and fogDistance to all clients.
