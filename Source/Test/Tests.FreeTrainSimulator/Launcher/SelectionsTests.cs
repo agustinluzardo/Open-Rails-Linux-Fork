@@ -16,6 +16,7 @@
 // along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.IO;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Models.Settings;
@@ -87,6 +88,23 @@ namespace Tests.FreeTrainSimulator.Launcher
             CollectionAssert.AreEqual(
                 new[] { "-SingleplayerNewGame", "-ExploreActivity", "MSTS", "EUROPE1", "Innsbruck-Bludenz", "freight 1", "08:05", "Autumn", "Rain" },
                 Selections.Arguments(explore));
+        }
+
+        [TestMethod]
+        public void TimetableSaveUsesTimetableResumeAction()
+        {
+            string save = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".save");
+            File.WriteAllBytes(save, Array.Empty<byte>());
+            try
+            {
+                CollectionAssert.AreEqual(
+                    new[] { "-SinglePlayerResumeTimetableGame", Path.GetFullPath(save) },
+                    Selections.SavedGameArguments(save, "-SinglePlayerResumeTimetableGame"));
+            }
+            finally
+            {
+                File.Delete(save);
+            }
         }
 
         [TestMethod]
