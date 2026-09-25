@@ -11,6 +11,7 @@ using GetText;
 using Microsoft.Xna.Framework;
 
 using Orts.Simulation;
+using Orts.Simulation.Physics;
 using Orts.Simulation.RollingStocks;
 
 namespace Orts.ActivityRunner.Viewer3D.PopupWindows
