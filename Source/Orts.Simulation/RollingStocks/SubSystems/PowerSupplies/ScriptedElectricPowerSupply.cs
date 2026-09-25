@@ -276,7 +276,9 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
             {
                 case PowerSupplyEvent.QuickPowerOn:
                     QuickPowerOn = true;
-                    SignalEventToBatterySwitch(PowerSupplyEvent.CloseBatterySwitch);
+                    // Preserve the semantic quick-power event. Battery switches in PushButtons
+                    // mode need it to press/release their virtual button sequence automatically.
+                    SignalEventToBatterySwitch(PowerSupplyEvent.QuickPowerOn);
                     SignalEventToMasterKey(PowerSupplyEvent.TurnOnMasterKey);
                     SignalEventToPantograph(PowerSupplyEvent.RaisePantograph, 1);
                     SignalEventToOtherTrainVehiclesWithId(PowerSupplyEvent.RaisePantograph, 1);
@@ -290,7 +292,7 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
                     SignalEventToPantographs(PowerSupplyEvent.LowerPantograph);
                     SignalEventToOtherTrainVehicles(PowerSupplyEvent.LowerPantograph);
                     SignalEventToMasterKey(PowerSupplyEvent.TurnOffMasterKey);
-                    SignalEventToBatterySwitch(PowerSupplyEvent.OpenBatterySwitch);
+                    SignalEventToBatterySwitch(PowerSupplyEvent.QuickPowerOff);
                     break;
 
                 default:
