@@ -110,6 +110,13 @@ namespace Orts.Simulation.RollingStocks
                     CurrentLocomotiveSteamHeatBoilerWaterCapacityL = (float)Size.LiquidVolume.FromGallonUK(800.0f);
                 }
             }
+
+            // Open Rails hot-starts electric locomotives when electric power is enabled.
+            // The FTS port lost that SetPower(true) call, leaving legacy electric stock with
+            // battery/low-voltage power off. MasterKey.HeadlightControl then forces headlights
+            // back to OFF every update, so H only produces the switch sound.
+            if (simulator.UserSettings.ElectricPowerConnected || simulator.UserSettings.SimplifiedControls)
+                SetPower(true);
         }
 
         //================================================================================================//
