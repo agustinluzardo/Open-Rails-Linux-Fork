@@ -662,7 +662,11 @@ namespace Orts.ActivityRunner.Viewer3D
             });
             UserCommandController.AddEvent(UserCommand.DebugSignalling, KeyEventType.KeyPressed, (UserCommandArgs userCommandArgs) =>
             {
-                //
+                // The legacy signalling debug command was left as an empty handler after the
+                // viewer refactor. Route it to the dispatcher, which exposes live signal state
+                // and switch information, until the old 3D signalling overlay is ported.
+                if (userCommandArgs is not ModifiableKeyCommandArgs)
+                    ToggleDispatcherView();
             });
             UserCommandController.AddEvent(UserCommand.DisplayTrainListWindow, KeyEventType.KeyPressed, () =>
             {
