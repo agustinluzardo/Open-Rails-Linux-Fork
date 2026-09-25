@@ -9041,10 +9041,11 @@ namespace Orts.Simulation.Physics
                         // Check if station beyond reversal point
                         if (TCRoute.ReversalInfo[activeSubroute].ReverseReversalOffset < platform.TrackCircuitOffset[SignalLocation.NearEnd, route[routeIndex].Direction])
                         {
+                            // The platform is beyond the reversal point in this subroute.
+                            // Leave routeIndex invalid and let the subroute-search loop below
+                            // advance exactly once. Advancing here skips the next/final
+                            // subroute before it is ever searched.
                             routeIndex = -1;
-                            // jump next subpath, because station stop can't be there
-                            activeSubroute++;
-                            activeSubrouteNodeIndex = 0;
                         }
                     }
                 }
@@ -9074,9 +9075,9 @@ namespace Orts.Simulation.Physics
                             TrackDirection direction = route[routeIndex].Direction;
                             if (TCRoute.ReversalInfo[activeSubroute].ReverseReversalOffset < platform.TrackCircuitOffset[SignalLocation.NearEnd, direction])
                             {
+                                // Do not advance here; the enclosing search loop owns the
+                                // subroute transition. Otherwise one subroute is skipped.
                                 routeIndex = -1;
-                                // jump next subpath, because station stop can't be there
-                                activeSubroute++;
                             }
                         }
                     }
