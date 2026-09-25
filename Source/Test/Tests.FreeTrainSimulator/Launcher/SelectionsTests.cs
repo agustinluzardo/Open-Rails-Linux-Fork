@@ -55,6 +55,26 @@ namespace Tests.FreeTrainSimulator.Launcher
             ProfileSelectionsModel explore = new ProfileSelectionsModel
             {
                 GamePlayAction = GamePlayAction.SingleplayerNewGame,
+                ActivityType = ActivityType.Explorer,
+                FolderName = "MSTS",
+                RouteId = "EUROPE1",
+                PathId = "Innsbruck-Bludenz",
+                WagonSetId = "freight 1",
+                StartTime = new TimeOnly(8, 5),
+                Season = SeasonType.Autumn,
+                Weather = WeatherType.Rain,
+            };
+            CollectionAssert.AreEqual(
+                new[] { "-SingleplayerNewGame", "-Explorer", "MSTS", "EUROPE1", "Innsbruck-Bludenz", "freight 1", "08:05", "Autumn", "Rain" },
+                Selections.Arguments(explore));
+        }
+
+        [TestMethod]
+        public void LegacyExploreActivityStillUsesItsExplicitMode()
+        {
+            ProfileSelectionsModel explore = new ProfileSelectionsModel
+            {
+                GamePlayAction = GamePlayAction.SingleplayerNewGame,
                 ActivityType = ActivityType.ExploreActivity,
                 FolderName = "MSTS",
                 RouteId = "EUROPE1",
