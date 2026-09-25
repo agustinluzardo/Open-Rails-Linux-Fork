@@ -27,6 +27,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 
 using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Info;
 using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Imported.ImportHandler;
@@ -107,6 +108,7 @@ namespace Riel.Launcher.Gui
             PlayButton.Click += (_, _) => Guarded(Play);
             ResumeButton.Click += (_, _) => Guarded(Resume);
             ContentButton.Click += (_, _) => Guarded(() => ManageContent(browseFirst: false));
+            ManualButton.Click += (_, _) => SystemInfo.OpenBrowser("https://www.openrails.org/learn/documents/");
             TestButton.Click += (_, _) => Guarded(ShowTesting);
             AddFirstFolderButton.Click += (_, _) => Guarded(() => ManageContent(browseFirst: true));
             UseDetectedButton.Click += (_, _) => Guarded(AddDetected);
