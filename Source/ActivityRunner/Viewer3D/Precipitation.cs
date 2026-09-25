@@ -523,6 +523,10 @@ namespace Orts.ActivityRunner.Viewer3D
 
             graphicsDevice.BlendState = BlendState.NonPremultiplied;
             graphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
+            // Precipitation quads are camera-facing billboards. Their triangle winding can
+            // flip under the DesktopGL backend, so back-face culling can discard every drop.
+            // Render precipitation double-sided, matching the intended billboard semantics.
+            graphicsDevice.RasterizerState = RasterizerState.CullNone;
         }
 
         public override void Render(List<RenderItem> renderItems, ref Matrix view, ref Matrix projection, ref Matrix viewProjection)
@@ -547,6 +551,7 @@ namespace Orts.ActivityRunner.Viewer3D
         {
             graphicsDevice.BlendState = BlendState.Opaque;
             graphicsDevice.DepthStencilState = DepthStencilState.Default;
+            graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
         }
 
         public override bool GetBlending()
