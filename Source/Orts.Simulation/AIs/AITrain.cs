@@ -75,6 +75,8 @@ namespace Orts.Simulation.AIs
 
         public float doorOpenDelay = -1f;
         public float doorCloseAdvance = -1f;
+        private int lastStationSignalWaitTraceTime = int.MinValue;
+        private int lastStationSignalWaitTraceSignal = -1;
         public AILevelCrossingHornPattern LevelCrossingHornPattern { get; set; }
 
         public float PathLength;
@@ -1525,6 +1527,24 @@ namespace Orts.Simulation.AIs
                     !(TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath].Count - 1 == PresentPosition[Direction.Forward].RouteListIndex &&
                         TCRoute.TCRouteSubpaths.Count - 1 == TCRoute.ActiveSubPath))
                 {
+                    Signal nextSignal = NextSignalObjects[Direction.Forward];
+                    if (lastStationSignalWaitTraceSignal != nextSignal.Index ||
+                        lastStationSignalWaitTraceTime == int.MinValue ||
+                        presentTime < lastStationSignalWaitTraceTime ||
+                        presentTime - lastStationSignalWaitTraceTime >= 60)
+                    {
+                        string headStates = string.Join(", ", nextSignal.SignalHeads.Select(head =>
+                            $"tdb={head.TDBIndex}:aspect={head.SignalIndicationState}:draw={head.DrawState}"));
+                        Trace.TraceWarning($"AI station departure blocked: train {Number} ({Name}), " +
+                            $"station '{thisStation.PlatformItem?.Name}', scheduled depart {actualdepart:F0}, now {correctedTime}, " +
+                            $"exit signal {thisStation.ExitSignal}, aspect {nextAspect}, hold {nextSignal.HoldState}, " +
+                            $"enabled train {nextSignal.EnabledTrain?.Train?.Number.ToString() ?? "none"}, " +
+                            $"TC {nextSignal.TrackCircuitIndex}/{nextSignal.TrackCircuitDirection}, " +
+                            $"subroute {TCRoute.ActiveSubPath}, route index {PresentPosition[Direction.Forward].RouteListIndex}, " +
+                            $"control {ControlMode}, heads [{headStates}]");
+                        lastStationSignalWaitTraceSignal = nextSignal.Index;
+                        lastStationSignalWaitTraceTime = presentTime;
+                    }
                     return;  // do not depart if exit signal at danger
                 }
             }
