@@ -30,11 +30,13 @@ using ORTS.Settings;
 
 namespace Orts
 {
+#if !RIEL_UNIX
     static class NativeMethods
     {
         [DllImport("kernel32.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern bool SetDllDirectory(string pathName);
     }
+#endif
 
     static class Program
     {
@@ -58,8 +60,10 @@ namespace Orts
             //enables loading of dll for specific architecture(32 or 64bit) from distinct folders, useful when both versions require same name (as for OpenAL32.dll)
             string path = Path.Combine(ApplicationInfo.ProcessDirectory, "Native");
             path = Path.Combine(path, (Environment.Is64BitProcess) ? "X64" : "X86");
+#if !RIEL_UNIX
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 NativeMethods.SetDllDirectory(path);
+#endif
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
