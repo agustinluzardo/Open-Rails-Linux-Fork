@@ -670,7 +670,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(RielPlatform)' == 'windows'">
     <Exec Command="PostBuildActions.bat" />
   </Target>
 </Project>
