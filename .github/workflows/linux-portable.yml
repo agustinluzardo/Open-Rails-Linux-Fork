@@ -84,8 +84,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create "main-${GITHUB_SHA:0:12}" \
-            "${RUNNER_TEMP}/riel-linux-x64.zip" \
-            "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
-            --prerelease --latest=false --title "Riel main ${GITHUB_SHA:0:12}" \
-            --notes "Portable Linux build of ${GITHUB_SHA}. Includes .NET runtime."
+          tag="main-${GITHUB_SHA:0:12}"
+          title="Riel main ${GITHUB_SHA:0:12}"
+          notes="Portable Linux build of ${GITHUB_SHA}. Includes .NET runtime."
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            # A force-push/rollback can legitimately rebuild a commit whose
+            # release tag already exists. Refresh its assets instead of failing.
+            gh release upload "$tag" \
+              "${RUNNER_TEMP}/riel-linux-x64.zip" \
+              "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
+              --clobber
+            gh release edit "$tag" --prerelease --latest=false --title "$title" --notes "$notes"
+          else
+            gh release create "$tag" \
+              "${RUNNER_TEMP}/riel-linux-x64.zip" \
+              "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
+              --prerelease --latest=false --title "$title" --notes "$notes"
+          fi
