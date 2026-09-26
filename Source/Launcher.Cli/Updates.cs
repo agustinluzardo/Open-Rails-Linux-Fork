@@ -16,7 +16,8 @@ namespace Riel.Launcher
     /// <summary>Installs only a tested, checksummed portable build from the main release channel.</summary>
     internal static class Updates
     {
-        private const string Releases = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/releases?per_page=100";
+        private const string MainBranch = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/branches/main";
+        private const string ReleaseByTag = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/releases/tags/";
         private const string ArchiveName = "riel-linux-x64.zip";
 
         internal static async Task<int> Run(bool checkOnly, CancellationToken cancellationToken)
@@ -27,19 +28,29 @@ namespace Riel.Launcher
 
             using HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd("Riel-Updater/1.0");
-            using JsonDocument releases = JsonDocument.Parse(await client.GetStringAsync(Releases, cancellationToken).ConfigureAwait(false));
-            // GitHub's release list can use the tag's creation time, which need
-            // not match publishing order for commits authored outside GitHub.
-            JsonElement release = releases.RootElement.EnumerateArray()
-                .Where(item => !item.GetProperty("draft").GetBoolean() &&
-                    item.GetProperty("tag_name").GetString().StartsWith("main-", StringComparison.Ordinal))
-                .OrderByDescending(item => item.GetProperty("published_at").GetDateTimeOffset())
-                .FirstOrDefault();
-            if (release.ValueKind == JsonValueKind.Undefined)
-                throw new LauncherException("No tested main release is available yet.");
+            // Follow the branch itself, not "most recently published" prereleases.
+            // Rollbacks and rebuilt commits can make release timestamps differ from
+            // main's actual history, which previously made the launcher offer a stale
+            // build or miss the current one entirely.
+            using JsonDocument branch = JsonDocument.Parse(await client.GetStringAsync(MainBranch, cancellationToken).ConfigureAwait(false));
+            string mainCommit = branch.RootElement.GetProperty("commit").GetProperty("sha").GetString();
+            if (string.IsNullOrWhiteSpace(mainCommit) || mainCommit.Length < 12)
+                throw new LauncherException("GitHub did not return a valid main commit.");
 
-            string tag = release.GetProperty("tag_name").GetString();
-            string commit = tag.Substring("main-".Length);
+            string commit = mainCommit.Substring(0, 12);
+            string tag = "main-" + commit;
+            using HttpResponseMessage releaseResponse = await client.GetAsync(ReleaseByTag + tag, cancellationToken).ConfigureAwait(false);
+            if (releaseResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                Console.WriteLine("No tested Riel build has been published for current main (" + commit + ") yet.");
+                return 0;
+            }
+            releaseResponse.EnsureSuccessStatusCode();
+            using JsonDocument releaseDocument = JsonDocument.Parse(
+                await releaseResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+            JsonElement release = releaseDocument.RootElement;
+            if (release.GetProperty("draft").GetBoolean())
+                throw new LauncherException("The current main build is still a draft.");
             if (commit.StartsWith(VersionInfo.CodeVersion, StringComparison.OrdinalIgnoreCase))
             {
                 string oldStage = Path.Combine(root, ".riel-update-stage");
