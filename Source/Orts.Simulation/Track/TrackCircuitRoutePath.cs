@@ -292,7 +292,7 @@ namespace Orts.Simulation.Track
                     {
                         VectorNode reversalVectorNode = trackDatabase.VectorNodes[nextPathNode.NextMainTVNIndex];
                         TrackTraveller? tdbTrav = TrackTraveller.InitializeTraveller(reversalVectorNode.VectorSections[0].Location, nextPathNode.NextMainTVNIndex, TrackDirection.Ahead);
-                        offset = tdbTrav?.DistanceTo(nextPathNode.Location) ?? 0;
+                        offset = tdbTrav?.DistanceTo(nextPathNode.Location, reversalVectorNode) ?? 0;
                         float reverseOffset = 0;
                         int sectionIndex = -1;
                         TrackDirection validDir = currentDir;
@@ -401,7 +401,7 @@ namespace Orts.Simulation.Track
 
             VectorNode endVectorNode = trackDatabase.VectorNodes[trackNodeIndex];
             TrackTraveller? tdbEndTrav = TrackTraveller.InitializeTraveller(endVectorNode.VectorSections[0].Location, trackNodeIndex, TrackDirection.Ahead);
-            float endOffset = tdbEndTrav?.DistanceTo(lastPathNode.Location) ?? 0;
+            float endOffset = tdbEndTrav?.DistanceTo(lastPathNode.Location, endVectorNode) ?? 0;
 
             // Prepare info about route end point
             float reverseEndOffset = 0;
@@ -891,6 +891,32 @@ namespace Orts.Simulation.Track
         //  SPA: Used with enhanced MSTS Mode, please don't change
         private static float GetOffsetToPathNode(AIPath aiPath, TrackDirection direction, AIPathNode pathNode)
         {
+            VectorNode waitingVectorNode = RuntimeDataResolver.Instance.TrackWorld.TrackDatabase.VectorNodes[pathNode.NextMainTVNIndex];
+            TrackTraveller? traveller = TrackTraveller.InitializeTraveller(
+                waitingVectorNode.VectorSections[0].Location,
+                pathNode.NextMainTVNIndex,
+                TrackDirection.Ahead);
+
+            if (!traveller.HasValue)
+                return 0;
+
+            // Match Open Rails: PAT node positions are resolved on the vector
+            // node that owns the path node, not against any nearby parallel rail.
+            float nodeOffset = traveller.Value.DistanceTo(pathNode.Location, waitingVectorNode) ?? 0;
+            int waitingSectionIndex = ConvertWaitingPoint(pathNode);
+
+            foreach (TrackCircuitSectionCrossReference crossReference in
+                Simulator.Instance.SignalEnvironment.NodeCrossReferences[pathNode.NextMainTVNIndex])
+            {
+                if (crossReference.Index != waitingSectionIndex)
+                    continue;
+
+                float sectionOffset = nodeOffset - crossReference.OffsetLength[TrackDirection.Reverse];
+                return direction == TrackDirection.Ahead
+                    ? crossReference.Length - sectionOffset
+                    : sectionOffset;
+            }
+
             return 0;
         }
 
@@ -1532,18 +1558,16 @@ namespace Orts.Simulation.Track
         {
             VectorNode waitingVectorNode = RuntimeDataResolver.Instance.TrackWorld.TrackDatabase.VectorNodes[stopPathNode.NextMainTVNIndex];
             TrackTraveller? tdbTraveller = TrackTraveller.InitializeTraveller(waitingVectorNode.VectorSections[0].Location, stopPathNode.NextMainTVNIndex, TrackDirection.Ahead);
-            float offset = tdbTraveller?.DistanceTo(stopPathNode.Location) ?? 0;
+            float offset = tdbTraveller?.DistanceTo(stopPathNode.Location, waitingVectorNode) ?? 0;
 
             int sectionIndex = -1;
 
             TrackCircuitCrossReferences waitingCrossRefs = Simulator.Instance.SignalEnvironment.NodeCrossReferences[stopPathNode.NextMainTVNIndex];
-            foreach (TrackCircuitSectionCrossReference crossReference in waitingCrossRefs)
+            for (int i = waitingCrossRefs.Count - 1; i >= 0 && sectionIndex < 0; i--)
             {
+                TrackCircuitSectionCrossReference crossReference = waitingCrossRefs[i];
                 if (offset < (crossReference.OffsetLength[TrackDirection.Reverse] + crossReference.Length))
-                {
                     sectionIndex = crossReference.Index;
-                    break;
-                }
             }
 
             if (sectionIndex < 0)
