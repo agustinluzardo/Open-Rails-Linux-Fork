@@ -270,6 +270,14 @@ namespace Orts.ActivityRunner.Processes
             // First use the .save file to check the validity and extract the route and activity.
             GameSaveState saveState = await GameSaveState.FromFile<GameSaveState>(profileSelections.GameSaveFile, Game.LoaderProcess.CancellationToken).ConfigureAwait(false);
 
+            string snapshotConsist = saveState.SimulatorSaveState?.Trains?
+                .FirstOrDefault()?.TrainCars?.FirstOrDefault()?.OriginalConsist;
+            Trace.TraceInformation(
+                "[SaveResume] loading file='{0}' realSave='{1:O}' gameTime={2:F0}s route='{3}' path='{4}' snapshotConsist='{5}' storedType={6} storedConsist='{7}'",
+                profileSelections.GameSaveFile, saveState.RealSaveTime, saveState.GameTime,
+                saveState.Route, saveState.Path, snapshotConsist,
+                saveState.ProfileSelections?.ActivityType, saveState.ProfileSelections?.WagonSetId);
+
             // A resumed session used to leave the static GameState.profileSelections pointing at
             // the command-line "-SingleplayerResume" selection, which only contains GameSaveFile.
             // Saving that resumed session therefore wrote a valid simulator snapshot with an
@@ -611,25 +619,26 @@ namespace Orts.ActivityRunner.Processes
 
             if (saved.ActivityType == ActivityType.None)
             {
-                // Prefer the current profile only when it points at the same saved route/path.
-                // This preserves the original mode and identifiers when the profile still has them.
-                if (currentMatchesPath && current.ActivityType != ActivityType.None)
-                    saved.ActivityType = current.ActivityType;
-                else if (!string.IsNullOrWhiteSpace(saveState.SimulatorSaveState?.TimetableFile))
+                // A save must be reconstructed from its own snapshot before consulting whatever the
+                // launcher/profile happens to have selected now. Using the current profile first made
+                // old saves on the same route/path silently inherit the most recently played mode.
+                if (!string.IsNullOrWhiteSpace(saveState.SimulatorSaveState?.TimetableFile))
                     saved.ActivityType = ActivityType.TimeTable;
                 else if (saveState.SimulatorSaveState?.Activity != null)
                     saved.ActivityType = ActivityType.Activity;
+                else if (!string.IsNullOrWhiteSpace(saveState.Path))
+                    saved.ActivityType = ActivityType.Explorer;
+                else if (currentMatchesPath && current.ActivityType != ActivityType.None)
+                    saved.ActivityType = current.ActivityType;
                 else
                     saved.ActivityType = ActivityType.Explorer;
             }
 
             if (saved.ActivityType is ActivityType.Explorer or ActivityType.ExploreActivity)
             {
-                if (string.IsNullOrWhiteSpace(saved.WagonSetId) && currentMatchesPath)
-                    saved.WagonSetId = current.WagonSetId;
-
-                // Explorer snapshots retain the original consist name on every saved car.
-                // Use it when the profile has since changed to another selection.
+                // Explorer snapshots retain the original consist name on the saved cars. This is
+                // authoritative for old saves whose ProfileSelections was lost after a resume.
+                // Only fall back to the current profile when the snapshot itself has no consist.
                 if (string.IsNullOrWhiteSpace(saved.WagonSetId))
                 {
                     string originalConsist = saveState.SimulatorSaveState?.Trains?
@@ -637,6 +646,10 @@ namespace Orts.ActivityRunner.Processes
                     if (!string.IsNullOrWhiteSpace(originalConsist))
                         saved.WagonSetId = Path.GetFileNameWithoutExtension(originalConsist);
                 }
+
+                if (string.IsNullOrWhiteSpace(saved.WagonSetId) && currentMatchesPath &&
+                    current.ActivityType is ActivityType.Explorer or ActivityType.ExploreActivity)
+                    saved.WagonSetId = current.WagonSetId;
 
                 if (saveState.SimulatorSaveState != null)
                 {
