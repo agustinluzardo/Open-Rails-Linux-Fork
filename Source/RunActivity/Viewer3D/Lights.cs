@@ -26,6 +26,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Orts.Formats.Msts;
+using Orts.Parsers.Msts;
 using Orts.Simulation.Physics;
 using Orts.Simulation.RollingStocks;
 using Orts.Simulation.RollingStocks.SubSystems;
@@ -156,13 +157,25 @@ namespace Orts.Viewer3D
 
         string DefineFullTexturePath(string textureName, bool searchSpecificTexture = false)
         {
-            if (File.Exists(Path.Combine(Path.GetDirectoryName(Car.WagFilePath), textureName)))
-                return Path.Combine(Path.GetDirectoryName(Car.WagFilePath), textureName);
-            if (searchSpecificTexture)
-                Trace.TraceWarning("Could not find light graphic {0} at {1}", textureName, Path.Combine(Path.GetDirectoryName(Car.WagFilePath), textureName));
-            if (File.Exists(Path.Combine(Viewer.ContentPath, textureName)))
-                return Path.Combine(Viewer.ContentPath, textureName);
-            return Path.Combine(Viewer.ContentPath, "LightGlow.png");
+            string local = string.IsNullOrEmpty(textureName)
+                ? null
+                : Path.Combine(Path.GetDirectoryName(Car.WagFilePath), textureName);
+            string resolved = local == null ? null : ContentPath.ResolveFile(local);
+            if (resolved != null)
+                return resolved;
+
+            if (searchSpecificTexture && local != null)
+                Trace.TraceWarning("Could not find light graphic {0} at {1}", textureName, local);
+
+            string content = string.IsNullOrEmpty(textureName)
+                ? null
+                : Path.Combine(Viewer.ContentPath, textureName);
+            resolved = content == null ? null : ContentPath.ResolveFile(content);
+            if (resolved != null)
+                return resolved;
+
+            return ContentPath.ResolveFile(Path.Combine(Viewer.ContentPath, "LightGlow.png"))
+                ?? Path.Combine(Viewer.ContentPath, "LightGlow.png");
         }
 
         void UpdateActiveLightCone()
