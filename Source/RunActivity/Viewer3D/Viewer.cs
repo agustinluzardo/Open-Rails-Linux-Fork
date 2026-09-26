@@ -22,9 +22,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+#if !RIEL_UNIX
 using System.Management;
+#endif
 using System.Threading;
-using System.Windows.Forms;
 using GNU.Gettext;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -187,7 +188,7 @@ namespace Orts.Viewer3D
 
         bool ForceMouseVisible;
         double MouseVisibleTillRealTime;
-        public Cursor ActualCursor = Cursors.Default;
+        public MouseCursor ActualCursor = MouseCursor.Arrow;
         public static Viewport DefaultViewport;
 
         ICabViewMouseControlRenderer MouseChangingControl;
@@ -754,6 +755,11 @@ namespace Orts.Viewer3D
         internal void UpdateAdapterInformation(GraphicsAdapter graphicsAdapter)
         {
             adapterDescription = graphicsAdapter.Description;
+#if RIEL_UNIX
+            // DesktopGL exposes the adapter name portably. Dedicated memory is not part of the
+            // MonoGame abstraction, so leave it unknown instead of querying Windows WMI.
+            adapterMemory = 0;
+#else
             try
             {
                 // Note that we might find multiple adapters with the same
@@ -771,6 +777,7 @@ namespace Orts.Viewer3D
             {
                 Trace.WriteLine(error);
             }
+#endif
         }
 
         [CallOnThread("Loader")]
@@ -1516,14 +1523,14 @@ namespace Orts.Viewer3D
                 }
                 else
                 {
-                    ActualCursor = Cursors.Default;
+                    ActualCursor = MouseCursor.Arrow;
                 }
             }
 
             if (MousePickedControl != null & MousePickedControl != OldMousePickedControl)
                 Simulator.Confirmer.Message(ConfirmLevel.None, String.IsNullOrEmpty(MousePickedControl.ControlLabel) ? MousePickedControl.GetControlName() : MousePickedControl.ControlLabel);
 
-            ActualCursor = RenderProcess.ActualCursor = MousePickedControl != null ? Cursors.Hand : Cursors.Default;
+            ActualCursor = RenderProcess.ActualCursor = MousePickedControl != null ? MouseCursor.Hand : MouseCursor.Arrow;
 
             if (UserInput.IsMouseWheelChanged)
                 MousePickedControl?.HandleUserInput();
@@ -1831,7 +1838,7 @@ namespace Orts.Viewer3D
                 Visibility = VisibilityState.ScreenshotPending;  // Next state else this path would be taken more than once.
                 if (!Directory.Exists(Settings.ScreenshotPath))
                     Directory.CreateDirectory(Settings.ScreenshotPath);
-                var fileName = Path.Combine(Settings.ScreenshotPath, System.Windows.Forms.Application.ProductName + " " + DateTime.Now.ToString("yyyy-MM-dd hh-mm-ss")) + ".png";
+                var fileName = Path.Combine(Settings.ScreenshotPath, ApplicationInfo.ProductName + " " + DateTime.Now.ToString("yyyy-MM-dd hh-mm-ss")) + ".png";
                 SaveScreenshotToFile(Game.GraphicsDevice, fileName, false);
                 SaveScreenshot = false; // cancel trigger
             }
