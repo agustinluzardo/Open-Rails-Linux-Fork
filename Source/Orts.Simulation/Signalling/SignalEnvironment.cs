@@ -436,8 +436,11 @@ namespace Orts.Simulation.Signalling
             int blockClear = 0;
             int blockOccupied = 0;
             int blockObstructed = 0;
-            int aspectStop = 0;
-            int aspectProceed = 0;
+            int aspectMrStop = 0;
+            int aspectMrProceed = 0;
+            int aspectLrStop = 0;
+            int aspectLrProceed = 0;
+            int normalMultiHead = 0;
             int endSignalLinks = 0;
             HashSet<int> normalSignalsLinkedAsEnd = new HashSet<int>();
 
@@ -487,15 +490,25 @@ namespace Orts.Simulation.Signalling
                         break;
                 }
 
+                int normalHeadCount = signal.SignalHeads.Count(head => head.SignalFunction == SignalFunctionType.Normal);
+                if (normalHeadCount > 1)
+                    normalMultiHead++;
+
                 if (signal.SignalMR(SignalFunctionType.Normal) == SignalAspectState.Stop)
-                    aspectStop++;
+                    aspectMrStop++;
                 else
-                    aspectProceed++;
+                    aspectMrProceed++;
+
+                if (signal.SignalLR(SignalFunctionType.Normal) == SignalAspectState.Stop)
+                    aspectLrStop++;
+                else
+                    aspectLrProceed++;
             }
 
             Trace.TraceInformation(
-                "[SignalDiag] normal={0} enabled={1} enabledWithRoute={2} stop={3} proceed={4} blockClear={5} occupied={6} obstructed={7} invalidTC={8} invalidNextTC={9} endSignalLinks={10} normalLinkedAsEnd={11}",
-                normalSignals, enabledSignals, enabledWithRoute, aspectStop, aspectProceed,
+                "[SignalDiag] normal={0} enabled={1} enabledWithRoute={2} mrStop={3} mrProceed={4} lrStop={5} lrProceed={6} multiHead={7} blockClear={8} occupied={9} obstructed={10} invalidTC={11} invalidNextTC={12} endSignalLinks={13} normalLinkedAsEnd={14}",
+                normalSignals, enabledSignals, enabledWithRoute, aspectMrStop, aspectMrProceed,
+                aspectLrStop, aspectLrProceed, normalMultiHead,
                 blockClear, blockOccupied, blockObstructed, invalidCircuit, invalidNextCircuit,
                 endSignalLinks, normalSignalsLinkedAsEnd.Count);
         }

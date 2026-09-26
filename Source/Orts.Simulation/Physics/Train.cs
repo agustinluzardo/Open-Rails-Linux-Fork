@@ -2257,18 +2257,6 @@ namespace Orts.Simulation.Physics
             {
                 InitializeSignals(false);     // Get signal information - only if train has route //
 
-                // A train which is already in AutoSignal at startup must actively request
-                // its first signal.  Relying on a later mode transition leaves the first
-                // normal signal disabled (and therefore at STOP) indefinitely.
-                if (ControlMode == TrainControlMode.AutoSignal && NextSignalObjects[Direction.Forward] != null &&
-                    NextSignalObjects[Direction.Forward].EnabledTrain != RoutedForward)
-                {
-                    Trace.TraceInformation(
-                        "[SignalInit] Train {0} requesting initial signal {1} after signal discovery.",
-                        Number, NextSignalObjects[Direction.Forward].Index);
-                    NextSignalObjects[Direction.Forward].RequestClearSignal(ValidRoutes[Direction.Forward], RoutedForward, 0, false, null);
-                }
-
                 if (TrainType != TrainType.Static)
                     TrainDeadlockInfo.CheckDeadlock(ValidRoutes[Direction.Forward], Number);    // Check deadlock against all other trains (not for static trains)
                 if (TCRoute != null)
@@ -5373,41 +5361,6 @@ namespace Orts.Simulation.Physics
 
             Simulator.Instance.SignalEnvironment.RequestClearNode(RoutedForward, ValidRoutes[Direction.Forward]);
 
-            // Legacy MSTS routes may contain signal topology which is usable through
-            // the train route but is not attached to TrackCircuitSection.EndSignals.
-            // Open Rails normally changes from node to signal control when RequestClearNode
-            // reaches EndSignals. If that link is missing, recover the transition only
-            // after the route has actually been reserved through the next normal signal.
-            if (ControlMode == TrainControlMode.AutoNode && NextSignalObjects[Direction.Forward] != null)
-            {
-                Signal nextSignal = NextSignalObjects[Direction.Forward];
-                int presentRouteIndex = PresentPosition[Direction.Forward].RouteListIndex;
-                int reservedRouteIndex = ValidRoutes[Direction.Forward].GetRouteIndex(
-                    EndAuthorities[Direction.Forward].LastReservedSection, presentRouteIndex);
-                int signalRouteIndex = ValidRoutes[Direction.Forward].GetRouteIndex(
-                    nextSignal.TrackCircuitIndex, presentRouteIndex);
-
-                bool routeClearedToSignal = signalRouteIndex >= 0 && reservedRouteIndex >= signalRouteIndex;
-
-                // Some legacy signals are represented at a section boundary and only their
-                // next track circuit survives the topology conversion. In that case require
-                // that the reservation has reached that next section before recovering.
-                if (!routeClearedToSignal && nextSignal.TrackCircuitNextIndex > 0)
-                {
-                    int nextSignalRouteIndex = ValidRoutes[Direction.Forward].GetRouteIndex(
-                        nextSignal.TrackCircuitNextIndex, presentRouteIndex);
-                    routeClearedToSignal = nextSignalRouteIndex >= 0 && reservedRouteIndex >= nextSignalRouteIndex;
-                }
-
-                if (routeClearedToSignal &&
-                    (nextSignal.EnabledTrain == null || nextSignal.EnabledTrain == RoutedForward))
-                {
-                    Trace.TraceInformation(
-                        "[SignalCompat] Train {0} entering signal control for signal {1}; EndSignals linkage was not used (reserved route index {2}).",
-                        Number, nextSignal.Index, reservedRouteIndex);
-                    SwitchToSignalControl(nextSignal);
-                }
-            }
         }
 
         /// <summary>
@@ -9102,11 +9055,11 @@ namespace Orts.Simulation.Physics
                         // Check if station beyond reversal point
                         if (TCRoute.ReversalInfo[activeSubroute].ReverseReversalOffset < platform.TrackCircuitOffset[SignalLocation.NearEnd, route[routeIndex].Direction])
                         {
-                            // The platform is beyond the reversal point in this subroute.
-                            // Leave routeIndex invalid and let the subroute-search loop below
-                            // advance exactly once. Advancing here skips the next/final
-                            // subroute before it is ever searched.
                             routeIndex = -1;
+                            // Open Rails advances here because this stop cannot belong to
+                            // the current subpath beyond its reversal point.
+                            activeSubroute++;
+                            activeSubrouteNodeIndex = 0;
                         }
                     }
                 }
@@ -9136,9 +9089,11 @@ namespace Orts.Simulation.Physics
                             TrackDirection direction = route[routeIndex].Direction;
                             if (TCRoute.ReversalInfo[activeSubroute].ReverseReversalOffset < platform.TrackCircuitOffset[SignalLocation.NearEnd, direction])
                             {
-                                // Do not advance here; the enclosing search loop owns the
-                                // subroute transition. Otherwise one subroute is skipped.
                                 routeIndex = -1;
+                                // Match Open Rails: skip the subpath whose reversal is
+                                // before this platform and restart the search at the next one.
+                                activeSubroute++;
+                                activeSubrouteNodeIndex = 0;
                             }
                         }
                     }
@@ -9152,94 +9107,6 @@ namespace Orts.Simulation.Physics
                         $"platform sections {platform.TCSectionIndex[0]}/{platform.TCSectionIndex[^1]}, " +
                         $"searched subroutes {beginActiveSubroute}-{Math.Min(activeSubroute, TCRoute.TCRouteSubpaths.Count - 1)}");
                     return false;
-                }
-
-                // MSTS service files also store the expected distance along the path for
-                // every station. Some legacy activities contain a stale PlatformStartID
-                // for the origin (often a neighbouring platform), while DistanceDownPath
-                // still points to the correct early stop. Without this guard, the stale
-                // platform can be found tens of kilometres later after a reversal/loop;
-                // that advances beginActiveSubroute and makes every following station
-                // disappear from the route.
-                //
-                // Only guard the first station, where there is no prior accepted stop to
-                // disambiguate sequence. If the expected distance lies clearly inside the
-                // earlier subroute(s), reject a match from a later subroute instead of
-                // poisoning the rest of the station list.
-                if (StationStops.Count == 0 && activeSubroute > beginActiveSubroute && distanceDownPath >= 0)
-                {
-                    float distanceBeforeMatchedSubroute = 0;
-                    for (int subroute = beginActiveSubroute; subroute < activeSubroute; subroute++)
-                    {
-                        foreach (TrackCircuitRouteElement element in TCRoute.TCRouteSubpaths[subroute])
-                            distanceBeforeMatchedSubroute += element.TrackCircuitSection.Length;
-                    }
-
-                    float sequenceTolerance = Math.Max(500f, clearingDistanceM * 4f);
-                    if (distanceDownPath + sequenceTolerance < distanceBeforeMatchedSubroute)
-                    {
-                        // The service's platform reference is stale for this path. Before
-                        // dropping the stop, try another platform belonging to the same
-                        // station which actually lies on the origin subroute. This mirrors
-                        // what MSTS content authors commonly intended when a service was
-                        // moved from one neighbouring terminal track to another.
-                        int originalPlatformStartID = platformStartID;
-                        int replacementPlatformIndex = -1;
-                        int replacementRouteIndex = int.MaxValue;
-
-                        if (!string.IsNullOrEmpty(platform.Name) &&
-                            Simulator.Instance.SignalEnvironment.StationXRefList.TryGetValue(platform.Name, out List<int> stationPlatforms))
-                        {
-                            TrackCircuitPartialPathRoute originRoute = TCRoute.TCRouteSubpaths[beginActiveSubroute];
-
-                            foreach (int candidatePlatformIndex in stationPlatforms.Distinct())
-                            {
-                                if (candidatePlatformIndex == platformIndex)
-                                    continue;
-
-                                PlatformDetails candidate = Simulator.Instance.SignalEnvironment.PlatformDetailsList[candidatePlatformIndex];
-                                if (candidate.TCSectionIndex.Count == 0)
-                                    continue;
-
-                                int candidateRouteIndex = -1;
-                                foreach (int candidateSection in candidate.TCSectionIndex)
-                                {
-                                    int indexOnRoute = originRoute.GetRouteIndex(candidateSection, 0);
-                                    if (indexOnRoute >= 0 && (candidateRouteIndex < 0 || indexOnRoute < candidateRouteIndex))
-                                        candidateRouteIndex = indexOnRoute;
-                                }
-
-                                if (candidateRouteIndex >= 0 && candidateRouteIndex < replacementRouteIndex)
-                                {
-                                    replacementPlatformIndex = candidatePlatformIndex;
-                                    replacementRouteIndex = candidateRouteIndex;
-                                }
-                            }
-                        }
-
-                        if (replacementPlatformIndex >= 0)
-                        {
-                            platformIndex = replacementPlatformIndex;
-                            platform = Simulator.Instance.SignalEnvironment.PlatformDetailsList[platformIndex];
-                            platformStartID = platform.PlatformReference[SignalLocation.NearEnd];
-                            activeSubroute = beginActiveSubroute;
-                            route = TCRoute.TCRouteSubpaths[activeSubroute];
-                            routeIndex = replacementRouteIndex;
-                            sectionIndex = route[routeIndex].TrackCircuitSection.Index;
-
-                            Trace.TraceWarning($"Train {Number} Service {Name} : origin platform {originalPlatformStartID} " +
-                                $"belongs to a later subroute despite service distance {distanceDownPath:F1}m; " +
-                                $"using platform {platformStartID} at station '{platform.Name}' on subroute {activeSubroute} instead.");
-                        }
-                        else
-                        {
-                            Trace.TraceWarning($"Train {Number} Service {Name} : ignoring origin platform {originalPlatformStartID} " +
-                                $"mapped to subroute {activeSubroute}; service distance {distanceDownPath:F1}m lies before " +
-                                $"that subroute ({distanceBeforeMatchedSubroute:F1}m), and no platform for station " +
-                                $"'{platform.Name}' is present on subroute {beginActiveSubroute}.");
-                            return false;
-                        }
-                    }
                 }
 
                 activeSubrouteNodeIndex = routeIndex;
