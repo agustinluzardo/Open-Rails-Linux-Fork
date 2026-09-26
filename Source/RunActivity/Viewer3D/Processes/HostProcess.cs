@@ -1,4 +1,106 @@
-﻿// COPYRIGHT 2022 by the Open Rails project.
+#if RIEL_UNIX
+using System;
+using System.Diagnostics;
+using System.Threading;
+using Orts.Processes;
+using ORTS.Common;
+
+namespace Orts.Viewer3D.Processes
+{
+    public class HostProcess
+    {
+        public int ProcessorCount { get; } = Environment.ProcessorCount;
+        public float CLRMemoryAllocatedBytesPerSec { get; private set; }
+        public float CPUMemoryPrivate { get; private set; }
+        public float CPUMemoryWorkingSet { get; private set; }
+        public float CPUMemoryWorkingSetPrivate { get; private set; }
+        public float CPUMemoryVirtual { get; private set; }
+        public ulong CPUMemoryVirtualLimit { get; private set; }
+        public float GPUMemoryCommitted { get; private set; }
+        public float GPUMemoryDedicated { get; private set; }
+        public float GPUMemoryShared { get; private set; }
+
+        readonly Profiler Profiler = new Profiler("Host");
+        readonly ProcessState State = new ProcessState("Host");
+        readonly Game Game;
+        readonly Thread Thread;
+        const int SleepTime = 10000;
+        long previousAllocated;
+        long previousTimestamp;
+
+        public HostProcess(Game game)
+        {
+            Game = game;
+            Thread = new Thread(HostThread) { IsBackground = true, Name = "Host" };
+            CPUMemoryVirtualLimit = (ulong)Math.Max(0, SystemInfo.InstalledMemoryMB) * 1024UL * 1024UL;
+        }
+
+        public void Start() => Thread.Start();
+        public void Stop() => State.SignalTerminate();
+
+        [ThreadName("Host")]
+        void HostThread()
+        {
+            Profiler.SetThread();
+            previousAllocated = GC.GetTotalAllocatedBytes(false);
+            previousTimestamp = Stopwatch.GetTimestamp();
+            while (true)
+            {
+                State.Sleep(SleepTime);
+                if (State.Terminated)
+                    break;
+                if (!DoHost())
+                    return;
+            }
+        }
+
+        [CallOnThread("Host")]
+        bool DoHost()
+        {
+            if (Debugger.IsAttached)
+                Host();
+            else
+            {
+                try { Host(); }
+                catch (Exception error) { Trace.WriteLine(error); }
+            }
+            return true;
+        }
+
+        [CallOnThread("Host")]
+        void Host()
+        {
+            Profiler.Start();
+            try
+            {
+                using Process process = Process.GetCurrentProcess();
+                process.Refresh();
+                CPUMemoryPrivate = process.PrivateMemorySize64;
+                CPUMemoryWorkingSet = process.WorkingSet64;
+                CPUMemoryWorkingSetPrivate = process.PrivateMemorySize64;
+                CPUMemoryVirtual = process.VirtualMemorySize64;
+
+                long nowAllocated = GC.GetTotalAllocatedBytes(false);
+                long nowTimestamp = Stopwatch.GetTimestamp();
+                double seconds = (double)(nowTimestamp - previousTimestamp) / Stopwatch.Frequency;
+                CLRMemoryAllocatedBytesPerSec = seconds > 0 ? (float)((nowAllocated - previousAllocated) / seconds) : 0;
+                previousAllocated = nowAllocated;
+                previousTimestamp = nowTimestamp;
+
+                // Portable graphics APIs do not expose per-process VRAM accounting.
+                GPUMemoryCommitted = 0;
+                GPUMemoryDedicated = 0;
+                GPUMemoryShared = 0;
+            }
+            finally
+            {
+                Profiler.Stop();
+            }
+        }
+    }
+}
+#else
+// COPYRIGHT 2022 by the Open Rails project.
 // 
 // This file is part of Open Rails.
 // 
@@ -235,3 +337,5 @@ namespace Orts.Viewer3D.Processes
         #endregion
     }
 }
+
+#endif
