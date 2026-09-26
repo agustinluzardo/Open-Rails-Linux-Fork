@@ -442,8 +442,8 @@ namespace Orts.Simulation.Track
                                                                                                                                  // Check if section is under train, and therefore can be unreserved from other trains
             {
                 int routeIndex = train.Train.ValidRoutes[Direction.Forward].GetRouteIndex(Index, 0);
-                if (((routeIndex <= train.Train.PresentPosition[Direction.Forward].RouteListIndex && Index >= train.Train.PresentPosition[Direction.Backward].RouteListIndex) ||
-                    (routeIndex >= train.Train.PresentPosition[Direction.Forward].RouteListIndex && Index <= train.Train.PresentPosition[Direction.Backward].RouteListIndex)) &&
+                if (((routeIndex <= train.Train.PresentPosition[Direction.Forward].RouteListIndex && routeIndex >= train.Train.PresentPosition[Direction.Backward].RouteListIndex) ||
+                    (routeIndex >= train.Train.PresentPosition[Direction.Forward].RouteListIndex && routeIndex <= train.Train.PresentPosition[Direction.Backward].RouteListIndex)) &&
                     CircuitState.TrainReserved != null && CircuitState.TrainReserved.Train != train.Train)
                 {
                     Train.TrainRouted trainRouted = CircuitState.TrainReserved;
