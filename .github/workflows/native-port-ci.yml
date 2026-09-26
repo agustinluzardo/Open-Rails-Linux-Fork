@@ -5,6 +5,10 @@ on:
     branches: [native-openrails-port]
   workflow_dispatch:
 
+concurrency:
+  group: native-openrails-port
+  cancel-in-progress: true
+
 jobs:
   linux-native:
     runs-on: ubuntu-24.04
