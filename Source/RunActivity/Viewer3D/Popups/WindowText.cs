@@ -619,6 +619,7 @@ namespace Orts.Viewer3D.Popups
         }
     }
 
+#if !RIEL_UNIX
     static class NativeMethods
     {
         [DllImport("gdi32.dll", SetLastError = true)]
@@ -642,5 +643,6 @@ namespace Orts.Viewer3D.Popups
 
         [DllImport("gdi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern bool GetCharABCWidthsFloat(IntPtr hdc, uint firstChar, uint lastChar, out NativeStructs.AbcFloatWidth abcFloatWidths);
-    }
+    }#endif
+
 }
