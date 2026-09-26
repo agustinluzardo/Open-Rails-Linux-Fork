@@ -23,7 +23,7 @@ using Orts.Processes;
 using ORTS.Common;
 using System;
 using System.Diagnostics;
-using System.Windows.Forms;
+using Microsoft.Xna.Framework.Input;
 using static ORTS.Settings.UserSettings;
 
 namespace Orts.Viewer3D.Processes
@@ -41,7 +41,6 @@ namespace Orts.Viewer3D.Processes
         public Profiler Profiler { get; private set; }
 
         readonly Game Game;
-        readonly Form GameForm;
         readonly Point GameWindowSize;
         readonly WatchdogToken WatchdogToken;
 
@@ -51,7 +50,7 @@ namespace Orts.Viewer3D.Processes
         RenderFrame NextFrame;      // we prepare the next frame in the background while the current one is rendering,
 
         public bool IsMouseVisible { get; set; }  // handles cross thread issues by signalling RenderProcess of a change
-        public Cursor ActualCursor = Cursors.Default;
+        public MouseCursor ActualCursor = MouseCursor.Arrow;
 
         // Diagnostic information
         public SmoothedData FrameRate { get; private set; }
@@ -71,8 +70,6 @@ namespace Orts.Viewer3D.Processes
         internal RenderProcess(Game game)
         {
             Game = game;
-            GameForm = (Form)Control.FromHandle(Game.Window.Handle);
-
             WatchdogToken = new WatchdogToken(System.Threading.Thread.CurrentThread);
 
             Profiler = new Profiler("Render");
@@ -148,9 +145,9 @@ namespace Orts.Viewer3D.Processes
             isFullScreen = pp.IsFullScreen;
             if (pp.IsFullScreen)
             {
-                var screen = Screen.FromControl(GameForm);
-                pp.BackBufferWidth = screen.Bounds.Width;
-                pp.BackBufferHeight = screen.Bounds.Height;
+                var displayMode = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+                pp.BackBufferWidth = displayMode.Width;
+                pp.BackBufferHeight = displayMode.Height;
             }
             else
             {
@@ -264,12 +261,9 @@ namespace Orts.Viewer3D.Processes
             if (IsMouseVisible != Game.IsMouseVisible)
                 Game.IsMouseVisible = IsMouseVisible;
 
-            // Restrict `ActualCursor` to the main window so that it won't affect other popup
-            // windows, such as the Dispatch window. This prevents cursor flickering.
-            if (GameForm.Focused == true)
-            {
-                GameForm.Cursor = ActualCursor;
-            }
+            // DesktopGL owns the native window through SDL; MonoGame applies the cursor to it.
+            if (Game.IsActive)
+                Mouse.SetCursor(ActualCursor);
 
             if (ToggleFullScreenRequested)
             {
