@@ -369,6 +369,14 @@ namespace ORTS.Common
         /// <returns></returns>
         public string[] GetSectionNames()
         {
+#if RIEL_UNIX
+            string[] sections = File.ReadLines(FilePath)
+                .Select(line => line.Trim())
+                .Where(line => line.Length >= 2 && line[0] == '[' && line[line.Length - 1] == ']')
+                .Select(line => line.Substring(1, line.Length - 2).Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            return sections.Length == 0 ? null : sections;
+#else
             var buffer = new String('\0', 256);
             while (true)
             {
@@ -384,6 +392,7 @@ namespace ORTS.Common
                 return null;
 
             return buffer.Split('\0');
+#endif
         }
 
         /// <summary>
@@ -391,6 +400,9 @@ namespace ORTS.Common
         /// </summary>
         public override string[] GetUserNames()
         {
+#if RIEL_UNIX
+            return ReadSection().Select(pair => pair.Key).ToArray();
+#else
             var buffer = new String('\0', 256);
             while (true)
             {
@@ -403,6 +415,7 @@ namespace ORTS.Common
                 buffer = new String('\0', buffer.Length * 2);
             }
             return buffer.Split('\0').Where(s => s.Contains('=')).Select(s => s.Split('=')[0]).ToArray();
+#endif
         }
 
         /// <summary>
@@ -415,6 +428,11 @@ namespace ORTS.Common
         {
             AssertGetUserValueType(expectedType);
 
+#if RIEL_UNIX
+            string buffer = ReadSection().LastOrDefault(pair => pair.Key.Equals(name, StringComparison.OrdinalIgnoreCase)).Value;
+            if (buffer == null)
+                return null;
+#else
             var buffer = new String('\0', 256);
             while (true)
             {
@@ -428,7 +446,7 @@ namespace ORTS.Common
             }
             if (buffer.Length == 0)
                 return null;
-
+#endif
             var value = buffer.Split(':');
             if (value.Length != 2)
             {
@@ -487,7 +505,7 @@ namespace ORTS.Common
         /// <param name="value">value of the setting</param>
         public override void SetUserValue(string name, bool value)
 		{
-			NativeMethods.WritePrivateProfileString(Section, name, "bool:" + (value ? "true" : "false"), FilePath);
+			WriteSetting(name, "bool:" + (value ? "true" : "false"), FilePath);
 		}
 
         /// <summary>
@@ -497,7 +515,7 @@ namespace ORTS.Common
         /// <param name="value">value of the setting</param>
         public override void SetUserValue(string name, int value)
         {
-            NativeMethods.WritePrivateProfileString(Section, name, "int:" + Uri.EscapeDataString(value.ToString(CultureInfo.InvariantCulture)), FilePath);
+            WriteSetting(name, "int:" + Uri.EscapeDataString(value.ToString(CultureInfo.InvariantCulture)), FilePath);
         }
 
         /// <summary>
@@ -507,7 +525,7 @@ namespace ORTS.Common
         /// <param name="value">value of the setting</param>
         public override void SetUserValue(string name, long value)
         {
-            NativeMethods.WritePrivateProfileString(Section, name, "long:" + Uri.EscapeDataString(value.ToString(CultureInfo.InvariantCulture)), FilePath);
+            WriteSetting(name, "long:" + Uri.EscapeDataString(value.ToString(CultureInfo.InvariantCulture)), FilePath);
         }
 
         /// <summary>
@@ -517,7 +535,7 @@ namespace ORTS.Common
         /// <param name="value">value of the setting</param>
         public override void SetUserValue(string name, DateTime value)
         {
-            NativeMethods.WritePrivateProfileString(Section, name, "DateTime:" + Uri.EscapeDataString(value.ToBinary().ToString(CultureInfo.InvariantCulture)), FilePath);
+            WriteSetting(name, "DateTime:" + Uri.EscapeDataString(value.ToBinary().ToString(CultureInfo.InvariantCulture)), FilePath);
         }
 
         /// <summary>
@@ -527,7 +545,7 @@ namespace ORTS.Common
         /// <param name="value">value of the setting</param>
         public override void SetUserValue(string name, TimeSpan value)
         {
-            NativeMethods.WritePrivateProfileString(Section, name, "TimeSpan:" + Uri.EscapeDataString(value.Ticks.ToString(CultureInfo.InvariantCulture)), FilePath);
+            WriteSetting(name, "TimeSpan:" + Uri.EscapeDataString(value.Ticks.ToString(CultureInfo.InvariantCulture)), FilePath);
         }
 
         /// <summary>
@@ -537,7 +555,7 @@ namespace ORTS.Common
         /// <param name="value">value of the setting</param>
         public override void SetUserValue(string name, string value)
 		{
-			NativeMethods.WritePrivateProfileString(Section, name, "string:" + Uri.EscapeDataString(value), FilePath);
+			WriteSetting(name, "string:" + Uri.EscapeDataString(value), FilePath);
 		}
 
         /// <summary>
@@ -547,7 +565,7 @@ namespace ORTS.Common
         /// <param name="value">value of the setting</param>
         public override void SetUserValue(string name, int[] value)
 		{
-			NativeMethods.WritePrivateProfileString(Section, name, "int[]:" + String.Join(",", ((int[])value).Select(v => Uri.EscapeDataString(v.ToString(CultureInfo.InvariantCulture))).ToArray()), FilePath);
+			WriteSetting(name, "int[]:" + String.Join(",", ((int[])value).Select(v => Uri.EscapeDataString(v.ToString(CultureInfo.InvariantCulture))).ToArray()), FilePath);
 		}
 
         /// <summary>
@@ -557,7 +575,7 @@ namespace ORTS.Common
         /// <param name="value">value of the setting</param>
         public override void SetUserValue(string name, string[] value)
 		{
-			NativeMethods.WritePrivateProfileString(Section, name, "string[]:" + String.Join(",", value.Select(v => Uri.EscapeDataString(v)).ToArray()), FilePath);
+			WriteSetting(name, "string[]:" + String.Join(",", value.Select(v => Uri.EscapeDataString(v)).ToArray()), FilePath);
 		}
 
         /// <summary>
@@ -566,8 +584,76 @@ namespace ORTS.Common
         /// <param name="name">name of the setting</param>
         public override void DeleteUserValue(string name)
 		{
-			NativeMethods.WritePrivateProfileString(Section, name, null, FilePath);
+			WriteSetting(name, null, FilePath);
 		}
+
+#if RIEL_UNIX
+        private IEnumerable<KeyValuePair<string, string>> ReadSection()
+        {
+            bool inSection = false;
+            foreach (string raw in File.ReadLines(FilePath))
+            {
+                string line = raw.Trim();
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    inSection = line.Substring(1, line.Length - 2).Trim()
+                        .Equals(Section, StringComparison.OrdinalIgnoreCase);
+                    continue;
+                }
+                if (!inSection || line.Length == 0 || line[0] == ';' || line[0] == '#')
+                    continue;
+                int separator = line.IndexOf('=');
+                if (separator > 0)
+                    yield return new KeyValuePair<string, string>(
+                        line.Substring(0, separator).Trim(), line.Substring(separator + 1).Trim());
+            }
+        }
+
+        private void WriteSetting(string name, string value, string filePath)
+        {
+            var lines = File.ReadAllLines(filePath).ToList();
+            bool inSection = false;
+            bool foundSection = false;
+            int insertion = lines.Count;
+            for (int index = 0; index < lines.Count; index++)
+            {
+                string line = lines[index].Trim();
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    if (inSection)
+                    {
+                        insertion = index;
+                        break;
+                    }
+                    inSection = line.Substring(1, line.Length - 2).Trim()
+                        .Equals(Section, StringComparison.OrdinalIgnoreCase);
+                    foundSection |= inSection;
+                    continue;
+                }
+                if (!inSection || line.StartsWith(";") || line.StartsWith("#"))
+                    continue;
+                int separator = line.IndexOf('=');
+                if (separator > 0 && line.Substring(0, separator).Trim().Equals(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (value == null)
+                        lines.RemoveAt(index);
+                    else
+                        lines[index] = name + "=" + value;
+                    File.WriteAllLines(filePath, lines);
+                    return;
+                }
+            }
+            if (value == null)
+                return;
+            if (!foundSection)
+                lines.Add("[" + Section + "]");
+            lines.Insert(foundSection ? insertion : lines.Count, name + "=" + value);
+            File.WriteAllLines(filePath, lines);
+        }
+#else
+        private void WriteSetting(string name, string value, string filePath) =>
+            NativeMethods.WritePrivateProfileString(Section, name, value, filePath);
+#endif
 
         /// <summary>
         /// Get the name of the settings store, in this case the INI file path.
