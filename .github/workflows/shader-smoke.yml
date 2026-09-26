@@ -4,8 +4,8 @@ on:
   push:
     branches: [native-openrails-port]
     paths:
-      - 'Source/Tools/FxcBridge/**'
-      - 'scripts/build-shaders.sh'
+      - 'Source/RunActivity/Content/*.fx'
+      - '.config/dotnet-tools.json'
       - '.github/workflows/shader-smoke.yml'
   workflow_dispatch:
 
@@ -15,17 +15,29 @@ concurrency:
 
 jobs:
   shaders:
-    runs-on: ubuntu-24.04
+    runs-on: windows-2025
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Install shader compiler dependency
+      - name: Compile current Open Rails shaders for DesktopGL
+        shell: pwsh
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends wine wine64
-      - name: Compile OpenGL shaders
-        run: |
-          set -euo pipefail
-          ./scripts/build-shaders.sh --profile OpenGL --output "${RUNNER_TEMP}/shaders" --check
+          $ErrorActionPreference = 'Stop'
+          dotnet tool restore
+          New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\shaders" | Out-Null
+          Get-ChildItem "Source\RunActivity\Content\*.fx" | ForEach-Object {
+            $out = Join-Path "$env:RUNNER_TEMP\shaders" ($_.BaseName + ".mgfx")
+            Write-Host "Compiling $($_.Name)"
+            dotnet tool run mgfxc $_.FullName $out /Profile:OpenGL
+            if ($LASTEXITCODE -ne 0) { throw "mgfxc failed for $($_.Name)" }
+          }
+          @('SceneryShader','PrecipitationShader','LightGlowShader','DebugShader') | ForEach-Object {
+            if (-not (Test-Path "$env:RUNNER_TEMP\shaders\$_.mgfx")) { throw "Missing $_.mgfx" }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openrails-opengl-shaders
+          path: ${{ runner.temp }}\shaders\*.mgfx
+          if-no-files-found: error
