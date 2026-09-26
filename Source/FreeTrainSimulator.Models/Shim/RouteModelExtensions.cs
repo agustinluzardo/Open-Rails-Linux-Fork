@@ -1,0 +1,83 @@
+﻿using System;
+using System.Collections.Immutable;
+using System.Threading;
+using System.Threading.Tasks;
+
+using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Models.Content;
+using FreeTrainSimulator.Models.Handler;
+using FreeTrainSimulator.Models.Signalling;
+using FreeTrainSimulator.Models.Track;
+
+namespace FreeTrainSimulator.Models.Shim
+{
+    /// <summary>
+    /// Extension methods for <see cref="RouteModelHeader"/> providing access to child content
+    /// (paths, activities, timetables, weather, track data, signal configuration), save-point
+    /// name generation, and path persistence.
+    /// </summary>
+    public static class RouteModelExtensions
+    {
+        public static ValueTask<RouteModel> GetExtended(this RouteModelHeader routeModel, CancellationToken cancellationToken) => RouteModelHandler.GetExtended(routeModel, cancellationToken);
+        public static Task<ImmutableArray<PathModelHeader>> GetPaths(this RouteModelHeader routeModel, CancellationToken cancellationToken) => routeModel.GetRoutePaths(cancellationToken);
+        public static Task<ImmutableArray<ActivityModelHeader>> GetActivities(this RouteModelHeader routeModel, CancellationToken cancellationToken) => routeModel.GetRouteActivities(cancellationToken);
+        public static Task<ImmutableArray<TimetableModel>> GetTimetables(this RouteModelHeader routeModel, CancellationToken cancellationToken) => TimetableModelHandler.GetTimetables(routeModel, cancellationToken);
+        public static Task<ImmutableArray<WeatherModelHeader>> GetWeatherFiles(this RouteModelHeader routeModel, CancellationToken cancellationToken) => WeatherModelHandler.GetWeatherFiles(routeModel, cancellationToken);
+        public static Task<TrackSectionModel> GetTrackSectionModel(this RouteModelHeader routeModel, CancellationToken cancellationToken) => TrackSectionsModelHandler.GetCore(routeModel, cancellationToken);
+        public static Task<SignalConfigurationModel> GetSignalConfigurationModel(this RouteModelHeader routeModel, CancellationToken cancellationToken) => SignalConfigurationModelHandler.GetCore(routeModel, cancellationToken);
+        public static Task<TrackModel> GetTrackModel(this RouteModelHeader routeModel, CancellationToken cancellationToken) => TrackModelHandler.GetCore(routeModel, cancellationToken);
+
+        public static async ValueTask<ActivityModel> ActivityModel(this RouteModelHeader routeModel, string activityId, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
+            ArgumentException.ThrowIfNullOrEmpty(activityId, nameof(activityId));
+
+            return await ActivityModelHandler.GetExtended(activityId, routeModel, cancellationToken).ConfigureAwait(false);
+        }
+
+        public static async ValueTask<PathModel> PathModel(this RouteModelHeader routeModel, string pathId, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
+            ArgumentException.ThrowIfNullOrEmpty(pathId, nameof(pathId));
+
+            return await PathModelHandler.GetExtended(pathId, routeModel, cancellationToken).ConfigureAwait(false);
+        }
+
+        public static async ValueTask<TimetableModel> TimetableModel(this RouteModelHeader routeModel, string timetableId, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
+            ArgumentException.ThrowIfNullOrEmpty(timetableId, nameof(timetableId));
+
+            return await TimetableModelHandler.GetCore(timetableId, routeModel, cancellationToken).ConfigureAwait(false);
+        }
+
+
+        public static string SavePointName(this RouteModelHeader routeModelHeader, ActivityType activityType)
+        {
+            ArgumentNullException.ThrowIfNull(routeModelHeader, nameof(routeModelHeader));
+            return activityType == ActivityType.ExploreActivity ? $"ea${routeModelHeader.Id}$" : routeModelHeader.Id;
+        }
+
+        public static string SavePointName(this RouteModelHeader routeModelHeader, ActivityModelHeader activityModel)
+        {
+            ArgumentNullException.ThrowIfNull(routeModelHeader, nameof(routeModelHeader));
+            ArgumentNullException.ThrowIfNull(activityModel, nameof(activityModel));
+            return $"{routeModelHeader.Id} {activityModel.Id}";
+        }
+
+        public static string SavePointName(this RouteModelHeader routeModelHeader, TimetableModel timetableModel)
+        {
+            ArgumentNullException.ThrowIfNull(routeModelHeader, nameof(routeModelHeader));
+            ArgumentNullException.ThrowIfNull(timetableModel, nameof(timetableModel));
+            return $"{routeModelHeader.Id} {timetableModel.Id}";
+        }
+
+        public static Task<PathModel> Save(this RouteModelHeader routeModel, PathModel pathModel)
+        {
+            ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
+            ArgumentNullException.ThrowIfNull(pathModel, nameof(pathModel));
+
+            return PathModelHandler.UpdatePath(pathModel, routeModel, CancellationToken.None);
+        }
+    }
+}

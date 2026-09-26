@@ -1,0 +1,144 @@
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
+using FreeTrainSimulator.Models.Content;
+using FreeTrainSimulator.Models.Handler;
+using FreeTrainSimulator.Models.Imported.Shim;
+
+using Orts.Formats.Msts.Files;
+
+namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
+{
+    internal sealed class ActivityModelImportHandler : ContentHandlerBase<ActivityModelHeader>
+    {
+        internal const string SourceNameKey = "MstsSourceActivity";
+
+        public static async Task<ImmutableArray<ActivityModelHeader>> ExpandActivityModels(RouteModelHeader routeModel, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
+
+            ConcurrentBag<ActivityModelHeader> results = new ConcurrentBag<ActivityModelHeader>();
+
+            string sourceFolder = routeModel.MstsRouteFolder().ActivitiesFolder;
+            if (ContentIO.DirectoryExists(sourceFolder))
+            {
+                // load existing MSTS files
+                ConcurrentDictionary<string, string> activityFiles = new ConcurrentDictionary<string, string>(ContentIO.EnumerateFiles(sourceFolder, "*.act").
+                    ToDictionary(Path.GetFileNameWithoutExtension), StringComparer.OrdinalIgnoreCase);
+
+                await Parallel.ForEachAsync(activityFiles, cancellationToken, async (path, token) =>
+                {
+                    Task<ActivityModelHeader> modelTask = Cast(Convert(path.Value, routeModel, cancellationToken));
+                    ActivityModelHeader activityModel = await modelTask.ConfigureAwait(false);
+                    if (null != activityModel)
+                    {
+                        string key = activityModel.Hierarchy();
+                        results.Add(activityModel);
+                        modelTaskCache[key] = modelTask;
+                    }
+                }).ConfigureAwait(false);
+            }
+
+            ImmutableArray<ActivityModelHeader> result = results.Concat(new ActivityModelHeader[] { CommonModelInstances.ExploreMode, CommonModelInstances.ExploreActivityMode }).ToImmutableArray();
+            string key = routeModel.Hierarchy();
+            modelSetTaskCache[key] = Task.FromResult(result);
+            _ = collectionUpdateRequired.TryRemove(key, out _);
+            return result;
+        }
+
+        private static async Task<ActivityModel> Convert(string filePath, RouteModelHeader routeModel, CancellationToken cancellationToken)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(filePath, nameof(filePath));
+            ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
+
+            if (ContentIO.FileExists(filePath))
+            {
+                ActivityFile activityFile;
+                try
+                {
+                    activityFile = new ActivityFile(filePath);
+                }
+                catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+                {
+                    ImportFailures.Record("activity", filePath, ex);
+                    return null;
+                }
+                catch (Exception ex) when (ex is SystemException && ex is not OperationCanceledException)
+                {
+                    ImportFailures.Record("activity", filePath, ex);
+                    return null;
+                }
+
+                ServiceFile srvFile;
+                try
+                {
+                    srvFile = new ServiceFile(routeModel.MstsRouteFolder().ServiceFile(activityFile.Activity.PlayerServices.Name));
+                }
+                catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+                {
+                    ImportFailures.Record("activity", filePath, new InvalidDataException($"its service file is missing: {ex.Message}", ex));
+                    return null;
+                }
+                catch (Exception ex) when (ex is SystemException && ex is not OperationCanceledException)
+                {
+                    ImportFailures.Record("activity", filePath, new InvalidDataException($"its service file could not be read: {ex.Message}", ex));
+                    return null;
+                }
+
+                // use average if both probabilities > 0, else use only the one which is > 0, else 0
+                static int CombinedHazardProbability(int workers, int animals) => workers > 0 && animals > 0 ? (workers + animals) / 2 : workers > 0 ? workers : animals > 0 ? animals : 0;
+
+                // these setting should be used as activity specific overrides to standard values or user settings
+                Dictionary<string, string> settings = new Dictionary<string, string>()
+                {
+                    { "LoadStationStock",$"{activityFile.Activity.Header.LoadStationsPopulationFile}" },
+                };
+
+                ActivityModel activityModel = new ActivityModel()
+                {
+                    Id = Path.GetFileNameWithoutExtension(filePath),
+                    Name = string.IsNullOrEmpty(activityFile.Activity.Header.Name) ?
+                        $"unnamed (@ {Path.GetFileNameWithoutExtension(filePath)})" : activityFile.Activity.Header.Name,
+                    Description = activityFile.Activity.Header.Description,
+                    Briefing = activityFile.Activity.Header.Briefing,
+                    StartTime = TimeOnly.FromTimeSpan(activityFile.Activity.Header.StartTime),
+                    Season = activityFile.Activity.Header.Season,
+                    Weather = activityFile.Activity.Header.Weather,
+                    Difficulty = activityFile.Activity.Header.Difficulty,
+                    Duration = activityFile.Activity.Header.Duration,
+                    ActivityType = ActivityType.Activity,
+                    PathId = activityFile.Activity.Header.PathID,
+                    ConsistId = srvFile.TrainConfig,
+                    Tags = new Dictionary<string, string> { { SourceNameKey, Path.GetFileNameWithoutExtension(filePath) } }.ToImmutableDictionary(),
+                    FuelLevels = new EnumArray<int, FuelType>((FuelType fuelType) => fuelType switch
+                    {
+                        FuelType.Water => activityFile.Activity.Header.FuelWater,
+                        FuelType.Coal => activityFile.Activity.Header.FuelCoal,
+                        FuelType.Diesel => activityFile.Activity.Header.FuelDiesel,
+                        _ => throw new NotImplementedException(),
+                    }),
+                    InitialSpeed = activityFile.Activity.Header.StartingSpeed,
+                    HazardProbability = CombinedHazardProbability(activityFile.Activity.Header.Workers, activityFile.Activity.Header.Animals),
+                    Settings = settings.ToImmutableDictionary(),
+                };
+
+                await Create(activityModel, routeModel, cancellationToken).ConfigureAwait(false);
+                return activityModel;
+            }
+            else
+            {
+                Trace.TraceWarning($"Activity file {filePath} refers to non-existing file.");
+                return null;
+            }
+        }
+    }
+}

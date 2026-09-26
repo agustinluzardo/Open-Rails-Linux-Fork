@@ -1,0 +1,33 @@
+﻿using System;
+
+using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Position;
+
+namespace FreeTrainSimulator.Runtime.Track
+{
+    #region TrackItemBase
+    public abstract record TrackItemBase : PointPrimitive, IIndexedElement
+    {
+#pragma warning disable CA1033 // Interface methods should be callable by child types
+        public int TrackItemIndex { get; }
+#pragma warning restore CA1033 // Interface methods should be callable by child types
+
+#pragma warning disable CA1033 // Interface methods should be callable by child types
+        int IIndexedElement.Index => TrackItemIndex;
+#pragma warning restore CA1033 // Interface methods should be callable by child types
+
+        protected TrackItemBase(TrackItemBase source) : base(source ?? throw new ArgumentNullException(nameof(source)))
+        {
+            TrackItemIndex = source.TrackItemIndex;
+        }
+
+        protected TrackItemBase(in PointD location) : base(location)
+        {
+        }
+
+        protected TrackItemBase(in WorldLocation location) : base(location)
+        {
+        }
+    }
+    #endregion
+}

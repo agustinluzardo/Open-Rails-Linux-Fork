@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Description>Free Train Simulator Common Library</Description>
+		<AssemblyTitle>Free Train Simulator Common Library</AssemblyTitle>
+		<OutputPath>..\..\Program</OutputPath>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+	</PropertyGroup>
+	<!--
+	  The Linux build has no GDI+, so the System.Drawing compatibility layer in Compatibility/
+	  rasterizes text and images with Skia instead. NativeAssets ships libSkiaSharp for linux-x64.
+	-->
+	<ItemGroup Condition="'$(RielPlatform)' != 'windows'">
+		<PackageReference Include="SkiaSharp" Version="4.152.0" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.152.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="MemoryPack" Version="1.21.4" />
+		<PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5.1" />
+		<PackageReference Include="RailDriver" Version="10.1.1" />
+		<PackageReference Include="System.IO.Hashing" Version="10.0.11" />
+		<PackageReference Include="System.Management" Version="10.0.11" />
+		<PackageReference Include="GetText.NET" Version="11.0.10-preview.1" />
+		<PackageReference Include="NuGet.Versioning" Version="7.9.0" />
+	</ItemGroup>
+</Project>

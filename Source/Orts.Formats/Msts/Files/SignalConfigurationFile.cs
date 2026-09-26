@@ -1,0 +1,278 @@
+﻿// COPYRIGHT 2010, 2011, 2012, 2013 by the Open Rails project.
+// 
+// This file is part of Open Rails.
+// 
+// Open Rails is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// Open Rails is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
+
+// This module parses the sigcfg file and builds an object model based on signal details
+// 
+// Author: Laurie Heath
+// Updates : Rob Roeterdink
+// 
+
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+
+using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Models.Signalling;
+
+using Orts.Formats.Msts.Models;
+using Orts.Formats.Msts.Parsers;
+
+namespace Orts.Formats.Msts.Files
+{
+    /// <summary>
+    /// Object containing a representation of everything in the MSTS sigcfg.dat file
+    /// Not everythin of the representation will be used by OpenRails
+    /// </summary>
+    public class SignalConfigurationFile
+    {
+        /// <summary>Name-indexed list of available light textures</summary>
+        public Dictionary<string, LightTexture> LightTextures { get; private set; }
+        /// <summary>Name-indexed list of available colours for lights</summary>
+        public Dictionary<string, LightTableEntry> LightsTable { get; private set; }
+        /// <summary>Name-indexed list of available signal types</summary>
+        public Dictionary<string, Models.SignalType> SignalTypes { get; private set; }
+        /// <summary>Name-indexed list of available signal shapes (including heads and other sub-objects)</summary>
+        public Dictionary<string, Models.SignalShape> SignalShapes { get; private set; }
+        /// <summary>list of names of script files</summary>
+        public Collection<string> ScriptFiles { get; private set; }
+        /// <summary>Full file name and path of the signal config file</summary>
+        public string ScriptPath { get; private set; }
+
+        /// <summary>
+        /// Constructor from file
+        /// </summary>
+        /// <param name="fileName">Full file name of the sigcfg.dat file</param>
+        /// <param name="compatibilityMode">Enhanced mode reads additional ORT-specific signal definitions</param>
+        public SignalConfigurationFile(string fileName, CompatibilityMode compatibilityMode)
+        {
+            ScriptPath = Path.GetDirectoryName(fileName);
+
+            SignalTypeRegistry signalTypeRegistry = SignalTypeRegistry.Initialize();
+
+            if (compatibilityMode == CompatibilityMode.Enhanced)
+            {
+                using (STFReader stf = new STFReader(fileName, false))
+                    stf.ParseFile(new STFReader.TokenProcessor[] {
+                    new STFReader.TokenProcessor("lighttextures", ()=>{ LightTextures = ReadLightTextures(stf); }),
+                    new STFReader.TokenProcessor("lightstab", ()=>{ LightsTable = ReadLightsTable(stf); }),
+                    new STFReader.TokenProcessor("ortssignalfunctions", ()=>{ ReadOrtsSignalFunctionTypes(stf); }),
+                    new STFReader.TokenProcessor("ortsnormalsubtypes", ()=>{ ReadOrtsNormalSubtypes(stf); }),
+                    new STFReader.TokenProcessor("signaltypes", ()=>{ SignalTypes = ReadSignalTypes(stf, compatibilityMode); }),
+                    new STFReader.TokenProcessor("signalshapes", ()=>{ SignalShapes = ReadSignalShapes(stf); }),
+                    new STFReader.TokenProcessor("scriptfiles", ()=>{ ScriptFiles = ReadScriptFiles(stf); }),
+                });
+            }
+            else
+            {
+                using (STFReader stf = new STFReader(fileName, false))
+                    stf.ParseFile(new STFReader.TokenProcessor[] {
+                    new STFReader.TokenProcessor("lighttextures", ()=>{ LightTextures = ReadLightTextures(stf); }),
+                    new STFReader.TokenProcessor("lightstab", ()=>{ LightsTable = ReadLightsTable(stf); }),
+                    new STFReader.TokenProcessor("signaltypes", ()=>{ SignalTypes = ReadSignalTypes(stf, compatibilityMode); }),
+                    new STFReader.TokenProcessor("signalshapes", ()=>{ SignalShapes = ReadSignalShapes(stf); }),
+                    new STFReader.TokenProcessor("scriptfiles", ()=>{ ScriptFiles = ReadScriptFiles(stf); }),
+                });
+            }
+
+            LightTextures = CheckAndInitialize(LightTextures, nameof(LightTextures), fileName);
+            LightsTable = CheckAndInitialize(LightsTable, nameof(LightsTable), fileName);
+            SignalTypes = CheckAndInitialize(SignalTypes, nameof(SignalTypes), fileName);
+            SignalShapes = CheckAndInitialize(SignalShapes, nameof(SignalShapes), fileName);
+            ScriptFiles = CheckAndInitialize(ScriptFiles, nameof(ScriptFiles), fileName);
+
+            signalTypeRegistry.Freeze();
+        }
+
+        private static T CheckAndInitialize<T>(T obj, string name, string fileName) where T: new()
+        {
+            if (obj == null)
+            {
+                Trace.TraceWarning($"Ignored missing {name} in {fileName}");
+                return new T();
+            }
+            return obj;
+        }
+
+        private static void ReadOrtsSignalFunctionTypes(STFReader stf)
+        {
+            stf.MustMatchBlockStart();
+            int count = stf.ReadInt(null);
+            int tokensRead = 0;
+
+            stf.ParseBlock(new STFReader.TokenProcessor[] {
+                new STFReader.TokenProcessor("ortssignalfunctiontype", ()=> {
+                    stf.MustMatchBlockStart();
+                    if (tokensRead >= count)
+                    {
+                        STFException.TraceWarning(stf, "Skipped extra ORTSFunctionType");
+                    }
+                    else
+                    {
+                        string functionType = stf.ReadString();
+                        // check against predefined MSTS types
+                        if (SignalTypeRegistry.Instance.TryGetFunction(functionType, out SignalFunctionType existingId) && existingId.MstsSignalFunction)
+                        {
+                            STFException.TraceWarning(stf, "Invalid definition of ORTSFunctionType, type is equal to MSTS defined type : " + functionType);
+                        }
+                        else if (functionType.StartsWith("OR_", StringComparison.OrdinalIgnoreCase) || functionType.StartsWith("ORTS", StringComparison.OrdinalIgnoreCase))
+                        {
+                            STFException.TraceWarning(stf, "Invalid definition of ORTSFunctionType, using reserved type name : " + functionType);
+                        }
+                        else
+                        {
+                            if (SignalTypeRegistry.Instance.ContainsFunction(functionType))
+                                STFException.TraceWarning(stf, "Skipped duplicate ORTSSignalFunction definition : " + functionType);
+                            else
+                            {
+                                SignalTypeRegistry.Instance.RegisterFunction(functionType);
+                                tokensRead ++;
+                            }
+                        }
+                    }
+                    stf.SkipRestOfBlock();
+                }),
+            });
+        }
+
+        private static void ReadOrtsNormalSubtypes(STFReader stf)
+        {
+            stf.MustMatchBlockStart();
+            int count = stf.ReadInt(null);
+            int tokensRead = 0;
+
+            stf.ParseBlock(new STFReader.TokenProcessor[] {
+                new STFReader.TokenProcessor("ortsnormalsubtype", ()=> {
+                    stf.MustMatchBlockStart();
+                    if (tokensRead >= count)
+                    {
+                        STFException.TraceWarning(stf, "Skipped extra ORTSNormalSubtype");
+                    }
+                    else
+                    {
+                        string subType = stf.ReadString().ToUpperInvariant();
+                        if (SignalTypeRegistry.Instance.ContainsNormalSubType(subType))
+                        {
+                            STFException.TraceWarning(stf, "Skipped duplicate ORTSNormalSubtype definition : " + subType);
+                        }
+                        else
+                        {
+                            SignalTypeRegistry.Instance.RegisterNormalSubType(subType);
+                            tokensRead ++;
+                        }
+                    }
+                    stf.SkipRestOfBlock();
+                }),
+            });
+        }
+
+        private static Dictionary<string, LightTexture> ReadLightTextures(STFReader stf)
+        {
+            stf.MustMatchBlockStart();
+            int count = stf.ReadInt(null);
+            Dictionary<string, LightTexture> lightTextures = new Dictionary<string, LightTexture>(count, StringComparer.OrdinalIgnoreCase);
+            stf.ParseBlock(new STFReader.TokenProcessor[] {
+                new STFReader.TokenProcessor("lighttex", ()=>{
+                    if (lightTextures.Count >= count)
+                        STFException.TraceWarning(stf, "Skipped extra LightTex");
+                    else
+                    {
+                        LightTexture lightTexture = new LightTexture(stf);
+                        if (!lightTextures.TryAdd(lightTexture.Name, lightTexture))
+                            STFException.TraceWarning(stf, "Skipped duplicate LightTex " + lightTexture.Name); }
+                }),
+            });
+            if (lightTextures.Count < count)
+                STFException.TraceWarning(stf, $"{count - lightTextures.Count} missing LightTex(s)");
+            return lightTextures;
+        }
+
+        private static Dictionary<string, LightTableEntry> ReadLightsTable(STFReader stf)
+        {
+            stf.MustMatchBlockStart();
+            int count = stf.ReadInt(null);
+            Dictionary<string, LightTableEntry> lightsTable = new Dictionary<string, LightTableEntry>(count, StringComparer.OrdinalIgnoreCase);
+            stf.ParseBlock(new STFReader.TokenProcessor[] {
+                new STFReader.TokenProcessor("lightstabentry", ()=>{
+                    if (lightsTable.Count >= count)
+                        STFException.TraceWarning(stf, "Skipped extra LightsTabEntry");
+                    else
+                    {
+                        LightTableEntry lightsTableEntry = new LightTableEntry(stf);
+                        if (!lightsTable.TryAdd(lightsTableEntry.Name, lightsTableEntry))
+                            STFException.TraceWarning(stf, "Skipped duplicate LightsTabEntry " + lightsTableEntry.Name); }
+                }),
+            });
+            if (lightsTable.Count < count)
+                STFException.TraceWarning(stf, $"{count - lightsTable.Count} missing LightsTabEntry(s)");
+            return lightsTable;
+        }
+
+        private static Dictionary<string, Models.SignalType> ReadSignalTypes(STFReader stf, CompatibilityMode compatibilityMode)
+        {
+            stf.MustMatchBlockStart();
+            int count = stf.ReadInt(null);
+            Dictionary<string, Models.SignalType> signalTypes = new Dictionary<string, Models.SignalType>(count, StringComparer.OrdinalIgnoreCase);
+            stf.ParseBlock(new STFReader.TokenProcessor[] {
+                new STFReader.TokenProcessor("signaltype", ()=>{
+                    if (signalTypes.Count >= count)
+                        STFException.TraceWarning(stf, "Skipped extra SignalType");
+                    else
+                    {
+                        Models.SignalType signalType = new Models.SignalType(stf, compatibilityMode);
+                        if (!signalTypes.TryAdd(signalType.Name, signalType))
+                            STFException.TraceWarning(stf, "Skipped duplicate SignalType " + signalType.Name); }
+                }),
+            });
+            if (signalTypes.Count < count)
+                STFException.TraceWarning(stf, $"{count - signalTypes.Count} missing SignalType(s)");
+            return signalTypes;
+        }
+
+        private static Dictionary<string, Models.SignalShape> ReadSignalShapes(STFReader stf)
+        {
+            stf.MustMatchBlockStart();
+            int count = stf.ReadInt(null);
+            Dictionary<string, Models.SignalShape> signalShapes = new Dictionary<string, Models.SignalShape>(count, StringComparer.OrdinalIgnoreCase);
+            stf.ParseBlock(new STFReader.TokenProcessor[] {
+                new STFReader.TokenProcessor("signalshape", ()=>{
+                        if (signalShapes.Count >= count)
+                            STFException.TraceWarning(stf, "Skipped extra SignalShape");
+                        else
+                        {
+                            Models.SignalShape signalShape = new Models.SignalShape(stf);
+                            if (!signalShapes.TryAdd(signalShape.ShapeFileName, signalShape))
+                                STFException.TraceWarning(stf, "Skipped duplicate SignalShape " + signalShape.ShapeFileName); }
+                }),
+            });
+            if (signalShapes.Count < count)
+                STFException.TraceWarning(stf, $"{count - signalShapes.Count} missing SignalShape(s)");
+            return signalShapes;
+        }
+
+        private static Collection<string> ReadScriptFiles(STFReader stf)
+        {
+            stf.MustMatchBlockStart();
+            Collection<string> scriptFiles = new Collection<string>();
+            stf.ParseBlock(new STFReader.TokenProcessor[] {
+                new STFReader.TokenProcessor("scriptfile", ()=>{ scriptFiles.Add(stf.ReadStringBlock(null)); }),
+            });
+            return scriptFiles;
+        }
+    }
+}

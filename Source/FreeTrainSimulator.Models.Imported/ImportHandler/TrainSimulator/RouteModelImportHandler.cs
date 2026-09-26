@@ -1,0 +1,232 @@
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+using FreeTrainSimulator.Common;
+using FreeTrainSimulator.Common.Native;
+using FreeTrainSimulator.Models.Content;
+using FreeTrainSimulator.Models.Handler;
+using FreeTrainSimulator.Models.Imported.Shim;
+
+using Orts.Formats.Msts;
+using Orts.Formats.Msts.Files;
+using Orts.Formats.Msts.Models;
+
+namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
+{
+    internal sealed class RouteModelImportHandler : ContentHandlerBase<RouteModelHeader>
+    {
+        internal const string SourceNameKey = "MstsSourceRoute";
+
+        public static async Task<ImmutableArray<RouteModelHeader>> ExpandRouteModels(FolderModel folderModel, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(folderModel, nameof(folderModel));
+
+            ImmutableDictionary<string, RouteModelHeader> persistedRoutes = await LoadPersistedRouteModels(folderModel, cancellationToken).ConfigureAwait(false);
+            ConcurrentDictionary<string, RouteModelHeader> importedRoutes = new ConcurrentDictionary<string, RouteModelHeader>(StringComparer.OrdinalIgnoreCase);
+            ConcurrentDictionary<string, FolderStructure.ContentFolder.RouteFolder> routeFolders = new ConcurrentDictionary<string, FolderStructure.ContentFolder.RouteFolder>(StringComparer.OrdinalIgnoreCase);
+
+            string sourceFolder = folderModel.MstsContentFolder().RoutesFolder;
+
+            if (ContentIO.DirectoryExists(sourceFolder))
+            {
+                // preload existing MSTS folders
+                foreach (string routeFolder in ContentIO.EnumerateDirectories(sourceFolder))
+                {
+                    FolderStructure.ContentFolder.RouteFolder folder = FolderStructure.Route(routeFolder);
+                    if (folder.Valid)
+                        _ = routeFolders.TryAdd(folder.RouteName, folder);
+                }
+
+                await Parallel.ForEachAsync(routeFolders, cancellationToken, async (routeFolder, token) =>
+                {
+                    Task<RouteModelHeader> modelTask = Cast(Convert(routeFolder.Value, folderModel, token));
+                    RouteModelHeader routeModel = await ImportFailures.Guard(modelTask, "route", routeFolder.Value.TrackFileName ?? routeFolder.Key).ConfigureAwait(false);
+                    if (routeModel == null || string.IsNullOrWhiteSpace(routeModel.Id))
+                        return;
+
+                    importedRoutes[routeModel.Id] = routeModel;
+                    modelTaskCache[routeModel.Hierarchy()] = modelTask;
+                }).ConfigureAwait(false);
+            }
+
+            Dictionary<string, RouteModelHeader> mergedRoutes = new Dictionary<string, RouteModelHeader>(persistedRoutes, StringComparer.OrdinalIgnoreCase);
+            foreach ((string routeId, RouteModelHeader routeModel) in importedRoutes)
+            {
+                mergedRoutes[routeId] = routeModel;
+            }
+
+            ImmutableArray<RouteModelHeader> result = mergedRoutes.Values
+                .OrderBy(route => route?.Name ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(route => route?.Id ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ToImmutableArray();
+
+            // imported routes are already cached above; cache the preserved (non-imported) persisted routes
+            foreach ((string routeId, RouteModelHeader persistedRoute) in persistedRoutes)
+            {
+                if (persistedRoute != null && !importedRoutes.ContainsKey(routeId))
+                    modelTaskCache[persistedRoute.Hierarchy()] = Task.FromResult(persistedRoute);
+            }
+
+            Trace.TraceInformation($"Route refresh merge for folder '{folderModel.Id}': imported={importedRoutes.Count}, preserved={result.Length - importedRoutes.Count}, merged={result.Length}");
+
+            string key = folderModel.Hierarchy();
+            modelSetTaskCache[key] = Task.FromResult(result);
+            return result;
+        }
+
+        private static async Task<ImmutableDictionary<string, RouteModelHeader>> LoadPersistedRouteModels(FolderModel folderModel, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(folderModel, nameof(folderModel));
+
+            string routesFolder = ModelFileResolver<RouteModelHeader>.FolderPath(folderModel);
+            string pattern = ModelFileResolver<RouteModelHeader>.WildcardSavePattern;
+            ConcurrentDictionary<string, RouteModelHeader> persistedRoutes = new ConcurrentDictionary<string, RouteModelHeader>(StringComparer.OrdinalIgnoreCase);
+
+            if (ContentIO.DirectoryExists(routesFolder))
+            {
+                await Parallel.ForEachAsync(Directory.EnumerateFiles(routesFolder, pattern), cancellationToken, async (file, token) =>
+                {
+                    string routeId = Path.GetFileNameWithoutExtension(file);
+                    if (routeId.EndsWith(fileExtension, StringComparison.OrdinalIgnoreCase))
+                        routeId = routeId[..^fileExtension.Length];
+
+                    RouteModelHeader routeModel = await FromFile<FolderModel>(routeId, folderModel, token).ConfigureAwait(false);
+                    if (routeModel != null && !string.IsNullOrWhiteSpace(routeModel.Id))
+                        persistedRoutes[routeModel.Id] = routeModel;
+                }).ConfigureAwait(false);
+            }
+
+            return persistedRoutes.ToImmutableDictionary(StringComparer.OrdinalIgnoreCase);
+        }
+
+        internal static bool IsSourceBackedRoute(RouteModelHeader routeModel)
+        {
+            ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
+
+            return routeModel.Tags != null &&
+                routeModel.Tags.TryGetValue(SourceNameKey, out string sourceRouteName) &&
+                !string.IsNullOrWhiteSpace(sourceRouteName);
+        }
+
+        internal static bool HasResolvableSourceRoute(RouteModelHeader routeModel)
+        {
+            ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
+
+            if (!IsSourceBackedRoute(routeModel) || routeModel.Parent == null)
+                return false;
+
+            try
+            {
+                FolderStructure.ContentFolder.RouteFolder routeFolder = routeModel.Parent.MstsContentFolder().Route(routeModel.Tags[SourceNameKey]);
+                return routeFolder.Valid && ContentIO.FileExists(routeFolder.TrackFileName);
+            }
+            catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException or ArgumentException or DirectoryNotFoundException)
+            {
+                Trace.TraceWarning($"Unable to resolve source route for '{routeModel.Id}': {ex.Message}");
+                return false;
+            }
+        }
+
+        internal static async Task<RouteModelHeader> RefreshPersistedRouteModel(RouteModelHeader routeModel, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(routeModel, nameof(routeModel));
+
+            // Load the full route model so version migration re-persists every property and does not
+            // truncate a persisted RouteModel down to its header.
+            RouteModel extendedModel = await FromFile<RouteModel, FolderModel>(routeModel.Id, routeModel.Parent, cancellationToken).ConfigureAwait(false);
+            if (extendedModel == null)
+                return routeModel;
+
+            extendedModel.RefreshModel();
+            await Create(extendedModel, extendedModel.Parent, true, true, cancellationToken).ConfigureAwait(false);
+
+            modelTaskCache[extendedModel.Hierarchy()] = Task.FromResult<RouteModelHeader>(extendedModel);
+            return extendedModel;
+        }
+
+        private static async Task<RouteModel> Convert(FolderStructure.ContentFolder.RouteFolder routeFolder, FolderModel contentFolder, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(routeFolder, nameof(routeFolder));
+
+            if (routeFolder.Valid)
+            {
+                string routeFileName = routeFolder.TrackFileName;
+                RouteFile routeFile = new RouteFile(routeFileName);
+                Route route = routeFile.Route;
+
+                // these setting should be used as route specific overrides to standard values or user settings
+                Dictionary<string, string> settings = new Dictionary<string, string>()
+                {
+                    { "SingleTunnelArea",$"{route.SingleTunnelAreaM2}" }, // values for tunnel operation
+                    { "SingleTunnelPerimeter",$"{route.SingleTunnelPerimeterM}" }, // values for tunnel operation
+                    { "DoubleTunnelArea",$"{route.DoubleTunnelAreaM2}" }, // values for tunnel operation
+                    { "DoubleTunnelPerimeter",$"{route.DoubleTunnelPerimeterM}" }, // values for tunnel operation
+                    { "ForestClearDistance",$"{route.ForestClearDistance}" },   // if > 0 indicates distance from track without forest trees
+                    { "RemoveForestTreesFromRoads",$"{route.RemoveForestTreesFromRoads}" }, // if true removes forest trees also from roads
+                    { "OpenComputerTrainDoors",$"{route.OpenDoorsInAITrains}" },
+                    { "CurveSound",$"{route.CurveSMSNumber}" },
+                    { "CurveSwitchSound",$"{route.CurveSwitchSMSNumber}" },
+                    { "SwitchSound",$"{route.SwitchSMSNumber}" },
+                };
+
+                RouteModel routeModel = new RouteModel(route.RouteStart.Location)
+                {
+                    Name = route.Name,
+                    Description = route.Description,
+                    MetricUnits = route.MilepostUnitsMetric,
+                    Id = route.RouteID,    // ie JAPAN1  - used for TRK file and route folder name
+                    Tags = new Dictionary<string, string> { { SourceNameKey, routeFolder.RouteName } }.ToImmutableDictionary(),    //store the route folder name
+                    EnvironmentConditions = new EnumArray2D<string, SeasonType, WeatherType>(route.Environment.GetEnvironmentFileName),
+                    RouteKey = route.FileName,  // ie OdakyuSE - used for MKR,RDB,REF,RIT,TDB,TIT
+                    RouteSounds = new EnumArray<string, DefaultSoundType>(new string[]
+                    {
+                        /// elements need to be in same order as listed in <see cref="DefaultSoundType"/>
+                        route.DefaultSignalSMS, route.DefaultCrossingSMS, route.DefaultWaterTowerSMS, route.DefaultCoalTowerSMS, route.DefaultDieselTowerSMS, route.DefaultTurntableSMS,
+                    }),
+                    Graphics = new EnumArray<string, GraphicType>(new string[]
+                    {
+                        /// elements need to be in same order as listed in <see cref="GraphicType"/>
+                        route.Thumbnail, route.LoadingScreen, route.LoadingScreenWide,
+                    }),
+                    RouteConditions = new RouteConditionModel()
+                    {
+                        Electrified = route.Electrified,
+                        MaxLineVoltage = route.MaxLineVoltage,
+                        OverheadWireHeight = route.OverheadWireHeight,
+                        DoubleWireEnabled = string.Equals(route.DoubleWireEnabled, "On", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(route.DoubleWireEnabled, "Enabled", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(route.DoubleWireEnabled, "Yes", StringComparison.OrdinalIgnoreCase) ||
+                            bool.TryParse(route.DoubleWireEnabled, out bool doubleWireEnabled) && doubleWireEnabled,
+                        DoubleWireHeight = route.DoubleWireHeight,
+                        TriphaseEnabled = string.Equals(route.TriphaseEnabled, "On", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(route.TriphaseEnabled, "Enabled", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(route.TriphaseEnabled, "Yes", StringComparison.OrdinalIgnoreCase) ||
+                            bool.TryParse(route.TriphaseEnabled, out bool triphaseEnabled) && triphaseEnabled,
+                        TriphaseWidth = route.TriphaseWidth,
+                    },
+                    SpeedRestrictions = new EnumArray<float, SpeedRestrictionType>(new float[]
+                    {
+                        /// elements need to be in same order as listed in <see cref="SpeedRestrictionType"/>
+                        route.SpeedLimit, route.TempRestrictedSpeed
+                    }),
+                    Settings = settings.ToImmutableDictionary(),
+                    SuperElevationRadiusSettings = route.SuperElevationHgtpRadiusM,
+                };
+                await Create(routeModel, contentFolder, true, true, cancellationToken).ConfigureAwait(false);
+                return routeModel;
+            }
+            else
+            {
+                Trace.TraceWarning($"Route folder {routeFolder.RouteName} refers to non-existing route.");
+                return null;
+            }
+        }
+    }
+}
