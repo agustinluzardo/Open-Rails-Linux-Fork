@@ -202,7 +202,7 @@ for directory in "${shader_sources[@]}"; do
 
         if [ "$profile" = "OpenGL" ]; then
             # The OpenGL profile tops out at shader model 3.
-            sed 's/vs_5_0/vs_3_0/g; s/ps_5_0/ps_3_0/g' "$shader" > "$prepared"
+            sed 's/vs_5_0/vs_3_0/g; s/ps_5_0/ps_3_0/g; s/vs_4_0_level_9_1/vs_3_0/g; s/ps_4_0_level_9_1/ps_3_0/g' "$shader" > "$prepared"
         else
             cp "$shader" "$prepared"
         fi
