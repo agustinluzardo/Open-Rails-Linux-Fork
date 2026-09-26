@@ -2532,8 +2532,17 @@ namespace Orts.Simulation.Signalling
 
             InternalBlockstate blockstate = InternalBlockstate.Reserved;  // preset to lowest possible state //
 
+            // Keep the first route element that makes the block non-reservable.
+            // Jn_Obstructed is an aggregate state, so without this information a log
+            // cannot tell whether the real cause is occupancy, another reservation,
+            // a claim/deadlock, or a misaligned junction.
+            TrackCircuitSection blockingSection = null;
+            TrackDirection blockingDirection = default;
+            int blockingRouteElementIndex = -1;
+
             // loop through all sections in route list
             TrackCircuitRouteElement lastElement = null;
+            int routeElementIndex = 0;
 
             foreach (TrackCircuitRouteElement routeElement in route)
             {
@@ -2542,7 +2551,13 @@ namespace Orts.Simulation.Signalling
                 TrackDirection direction = routeElement.Direction;
                 blockstate = section.GetSectionState(EnabledTrain, direction, blockstate, route, Index);
                 if (blockstate > InternalBlockstate.Reservable)
+                {
+                    blockingSection = section;
+                    blockingDirection = direction;
+                    blockingRouteElementIndex = routeElementIndex;
                     break;           // break on first non-reservable section //
+                }
+                routeElementIndex++;
 
                 // if alternative path from section available but train already waiting for deadlock, set blocked
                 if (routeElement.StartAlternativePath != null)
@@ -2673,6 +2688,40 @@ namespace Orts.Simulation.Signalling
                         returnvalue = true;
                     }
                 }
+            }
+
+            if (blockstate > InternalBlockstate.Reservable && blockingSection != null)
+            {
+                string occupants = string.Join(",",
+                    blockingSection.CircuitState.TrainsOccupying().Select(item =>
+                        $"{item.Train.Number}:{item.Train.Name}/{item.Direction}"));
+                Train.TrainRouted reservedTrain = blockingSection.CircuitState.TrainReserved;
+                string reserved = reservedTrain == null
+                    ? "-"
+                    : $"{reservedTrain.Train.Number}:{reservedTrain.Train.Name}/{reservedTrain.Direction}";
+                string claimed = blockingSection.CircuitState.TrainClaimed.Count == 0
+                    ? "-"
+                    : $"{blockingSection.CircuitState.TrainClaimed.PeekTrain().Number}:{blockingSection.CircuitState.TrainClaimed.PeekTrain().Name}";
+
+                Trace.TraceInformation(
+                    "[SignalBlock] signal={0} train={1}:{2} routeElement={3}/{4} section={5} type={6} dir={7} state={8} reserved={9} signalReserved={10} occupants=[{11}] claimedCount={12} claimedHead={13} forced={14} deadlockTrap={15} deadlockAwaited={16}",
+                    Index,
+                    train?.Train?.Number ?? -1,
+                    train?.Train?.Name ?? "<none>",
+                    blockingRouteElementIndex,
+                    route.Count,
+                    blockingSection.Index,
+                    blockingSection.CircuitType,
+                    blockingDirection,
+                    blockstate,
+                    reserved,
+                    blockingSection.CircuitState.SignalReserved,
+                    occupants,
+                    blockingSection.CircuitState.TrainClaimed.Count,
+                    claimed,
+                    blockingSection.CircuitState.Forced,
+                    train != null && blockingSection.DeadlockTraps.ContainsKey(train.Train.Number),
+                    train != null && blockingSection.DeadlockAwaited.Contains(train.Train.Number));
             }
 
             internalBlockState = blockstate;
