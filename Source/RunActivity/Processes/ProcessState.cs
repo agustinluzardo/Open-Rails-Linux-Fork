@@ -96,6 +96,11 @@ namespace Orts.Processes
 #endif
         }
 
+        public bool WaitTillFinished(int millisecondsTimeout)
+        {
+            return WaitHandle.WaitAny(FinishEvents, millisecondsTimeout) != WaitHandle.WaitTimeout;
+        }
+
         /// <summary>Wait for the specified number of milliseconds, unless termination is signalled.</summary>
         public void Sleep(int milliseconds)
         {
