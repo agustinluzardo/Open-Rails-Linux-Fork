@@ -334,6 +334,26 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
                         "[SoundDiag] SMS loaded file={0} groupDetail={1} streams={2} triggers={3} discrete={4} variable={5} initial={6} sourceVolume={7:0.###} external={8} ignore3D={9}",
                         SMSFileName, mstsScalabiltyGroup.DetailLevel, SoundStreams.Length, triggerCount,
                         discreteCount, variableCount, initialCount, Volume, ExternalSource, Ignore3D);
+
+                    int streamIndex = 0;
+                    foreach (SoundStream stream in SoundStreams)
+                    {
+                        int triggerIndex = 0;
+                        foreach (SoundTrigger trigger in stream.Triggers)
+                        {
+                            if (trigger is DiscreteSoundTrigger discreteTrigger)
+                            {
+                                string files = trigger.SoundCommand is PlaySoundCommand playCommand
+                                    ? string.Join("|", playCommand.Files)
+                                    : trigger.SoundCommand?.GetType().Name ?? "<null>";
+                                Trace.TraceInformation(
+                                    "[SoundDiag] SMS discrete file={0} stream={1} trigger={2} event={3} files={4}",
+                                    SMSFileName, streamIndex, triggerIndex, discreteTrigger.TriggerId, files);
+                            }
+                            triggerIndex++;
+                        }
+                        streamIndex++;
+                    }
                 }
             }
         }
