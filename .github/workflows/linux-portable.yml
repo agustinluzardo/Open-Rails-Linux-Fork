@@ -71,7 +71,7 @@ jobs:
       - name: Install Linux audio runtime
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libopenal1
+          sudo apt-get install -y --no-install-recommends libopenal1 libsndio7.0 patchelf
 
       - name: Publish native engine and launchers
         env:
@@ -94,8 +94,14 @@ jobs:
             -p:RielPlatform=linux -o "$publish"
 
           openal="$(ldconfig -p | awk '/libopenal\.so\.1 \(libc6,x86-64\)/ { print $NF; exit }')"
+          sndio="$(ldconfig -p | awk '/libsndio\.so\.7 \(libc6,x86-64\)/ { print $NF; exit }')"
           test -n "$openal"
+          test -n "$sndio"
           cp -L "$openal" "$publish/engine/libopenal.so.1"
+          cp -L "$sndio" "$publish/engine/libsndio.so.7"
+          # Make OpenAL resolve its bundled helper library beside itself instead of
+          # depending on the target distribution to have Ubuntu's sndio ABI installed.
+          patchelf --set-rpath '$ORIGIN' "$publish/engine/libopenal.so.1"
           cp /usr/share/doc/libopenal1/copyright "$publish/engine/OPENAL-LICENSE.txt"
 
       - uses: actions/download-artifact@v4
@@ -123,6 +129,8 @@ jobs:
           test -s "$publish/engine/System.Net.Http.dll"
           test -s "$publish/engine/System.Security.Cryptography.Algorithms.dll"
           test -s "$publish/engine/libopenal.so.1"
+          test -s "$publish/engine/libsndio.so.7"
+          test "$(patchelf --print-rpath "$publish/engine/libopenal.so.1")" = '$ORIGIN'
           strings "$publish/engine/RunActivity.dll" | grep -q 'libopenal.so.1'
           if ldd "$publish/engine/libopenal.so.1" | grep -q 'not found'; then
             echo "Bundled OpenAL has unresolved native dependencies" >&2
