@@ -1293,12 +1293,27 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
         /// <param name="wagonFolderSlash"></param>
         private void LoadCarSounds(string wagonFolderSlash)
         {
-            if (MSTSWagon.MainSoundFileName != null)
-                LoadCarSound(wagonFolderSlash, MSTSWagon.MainSoundFileName);
-            if (MSTSWagon.InteriorSoundFileName != null)
-                LoadCarSound(wagonFolderSlash, MSTSWagon.InteriorSoundFileName);
-            if (MSTSWagon.Cab3DSoundFileName != null)
-                LoadCarSound(wagonFolderSlash, MSTSWagon.InteriorSoundFileName);
+            // Open Rails allows more than one SMS file in each Sound(...) block.
+            // Load all of them; older Riel only kept the first entry. Also avoid
+            // the old Cab3D typo which loaded InteriorSoundFileName a second time.
+            var soundFileNames = new List<string>();
+            if (MSTSWagon.MainSoundFileNames != null)
+                soundFileNames.AddRange(MSTSWagon.MainSoundFileNames);
+            else if (MSTSWagon.MainSoundFileName != null)
+                soundFileNames.Add(MSTSWagon.MainSoundFileName);
+
+            if (MSTSWagon.InteriorSoundFileNames != null)
+                soundFileNames.AddRange(MSTSWagon.InteriorSoundFileNames);
+            else if (MSTSWagon.InteriorSoundFileName != null)
+                soundFileNames.Add(MSTSWagon.InteriorSoundFileName);
+
+            if (MSTSWagon.Cab3DSoundFileNames != null)
+                soundFileNames.AddRange(MSTSWagon.Cab3DSoundFileNames);
+            else if (MSTSWagon.Cab3DSoundFileName != null)
+                soundFileNames.Add(MSTSWagon.Cab3DSoundFileName);
+
+            foreach (string soundFileName in soundFileNames)
+                LoadCarSound(wagonFolderSlash, soundFileName);
         }
 
 
@@ -1339,7 +1354,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
         {
             if (Viewer.TrackTypes.Count > 0)  // TODO, still have to figure out if this should be part of the car, or train, or track
             {
-                if (!string.IsNullOrEmpty(MSTSWagon.InteriorSoundFileName))
+                if ((MSTSWagon.InteriorSoundFileNames?.Count ?? 0) > 0 || !string.IsNullOrEmpty(MSTSWagon.InteriorSoundFileName))
                     LoadTrackSound(Viewer.TrackTypes[0].InsideSound);
 
                 LoadTrackSound(Viewer.TrackTypes[0].OutsideSound);
