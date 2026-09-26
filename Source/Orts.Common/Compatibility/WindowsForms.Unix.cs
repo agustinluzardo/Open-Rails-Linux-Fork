@@ -35,6 +35,13 @@ namespace System.Windows.Forms
         public static void SetCompatibleTextRenderingDefault(bool defaultValue) { }
     }
 
+    public static class SystemInformation
+    {
+        // X11/Wayland generally expose the physical button order to SDL already.
+        public static bool MouseButtonsSwapped => false;
+        public static int HorizontalScrollBarHeight => 17;
+    }
+
     [Flags]
     public enum TextFormatFlags
     {
