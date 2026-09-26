@@ -185,23 +185,16 @@ namespace Orts.Simulation.Track
 
         public int GetRouteIndexBackward(int sectionIndex, int startIndex)
         {
-            if (Count == 1 && startIndex == 1 && this[0].TrackCircuitSection.Index == sectionIndex)
+            // Match Open Rails exactly: search from the element immediately before
+            // startIndex and return the nearest previous occurrence. Routes can visit
+            // the same track circuit more than once around loops/reversals, so taking
+            // the first item from the forward-ordered lookup can jump to an old pass.
+            for (int routeIndex = startIndex - 1; routeIndex >= 0 && routeIndex < Count; routeIndex--)
             {
-                return 0;
+                if (this[routeIndex].TrackCircuitSection.Index == sectionIndex)
+                    return routeIndex;
             }
-            else if (Count > 1 && startIndex < Count)
-            {
-                if (items == null)
-                {
-                    ReIndex();
-                }
-                if (items.Contains(sectionIndex))
-                {
-                    foreach (int item in items[sectionIndex])
-                        if (item < startIndex)
-                            return item;
-                }
-            }
+
             return -1;
         }
 

@@ -99,24 +99,7 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
         {
             if (e.SoundEvent == TriggerId)
             {
-                // The attached car's exterior SMS stays active in an interior view so
-                // mechanical sounds such as compressors can pass through the cab shell.
-                // Horns are different: MSTS stock commonly provides a dedicated cab horn
-                // in the interior SMS. Letting the exterior HornOn/HornOff trigger fire as
-                // well produces two different horn samples on top of each other.
-                CameraStyle cameraStyle = Program.Viewer.Camera.Style;
-                bool interiorView = cameraStyle == CameraStyle.Cab ||
-                    cameraStyle == CameraStyle.Cab3D ||
-                    cameraStyle == CameraStyle.Passenger;
-                bool exteriorHornInOwnCab =
-                    (TriggerId == TrainEvent.HornOn || TriggerId == TrainEvent.HornOff) &&
-                    soundStream.SoundSource.ExternalSource &&
-                    interiorView &&
-                    soundStream.SoundSource.Car != null &&
-                    Program.Viewer.Camera.AttachedCar == soundStream.SoundSource.Car;
-
-                Triggered = !exteriorHornInOwnCab &&
-                    (e.Owner == null || Program.Viewer.SoundProcess.IsSoundSourceOwnedBy(e.Owner, soundStream.SoundSource));
+                Triggered = e.Owner == null || Program.Viewer.SoundProcess.IsSoundSourceOwnedBy(e.Owner, soundStream.SoundSource);
             }
         }
 
