@@ -44,6 +44,7 @@
 
 using Microsoft.Xna.Framework;
 using Orts.Formats.Msts;
+using Orts.Parsers.Msts;
 using Orts.Formats.OR;
 using ORTS.Common;
 using Orts.Simulation.RollingStocks;
@@ -267,6 +268,7 @@ namespace Orts.Viewer3D
             // determine file path to the WFile at the specified tile coordinates
             var WFileName = WorldFileNameFromTileCoordinates(tileX, tileZ);
             var WFilePath = viewer.Simulator.RoutePath + @"\World\" + WFileName;
+            WFilePath = ContentPath.ResolveFile(WFilePath) ?? ContentPath.Normalize(WFilePath);
 
             // if there isn't a file, then return with an empty WorldFile object
             if (!File.Exists(WFilePath))
@@ -281,6 +283,7 @@ namespace Orts.Viewer3D
 
             // check for existence of world file in OpenRails subfolder
             WFilePath = Orts.Common.ORFileHelper.GetORTSFilePath(WFilePath);
+            WFilePath = ContentPath.ResolveFile(WFilePath) ?? ContentPath.Normalize(WFilePath);
             if (File.Exists(WFilePath))
             {
                 // We have an OR-specific addition to world file
@@ -336,7 +339,19 @@ namespace Orts.Viewer3D
                 {
                     try
                     {
-                        shapeFilePath = Path.GetFullPath(shapeFilePath);
+                        shapeFilePath = Path.GetFullPath(ContentPath.Normalize(shapeFilePath));
+                        shapeFilePath = ContentPath.ResolveFile(shapeFilePath) ?? shapeFilePath;
+
+                        // Some legacy MSTS routes place world shapes in the route root instead of
+                        // the conventional Shapes directory. Keep the standard path first, then
+                        // accept that layout explicitly on Linux.
+                        if (!File.Exists(shapeFilePath) && !global)
+                        {
+                            var legacyShapePath = Path.GetFullPath(ContentPath.Normalize(Path.Combine(viewer.Simulator.RoutePath, worldObject.FileName)));
+                            var resolvedLegacyShape = ContentPath.ResolveFile(legacyShapePath);
+                            if (resolvedLegacyShape != null)
+                                shapeFilePath = resolvedLegacyShape;
+                        }
                     }
                     catch (Exception e)
                     {
@@ -344,14 +359,14 @@ namespace Orts.Viewer3D
                         Trace.TraceInformation("Illegal characters in a file path are: \\ / : * ? \" < > |");
                         shapeFilePath = null;
                     }
-                    if (!File.Exists(shapeFilePath))
+                    if (shapeFilePath != null && !File.Exists(shapeFilePath))
                     {
                         Trace.TraceWarning("{0} scenery object {1} with StaticFlags {3:X8} references non-existent {2}", WFileName, worldObject.UID, shapeFilePath, worldObject.StaticFlags);
                         shapeFilePath = null;
                     }
                 }
 
-                var shapeDescriptorPath = shapeFilePath + "d";
+                var shapeDescriptorPath = shapeFilePath == null ? null : ContentPath.ResolveFile(shapeFilePath + "d") ?? ContentPath.Normalize(shapeFilePath + "d");
                 if (shapeFilePath != null)
                 {
                     var shape = new ShapeDescriptorFile(shapeDescriptorPath);
