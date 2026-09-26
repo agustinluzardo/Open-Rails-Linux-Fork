@@ -80,6 +80,11 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
         /// </summary>
         public float Volume { get; set; }
         /// <summary>
+        /// Final gain after SMS volume curves and cab/external attenuation.
+        /// This is diagnostic state only; it does not alter mixing.
+        /// </summary>
+        public float CalculatedVolume { get; private set; } = 1.0f;
+        /// <summary>
         /// List of triggers controlling this stream
         /// </summary>
         public ImmutableArray<SoundTrigger> Triggers { get; } = ImmutableArray<SoundTrigger>.Empty;
@@ -321,6 +326,7 @@ SoundSource.SMSFileName, SoundSource.SoundStreams.Length, Triggers.Length - 1);
                     volume *= ((MSTSWagon)Program.Viewer.Camera.AttachedCar).ExternalSoundPassThruPercent * 0.01f;
             }
 
+            CalculatedVolume = volume;
             ALSoundSource.Volume = volume;
         }
 
