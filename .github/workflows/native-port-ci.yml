@@ -10,7 +10,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  shaders:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Compile Open Rails shaders for DesktopGL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet tool restore
+          New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\shaders" | Out-Null
+          Get-ChildItem "Source\RunActivity\Content\*.fx" | ForEach-Object {
+            $prepared = Join-Path "$env:RUNNER_TEMP" $_.Name
+            $source = [IO.File]::ReadAllText($_.FullName)
+            $source = $source.Replace('vs_5_0','vs_3_0').Replace('ps_5_0','ps_3_0')
+            $source = $source.Replace('vs_4_0_level_9_1','vs_3_0').Replace('ps_4_0_level_9_1','ps_3_0')
+            $source = $source.Replace('vs_4_0_level_9_3','vs_3_0').Replace('ps_4_0_level_9_3','ps_3_0')
+            [IO.File]::WriteAllText($prepared, $source)
+            $out = Join-Path "$env:RUNNER_TEMP\shaders" ($_.BaseName + ".mgfx")
+            Write-Host "Compiling $($_.Name)"
+            dotnet tool run mgfxc $prepared $out /Profile:OpenGL
+            if ($LASTEXITCODE -ne 0) { throw "mgfxc failed for $($_.Name)" }
+          }
+          $expected = Get-ChildItem "Source\RunActivity\Content\*.fx" | ForEach-Object { $_.BaseName }
+          foreach ($name in $expected) {
+            if (-not (Test-Path "$env:RUNNER_TEMP\shaders\$name.mgfx")) { throw "Missing $name.mgfx" }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openrails-opengl-shaders
+          path: ${{ runner.temp }}\shaders\*.mgfx
+          if-no-files-found: error
+
   linux-native:
+    needs: shaders
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -22,12 +58,6 @@ jobs:
           dotnet-version: |
             6.0.x
             10.0.x
-
-      - name: Install build-time shader compiler dependency
-        run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends wine wine64
 
       - name: Build and test native Open Rails
         working-directory: Source
@@ -50,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           publish="${RUNNER_TEMP}/riel-publish"
-          mkdir -p "$publish"
+          mkdir -p "$publish/Content"
 
           dotnet publish Source/RunActivity/RunActivity.csproj -c Release -r linux-x64 --self-contained true \
             -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL -p:IsPublishable=true -o "$publish"
@@ -59,15 +89,24 @@ jobs:
           dotnet publish Source/Launcher.Gui/Launcher.Gui.csproj -c Release -r linux-x64 --self-contained true \
             -p:RielPlatform=linux -o "$publish"
 
-          mkdir -p "$publish/Content"
-          ./scripts/build-shaders.sh --profile OpenGL --output "$publish/Content" --check
-
           test -x "$publish/RunActivity"
           test -x "$publish/riel"
           test -x "$publish/riel-gui"
-          test -f "$publish/Content/SceneryShader.mgfx"
-          test -f "$publish/Content/PrecipitationShader.mgfx"
-          test -f "$publish/Content/LightGlowShader.mgfx"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: openrails-opengl-shaders
+          path: ${{ runner.temp }}/riel-publish/Content
+
+      - name: Validate native renderer assets
+        run: |
+          set -euo pipefail
+          publish="${RUNNER_TEMP}/riel-publish"
+          for shader in CabShader DebugShader DriverMachineInterfaceShader LightConeShader LightGlowShader Loading ParticleEmitterShader PopupWindow PrecipitationShader SceneryShader ShadowMap SkyShader; do
+            test -s "$publish/Content/$shader.mgfx"
+          done
+          file "$publish/RunActivity" | grep -q 'ELF 64-bit'
+          ! find "$publish" -maxdepth 2 -iname '*.exe' -print -quit | grep -q .
 
       - name: Smoke portable launcher
         env:
