@@ -1338,11 +1338,30 @@ namespace Orts.Viewer3D.Processes
 
         long GetProcessBytesLoaded()
         {
+#if RIEL_UNIX
+            // /proc/self/io:rchar is the closest Linux equivalent to Win32
+            // ReadTransferCount: bytes returned by read-like syscalls, including cached I/O.
+            try
+            {
+                foreach (string line in File.ReadLines("/proc/self/io"))
+                {
+                    if (!line.StartsWith("rchar:", StringComparison.Ordinal))
+                        continue;
+                    if (long.TryParse(line.Substring(6).Trim(), out long bytes))
+                        return bytes;
+                    break;
+                }
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+            return 0;
+#else
             NativeMathods.IO_COUNTERS counters;
             if (NativeMathods.GetProcessIoCounters(Process.GetCurrentProcess().Handle, out counters))
                 return (long)counters.ReadTransferCount;
 
             return 0;
+#endif
         }
 
         class LoadingPrimitive : RenderPrimitive, IDisposable
@@ -1639,6 +1658,7 @@ namespace Orts.Viewer3D.Processes
             }
         }
 
+#if !RIEL_UNIX
         static class NativeMathods
         {
             [DllImport("kernel32.dll", SetLastError = true)]
@@ -1655,6 +1675,7 @@ namespace Orts.Viewer3D.Processes
                 public UInt64 OtherTransferCount;
             };
         }
+#endif
     }
 
     public sealed class IncompatibleSaveException : Exception
