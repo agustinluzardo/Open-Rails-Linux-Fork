@@ -33,8 +33,12 @@ float particleSize;
 float2 cameraTileXZ;
 float currentTime;
 
-static float2 texCoords[4] = { float2(0, 0), float2(1, 0), float2(1, 1), float2(0, 1) };
-static float2 offsets[4] = { float2(-0.5f, 0.5f), float2(0.5f, 0.5f), float2(0.5f, -0.5f), float2(-0.5f, -0.5f) };
+// Open Rails uses static arrays for these four corners. MonoGame's DesktopGL
+// shader cross-compiler turns those arrays into an internal uniform array;
+// on some GL drivers that block is left at zero, collapsing every billboard
+// to a zero-area triangle. Keep the exact Open Rails corner mapping, but
+// select the four constants explicitly so the generated GLSL contains them
+// as literals instead of hidden uniforms.
 
 texture precipitation_Tex;
 
@@ -74,17 +78,39 @@ VERTEX_OUTPUT VSPrecipitation(in VERTEX_INPUT In)
 	VERTEX_OUTPUT Out = (VERTEX_OUTPUT)0;
 	
 	float age = (currentTime - In.StartPosition_StartTime.w) / (In.EndPosition_EndTime.w - In.StartPosition_StartTime.w);
-	int vertIdx = (int)In.TileXZ_Vertex.z;
+	float vertex = In.TileXZ_Vertex.z;
+	float2 offset;
+	float2 texCoord;
+	if (vertex < 0.5f)
+	{
+		offset = float2(-0.5f, 0.5f);
+		texCoord = float2(0, 0);
+	}
+	else if (vertex < 1.5f)
+	{
+		offset = float2(0.5f, 0.5f);
+		texCoord = float2(1, 0);
+	}
+	else if (vertex < 2.5f)
+	{
+		offset = float2(0.5f, -0.5f);
+		texCoord = float2(1, 1);
+	}
+	else
+	{
+		offset = float2(-0.5f, -0.5f);
+		texCoord = float2(0, 1);
+	}
 	float3 right = invView[0].xyz;
 	float3 up = normalize(In.StartPosition_StartTime.xyz - In.EndPosition_EndTime.xyz);
 	
 	In.StartPosition_StartTime.xyz = lerp(In.StartPosition_StartTime.xyz, In.EndPosition_EndTime.xyz, age);
 	In.StartPosition_StartTime.xz += (cameraTileXZ - In.TileXZ_Vertex.xy) * float2(-2048, 2048);
-	In.StartPosition_StartTime.xyz += right * offsets[vertIdx].x * particleSize;
-	In.StartPosition_StartTime.xyz += up * offsets[vertIdx].y * particleSize;
+	In.StartPosition_StartTime.xyz += right * offset.x * particleSize;
+	In.StartPosition_StartTime.xyz += up * offset.y * particleSize;
 	
 	Out.Position = mul(float4(In.StartPosition_StartTime.xyz, 1), worldViewProjection);
-	Out.TexCoord = texCoords[vertIdx];
+	Out.TexCoord = texCoord;
 	
 	return Out;
 }
