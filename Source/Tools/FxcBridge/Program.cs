@@ -77,9 +77,17 @@ namespace FxcBridge
         {
             try
             {
+                Console.Error.WriteLine($"fxcbridge raw argc={args.Length}");
+                for (int i = 0; i < args.Length; i++)
+                    Console.Error.WriteLine($"fxcbridge raw arg[{i}]={args[i]}");
+
                 // Drop the assembly argument when we are standing in for the dotnet muxer.
                 if (args.Length > 0 && args[0].EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
                     args = args[1..];
+
+                Console.Error.WriteLine($"fxcbridge argc={args.Length}");
+                for (int i = 0; i < args.Length; i++)
+                    Console.Error.WriteLine($"fxcbridge arg[{i}]={args[i]}");
 
                 // MonoGame 3.8.1 passes five arguments after fxccs.dll; newer releases add a
                 // separate display path before the output file. Support both protocols so the
