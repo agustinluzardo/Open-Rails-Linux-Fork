@@ -150,9 +150,15 @@ namespace Riel.Launcher.Gui
                 }
                 catch (Exception ex) when (ex is not OutOfMemoryException)
                 {
+                    // The details panel is optional metadata. A preview/deserialization
+                    // failure here must not prevent the simulator from attempting its
+                    // normal restore path, especially for saves from older Riel builds.
+                    // Only a snapshot which was successfully read and explicitly marked
+                    // invalid above is blocked.
                     item.Summary = T("Save details unavailable");
                     item.Details = F("Could not read this save: {0}", ex.Message);
-                    item.CanResume = false;
+                    item.CanResume = true;
+                    item.ResumeAction = "-SingleplayerResume";
                 }
                 item.DetailsLoaded = true;
                 if (SaveList.SelectedItem == item)

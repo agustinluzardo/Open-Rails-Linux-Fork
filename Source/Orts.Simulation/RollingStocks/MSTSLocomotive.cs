@@ -4886,6 +4886,7 @@ namespace Orts.Simulation.RollingStocks
                 return;
 
             CabLightOn = !CabLightOn;
+            Trace.TraceInformation("[CabLightDiag] car={0} state={1}", CarID, CabLightOn ? "on" : "off");
             SignalEvent(TrainEvent.CabLightSwitchToggle);
             simulator.Confirmer.Confirm(CabControl.CabLight, CabLightOn ? CabSetting.On : CabSetting.Off);
         }

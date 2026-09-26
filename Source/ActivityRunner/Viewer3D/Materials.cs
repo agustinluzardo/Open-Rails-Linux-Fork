@@ -32,6 +32,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 using Orts.ActivityRunner.Viewer3D.Common;
 using Orts.Formats.Msts.Files;
+using Orts.Simulation.RollingStocks;
 
 namespace Orts.ActivityRunner.Viewer3D
 {
@@ -829,6 +830,36 @@ namespace Orts.ActivityRunner.Viewer3D
             return result;
         }
 
+        private bool CabLightIlluminatesThisMaterial()
+        {
+            // ORTS_CABLIGHT changes the locomotive state, but Open Rails never propagates
+            // that state into the ordinary SceneryMaterial used by a 3D cab shape. Keep
+            // this scoped to the attached locomotive's own CABVIEW3D material paths so
+            // switching L cannot brighten the train exterior or world scenery.
+            if (viewer.Camera?.Style != CameraStyle.Cab3D ||
+                viewer.Camera.AttachedCar is not MSTSLocomotive locomotive ||
+                !locomotive.CabLightOn ||
+                string.IsNullOrEmpty(texturePath) ||
+                string.IsNullOrEmpty(locomotive.CabView3D?.ShapeFilePath))
+                return false;
+
+            string cabDirectory = Path.GetDirectoryName(locomotive.CabView3D.ShapeFilePath);
+            if (string.IsNullOrEmpty(cabDirectory))
+                return false;
+
+            try
+            {
+                string normalizedTexture = Path.GetFullPath(ContentIO.Normalize(texturePath));
+                string normalizedCabDirectory = Path.GetFullPath(ContentIO.Normalize(cabDirectory))
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                return normalizedTexture.StartsWith(normalizedCabDirectory, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException || ex is PathTooLongException)
+            {
+                return false;
+            }
+        }
+
         public override void SetState(Material previousMaterial)
         {
             graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
@@ -900,7 +931,15 @@ namespace Orts.ActivityRunner.Viewer3D
                     throw new InvalidDataException("Options has unexpected SceneryMaterialOptions.SpecularMask value.");
             }
 
-            if (nightTextureEnabled && ((undergroundTextureEnabled && viewer.MaterialManager.sunDirection.Y < -0.085f || viewer.Camera.IsUnderground) ||
+            if (CabLightIlluminatesThisMaterial())
+            {
+                // Prefer the authored night texture when present; otherwise illuminate the
+                // normal cab texture. ImageTextureIsNight is the existing scenery-shader
+                // path which deliberately bypasses sun/night darkening for emissive content.
+                shader.ImageTexture = nightTextureEnabled ? nightTexture : dayTexture;
+                shader.ImageTextureIsNight = true;
+            }
+            else if (nightTextureEnabled && ((undergroundTextureEnabled && viewer.MaterialManager.sunDirection.Y < -0.085f || viewer.Camera.IsUnderground) ||
             viewer.MaterialManager.sunDirection.Y < 0.0f - timeOffset))
             //if (nightTexture != null && nightTexture != SharedMaterialManager.MissingTexture && (((options & SceneryMaterialOptions.UndergroundTexture) != 0 &&
             //    (Viewer.MaterialManager.sunDirection.Y < -0.085f || Viewer.Camera.IsUnderground)) || Viewer.MaterialManager.sunDirection.Y < 0.0f - ((float)KeyLengthRemainder()) / 5000f))
