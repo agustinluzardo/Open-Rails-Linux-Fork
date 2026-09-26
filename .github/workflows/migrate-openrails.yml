@@ -53,10 +53,10 @@ jobs:
           upstream_repository=openrails/openrails
           upstream_branch=master
           upstream_commit=$(git rev-parse upstream/master)
-          migrated_from=\${GITHUB_SHA}
+          migrated_from=$GITHUB_SHA
           legacy_branch=legacy-fts
           EOF
 
           git add -A
           git commit -m "Rebase Riel on Open Rails upstream"
-          git push origin HEAD:main --force-with-lease=main:\${GITHUB_SHA}
+          git push origin HEAD:main --force-with-lease=main:$GITHUB_SHA
