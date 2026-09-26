@@ -271,7 +271,7 @@ namespace ORTS.Settings
         public int PerformanceTunerTarget { get; set; }
 
         // Experimental settings:
-        [Default(0)]
+        [Default(false)]
         public bool LegacySuperElevation { get; set; }
         [Default(1435)]
         public int SuperElevationGauge { get; set; }
