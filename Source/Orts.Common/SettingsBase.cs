@@ -36,6 +36,21 @@ namespace ORTS.Common
 
         static SettingsBase()
         {
+#if RIEL_UNIX
+            // Native Linux has no Windows registry. Keep the engine settings in the same XDG
+            // configuration tree as the Riel launcher and create the INI eagerly so the existing
+            // SettingsStore factory can open it without any platform-specific branch.
+            string configured = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
+            string root = !string.IsNullOrEmpty(configured) && Path.IsPathRooted(configured)
+                ? configured
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config");
+            string directory = Path.Combine(root, "riel");
+            Directory.CreateDirectory(directory);
+            SettingsFilePath = Path.Combine(directory, DefaultSettingsFileName);
+            RegistryKey = null;
+            if (!File.Exists(SettingsFilePath))
+                File.WriteAllText(SettingsFilePath, string.Empty);
+#else
             // Only one of these is allowed; if the INI file exists, we use that, otherwise we use the registry.
             RegistryKey = DefaultRegistryKey;
             SettingsFilePath = Path.Combine(ApplicationInfo.ProcessDirectory, DefaultSettingsFileName);
@@ -43,6 +58,7 @@ namespace ORTS.Common
                 RegistryKey = null;
             else
                 SettingsFilePath = null;
+#endif
         }
 
         /// <summary>
