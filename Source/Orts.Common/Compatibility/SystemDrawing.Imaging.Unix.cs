@@ -95,8 +95,10 @@ namespace System.Drawing
         public Bitmap(int width, int height, PixelFormat format)
         {
             _ = format;
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+            if (width <= 0)
+                throw new ArgumentOutOfRangeException(nameof(width), width, "Width must be greater than zero.");
+            if (height <= 0)
+                throw new ArgumentOutOfRangeException(nameof(height), height, "Height must be greater than zero.");
             bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Premul));
         }
 
