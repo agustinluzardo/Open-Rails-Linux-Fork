@@ -21,6 +21,17 @@ namespace FreeTrainSimulator.Models.Settings
         public string FolderName { get; set; }
         /// <summary>Identifier of the selected route.</summary>
         public string RouteId { get; set; }
+
+        // Physical source metadata used by the Open Rails runner. The launcher keeps logical IDs
+        // for UI restore, but upstream RunActivity expects actual MSTS file paths.
+        public string FolderPath { get; set; }
+        public string RouteSourceName { get; set; }
+        public string ActivitySourceName { get; set; }
+        public string PathSourceName { get; set; }
+        public string WagonSetSourceName { get; set; }
+        public string TimetableSourceFile { get; set; }
+        public string WeatherSourceFile { get; set; }
+
         /// <summary>Activity type (Activity, Explore, ExploreActivity, Timetable).</summary>
         public ActivityType ActivityType { get; set; }
         #endregion
