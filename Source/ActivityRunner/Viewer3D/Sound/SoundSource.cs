@@ -40,6 +40,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 
 using FreeTrainSimulator.Common;
@@ -307,6 +308,32 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
                 foreach (SmsStream mstsStream in mstsScalabiltyGroup.Streams)
                 {
                     SoundStreams = SoundStreams.Add(new SoundStream(mstsStream, eventSource, this));
+                }
+
+                if (Car?.Train?.IsActualPlayerTrain == true)
+                {
+                    int triggerCount = 0;
+                    int discreteCount = 0;
+                    int variableCount = 0;
+                    int initialCount = 0;
+                    foreach (SoundStream stream in SoundStreams)
+                    {
+                        triggerCount += stream.Triggers.Length;
+                        foreach (SoundTrigger trigger in stream.Triggers)
+                        {
+                            if (trigger is DiscreteSoundTrigger)
+                                discreteCount++;
+                            else if (trigger is VariableSoundTrigger)
+                                variableCount++;
+                            else if (trigger is InitialSoundTrigger)
+                                initialCount++;
+                        }
+                    }
+
+                    Trace.TraceInformation(
+                        "[SoundDiag] SMS loaded file={0} groupDetail={1} streams={2} triggers={3} discrete={4} variable={5} initial={6} sourceVolume={7:0.###} external={8} ignore3D={9}",
+                        SMSFileName, mstsScalabiltyGroup.DetailLevel, SoundStreams.Length, triggerCount,
+                        discreteCount, variableCount, initialCount, Volume, ExternalSource, Ignore3D);
                 }
             }
         }
