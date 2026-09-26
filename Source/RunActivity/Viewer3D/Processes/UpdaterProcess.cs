@@ -57,6 +57,11 @@ namespace Orts.Viewer3D.Processes
             State.WaitTillFinished();
         }
 
+        public bool WaitTillFinished(int millisecondsTimeout)
+        {
+            return State.WaitTillFinished(millisecondsTimeout);
+        }
+
         [ThreadName("Updater")]
         void UpdaterThread()
         {
