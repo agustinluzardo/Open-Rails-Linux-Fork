@@ -59,24 +59,10 @@ namespace Riel.Launcher
                 Console.WriteLine("Riel is up to date (" + commit + ").");
                 return 0;
             }
-            // A just-built local main commit can be newer than the last published
-            // release. GitHub's ancestry check prevents silently downgrading it.
-            try
-            {
-                string compareUrl = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/compare/" +
-                    VersionInfo.CodeVersion + "..." + commit;
-                using JsonDocument comparison = JsonDocument.Parse(await client.GetStringAsync(compareUrl, cancellationToken).ConfigureAwait(false));
-                if (comparison.RootElement.GetProperty("status").GetString() != "ahead")
-                {
-                    Console.WriteLine("Riel is up to date (" + VersionInfo.CodeVersion + ").");
-                    return 0;
-                }
-            }
-            catch (HttpRequestException)
-            {
-                // A custom build may not exist in this repository; the release is
-                // still offered explicitly, after verification, to its user.
-            }
+            // This launcher follows the tested main channel exactly. A deliberate
+            // rollback or branch reset must therefore still be offered as an update;
+            // comparing Git ancestry here would incorrectly treat a superseded build
+            // as newer and permanently strand it off the main channel.
             Console.WriteLine("Available Riel main build: " + commit + " (installed: " + VersionInfo.CodeVersion + ").");
             if (checkOnly)
                 return 10; // GUI uses this to distinguish available from up to date.
