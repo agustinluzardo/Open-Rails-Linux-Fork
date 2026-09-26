@@ -1082,9 +1082,9 @@ namespace Orts.Simulation.Track
             // check if any trains have claimed this section
             List<Train.TrainRouted> claimedTrains = new List<Train.TrainRouted>(CircuitState.TrainClaimed);
 
-            CircuitState.TrainClaimed.Clear();
             foreach (Train.TrainRouted claimingTrain in claimedTrains)
             {
+                UnclaimTrain(claimingTrain);
                 claimingTrain.Train.ClaimState = false; // reset train claim state
             }
 
@@ -1101,7 +1101,11 @@ namespace Orts.Simulation.Track
                 {
                     Train.TrainRouted claimingTrain = claimedTrains[iTrain];
 
-                    if (!nextSection.CircuitState.TrainClaimed.Remove(train))
+                    if (nextSection.CircuitState.TrainClaimed.ContainsTrain(claimingTrain))
+                    {
+                        nextSection.UnclaimTrain(claimingTrain);
+                    }
+                    else
                     {
                         claimedTrains.Remove(claimingTrain);
                     }
