@@ -106,6 +106,11 @@ namespace Orts.Simulation.RollingStocks
         public const int LeftWindowRearIndex = 2;
         public const int RightWindowRearIndex = 3;
         public WindowState[] WindowStates { get; } = new WindowState[4];
+        /// <summary>
+        /// Open Rails-compatible correction for external sounds heard from inside
+        /// the active cab. Values represent the opening fraction of the two cab windows.
+        /// </summary>
+        public float[] SoundHeardInternallyCorrection { get; } = new float[2];
 
         public bool UnloadingPartsOpen { get; set; }
         private bool waitForAnimationReady; // delay counter to start loading/unliading is on;
