@@ -269,8 +269,19 @@ namespace Orts.ActivityRunner.Processes
         {
             // First use the .save file to check the validity and extract the route and activity.
             GameSaveState saveState = await GameSaveState.FromFile<GameSaveState>(profileSelections.GameSaveFile, Game.LoaderProcess.CancellationToken).ConfigureAwait(false);
-            saveState.ProfileSelections.Log();
-            await InitSimulator(Game.UserSettings, saveState.ProfileSelections, Game.LoaderProcess.CancellationToken).ConfigureAwait(false);
+
+            // A resumed session used to leave the static GameState.profileSelections pointing at
+            // the command-line "-SingleplayerResume" selection, which only contains GameSaveFile.
+            // Saving that resumed session therefore wrote a valid simulator snapshot with an
+            // effectively empty ProfileSelections object. Repair those saves from the metadata
+            // that is still present in GameSaveState, and keep the repaired selection active so
+            // every subsequent save is complete again.
+            ProfileSelectionsModel restoredSelections = await ResolveSaveSelections(saveState, Game.LoaderProcess.CancellationToken).ConfigureAwait(false);
+            GameState.profileSelections = restoredSelections;
+            saveState.ProfileSelections = restoredSelections;
+
+            restoredSelections.Log();
+            await InitSimulator(Game.UserSettings, restoredSelections, Game.LoaderProcess.CancellationToken).ConfigureAwait(false);
             simulator.BeforeRestore(saveState.Path, saveState.InitialLocation);
 
             await simulator.Restore(saveState.SimulatorSaveState).ConfigureAwait(false);
@@ -575,6 +586,155 @@ namespace Orts.ActivityRunner.Processes
             loadingBytesActual = null;
         }
         #endregion
+
+        private async ValueTask<ProfileSelectionsModel> ResolveSaveSelections(GameSaveState saveState, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(saveState, nameof(saveState));
+
+            ProfileSelectionsModel saved = saveState.ProfileSelections ?? new ProfileSelectionsModel();
+            ProfileSelectionsModel current = await Game.UserSettings.Parent
+                .LoadSettingsModel<ProfileSelectionsModel>(cancellationToken).ConfigureAwait(false);
+
+            // GameSaveState has always stored route/path independently of ProfileSelections.
+            // They are the authoritative recovery source for saves made after a resume.
+            if (string.IsNullOrWhiteSpace(saved.RouteId))
+                saved.RouteId = !string.IsNullOrWhiteSpace(saveState.Route) ? saveState.Route : current?.RouteId;
+            if (string.IsNullOrWhiteSpace(saved.PathId))
+                saved.PathId = !string.IsNullOrWhiteSpace(saveState.Path) ? saveState.Path : current?.PathId;
+
+            bool currentMatchesRoute = current != null &&
+                !string.IsNullOrWhiteSpace(saved.RouteId) &&
+                string.Equals(current.RouteId, saved.RouteId, StringComparison.OrdinalIgnoreCase);
+            bool currentMatchesPath = currentMatchesRoute &&
+                (string.IsNullOrWhiteSpace(saved.PathId) ||
+                 string.Equals(current.PathId, saved.PathId, StringComparison.OrdinalIgnoreCase));
+
+            if (saved.ActivityType == ActivityType.None)
+            {
+                // Prefer the current profile only when it points at the same saved route/path.
+                // This preserves the original mode and identifiers when the profile still has them.
+                if (currentMatchesPath && current.ActivityType != ActivityType.None)
+                    saved.ActivityType = current.ActivityType;
+                else if (!string.IsNullOrWhiteSpace(saveState.SimulatorSaveState?.TimetableFile))
+                    saved.ActivityType = ActivityType.TimeTable;
+                else if (saveState.SimulatorSaveState?.Activity != null)
+                    saved.ActivityType = ActivityType.Activity;
+                else
+                    saved.ActivityType = ActivityType.Explorer;
+            }
+
+            if (saved.ActivityType is ActivityType.Explorer or ActivityType.ExploreActivity)
+            {
+                if (string.IsNullOrWhiteSpace(saved.WagonSetId) && currentMatchesPath)
+                    saved.WagonSetId = current.WagonSetId;
+
+                // Explorer snapshots retain the original consist name on every saved car.
+                // Use it when the profile has since changed to another selection.
+                if (string.IsNullOrWhiteSpace(saved.WagonSetId))
+                {
+                    string originalConsist = saveState.SimulatorSaveState?.Trains?
+                        .FirstOrDefault()?.TrainCars?.FirstOrDefault()?.OriginalConsist;
+                    if (!string.IsNullOrWhiteSpace(originalConsist))
+                        saved.WagonSetId = Path.GetFileNameWithoutExtension(originalConsist);
+                }
+
+                if (saveState.SimulatorSaveState != null)
+                {
+                    double clockSeconds = saveState.SimulatorSaveState.ClockTime % 86400;
+                    if (clockSeconds < 0)
+                        clockSeconds += 86400;
+                    saved.StartTime = TimeOnly.FromTimeSpan(TimeSpan.FromSeconds(clockSeconds));
+                    saved.Season = saveState.SimulatorSaveState.Season;
+                    saved.Weather = saveState.SimulatorSaveState.Weather;
+                }
+            }
+            else if (saved.ActivityType == ActivityType.Activity)
+            {
+                if (string.IsNullOrWhiteSpace(saved.ActivityId) && currentMatchesRoute &&
+                    current.ActivityType == ActivityType.Activity)
+                    saved.ActivityId = current.ActivityId;
+            }
+            else if (saved.ActivityType == ActivityType.TimeTable)
+            {
+                if (currentMatchesRoute && current.ActivityType == ActivityType.TimeTable)
+                {
+                    saved.TimetableSet ??= current.TimetableSet;
+                    saved.TimetableName ??= current.TimetableName;
+                    saved.TimetableTrain ??= current.TimetableTrain;
+                    saved.WeatherChanges ??= current.WeatherChanges;
+                    saved.TimetableDay = current.TimetableDay;
+                }
+            }
+
+            // Resolve the content folder from the recovered route rather than trusting a null/stale
+            // FolderName. Prefer the current folder when it contains the same route, then scan the
+            // configured content folders. This also makes old saves survive a renamed profile selection.
+            ContentModel contentModel = await ContentModelExtensions.Get(null, cancellationToken).ConfigureAwait(false);
+            FolderModel folder = !string.IsNullOrWhiteSpace(saved.FolderName)
+                ? contentModel.ContentFolders.GetByName(saved.FolderName)
+                : null;
+
+            async ValueTask<bool> ContainsRoute(FolderModel candidate)
+            {
+                if (candidate == null || string.IsNullOrWhiteSpace(saved.RouteId))
+                    return false;
+                return (await candidate.GetRoutes(cancellationToken).ConfigureAwait(false))
+                    .Any(route => string.Equals(route.Id, saved.RouteId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!await ContainsRoute(folder).ConfigureAwait(false))
+            {
+                folder = null;
+
+                if (currentMatchesRoute && !string.IsNullOrWhiteSpace(current.FolderName))
+                {
+                    FolderModel currentFolder = contentModel.ContentFolders.GetByName(current.FolderName);
+                    if (await ContainsRoute(currentFolder).ConfigureAwait(false))
+                        folder = currentFolder;
+                }
+
+                if (folder == null)
+                {
+                    foreach (FolderModel candidate in contentModel.ContentFolders)
+                    {
+                        if (await ContainsRoute(candidate).ConfigureAwait(false))
+                        {
+                            folder = candidate;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (folder == null)
+                throw new InvalidDataException($"Saved route '{saved.RouteId ?? saveState.Route}' is not available in any configured content folder.");
+
+            saved.FolderName = folder.Name;
+
+            // If OriginalConsist only gave us a file stem, normalize it to the model's real ID.
+            if (saved.ActivityType is ActivityType.Explorer or ActivityType.ExploreActivity &&
+                !string.IsNullOrWhiteSpace(saved.WagonSetId))
+            {
+                var wagonSets = await folder.GetWagonSets(cancellationToken).ConfigureAwait(false);
+                WagonSetModel wagonSet = wagonSets.FirstOrDefault(candidate =>
+                    string.Equals(candidate.Id, saved.WagonSetId, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(Path.GetFileNameWithoutExtension(candidate.Id), Path.GetFileNameWithoutExtension(saved.WagonSetId), StringComparison.OrdinalIgnoreCase));
+                if (wagonSet != null)
+                    saved.WagonSetId = wagonSet.Id;
+            }
+
+            saved.GamePlayAction = saved.ActivityType == ActivityType.TimeTable
+                ? GamePlayAction.SinglePlayerTimetableGame
+                : GamePlayAction.SingleplayerNewGame;
+            saved.GameSaveFile = null;
+
+            Trace.TraceInformation(
+                "[SaveResume] selections folder='{0}' route='{1}' type={2} path='{3}' activity='{4}' consist='{5}' saveVersion='{6}'",
+                saved.FolderName, saved.RouteId, saved.ActivityType, saved.PathId,
+                saved.ActivityId, saved.WagonSetId, saveState.GameVersion);
+
+            return saved;
+        }
 
         private async ValueTask InitSimulator(ProfileUserSettingsModel userSettings, ProfileSelectionsModel profileSelections, CancellationToken cancellationToken)
         {
