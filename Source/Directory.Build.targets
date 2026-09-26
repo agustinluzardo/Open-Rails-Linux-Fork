@@ -19,6 +19,20 @@
     <Reference Remove="System.DirectoryServices" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(RielPlatform)' != 'windows' AND '$(MSBuildProjectName)' == 'Orts.Common'">
+    <PackageReference Include="SkiaSharp" Version="4.152.0" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.152.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RielPlatform)' == 'windows'">
+    <Compile Remove="**/*.Unix.cs" />
+    <None Include="**/*.Unix.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RielPlatform)' != 'windows'">
+    <Compile Remove="**/*.Windows.cs" />
+    <None Include="**/*.Windows.cs" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(RielPlatform)' != 'windows' AND '$(MSBuildProjectName)' == 'RunActivity'">
     <Compile Remove="Viewer3D/Debugging/DebugViewerForm.cs" />
     <Compile Remove="Viewer3D/Debugging/DebugViewerForm.Designer.cs" />
