@@ -274,16 +274,37 @@ namespace Orts.Viewer3D.Processes
 
             if (gameTime.TotalGameTime.TotalSeconds > 0.001)
             {
-                Game.UpdaterProcess.WaitTillFinished();
+                // DesktopGL may have GPU work queued by the updater or loader. The render thread
+                // owns the OpenGL context, so service that queue while waiting instead of
+                // deadlocking on a worker that is itself waiting for us.
+                GraphicsQueue.WaitFor(Game.UpdaterProcess);
 
                 // Must be done in XNA Game thread.
                 UserInput.Update(Game);
 
-                // Swap frames and start the next update (non-threaded updater does the whole update).
+                // Service loader uploads only while no updater frame is active. During the
+                // loading screen this turns a 10 FPS one-resource-per-frame crawl into a burst;
+                // during driving it prevents dense tiles from falling behind the train.
+                if (Game.State is GameStateRunActivity && !gameTime.IsRunningSlowly)
+                {
+                    GraphicsQueue.Pump(LoadingPumpTime);
+                }
+                else if (Game.State is GameStateViewer3D && !Game.LoaderProcess.Finished)
+                {
+                    GraphicsQueue.PumpPending(Game.Settings.VerticalSync
+                        ? VSyncStreamingPumpTime
+                        : StreamingPumpTime);
+                }
+
+                // Swap frames and start the next update.
                 SwapFrames(ref CurrentFrame, ref NextFrame);
                 Game.UpdaterProcess.StartUpdate(NextFrame, gameTime.TotalGameTime.TotalSeconds);
             }
         }
+
+        private static readonly TimeSpan LoadingPumpTime = TimeSpan.FromMilliseconds(70);
+        private static readonly TimeSpan StreamingPumpTime = TimeSpan.FromMilliseconds(1);
+        private static readonly TimeSpan VSyncStreamingPumpTime = TimeSpan.FromMilliseconds(3);
 
         internal void BeginDraw()
         {
