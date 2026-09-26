@@ -25,7 +25,8 @@ namespace ORTS.Common
         public static string ProcessFile => Process.GetCurrentProcess().MainModule.FileName;
         public static string ProcessDirectory => Path.GetDirectoryName(ProcessFile);
         static FileVersionInfo VersionInfo => FileVersionInfo.GetVersionInfo(ProcessFile);
-        public static string ProductName => VersionInfo.ProductName;
-        public static string ApplicationName => VersionInfo.FileDescription;
+        // FileVersionInfo fields may be absent on native ELF executables.
+        public static string ProductName => string.IsNullOrWhiteSpace(VersionInfo.ProductName) ? "Riel" : VersionInfo.ProductName;
+        public static string ApplicationName => string.IsNullOrWhiteSpace(VersionInfo.FileDescription) ? ProductName : VersionInfo.FileDescription;
     }
 }
