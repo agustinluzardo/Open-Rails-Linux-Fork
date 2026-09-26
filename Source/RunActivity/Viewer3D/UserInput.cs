@@ -55,8 +55,10 @@ namespace Orts.Viewer3D
 
         static InputSettings InputSettings;
 
+#if !RIEL_UNIX
         [DllImport("user32.dll")]
         static extern short GetAsyncKeyState(Keys key);
+#endif
 
         public static void Initialize(Game game)
         {
@@ -132,6 +134,11 @@ namespace Orts.Viewer3D
 
         static Keys[] GetKeysWithPrintScreenFix(KeyboardState keyboardState)
         {
+#if RIEL_UNIX
+            // MonoGame/SDL reports PrintScreen through Keyboard.GetState() on Linux.
+            // The Win32 workaround below must never execute on Unix.
+            return keyboardState.GetPressedKeys();
+#else
             // When running in fullscreen, Win32's GetKeyboardState (the API behind Keyboard.GetState()) never returns
             // the print screen key as being down. Something is eating it or something. So here we simply query that
             // key directly and forcibly add it to the list of pressed keys.
@@ -139,6 +146,7 @@ namespace Orts.Viewer3D
             if ((GetAsyncKeyState(Keys.PrintScreen) & 0x8000) != 0)
                 keys.Add(Keys.PrintScreen);
             return keys.ToArray();
+#endif
         }
 
         public static void Handled()
