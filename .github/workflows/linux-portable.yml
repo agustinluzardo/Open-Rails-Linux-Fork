@@ -53,9 +53,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            6.0.x
-            10.0.x
+          dotnet-version: '10.0.x'
 
       - name: Test native Open Rails
         working-directory: Source
@@ -65,8 +63,8 @@ jobs:
           AVALONIA_TELEMETRY_OPTOUT: '1'
         run: |
           set -euo pipefail
-          dotnet test Tests/Tests.csproj -c Release -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
-          dotnet build RunActivity/RunActivity.csproj -c Release -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
+          dotnet test Tests/Tests.csproj -c Release -p:TargetFramework=net10.0 -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
+          dotnet build RunActivity/RunActivity.csproj -c Release -p:TargetFramework=net10.0 -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
 
       - name: Publish native engine and launchers
         env:
@@ -79,11 +77,11 @@ jobs:
           mkdir -p "$publish/Content"
 
           dotnet publish Source/RunActivity/RunActivity.csproj -c Release -r linux-x64 --self-contained true \
-            -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL -p:IsPublishable=true -o "$publish"
+            -p:TargetFramework=net10.0 -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL -p:IsPublishable=true -o "$publish"
           dotnet publish Source/Launcher.Cli/Launcher.Cli.csproj -c Release -r linux-x64 --self-contained true \
-            -p:RielPlatform=linux -o "$publish"
+            -p:TargetFramework=net10.0 -p:RielPlatform=linux -o "$publish"
           dotnet publish Source/Launcher.Gui/Launcher.Gui.csproj -c Release -r linux-x64 --self-contained true \
-            -p:RielPlatform=linux -o "$publish"
+            -p:TargetFramework=net10.0 -p:RielPlatform=linux -o "$publish"
 
       - uses: actions/download-artifact@v4
         with:
@@ -107,6 +105,9 @@ jobs:
           test -x "$publish/riel"
           test -x "$publish/riel-gui"
           file "$publish/RunActivity" | grep -q 'ELF 64-bit'
+          test -s "$publish/System.Security.Cryptography.dll"
+          grep -q '"tfm": "net10.0"' "$publish/RunActivity.runtimeconfig.json"
+          grep -q '"version": "10.0.' "$publish/RunActivity.runtimeconfig.json"
           for shader in CabShader DebugShader DriverMachineInterfaceShader LightConeShader LightGlowShader Loading ParticleEmitterShader PopupWindow PrecipitationShader SceneryShader ShadowMap SkyShader; do
             test -s "$publish/Content/$shader.mgfx"
           done
