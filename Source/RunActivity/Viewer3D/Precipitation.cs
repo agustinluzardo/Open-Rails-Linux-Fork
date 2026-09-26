@@ -282,14 +282,17 @@ namespace Orts.Viewer3D
             var numCanBeEmitted = GetCountFreeParticles();
             var numToEmit = Math.Min(numToBeEmitted, numCanBeEmitted);
 
+            bool includeSceneryHeight = Viewer.Simulator.WeatherType == Orts.Formats.Msts.WeatherType.Snow;
             for (var i = 0; i < numToEmit; i++)
             {
                 var temp = new WorldLocation(worldLocation.TileX, worldLocation.TileZ, worldLocation.Location.X + (float)((Viewer.Random.NextDouble() - 0.5) * ParticleBoxWidthM), 0, worldLocation.Location.Z + (float)((Viewer.Random.NextDouble() - 0.5) * ParticleBoxLengthM));
-                temp.Location.Y = Heights.GetHeight(temp, tiles, scenery);
+                temp.Location.Y = Heights.GetHeight(temp, tiles, scenery, includeSceneryHeight);
                 var position = new WorldPosition(temp);
 
                 var time = MathHelper.Lerp(TimeParticlesLastEmitted, currentTime, (float)i / numToEmit);
-                var particle = (FirstFreeParticle + 1) % MaxParticles;
+                // FirstFreeParticle is the slot to fill. Advancing before writing leaves the
+                // uploaded range one particle behind, which makes precipitation invisible.
+                var particle = FirstFreeParticle;
                 var vertex = particle * VerticiesPerParticle;
 
                 for (var j = 0; j < VerticiesPerParticle; j++)
@@ -300,7 +303,7 @@ namespace Orts.Viewer3D
                     Vertices[vertex + j].TileXZ_Vertex = new Vector4(position.TileX, position.TileZ, j, 0);
                 }
 
-                FirstFreeParticle = particle;
+                FirstFreeParticle = (FirstFreeParticle + 1) % MaxParticles;
                 ParticlesToEmit--;
                 numParticlesAdded++;
             }
@@ -392,8 +395,15 @@ namespace Orts.Viewer3D
                 Divisions = (int)Math.Round(2048f / blockSize);
             }
 
-            public float GetHeight(WorldLocation location, TileManager tiles, SceneryDrawer scenery)
+            bool? IncludesScenery;
+
+            public float GetHeight(WorldLocation location, TileManager tiles, SceneryDrawer scenery, bool includeScenery)
             {
+                if (IncludesScenery != includeScenery)
+                {
+                    Tiles.Clear();
+                    IncludesScenery = includeScenery;
+                }
                 location.Normalize();
 
                 // First, ensure we have the tile in question cached.
@@ -453,7 +463,12 @@ namespace Orts.Viewer3D
                 if (tile.Height[x, z] == float.MinValue)
                 {
                     var position = new WorldLocation(location.TileX, location.TileZ, ((x + 0.5f) * BlockSize) - 1024, 0, ((z + 0.5f) * BlockSize) - 1024);
-                    tile.Height[x, z] = Math.Max(tiles.GetElevation(position), scenery.GetBoundingBoxTop(position, BlockSize));
+                    tile.Height[x, z] = tiles.GetElevation(position);
+                    // Snow may settle on structures; rain should start from terrain and let the
+                    // depth buffer hide drops behind roofs. Using a whole scenery bounding box as
+                    // the rain floor can put every drop above the camera/platform.
+                    if (includeScenery)
+                        tile.Height[x, z] = Math.Max(tile.Height[x, z], scenery.GetBoundingBoxTop(position, BlockSize));
                     tile.Used++;
                 }
 
@@ -532,6 +547,9 @@ namespace Orts.Viewer3D
 
             graphicsDevice.BlendState = BlendState.NonPremultiplied;
             graphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
+#if RIEL_DESKTOPGL
+            graphicsDevice.RasterizerState = RasterizerState.CullNone;
+#endif
         }
 
         public override void Render(GraphicsDevice graphicsDevice, IEnumerable<RenderItem> renderItems, ref Matrix XNAViewMatrix, ref Matrix XNAProjectionMatrix)
@@ -558,6 +576,9 @@ namespace Orts.Viewer3D
         {
             graphicsDevice.BlendState = BlendState.Opaque;
             graphicsDevice.DepthStencilState = DepthStencilState.Default;
+#if RIEL_DESKTOPGL
+            graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+#endif
         }
 
         public override bool GetBlending()
