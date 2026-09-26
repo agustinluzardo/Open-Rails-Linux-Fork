@@ -297,18 +297,27 @@ namespace Orts.ActivityRunner.Viewer3D
             var numToBeEmitted = (int)particlesToEmit;
             var numCanBeEmitted = GetCountFreeParticles();
             var numToEmit = Math.Min(numToBeEmitted, numCanBeEmitted);
+            bool snow = viewer.Simulator.WeatherType == WeatherType.Snow;
 
             for (var i = 0; i < numToEmit; i++)
             {
                 WorldLocation location = new WorldLocation(worldLocation.Tile, worldLocation.Location.X + (float)((StaticRandom.NextDouble() - 0.5) * ParticleBoxWidthM),
                     0, worldLocation.Location.Z + (float)((StaticRandom.NextDouble() - 0.5) * ParticleBoxLengthM));
-                location = new WorldLocation(location.Tile, location.Location.X, heights.GetHeight(location, tiles, scenery), location.Location.Z);
+                // Scenery bounding boxes can span a whole platform or station even
+                // where the camera has an open view of the sky. Using their top as
+                // the rain floor starts every drop above that roof (and behind the
+                // depth buffer); in the FCGR log the sampled floor was 20.9 m while
+                // the camera was at 13.8 m. Let depth testing hide drops behind
+                // actual scenery instead. Snow still settles on overhead shapes.
+                location = new WorldLocation(location.Tile, location.Location.X, heights.GetHeight(location, tiles, scenery, snow), location.Location.Z);
                 if (numParticlesAdded == 0)
                     firstParticleGroundHeight = location.Location.Y;
                 var position = new WorldPosition(location);
 
                 var time = MathHelper.Lerp(timeParticlesLastEmitted, currentTime, (float)i / numToEmit);
-                var particle = (firstFreeParticle + 1) % MaxParticles;
+                // firstFreeParticle points at the slot to fill, not the previous
+                // slot. The upload and index ranges both start at firstNewParticle.
+                var particle = firstFreeParticle;
                 var vertex = particle * VerticiesPerParticle;
 
                 for (var j = 0; j < VerticiesPerParticle; j++)
@@ -319,7 +328,7 @@ namespace Orts.ActivityRunner.Viewer3D
                     Vertices[vertex + j].TileXZ_Vertex = new Vector4(position.Tile.X, position.Tile.Z, j, 0);
                 }
 
-                firstFreeParticle = particle;
+                firstFreeParticle = (firstFreeParticle + 1) % MaxParticles;
                 particlesToEmit--;
                 numParticlesAdded++;
             }
@@ -408,6 +417,7 @@ namespace Orts.ActivityRunner.Viewer3D
             private readonly int BlockSize;
             private readonly int Divisions;
             private readonly List<PrecipitationTile> Tiles = new List<PrecipitationTile>();
+            private bool? includesScenery;
 
             public HeightCache(int blockSize)
             {
@@ -415,8 +425,13 @@ namespace Orts.ActivityRunner.Viewer3D
                 Divisions = (int)Math.Round(2048f / blockSize);
             }
 
-            public float GetHeight(in WorldLocation location, TileManager tiles, SceneryDrawer scenery)
+            public float GetHeight(in WorldLocation location, TileManager tiles, SceneryDrawer scenery, bool includeScenery)
             {
+                if (includesScenery != includeScenery)
+                {
+                    Tiles.Clear();
+                    includesScenery = includeScenery;
+                }
                 WorldLocation temp = location.Normalize();
 
                 // First, ensure we have the tile in question cached.
@@ -454,7 +469,9 @@ namespace Orts.ActivityRunner.Viewer3D
                 if (tile.Height[x, z] == float.MinValue)
                 {
                     var position = new WorldLocation(temp.Tile, (x + 0.5f) * BlockSize - 1024, 0, (z + 0.5f) * BlockSize - 1024);
-                    tile.Height[x, z] = Math.Max(tiles.GetElevation(position), scenery.GetBoundingBoxTop(position, BlockSize));
+                    tile.Height[x, z] = tiles.GetElevation(position);
+                    if (includeScenery)
+                        tile.Height[x, z] = Math.Max(tile.Height[x, z], scenery.GetBoundingBoxTop(position, BlockSize));
                     tile.Used++;
                 }
 
