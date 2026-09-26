@@ -136,9 +136,14 @@ namespace Orts.Simulation.RollingStocks
         public float FreightAnimFlag { get; private set; } = 1;   // if absent or >= 0 causes the freightanim to drop in tenders
         public string Cab3DShapeFileName { get; private set; } // 3DCab view shape file name
         public string InteriorShapeFileName { get; private set; } // passenger view shape file name
+        // Keep the original singular properties for compatibility with older Riel
+        // code, but preserve every SMS entry exactly like current Open Rails does.
         public string MainSoundFileName { get; private set; }
         public string InteriorSoundFileName { get; private set; }
         public string Cab3DSoundFileName { get; private set; }
+        public List<string> MainSoundFileNames { get; private set; }
+        public List<string> InteriorSoundFileNames { get; private set; }
+        public List<string> Cab3DSoundFileNames { get; private set; }
         public float ExternalSoundPassThruPercent { get; private set; } = -1;
         public float WheelRadiusM { get; private set; } = (float)Size.Length.FromIn(18.0f);  // Provide some defaults in case it's missing from the wag - Wagon wheels could vary in size from approx 10" to 25".
         private float StaticFrictionFactorN;// factor to multiply friction by to determine static or starting friction - will vary depending upon whether roller or friction bearing
@@ -1175,7 +1180,11 @@ namespace Orts.Simulation.RollingStocks
                     DriverWheelRadiusM = stf.ReadFloatBlock(STFReader.Units.Distance, null);
                     break;
                 case "wagon(sound":
-                    MainSoundFileName = stf.ReadStringBlock(null);
+                    stf.MustMatch("(");
+                    MainSoundFileNames = new List<string> { stf.ReadString() };
+                    while (!stf.EndOfBlock())
+                        MainSoundFileNames.Add(stf.ReadString());
+                    MainSoundFileName = MainSoundFileNames.Count > 0 ? MainSoundFileNames[0] : null;
                     break;
                 case "wagon(ortsbrakeshoefriction":
                     brakeShoeFrictionFactor = stf.CreateInterpolator();
@@ -1552,6 +1561,7 @@ namespace Orts.Simulation.RollingStocks
             WheelRadiusM = source.WheelRadiusM;
             DriverWheelRadiusM = source.DriverWheelRadiusM;
             MainSoundFileName = source.MainSoundFileName;
+            MainSoundFileNames = source.MainSoundFileNames == null ? null : new List<string>(source.MainSoundFileNames);
             brakeShoeFrictionFactor = source.brakeShoeFrictionFactor;
             WheelBrakeSlideProtectionFitted = source.WheelBrakeSlideProtectionFitted;
             WheelBrakeSlideProtectionLimitDisabled = source.WheelBrakeSlideProtectionLimitDisabled;
@@ -1601,8 +1611,10 @@ namespace Orts.Simulation.RollingStocks
             RetainerPositions = source.RetainerPositions;
             InteriorShapeFileName = source.InteriorShapeFileName;
             InteriorSoundFileName = source.InteriorSoundFileName;
+            InteriorSoundFileNames = source.InteriorSoundFileNames == null ? null : new List<string>(source.InteriorSoundFileNames);
             Cab3DShapeFileName = source.Cab3DShapeFileName;
             Cab3DSoundFileName = source.Cab3DSoundFileName;
+            Cab3DSoundFileNames = source.Cab3DSoundFileNames == null ? null : new List<string>(source.Cab3DSoundFileNames);
             Adhesion1 = source.Adhesion1;
             Adhesion2 = source.Adhesion2;
             Adhesion3 = source.Adhesion3;
@@ -1678,7 +1690,13 @@ namespace Orts.Simulation.RollingStocks
             PassengerViewPoint passengerViewPoint = new PassengerViewPoint();
             stf.MustMatch("(");
             stf.ParseBlock(new STFReader.TokenProcessor[] {
-                new STFReader.TokenProcessor("sound", ()=>{ InteriorSoundFileName = stf.ReadStringBlock(null); }),
+                new STFReader.TokenProcessor("sound", ()=>{
+                    stf.MustMatch("(");
+                    InteriorSoundFileNames = new List<string> { stf.ReadString() };
+                    while (!stf.EndOfBlock())
+                        InteriorSoundFileNames.Add(stf.ReadString());
+                    InteriorSoundFileName = InteriorSoundFileNames.Count > 0 ? InteriorSoundFileNames[0] : null;
+                }),
                 new STFReader.TokenProcessor("passengercabinfile", ()=>{ InteriorShapeFileName = stf.ReadStringBlock(null); }),
                 new STFReader.TokenProcessor("passengercabinheadpos", ()=>{ passengerViewPoint.Location = stf.ReadVector3Block(STFReader.Units.Distance, new Vector3()); }),
                 new STFReader.TokenProcessor("rotationlimit", ()=>{ passengerViewPoint.RotationLimit = stf.ReadVector3Block(STFReader.Units.None, new Vector3()); }),
@@ -1696,7 +1714,13 @@ namespace Orts.Simulation.RollingStocks
             PassengerViewPoint passengerViewPoint = new PassengerViewPoint();
             stf.MustMatch("(");
             stf.ParseBlock(new STFReader.TokenProcessor[] {
-                new STFReader.TokenProcessor("sound", ()=>{ Cab3DSoundFileName = stf.ReadStringBlock(null); }),
+                new STFReader.TokenProcessor("sound", ()=>{
+                    stf.MustMatch("(");
+                    Cab3DSoundFileNames = new List<string> { stf.ReadString() };
+                    while (!stf.EndOfBlock())
+                        Cab3DSoundFileNames.Add(stf.ReadString());
+                    Cab3DSoundFileName = Cab3DSoundFileNames.Count > 0 ? Cab3DSoundFileNames[0] : null;
+                }),
                 new STFReader.TokenProcessor("orts3dcabfile", ()=>{ Cab3DShapeFileName = stf.ReadStringBlock(null); }),
                 new STFReader.TokenProcessor("orts3dcabheadpos", ()=>{ passengerViewPoint.Location = stf.ReadVector3Block(STFReader.Units.Distance, new Vector3()); }),
                 new STFReader.TokenProcessor("rotationlimit", ()=>{ passengerViewPoint.RotationLimit = stf.ReadVector3Block(STFReader.Units.None, new Vector3()); }),
