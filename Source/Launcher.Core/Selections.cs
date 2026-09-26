@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Info;
+using FreeTrainSimulator.Common.Native;
 using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Settings;
 using FreeTrainSimulator.Models.Shim;
@@ -91,6 +92,9 @@ namespace Riel.Launcher
                 ActivityType = ActivityType.Activity,
                 FolderName = folder.Name,
                 RouteId = route.Id,
+                FolderPath = folder.ContentPath,
+                RouteSourceName = Source(route.Tags, "MstsSourceRoute", route.Id),
+                ActivitySourceName = Source(activity.Tags, "MstsSourceActivity", activity.Id),
                 ActivityId = activity.Id,
                 StartTime = activity.StartTime,
                 Season = activity.Season,
@@ -115,6 +119,10 @@ namespace Riel.Launcher
                 ActivityType = activityMode ? ActivityType.ExploreActivity : ActivityType.Explorer,
                 FolderName = folder.Name,
                 RouteId = route.Id,
+                FolderPath = folder.ContentPath,
+                RouteSourceName = Source(route.Tags, "MstsSourceRoute", route.Id),
+                PathSourceName = Source(path.Tags, "MstsSourcePath", path.Id),
+                WagonSetSourceName = Source(consist.Tags, "MstsSourceConsist", consist.Id),
                 PathId = path.Id,
                 LocomotiveId = consist.Locomotive?.Reference,
                 WagonSetId = consist.Id,
@@ -137,6 +145,10 @@ namespace Riel.Launcher
                 ActivityType = ActivityType.TimeTable,
                 FolderName = folder.Name,
                 RouteId = route.Id,
+                FolderPath = folder.ContentPath,
+                RouteSourceName = Source(route.Tags, "MstsSourceRoute", route.Id),
+                TimetableSourceFile = Source(timetable.Tags, "OrSourceRoute", timetable.Id),
+                WeatherSourceFile = weatherFile == null ? null : Source(weatherFile.Tags, "ORSourceWeather", weatherFile.Id),
                 TimetableSet = timetable.Id,
                 TimetableName = train.Group,
                 TimetableTrain = train.Id,
@@ -147,56 +159,94 @@ namespace Riel.Launcher
             };
         }
 
-        /// <summary>The simulator's command line for <paramref name="selections"/>.</summary>
+        /// <summary>The Open Rails runner command line for <paramref name="selections"/>.</summary>
         public static string[] Arguments(ProfileSelectionsModel selections)
         {
             ArgumentNullException.ThrowIfNull(selections);
 
+            string routeFolder = RouteFolder(selections);
             return selections.ActivityType switch
             {
                 ActivityType.Activity => new[]
                 {
-                    "-SingleplayerNewGame",
-                    "-Activity",
-                    selections.FolderName,
-                    selections.RouteId,
-                    selections.ActivityId,
+                    "-start",
+                    "-activity",
+                    ResolveFile(Path.Combine(routeFolder, "Activities", EnsureExtension(selections.ActivitySourceName ?? selections.ActivityId, ".act"))),
                 },
                 ActivityType.Explorer => new[]
                 {
-                    "-SingleplayerNewGame",
-                    "-Explorer",
-                    selections.FolderName,
-                    selections.RouteId,
-                    selections.PathId,
-                    selections.WagonSetId,
-                    selections.StartTime.ToString("HH\\:mm", CultureInfo.InvariantCulture),
-                    selections.Season.ToString(),
-                    selections.Weather.ToString(),
+                    "-start",
+                    "-explorer",
+                    ResolveFile(Path.Combine(routeFolder, "Paths", EnsureExtension(selections.PathSourceName ?? selections.PathId, ".pat"))),
+                    ResolveFile(Path.Combine(selections.FolderPath, "Trains", "Consists", EnsureExtension(selections.WagonSetSourceName ?? selections.WagonSetId, ".con"))),
+                    selections.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture),
+                    ((int)selections.Season).ToString(CultureInfo.InvariantCulture),
+                    ((int)selections.Weather).ToString(CultureInfo.InvariantCulture),
                 },
-                // Preserve explicit legacy ExploreActivity selections for backwards compatibility.
                 ActivityType.ExploreActivity => new[]
                 {
-                    "-SingleplayerNewGame",
-                    "-ExploreActivity",
-                    selections.FolderName,
-                    selections.RouteId,
-                    selections.PathId,
-                    selections.WagonSetId,
-                    selections.StartTime.ToString("HH\\:mm", CultureInfo.InvariantCulture),
-                    selections.Season.ToString(),
-                    selections.Weather.ToString(),
+                    "-start",
+                    "-exploreactivity",
+                    ResolveFile(Path.Combine(routeFolder, "Paths", EnsureExtension(selections.PathSourceName ?? selections.PathId, ".pat"))),
+                    ResolveFile(Path.Combine(selections.FolderPath, "Trains", "Consists", EnsureExtension(selections.WagonSetSourceName ?? selections.WagonSetId, ".con"))),
+                    selections.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture),
+                    ((int)selections.Season).ToString(CultureInfo.InvariantCulture),
+                    ((int)selections.Weather).ToString(CultureInfo.InvariantCulture),
                 },
-                ActivityType.TimeTable => new[]
-                {
-                    "-SinglePlayerTimetableGame", "-TimeTable",
-                    selections.FolderName, selections.RouteId, selections.TimetableSet,
-                    selections.TimetableName, selections.TimetableTrain,
-                    selections.TimetableDay.ToString(), selections.Season.ToString(), selections.Weather.ToString(),
-                }.Concat(string.IsNullOrEmpty(selections.WeatherChanges)
-                    ? Array.Empty<string>() : new[] { selections.WeatherChanges }).ToArray(),
+                ActivityType.TimeTable => BuildTimetableArguments(selections, routeFolder),
                 _ => throw new LauncherException($"cannot start a {selections.ActivityType} selection"),
             };
+        }
+
+        private static string[] BuildTimetableArguments(ProfileSelectionsModel selections, string routeFolder)
+        {
+            string timetable = ResolveFile(Path.Combine(routeFolder, "Activities", "OpenRails",
+                selections.TimetableSourceFile ?? selections.TimetableSet));
+            List<string> arguments = new List<string>
+            {
+                "-start",
+                "-timetable",
+                timetable,
+                $"{selections.TimetableName}:{selections.TimetableTrain}",
+                ((int)selections.TimetableDay).ToString(CultureInfo.InvariantCulture),
+                ((int)selections.Season).ToString(CultureInfo.InvariantCulture),
+                ((int)selections.Weather).ToString(CultureInfo.InvariantCulture),
+            };
+
+            if (!string.IsNullOrWhiteSpace(selections.WeatherSourceFile ?? selections.WeatherChanges))
+                arguments.Add(ResolveFile(Path.Combine(routeFolder, "WeatherFiles",
+                    selections.WeatherSourceFile ?? EnsureExtension(selections.WeatherChanges, ".weather-or"))));
+
+            return arguments.ToArray();
+        }
+
+        private static string RouteFolder(ProfileSelectionsModel selections)
+        {
+            if (string.IsNullOrWhiteSpace(selections.FolderPath))
+                throw new LauncherException("this saved selection predates the Open Rails migration; select the route again once in the launcher");
+
+            string route = Path.Combine(selections.FolderPath, "Routes", selections.RouteSourceName ?? selections.RouteId);
+            return ContentIO.ResolveDirectory(route) ?? ContentIO.Normalize(route);
+        }
+
+        private static string ResolveFile(string path)
+        {
+            string resolved = ContentIO.ResolveFile(path);
+            return resolved ?? ContentIO.Normalize(path);
+        }
+
+        private static string EnsureExtension(string value, string extension)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return value;
+            return value.EndsWith(extension, StringComparison.OrdinalIgnoreCase) ? value : value + extension;
+        }
+
+        private static string Source(System.Collections.Immutable.ImmutableDictionary<string, string> tags, string key, string fallback)
+        {
+            return tags != null && tags.TryGetValue(key, out string source) && !string.IsNullOrWhiteSpace(source)
+                ? source
+                : fallback;
         }
 
         /// <summary>Saved games in the same folder the simulator writes to, newest first.</summary>
@@ -242,21 +292,23 @@ namespace Riel.Launcher
             if (string.IsNullOrWhiteSpace(save) || !File.Exists(save) ||
                 !string.Equals(Path.GetExtension(save), FileNameExtensions.SaveFile, StringComparison.OrdinalIgnoreCase))
                 throw new LauncherException("the selected saved game is no longer available");
-            return new[] { "-SingleplayerResume", Path.GetFullPath(save) };
+            return new[] { "-resume", Path.GetFullPath(save) };
         }
 
         public static IReadOnlyList<string> SavedGameArguments(string save, string action)
         {
-            if (action != "-SingleplayerResume" &&
-                action != "-SinglePlayerResumeTimetableGame" &&
-                action != "-SingleplayerReplay" &&
-                action != "-SingleplayerReplayFromSave")
-                throw new LauncherException("unsupported saved game action");
+            string runnerAction = action switch
+            {
+                "-SingleplayerResume" or "-SinglePlayerResumeTimetableGame" or "-resume" => "-resume",
+                "-SingleplayerReplay" or "-replay" => "-replay",
+                "-SingleplayerReplayFromSave" or "-replay_from_save" => "-replay_from_save",
+                _ => throw new LauncherException("unsupported saved game action"),
+            };
             string fullPath = ResumeArguments(save)[1];
-            bool replayAction = action is "-SingleplayerReplay" or "-SingleplayerReplayFromSave";
+            bool replayAction = runnerAction is "-replay" or "-replay_from_save";
             if (replayAction && !File.Exists(Path.ChangeExtension(fullPath, ".replay")))
                 throw new LauncherException("the selected saved game has no replay log");
-            return new[] { action, fullPath };
+            return new[] { runnerAction, fullPath };
         }
 
         /// <summary>The simulator's command line for continuing the newest save.</summary>
