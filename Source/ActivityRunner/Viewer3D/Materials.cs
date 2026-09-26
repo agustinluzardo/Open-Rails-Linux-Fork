@@ -733,9 +733,15 @@ namespace Orts.ActivityRunner.Viewer3D
             this.texturePath = texturePath;
             dayTexture = SharedMaterialManager.MissingTexture;
             nightTexture = SharedMaterialManager.MissingTexture;
-            // <CSComment> if "trainset" is in the path (true for night textures for 3DCabs) deferred load of night textures is disabled 
+            // If "trainset" is in the path (true for night textures for 3D cabs),
+            // deferred loading must be disabled so both day and night textures are available.
+            // The original Open Rails check used Windows separators and never matched native
+            // Linux paths, leaving 3D cabs started at night without their day/light fallback.
+            string normalizedTexturePath = ContentIO.Normalize(texturePath);
+            bool trainsetTexture = !string.IsNullOrEmpty(normalizedTexturePath) &&
+                normalizedTexturePath.Contains($"{Path.DirectorySeparatorChar}trainset{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
             if (!String.IsNullOrEmpty(texturePath) && (options & SceneryMaterialOptions.NightTexture) != 0 && ((!viewer.Daytime && !viewer.Nighttime)
-                || texturePath.Contains(@"\trainset\")))
+                || trainsetTexture))
             {
                 var nightTexturePath = Helpers.GetNightTextureFile(texturePath);
                 if (!String.IsNullOrEmpty(nightTexturePath))
