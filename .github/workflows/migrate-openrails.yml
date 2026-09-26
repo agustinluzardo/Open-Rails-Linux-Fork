@@ -44,8 +44,10 @@ jobs:
             packaging/linux \
             scripts/build-shaders.sh \
             .github/workflows/linux-portable.yml \
-            .github/workflows/migrate-openrails.yml \
             | tar -x -C /tmp/riel-layer
+
+          mkdir -p /tmp/riel-layer/.github/workflows
+          cp .github/workflows/migrate-openrails.yml /tmp/riel-layer/.github/workflows/migrate-openrails.yml
 
           git switch --detach upstream/master
           rm -rf .github/workflows
