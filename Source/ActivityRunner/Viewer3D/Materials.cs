@@ -18,6 +18,7 @@
 // This file is the responsibility of the 3D & Environment Team. 
 
 using System;
+using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Native;
 using System.Collections.Generic;
 using System.Diagnostics;
