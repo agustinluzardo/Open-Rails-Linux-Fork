@@ -100,6 +100,14 @@ namespace Orts.ActivityRunner.Viewer3D
                 }
             }
             HasLightCone = LightPrimitives.Any(lm => lm is LightConePrimitive);
+
+            // UpdateState() runs before primitives are created so it can capture the current
+            // restored headlight/coupling/control state. On a resumed game that state may already
+            // be HeadlightOn/Dimmed. Without applying it once to the freshly-created primitives,
+            // they remain at their default disabled state until some other condition changes.
+            foreach (var lightPrimitive in LightPrimitives)
+                lightPrimitive.UpdateState(this);
+
 #if DEBUG_LIGHT_STATES
             Trace.WriteLine();
 #endif
