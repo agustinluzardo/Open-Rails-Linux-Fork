@@ -675,11 +675,27 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
 
             CameraStyle viewpoint = viewer.Camera.Style;
 
-            // Keep the Open Rails camera-selection semantics here. External sound
-            // pass-through changes the gain of an already-active external source; it
-            // must not turn an ExternalCam-only SMS into a Cab/Cab3D source.
-            if (EnvironmentSound || !EnvironmentSound && CheckCabView && !IsInvisibleSoundCar && !WeatherSound)
+            // Exterior sounds from cars other than the one currently viewed are evaluated
+            // as external. In addition, keep the viewed car's own exterior SMS active while
+            // inside when external-sound pass-through is enabled. Otherwise the nearest
+            // compressor/traction/pantograph source is disabled and the player only hears
+            // the same event from a distant car in the consist.
+            bool internalView = viewpoint == CameraStyle.Cab || viewpoint == CameraStyle.Cab3D || viewpoint == CameraStyle.Passenger;
+            bool attachedCarExternalPassThrough = false;
+            if (ExternalSource && internalView && Car != null && viewer.Camera.AttachedCar == Car)
+            {
+                float passThruPercent = Car.ExternalSoundPassThruPercent == -1
+                    ? viewer.UserSettings.ExternalSoundPassThruPercent
+                    : Car.ExternalSoundPassThruPercent;
+                attachedCarExternalPassThrough = passThruPercent > 0;
+            }
+
+            if (EnvironmentSound ||
+                !EnvironmentSound && CheckCabView && !IsInvisibleSoundCar && !WeatherSound ||
+                attachedCarExternalPassThrough)
+            {
                 viewpoint = CameraStyle.External;
+            }
 
             if (conditions.CabCam && (viewpoint == CameraStyle.Cab || viewpoint == CameraStyle.Cab3D))
                 return true;
