@@ -721,6 +721,15 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             rightWindowFront.UpdateState(MSTSWagon.WindowStates[MSTSWagon.RightWindowFrontIndex] >= MSTSWagon.WindowState.Opening, elapsedTime);
             leftWindowRear.UpdateState(MSTSWagon.WindowStates[MSTSWagon.LeftWindowRearIndex] >= MSTSWagon.WindowState.Opening, elapsedTime);
             rightWindowRear.UpdateState(MSTSWagon.WindowStates[MSTSWagon.RightWindowRearIndex] >= MSTSWagon.WindowState.Opening, elapsedTime);
+
+            // Match Open Rails' external-sound pass-through behaviour: opening a
+            // cab window progressively removes the sealed-cab attenuation.
+            bool rearCab = MSTSWagon is MSTSLocomotive locomotive && locomotive.UsingRearCab;
+            MSTSWagon.SoundHeardInternallyCorrection[0] =
+                rearCab ? leftWindowRear.AnimationFraction : leftWindowFront.AnimationFraction;
+            MSTSWagon.SoundHeardInternallyCorrection[1] =
+                rearCab ? rightWindowRear.AnimationFraction : rightWindowFront.AnimationFraction;
+
             unloadingParts.UpdateState(MSTSWagon.UnloadingPartsOpen, elapsedTime);
             item1TwoState.UpdateState(MSTSWagon.GenericItem1, elapsedTime);
             item2TwoState.UpdateState(MSTSWagon.GenericItem2, elapsedTime);
