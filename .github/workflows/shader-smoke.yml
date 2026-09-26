@@ -28,9 +28,13 @@ jobs:
           dotnet tool restore
           New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\shaders" | Out-Null
           Get-ChildItem "Source\RunActivity\Content\*.fx" | ForEach-Object {
+            $prepared = Join-Path "$env:RUNNER_TEMP" $_.Name
+            $source = [IO.File]::ReadAllText($_.FullName)
+            $source = $source.Replace('vs_5_0','vs_3_0').Replace('ps_5_0','ps_3_0')
+            [IO.File]::WriteAllText($prepared, $source)
             $out = Join-Path "$env:RUNNER_TEMP\shaders" ($_.BaseName + ".mgfx")
             Write-Host "Compiling $($_.Name)"
-            dotnet tool run mgfxc $_.FullName $out /Profile:OpenGL
+            dotnet tool run mgfxc $prepared $out /Profile:OpenGL
             if ($LASTEXITCODE -ne 0) { throw "mgfxc failed for $($_.Name)" }
           }
           @('SceneryShader','PrecipitationShader','LightGlowShader','DebugShader') | ForEach-Object {
