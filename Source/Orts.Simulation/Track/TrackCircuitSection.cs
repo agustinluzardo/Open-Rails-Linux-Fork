@@ -442,14 +442,20 @@ namespace Orts.Simulation.Track
                                                                                                                                  // Check if section is under train, and therefore can be unreserved from other trains
             {
                 int routeIndex = train.Train.ValidRoutes[Direction.Forward].GetRouteIndex(Index, 0);
-                if (((routeIndex <= train.Train.PresentPosition[Direction.Forward].RouteListIndex && routeIndex >= train.Train.PresentPosition[Direction.Backward].RouteListIndex) ||
-                    (routeIndex >= train.Train.PresentPosition[Direction.Forward].RouteListIndex && routeIndex <= train.Train.PresentPosition[Direction.Backward].RouteListIndex)) &&
-                    CircuitState.TrainReserved != null && CircuitState.TrainReserved.Train != train.Train)
+                // Keep the original Open Rails initial-placement test exactly.
+                // Although comparing the track-circuit Index to the rear route-list
+                // index looks unusual, changing both comparisons to routeIndex altered
+                // which reservations are released while the player is being placed.
+                if ((routeIndex <= train.Train.PresentPosition[Direction.Forward].RouteListIndex && Index >= train.Train.PresentPosition[Direction.Backward].RouteListIndex) ||
+                    (routeIndex >= train.Train.PresentPosition[Direction.Forward].RouteListIndex && Index <= train.Train.PresentPosition[Direction.Backward].RouteListIndex))
                 {
-                    Train.TrainRouted trainRouted = CircuitState.TrainReserved;
-                    ClearSectionsOfTrainBehind(trainRouted, this);
-                    if (trainRouted.Train.TrainType == TrainType.Ai || trainRouted.Train.TrainType == TrainType.AiPlayerHosting)
-                        ((AITrain)trainRouted.Train).ResetActions(true);
+                    if (CircuitState.TrainReserved != null && CircuitState.TrainReserved.Train != train.Train)
+                    {
+                        Train.TrainRouted trainRouted = CircuitState.TrainReserved;
+                        ClearSectionsOfTrainBehind(trainRouted, this);
+                        if (trainRouted.Train.TrainType == TrainType.Ai || trainRouted.Train.TrainType == TrainType.AiPlayerHosting)
+                            ((AITrain)trainRouted.Train).ResetActions(true);
+                    }
                 }
             }
             else if (CircuitState.TrainReserved != null && CircuitState.TrainReserved.Train != train.Train)
