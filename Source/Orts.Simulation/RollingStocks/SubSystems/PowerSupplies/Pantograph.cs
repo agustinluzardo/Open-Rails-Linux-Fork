@@ -316,7 +316,7 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
 
         public void HandleEvent(PowerSupplyEvent evt)
         {
-            //TrainEvent soundEvent = TrainEvent.None;
+            TrainEvent soundEvent = TrainEvent.None;
 
             switch (evt)
             {
@@ -329,22 +329,22 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
                         {
                             default:
                             case 1:
-                                //soundEvent = TrainEvent.Pantograph1Down;
+                                soundEvent = TrainEvent.Pantograph1Down;
                                 Confirm(CabControl.Pantograph1, CabSetting.Off);
                                 break;
 
                             case 2:
-                                //soundEvent = TrainEvent.Pantograph2Down;
+                                soundEvent = TrainEvent.Pantograph2Down;
                                 Confirm(CabControl.Pantograph2, CabSetting.Off);
                                 break;
 
                             case 3:
-                                //soundEvent = TrainEvent.Pantograph3Down;
+                                soundEvent = TrainEvent.Pantograph3Down;
                                 Confirm(CabControl.Pantograph3, CabSetting.Off);
                                 break;
 
                             case 4:
-                                //soundEvent = TrainEvent.Pantograph4Down;
+                                soundEvent = TrainEvent.Pantograph4Down;
                                 Confirm(CabControl.Pantograph4, CabSetting.Off);
                                 break;
                         }
@@ -361,22 +361,22 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
                         {
                             default:
                             case 1:
-                                //soundEvent = TrainEvent.Pantograph1Up;
+                                soundEvent = TrainEvent.Pantograph1Up;
                                 Confirm(CabControl.Pantograph1, CabSetting.On);
                                 break;
 
                             case 2:
-                                //soundEvent = TrainEvent.Pantograph2Up;
+                                soundEvent = TrainEvent.Pantograph2Up;
                                 Confirm(CabControl.Pantograph2, CabSetting.On);
                                 break;
 
                             case 3:
-                                //soundEvent = TrainEvent.Pantograph3Up;
+                                soundEvent = TrainEvent.Pantograph3Up;
                                 Confirm(CabControl.Pantograph3, CabSetting.On);
                                 break;
 
                             case 4:
-                                //soundEvent = TrainEvent.Pantograph4Up;
+                                soundEvent = TrainEvent.Pantograph4Up;
                                 Confirm(CabControl.Pantograph4, CabSetting.On);
                                 break;
                         }
@@ -386,6 +386,12 @@ namespace Orts.Simulation.RollingStocks.SubSystems.PowerSupplies
                     }
                     break;
             }
+
+            // Match Open Rails: the pantograph subsystem must emit the
+            // specific up/down event. MSTSWagon emits PantographToggle
+            // separately for legacy SMS compatibility.
+            if (soundEvent != TrainEvent.None)
+                wagon.TriggerWagonSoundEvent(soundEvent, null);
         }
 
         protected void Confirm(CabControl control, CabSetting setting)
