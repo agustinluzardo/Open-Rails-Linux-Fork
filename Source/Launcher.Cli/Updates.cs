@@ -18,6 +18,8 @@ namespace Riel.Launcher
     {
         private const string Releases = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/releases?per_page=100";
         private const string ArchiveName = "riel-linux-x64.zip";
+        // Last release on the FTS history, before main moved to native Open Rails.
+        private const string LegacyMainTip = "c19a19e2b5d5230e0acb460e1cbf0a63a4863edc";
 
         internal static async Task<int> Run(bool checkOnly, CancellationToken cancellationToken)
         {
@@ -55,7 +57,20 @@ namespace Riel.Launcher
                 string compareUrl = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/compare/" +
                     VersionInfo.CodeVersion + "..." + commit;
                 using JsonDocument comparison = JsonDocument.Parse(await client.GetStringAsync(compareUrl, cancellationToken).ConfigureAwait(false));
-                if (comparison.RootElement.GetProperty("status").GetString() != "ahead")
+                string status = comparison.RootElement.GetProperty("status").GetString();
+                bool legacyMigration = false;
+                if (status == "diverged")
+                {
+                    // The upstream rebase made every installed FTS build diverge
+                    // from native main. Only migrate versions on that old history;
+                    // a different local or newer native build must not be downgraded.
+                    string legacyUrl = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/compare/" +
+                        VersionInfo.CodeVersion + "..." + LegacyMainTip;
+                    using JsonDocument legacy = JsonDocument.Parse(await client.GetStringAsync(legacyUrl, cancellationToken).ConfigureAwait(false));
+                    string legacyStatus = legacy.RootElement.GetProperty("status").GetString();
+                    legacyMigration = legacyStatus == "ahead" || legacyStatus == "identical";
+                }
+                if (status != "ahead" && !legacyMigration)
                 {
                     Console.WriteLine("Riel is up to date (" + VersionInfo.CodeVersion + ").");
                     return 0;
