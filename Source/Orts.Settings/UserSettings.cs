@@ -489,7 +489,12 @@ namespace ORTS.Settings
 #else
             CustomDefaultValues["LoggingPath"] = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
 #endif
+#if RIEL_UNIX
+            // Native ELF executables may have no Windows product metadata or MyPictures folder.
+            CustomDefaultValues["ScreenshotPath"] = Path.Combine(UserDataFolder, "Screenshots");
+#else
             CustomDefaultValues["ScreenshotPath"] = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), ApplicationInfo.ProductName);
+#endif
             CustomDefaultValues["Multiplayer_User"] = Environment.UserName;
             Load(options);
             Folders = new FolderSettings(options);
