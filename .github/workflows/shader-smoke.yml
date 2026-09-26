@@ -1,0 +1,31 @@
+name: Shader smoke
+
+on:
+  push:
+    branches: [native-openrails-port]
+    paths:
+      - 'Source/Tools/FxcBridge/**'
+      - 'scripts/build-shaders.sh'
+      - '.github/workflows/shader-smoke.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: native-openrails-shaders
+  cancel-in-progress: true
+
+jobs:
+  shaders:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install shader compiler dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends wine wine64
+      - name: Compile OpenGL shaders
+        run: |
+          set -euo pipefail
+          ./scripts/build-shaders.sh --profile OpenGL --output "${RUNNER_TEMP}/shaders" --check
