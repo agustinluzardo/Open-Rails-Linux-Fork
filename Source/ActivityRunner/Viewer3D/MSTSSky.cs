@@ -200,7 +200,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 // Fill in the sun- and moon-position lookup tables
                 for (int i = 0; i < skySteps.MaxSteps; i++)
                 {
-                    mstsskysolarPosArray[i] = SunMoonPos.SolarAngle(mstsskylatitude, mstsskylongitude, ((float)i / skySteps.MaxSteps), date);
+                    mstsskysolarPosArray[i] = SunMoonPos.SolarAngle(mstsskylatitude, mstsskylongitude, MSTSSkyViewer.ENVFile?.Sun, ((float)i / skySteps.MaxSteps), date);
                     mstsskylunarPosArray[i] = SunMoonPos.LunarAngle(mstsskylatitude, mstsskylongitude, ((float)i / skySteps.MaxSteps), date);
                 }
                 // Phase of the moon is generated at random
@@ -238,7 +238,7 @@ namespace Orts.ActivityRunner.Viewer3D
             // Get the current latitude and longitude coordinates
             EarthCoordinates.ConvertWTC(MSTSSkyViewer.Camera.Tile, MSTSSkyViewer.Camera.Location, out mstsskylatitude, out mstsskylongitude);
             float fractClockTime = (float)MSTSSkyViewer.Simulator.ClockTime / 86400;
-            mstsskysolarDirection = SunMoonPos.SolarAngle(mstsskylatitude, mstsskylongitude, fractClockTime, date);
+            mstsskysolarDirection = SunMoonPos.SolarAngle(mstsskylatitude, mstsskylongitude, MSTSSkyViewer.ENVFile?.Sun, fractClockTime, date);
             mstsskylatitude = 0;
             mstsskylongitude = 0;
         }
