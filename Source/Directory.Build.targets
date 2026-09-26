@@ -1,0 +1,24 @@
+<Project>
+  <!--
+    Riel's native Linux port is deliberately opt-in while it is being validated.
+    The Open Rails simulation code stays upstream; this file only changes the
+    platform/toolchain used to compile it.
+  -->
+  <PropertyGroup Condition="'$(RielNativeLinux)' == 'true'">
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <UseWindowsForms>false</UseWindowsForms>
+    <ImportWindowsDesktopTargets>false</ImportWindowsDesktopTargets>
+    <EnableWindowsTargeting>false</EnableWindowsTargeting>
+    <DefineConstants>$(DefineConstants);LINUX;DESKTOPGL;RIEL_NATIVE</DefineConstants>
+    <ApplicationIcon></ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(RielNativeLinux)' == 'true'">
+    <PackageReference Remove="MonoGame.Framework.WindowsDX" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+    <Reference Remove="System.Windows.Forms" />
+    <Reference Remove="PresentationFramework" />
+    <Reference Remove="System.DirectoryServices" />
+  </ItemGroup>
+</Project>
