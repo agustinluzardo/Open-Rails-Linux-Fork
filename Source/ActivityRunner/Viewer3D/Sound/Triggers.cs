@@ -118,10 +118,13 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
                         ? string.Join("|", playCommand.Files)
                         : SoundCommand?.GetType().Name ?? "<null>";
                     Trace.TraceInformation(
-                        "[SoundDiag] Compressor trigger event={0} sms={1} files={2} sourceVolume={3:0.###} streamVolume={4:0.###} calculatedGain={5:0.###} external={6} active={7}",
+                        "[SoundDiag] Compressor trigger event={0} sms={1} files={2} sourceVolume={3:0.###} streamVolume={4:0.###} calculatedGain={5:0.###} external={6} active={7} camera={8} distanceM={9:0.###} rolloff={10:0.######}",
                         TriggerId, soundStream.SoundSource.SMSFileName, files,
                         soundStream.SoundSource.Volume, soundStream.Volume, soundStream.CalculatedVolume,
-                        soundStream.SoundSource.ExternalSource, soundStream.SoundSource.Active);
+                        soundStream.SoundSource.ExternalSource, soundStream.SoundSource.Active,
+                        Program.Viewer?.Camera?.Style,
+                        Math.Sqrt(Math.Max(0, soundStream.SoundSource.DistanceSquared)),
+                        soundStream.SoundSource.RolloffFactor);
                 }
 
                 SoundCommand.Run();
