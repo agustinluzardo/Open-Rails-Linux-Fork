@@ -101,13 +101,6 @@ namespace Orts.ActivityRunner.Viewer3D
             }
             HasLightCone = LightPrimitives.Any(lm => lm is LightConePrimitive);
 
-            // UpdateState() runs before primitives are created so it can capture the current
-            // restored headlight/coupling/control state. On a resumed game that state may already
-            // be HeadlightOn/Dimmed. Without applying it once to the freshly-created primitives,
-            // they remain at their default disabled state until some other condition changes.
-            foreach (var lightPrimitive in LightPrimitives)
-                lightPrimitive.UpdateState(this);
-
 #if DEBUG_LIGHT_STATES
             Trace.WriteLine();
 #endif
@@ -155,6 +148,20 @@ namespace Orts.ActivityRunner.Viewer3D
             {
                 foreach (var lightPrimitive in LightPrimitives)
                     lightPrimitive.UpdateState(this);
+
+                if (Car == Viewer.PlayerLocomotive)
+                {
+                    Trace.TraceInformation(
+                        "[LightDiag] headlight={0} leadHeadlight={1} leadIndex={2} playerIndex={3} primitives={4} enabled={5} cones={6} enabledCones={7}",
+                        TrainHeadlight,
+                        Car.Train?.LeadLocomotive?.Headlight,
+                        Car.Train?.LeadLocomotiveIndex ?? -1,
+                        Car.Train?.Cars.IndexOf(Viewer.PlayerLocomotive) ?? -1,
+                        LightPrimitives.Count,
+                        LightPrimitives.Count(light => light.Enabled),
+                        LightPrimitives.Count(light => light is LightConePrimitive),
+                        LightPrimitives.Count(light => light is LightConePrimitive && light.Enabled));
+                }
 #if DEBUG_LIGHT_STATES
                 Trace.WriteLine();
 #endif
@@ -231,13 +238,17 @@ namespace Orts.ActivityRunner.Viewer3D
         {
 			Debug.Assert(Viewer.PlayerTrain.LeadLocomotive == Viewer.PlayerLocomotive ||Viewer.PlayerTrain.TrainType == TrainType.AiPlayerHosting ||
                 Viewer.PlayerTrain.TrainType == TrainType.Remote || Viewer.PlayerTrain.TrainType == TrainType.Static, "PlayerTrain.LeadLocomotive must be PlayerLocomotive.");
-			var locomotive = Car.Train != null && Car.Train.IsActualPlayerTrain ? Viewer.PlayerLocomotive : null;
-            if (locomotive == null && Car.Train != null && Car.Train.TrainType == TrainType.Remote && Car is MSTSLocomotive && (Car as MSTSLocomotive) == Car.Train.LeadLocomotive)
-                locomotive = Car.Train.LeadLocomotive;
+            // Match canonical Open Rails: every light in a consist follows the train's actual
+            // lead locomotive. Viewer.PlayerLocomotive can be rebound while a save is restored,
+            // which made light conditions depend on a transient global reference instead of the
+            // restored train state.
+            var locomotive = Car.Train?.LeadLocomotive;
             var mstsLocomotive = locomotive as MSTSLocomotive;
 
             // Headlight
-			HeadLightState newTrainHeadlight = locomotive != null ? locomotive.Headlight : Car.Train != null && Car.Train.TrainType != TrainType.Static ? HeadLightState.HeadlightOn : HeadLightState.HeadlightOff;
+            HeadLightState newTrainHeadlight = Car.Train != null && Car.Train.TrainType != TrainType.Static
+                ? locomotive?.Headlight ?? HeadLightState.HeadlightOn
+                : HeadLightState.HeadlightOff;
             if (Car == Viewer.PlayerLocomotive && TrainHeadlight != newTrainHeadlight)
                 Trace.TraceInformation($"Player headlight visual state: {TrainHeadlight} -> {newTrainHeadlight}, " +
                     $"battery={((Car as MSTSWagon)?.PowerSupply?.BatteryState)}, " +

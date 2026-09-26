@@ -827,7 +827,25 @@ namespace Orts.ActivityRunner.Processes
                 return await Game.UserSettings.Parent.LoadSettingsModel<ProfileSelectionsModel>(Game.LoaderProcess.CancellationToken).ConfigureAwait(false);
             }
 
-            List<IGrouping<bool, string>> groupedArguments = args.GroupBy(argumenType => argumenType.StartsWith('-') || argumenType.StartsWith('/')).ToList();
+            // On Windows Open Rails historically accepts both "-Option" and "/Option". On Unix,
+            // however, an absolute path also starts with '/'. Treat slash-prefixed text as an
+            // option only when it is actually a known action/activity token; otherwise preserve it
+            // verbatim as a positional parameter (notably /home/.../*.save on Linux).
+            static bool IsOptionArgument(string argument)
+            {
+                if (string.IsNullOrEmpty(argument))
+                    return false;
+                if (argument[0] == '-')
+                    return true;
+                if (argument[0] != '/' || argument.Length == 1)
+                    return false;
+
+                string option = argument[1..];
+                return EnumExtension.GetValue(option, out GamePlayAction _) ||
+                    EnumExtension.GetValue(option, out ActivityType _);
+            }
+
+            List<IGrouping<bool, string>> groupedArguments = args.GroupBy(IsOptionArgument).ToList();
             List<string> optionsList = groupedArguments.Where(grouping => grouping.Key).SelectMany(grouping => grouping).Select(option => option[1..]).ToList();
             string[] parameters = groupedArguments.Where(grouping => !grouping.Key).SelectMany(grouping => grouping).ToArray();
 
