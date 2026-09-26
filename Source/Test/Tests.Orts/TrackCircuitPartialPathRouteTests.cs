@@ -28,6 +28,7 @@ namespace Tests.Orts
             Assert.AreEqual(0, route.GetRouteIndex(10, 0));
             Assert.AreEqual(2, route.GetRouteIndex(10, 1));
             Assert.AreEqual(4, route.GetRouteIndex(10, 3));
+            Assert.AreEqual(-1, route.GetRouteIndex(10, -1));
         }
 
         private static TrackCircuitPartialPathRoute BuildRoute(params int[] sectionIndices)

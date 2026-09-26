@@ -158,23 +158,15 @@ namespace Orts.Simulation.Track
         /// <\summary>
         public int GetRouteIndex(int sectionIndex, int startIndex)
         {
-            if (Count == 1 && startIndex == 0 && this[0].TrackCircuitSection.Index == sectionIndex)
+            // Match Open Rails exactly. In particular, a negative start index means
+            // the caller has no valid route position yet and must not be silently
+            // converted into the first occurrence of the requested section.
+            for (int routeIndex = startIndex; routeIndex >= 0 && routeIndex < Count; routeIndex++)
             {
-                return 0;
+                if (this[routeIndex].TrackCircuitSection.Index == sectionIndex)
+                    return routeIndex;
             }
-            else if (Count > 1 && startIndex < Count)
-            {
-                if (items == null)
-                {
-                    ReIndex();
-                }
-                if (items.Contains(sectionIndex))
-                {
-                    foreach (int item in items[sectionIndex])
-                        if (item >= startIndex)
-                            return item;
-                }
-            }
+
             return -1;
         }
 
