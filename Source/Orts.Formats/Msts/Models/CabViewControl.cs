@@ -36,9 +36,17 @@ namespace Orts.Formats.Msts.Models
                     Id = subtype;
                 }
             }
-            else
-                if (EnumExtension.GetValue(name, out CabViewControlType controlType))
+            else if (string.Equals(name, "CABLIGHT", StringComparison.OrdinalIgnoreCase))
+            {
+                // Some MSTS-era stock uses CABLIGHT instead of the Open Rails
+                // extension name ORTS_CABLIGHT. Treat it as the same control so
+                // the L key drives the authored cab-light switch/indicator.
+                CabViewControlType = CabViewControlType.Orts_CabLight;
+            }
+            else if (EnumExtension.GetValue(name, out CabViewControlType controlType))
+            {
                 CabViewControlType = controlType;
+            }
         }
 
         public bool Equals(ControlType other)

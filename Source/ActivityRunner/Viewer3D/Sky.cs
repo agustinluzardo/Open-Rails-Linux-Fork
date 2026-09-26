@@ -146,7 +146,7 @@ namespace Orts.ActivityRunner.Viewer3D
             // Fill in the sun- and moon-position lookup tables
             for (int i = 0; i < SkyInterpolation.MaxSteps; i++)
             {
-                SolarPositionCache[i] = SunMoonPos.SolarAngle(Latitude, Longitude, (float)i / SkyInterpolation.MaxSteps, date);
+                SolarPositionCache[i] = SunMoonPos.SolarAngle(Latitude, Longitude, viewer.ENVFile?.Sun, (float)i / SkyInterpolation.MaxSteps, date);
                 LunarPositionCache[i] = SunMoonPos.LunarAngle(Latitude, Longitude, (float)i / SkyInterpolation.MaxSteps, date);
             }
 
@@ -156,6 +156,12 @@ namespace Orts.ActivityRunner.Viewer3D
             {
                 MoonPhase = 3;
             }
+
+            Trace.TraceInformation(
+                "[SkyDiag] clock={0:0}s latitude={1:F5} longitude={2:F5} envSunRise={3}s envSunSet={4}s sunY06={5:F3} sunY12={6:F3} sunY18={7:F3}",
+                Simulator.Instance.ClockTime, Latitude, Longitude,
+                viewer.ENVFile?.Sun?.RiseTime ?? 0, viewer.ENVFile?.Sun?.SetTime ?? 0,
+                SolarPositionCache[18].Y, SolarPositionCache[36].Y, SolarPositionCache[54].Y);
         }
     }
 

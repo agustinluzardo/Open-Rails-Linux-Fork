@@ -27,6 +27,8 @@
 
 using Microsoft.Xna.Framework;
 
+using Orts.Formats.Msts.Models;
+
 using System;
 
 namespace Orts.ActivityRunner.Viewer3D.Common
@@ -41,69 +43,74 @@ namespace Orts.ActivityRunner.Viewer3D.Common
         /// <param name="longitude">longitude</param>
         /// <param name="clockTime">wall clock time since start of activity, days</param>
         /// <param name="date">structure made up of day, month, year and ordinal date</param>
-        public static Vector3 SolarAngle(double latitude, double longitude, float clockTime, SkyDate date)
+        public static Vector3 SolarAngle(double latitude, double longitude, SkySatellite sun, float clockTime, SkyDate date)
         {
             Vector3 sunDirection;
+            double solarHourAngle;
 
-            // For these calculations, west longitude is in positive degrees,
-            float NOAAlongitude = -MathHelper.ToDegrees((float)longitude);
-            // Fractional year, radians
+            // Fractional year, radians.
             double fYear = (MathHelper.TwoPi / 365) * (date.OrdinalDate - 1 + (clockTime - 0.5));
-            // Equation of time, minutes
-            double eqTime = 229.18 * (0.000075
-                + 0.001868 * Math.Cos(fYear)
-                - 0.032077 * Math.Sin(fYear)
-                - 0.014615 * Math.Cos(2 * fYear)
-                - 0.040849 * Math.Sin(2 * fYear));
-            // Solar declination, radians
+
+            // Solar declination, radians.
             double solarDeclination = 0.006918
-                - 0.399912 * Math.Cos(fYear)
-                + 0.070257 * Math.Sin(fYear)
-                - 0.006758 * Math.Cos(2 * fYear)
-                + 0.000907 * Math.Sin(2 * fYear)
-                - 0.002697 * Math.Cos(3 * fYear)
-                + 0.001480 * Math.Sin(3 * fYear);
-            // Time offset at present longitude, minutes
-            double timeOffset = eqTime - 4 * NOAAlongitude + 60 * Math.Round(NOAAlongitude / 15);
-            // True solar time, minutes (since midnight)
-            double trueSolar = clockTime * 24 * 60 + timeOffset;
-            // Solar hour angle, radians
-            double solarHourAngle = MathHelper.ToRadians((float)(trueSolar / 4) - 180);
+                - (0.399912 * Math.Cos(fYear))
+                + (0.070257 * Math.Sin(fYear))
+                - (0.006758 * Math.Cos(2 * fYear))
+                + (0.000907 * Math.Sin(2 * fYear))
+                - (0.002697 * Math.Cos(3 * fYear))
+                + (0.001480 * Math.Sin(3 * fYear));
 
-            // Solar zenith cosine. This is the Y COORDINATE of the solar Vector.
-            double solarZenithCosine = Math.Sin(latitude)
-                * Math.Sin(solarDeclination)
-                + Math.Cos(latitude)
-                * Math.Cos(solarDeclination)
-                * Math.Cos(solarHourAngle);
+            // Open Rails aligns the sun with MSTS environment rise/set times when
+            // those are available. This was lost in the native port, which made
+            // route lighting use a generic NOAA day instead of the ENV definition.
+            double horizonSolarHourAngle = Math.Acos(
+                -(Math.Sin(latitude) * Math.Sin(solarDeclination)) /
+                (Math.Cos(latitude) * Math.Cos(solarDeclination)));
 
-            // Solar elevation angle, radians. Currently not used.
-            //          double solarElevationAngle = MathHelper.PiOver2 - Math.Acos(solarZenithCosine);
+            if (sun?.RiseTime != 0 && sun?.SetTime != 0 &&
+                sun.RiseTime < sun.SetTime && !double.IsNaN(horizonSolarHourAngle))
+            {
+                float noonTimeD = (float)(sun.RiseTime + sun.SetTime) / 2 / 86400;
+                float riseSetScale = 90 / (noonTimeD - ((float)sun.RiseTime / 86400));
+                solarHourAngle = MathHelper.ToRadians(
+                    (clockTime - noonTimeD) * riseSetScale *
+                    (float)(horizonSolarHourAngle / MathHelper.PiOver2));
+            }
+            else
+            {
+                // Fallback used by Open Rails when the ENV has no valid rise/set data.
+                float noaaLongitude = -MathHelper.ToDegrees((float)longitude);
+                double eqTime = 229.18 * (0.000075
+                    + (0.001868 * Math.Cos(fYear))
+                    - (0.032077 * Math.Sin(fYear))
+                    - (0.014615 * Math.Cos(2 * fYear))
+                    - (0.040849 * Math.Sin(2 * fYear)));
+                double timeOffset = eqTime - (4 * noaaLongitude) + (60 * Math.Round(noaaLongitude / 15));
+                double trueSolar = (clockTime * 24 * 60) + timeOffset;
+                solarHourAngle = MathHelper.ToRadians((float)(trueSolar / 4) - 180);
+            }
 
-            // Solar azimuth cosine. This is the Z COORDINATE of the solar Vector.
-            double solarAzimuthCosine = -(Math.Sin(latitude)
-                * solarZenithCosine
-                - Math.Sin(solarDeclination)) / (
-                +Math.Cos(latitude)
-                * Math.Sin(Math.Acos(solarZenithCosine)));
+            double solarZenithCosine =
+                (Math.Sin(latitude) * Math.Sin(solarDeclination)) +
+                (Math.Cos(latitude) * Math.Cos(solarDeclination) * Math.Cos(solarHourAngle));
+            // Clamp round-off before acos, matching the safety needed by the old calculation.
+            solarZenithCosine = Math.Clamp(solarZenithCosine, -1.0, 1.0);
+            double solarZenithSine = Math.Sin(Math.Acos(solarZenithCosine));
+            double denominator = solarZenithSine * Math.Cos(latitude);
 
-            // Running at 64 bit solarAzimuthCosine can be slightly below -1, generating NaN results
-            if (solarAzimuthCosine > 1.0d)
-                solarAzimuthCosine = 1.0d;
-            if (solarAzimuthCosine < -1.0d)
-                solarAzimuthCosine = -1.0d;
+            double solarAzimuthCosine = Math.Abs(denominator) > double.Epsilon
+                ? (Math.Sin(solarDeclination) - (solarZenithCosine * Math.Sin(latitude))) / denominator
+                : 0;
+            solarAzimuthCosine = Math.Clamp(solarAzimuthCosine, -1.0, 1.0);
 
-            // Solar azimuth angle, radians. Currently not used.
-            //          double solarAzimuthAngle = Math.Acos(solarAzimuthCosine);
-            //          if (clockTime > 0.5)
-            //              solarAzimuthAngle = MathHelper.TwoPi - solarAzimuthAngle;
+            double solarAzimuthSine = Math.Abs(solarZenithSine) > double.Epsilon
+                ? -Math.Sin(solarHourAngle) * Math.Cos(solarDeclination) / solarZenithSine
+                : 0;
+            solarAzimuthSine = Math.Clamp(solarAzimuthSine, -1.0, 1.0);
 
-            // Solar azimuth sine. This is the X COORDINATE of the solar Vector.
-            double solarAzimuthSine = Math.Sin(Math.Acos(solarAzimuthCosine)) * (clockTime > 0.5 ? 1 : -1);
-
-            sunDirection.X = -(float)solarAzimuthSine;
+            sunDirection.X = (float)(solarZenithSine * solarAzimuthSine);
             sunDirection.Y = (float)solarZenithCosine;
-            sunDirection.Z = -(float)solarAzimuthCosine;
+            sunDirection.Z = -(float)(solarZenithSine * solarAzimuthCosine);
             sunDirection.Normalize();
             return sunDirection;
         }

@@ -16,6 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.Collections.Generic;
+using System.Linq;
 
 using Orts.Formats.Msts.Models;
 using Orts.Formats.Msts.Parsers;
@@ -32,6 +33,11 @@ namespace Orts.Formats.Msts.Files
         public List<SkyLayer> SkyLayers { get; private set; }
         public List<SkySatellite> SkySatellites { get; private set; }
 #pragma warning restore CA1002 // Do not expose generic lists
+
+        // Open Rails uses the environment-defined sun rise/set times to align
+        // the solar light vector with MSTS route content. Keep the convenience
+        // lookup here so the viewer does not have to guess which satellite is the sun.
+        public SkySatellite Sun => SkySatellites?.FirstOrDefault(s => s.Type == SkySatellite.SkySatelliteType.Sun);
 
         public EnvironmentFile(string fileName)
         {
