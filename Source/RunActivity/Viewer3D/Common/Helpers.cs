@@ -17,6 +17,7 @@
 
 using Orts.Formats.Msts;
 using Orts.Simulation;
+using Orts.Parsers.Msts;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -51,21 +52,21 @@ namespace Orts.Viewer3D.Common
         {
             var texturePath = Path.GetDirectoryName(textureFilePath);
             var textureName = Path.GetFileName(textureFilePath);
-            var nightTexturePath = !File.Exists(texturePath + @"\Night\" + textureName) &&
-                !File.Exists(texturePath + @"\Night\" + Path.ChangeExtension(textureName, ".dds")) ? Path.GetDirectoryName(texturePath) + @"\Night\" : texturePath + @"\Night\";
+            var nightTexturePath = !ContentPath.FileExists(texturePath + @"\Night\" + textureName) &&
+                !ContentPath.FileExists(texturePath + @"\Night\" + Path.ChangeExtension(textureName, ".dds")) ? Path.GetDirectoryName(texturePath) + @"\Night\" : texturePath + @"\Night\";
 
-            if (!String.IsNullOrEmpty(nightTexturePath + textureName) && Path.GetExtension(nightTexturePath + textureName) == ".dds" && File.Exists(nightTexturePath + textureName))
+            if (!String.IsNullOrEmpty(nightTexturePath + textureName) && Path.GetExtension(nightTexturePath + textureName) == ".dds" && ContentPath.FileExists(nightTexturePath + textureName))
             {
                 return nightTexturePath + textureName;
             }
             else if (!String.IsNullOrEmpty(nightTexturePath + textureName) && Path.GetExtension(nightTexturePath + textureName) == ".ace")
             {
                 var alternativeTexture = Path.ChangeExtension(nightTexturePath + textureName, ".dds");
-                if (!String.IsNullOrEmpty(alternativeTexture.ToLower()) && File.Exists(alternativeTexture))
+                if (!String.IsNullOrEmpty(alternativeTexture.ToLower()) && ContentPath.FileExists(alternativeTexture))
                 {
                     return alternativeTexture;
                 }
-                else if (File.Exists(nightTexturePath + textureName))
+                else if (ContentPath.FileExists(nightTexturePath + textureName))
                 {
                     return nightTexturePath + textureName;
                 }
@@ -82,7 +83,14 @@ namespace Orts.Viewer3D.Common
 
         public static string GetRouteTextureFile(Simulator simulator, TextureFlags textureFlags, string textureName)
         {
-            return GetTextureFile(simulator, textureFlags, simulator.RoutePath + @"\Textures", textureName);
+            var routeTexture = GetTextureFile(simulator, textureFlags, simulator.RoutePath + @"\Textures", textureName);
+            if (ContentPath.FileExists(routeTexture))
+                return ContentPath.ResolveFile(routeTexture);
+
+            // Global shapes frequently reference GLOBAL/Textures. Preserve the route as the
+            // primary location but fall back to the MSTS global texture folder when needed.
+            var globalTexture = GetTextureFile(simulator, textureFlags, simulator.BasePath + @"\Global\Textures", textureName);
+            return ContentPath.ResolveFile(globalTexture) ?? ContentPath.Normalize(routeTexture);
         }
 
         public static string GetTransferTextureFile(Simulator simulator, string textureName)
@@ -116,8 +124,8 @@ namespace Orts.Viewer3D.Common
             else if ((textureFlags & TextureFlags.WinterSnow) != 0 && simulator.Season == SeasonType.Winter && simulator.WeatherType == WeatherType.Snow)
                 alternativePath = @"\WinterSnow\";
 
-            if (alternativePath.Length > 0) return texturePath + alternativePath + textureName;
-            return texturePath + @"\" + textureName;
+            var candidate = alternativePath.Length > 0 ? texturePath + alternativePath + textureName : texturePath + @"\" + textureName;
+            return ContentPath.ResolveFile(candidate) ?? ContentPath.Normalize(candidate);
         }
 
         public static bool IsSnow(Simulator simulator)
