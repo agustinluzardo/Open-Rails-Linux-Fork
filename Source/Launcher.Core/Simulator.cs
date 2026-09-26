@@ -73,12 +73,16 @@ namespace Riel.Launcher
                     : throw new LauncherException($"RIEL_SIMULATOR points at '{configured}', which does not exist");
             }
 
+            string packaged = Path.Combine(AppContext.BaseDirectory, "engine", ExecutableName);
+            if (File.Exists(packaged))
+                return packaged;
+
             string beside = Path.Combine(AppContext.BaseDirectory, ExecutableName);
             if (File.Exists(beside))
                 return beside;
 
             throw new LauncherException(
-                $"{ExecutableName} was not found next to the launcher ({AppContext.BaseDirectory}). " +
+                $"{ExecutableName} was not found in the packaged engine directory or next to the launcher ({AppContext.BaseDirectory}). " +
                 "Set RIEL_SIMULATOR to its path.");
         }
 
