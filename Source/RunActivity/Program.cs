@@ -58,7 +58,8 @@ namespace Orts
             //enables loading of dll for specific architecture(32 or 64bit) from distinct folders, useful when both versions require same name (as for OpenAL32.dll)
             string path = Path.Combine(ApplicationInfo.ProcessDirectory, "Native");
             path = Path.Combine(path, (Environment.Is64BitProcess) ? "X64" : "X86");
-            NativeMethods.SetDllDirectory(path);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                NativeMethods.SetDllDirectory(path);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
