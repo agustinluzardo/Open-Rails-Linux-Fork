@@ -448,9 +448,12 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock.CabView
 
             if (shader != null)
             {
-                // TODO: Readd ability to control night time lighting.
+                // Prefer authored CABLIGHT textures. When the cab does not provide them,
+                // use the existing CabShader dashboard lights as a native fallback so L still
+                // makes a 2D cab usable at night.
+                bool shaderCabLight = locomotive.CabLightOn && !cabLightDirectory;
                 float overcast = viewer.UserSettings.MstsEnvironment ? viewer.World.MSTSSky.mstsskyovercastFactor : viewer.Simulator.Weather.OvercastFactor;
-                shader.SetData(viewer.MaterialManager.sunDirection, nightTexture, false, overcast);
+                shader.SetData(viewer.MaterialManager.sunDirection, nightTexture, shaderCabLight, overcast);
                 shader.SetTextureData(cabRect.Left, cabRect.Top, cabRect.Width, cabRect.Height);
             }
 
