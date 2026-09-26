@@ -27,6 +27,7 @@ using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Orts.Viewer3D.Common;
+using Orts.Parsers.Msts;
 using Orts.Viewer3D.Popups;
 using ORTS.Common;
 using Color = Microsoft.Xna.Framework.Color;
