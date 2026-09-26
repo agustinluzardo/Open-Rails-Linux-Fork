@@ -36,6 +36,8 @@ namespace System.Drawing
 
         public Size Size => new Size(Width, Height);
 
+        public virtual PixelFormat PixelFormat => PixelFormat.Format32bppArgb;
+
         public static Image FromFile(string filename)
         {
             return Bitmap.Decode(SKBitmap.Decode(filename), filename);
@@ -107,6 +109,17 @@ namespace System.Drawing
             bitmap = source;
         }
 
+        public Bitmap(Image source)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+            if (source is not Bitmap original)
+                throw new ArgumentException("Only a bitmap can be copied.", nameof(source));
+            bitmap = new SKBitmap(new SKImageInfo(original.Width, original.Height, SKColorType.Bgra8888, SKAlphaType.Premul));
+            using SKCanvas canvas = new SKCanvas(bitmap);
+            canvas.Clear(SKColors.Transparent);
+            canvas.DrawBitmap(original.bitmap, 0, 0);
+        }
+
         /// <summary>
         /// Creates a scaled copy of <paramref name="source"/>, used to make screenshot thumbnails.
         /// </summary>
@@ -130,7 +143,7 @@ namespace System.Drawing
         internal SKBitmap SkiaBitmap => bitmap;
 
         /// <summary>The pixel layout, always 32 bit straight-alpha BGRA in this layer.</summary>
-        public PixelFormat PixelFormat => PixelFormat.Format32bppArgb;
+        public override PixelFormat PixelFormat => PixelFormat.Format32bppArgb;
 
         internal static Bitmap Decode(SKBitmap decoded, string source)
         {
@@ -151,6 +164,20 @@ namespace System.Drawing
                 decoded = converted;
             }
             return new Bitmap(decoded);
+        }
+
+        public Bitmap Clone(Rectangle rectangle, PixelFormat format)
+        {
+            _ = format;
+            if (rectangle.Width <= 0 || rectangle.Height <= 0)
+                throw new ArgumentOutOfRangeException(nameof(rectangle));
+            SKBitmap cropped = new SKBitmap(new SKImageInfo(rectangle.Width, rectangle.Height, SKColorType.Bgra8888, SKAlphaType.Premul));
+            using SKCanvas canvas = new SKCanvas(cropped);
+            canvas.Clear(SKColors.Transparent);
+            SKRect source = new SKRect(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
+            SKRect destination = new SKRect(0, 0, rectangle.Width, rectangle.Height);
+            canvas.DrawBitmap(bitmap, source, destination);
+            return new Bitmap(cropped);
         }
 
         public Color GetPixel(int x, int y)
