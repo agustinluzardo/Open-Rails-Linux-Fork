@@ -81,9 +81,12 @@ namespace FxcBridge
                 if (args.Length > 0 && args[0].EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
                     args = args[1..];
 
-                if (args.Length < 6)
+                // MonoGame 3.8.1 passes five arguments after fxccs.dll; newer releases add a
+                // separate display path before the output file. Support both protocols so the
+                // bridge stays tied to the Open Rails MonoGame version instead of the tool host.
+                if (args.Length < 5)
                 {
-                    Console.Error.WriteLine("usage: fxcbridge <source file> <entry point> <profile> <flags> <display path> <output file>");
+                    Console.Error.WriteLine("usage: fxcbridge <source file> <entry point> <profile> <flags> [display path] <output file>");
                     return 2;
                 }
 
@@ -91,8 +94,8 @@ namespace FxcBridge
                 string entryPoint = args[1];
                 string profile = args[2];
                 uint flags = uint.TryParse(args[3], out uint parsed) ? parsed : 0;
-                string displayPath = args[4];
-                string outputPath = args[5];
+                string displayPath = args.Length >= 6 ? args[4] : args[0];
+                string outputPath = args.Length >= 6 ? args[5] : args[4];
 
                 byte[] bytecode = Compile(source, entryPoint, profile, flags, displayPath, out string errors);
                 if (!string.IsNullOrEmpty(errors))
