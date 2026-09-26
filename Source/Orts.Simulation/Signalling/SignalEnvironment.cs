@@ -68,6 +68,7 @@ namespace Orts.Simulation.Signalling
         private int updateStart;
         private int updateStep;
         private bool signalDiagnosticLogged;
+        private readonly HashSet<string> signalNodeDiagnosticKeys = new HashSet<string>();
 
         public List<PlatformDetails> PlatformDetailsList { get; } = new List<PlatformDetails>();
         public Dictionary<int, int> PlatformXRefList { get; } = new Dictionary<int, int>();
@@ -437,6 +438,22 @@ namespace Orts.Simulation.Signalling
             int blockObstructed = 0;
             int aspectStop = 0;
             int aspectProceed = 0;
+            int endSignalLinks = 0;
+            HashSet<int> normalSignalsLinkedAsEnd = new HashSet<int>();
+
+            foreach (TrackCircuitSection section in TrackCircuitSection.TrackCircuitList)
+            {
+                foreach (TrackDirection direction in EnumExtension.GetValues<TrackDirection>())
+                {
+                    Signal endSignal = section.EndSignals[direction];
+                    if (endSignal != null)
+                    {
+                        endSignalLinks++;
+                        if (endSignal.SignalNormal())
+                            normalSignalsLinkedAsEnd.Add(endSignal.Index);
+                    }
+                }
+            }
 
             foreach (Signal signal in Signals)
             {
@@ -477,9 +494,62 @@ namespace Orts.Simulation.Signalling
             }
 
             Trace.TraceInformation(
-                "[SignalDiag] normal={0} enabled={1} enabledWithRoute={2} stop={3} proceed={4} blockClear={5} occupied={6} obstructed={7} invalidTC={8} invalidNextTC={9}",
+                "[SignalDiag] normal={0} enabled={1} enabledWithRoute={2} stop={3} proceed={4} blockClear={5} occupied={6} obstructed={7} invalidTC={8} invalidNextTC={9} endSignalLinks={10} normalLinkedAsEnd={11}",
                 normalSignals, enabledSignals, enabledWithRoute, aspectStop, aspectProceed,
-                blockClear, blockOccupied, blockObstructed, invalidCircuit, invalidNextCircuit);
+                blockClear, blockOccupied, blockObstructed, invalidCircuit, invalidNextCircuit,
+                endSignalLinks, normalSignalsLinkedAsEnd.Count);
+        }
+
+        private void TraceNodeRouteOnce(Train.TrainRouted train, TrackCircuitPartialPathRoute routePart)
+        {
+            string key = $"route:{train.Train.Number}:{train.Direction}";
+            if (!signalNodeDiagnosticKeys.Add(key))
+                return;
+
+            int startIndex = train.Train.PresentPosition[train.Direction].RouteListIndex;
+            List<string> preview = new List<string>();
+            if (startIndex >= 0)
+            {
+                int endIndex = Math.Min(routePart.Count, startIndex + 16);
+                for (int i = startIndex; i < endIndex; i++)
+                {
+                    TrackCircuitRouteElement element = routePart[i];
+                    TrackCircuitSection section = element.TrackCircuitSection;
+                    Signal endSignal = section.EndSignals[element.Direction];
+                    preview.Add($"{i}:{section.Index}/{element.Direction}/sig={(endSignal?.Index ?? -1)}/res={(section.CircuitState.TrainReserved?.Train?.Number ?? -1)}/sigres={section.CircuitState.SignalReserved}");
+                }
+            }
+
+            Trace.TraceInformation(
+                "[SignalNodeRoute] train={0} name='{1}' type={2} mode={3} dir={4} presentTC={5} routeIndex={6} routeCount={7} lastReserved={8} nextSignal={9} preview=[{10}]",
+                train.Train.Number, train.Train.Name, train.Train.TrainType, train.Train.ControlMode, train.Direction,
+                train.Train.PresentPosition[train.Direction].TrackCircuitSectionIndex, startIndex, routePart.Count,
+                train.Train.EndAuthorities[train.Direction].LastReservedSection,
+                train.Direction == Direction.Forward ? train.Train.NextSignalObjects[Direction.Forward]?.Index ?? -1 : -1,
+                string.Join(", ", preview));
+        }
+
+        private void TraceNodeDecision(Train.TrainRouted train, string reason, int routeIndex, TrackCircuitSection section,
+            TrackDirection direction, float clearedDistanceM, int lastReserved)
+        {
+            if (section == null)
+                return;
+
+            int endSignal = section.EndSignals[direction]?.Index ?? -1;
+            int reservationOwner = section.CircuitState.TrainReserved?.Train?.Number ?? -1;
+            bool occupiedOther = section.CircuitState.OccupiedByOtherTrains(train);
+            bool occupiedSelf = section.CircuitState.OccupiedByThisTrain(train);
+            bool deadlock = section.DeadlockTraps.ContainsKey(train.Train.Number);
+            string key = $"{train.Train.Number}:{train.Direction}:{reason}:{routeIndex}:{section.Index}:{direction}:{endSignal}:{reservationOwner}:{section.CircuitState.SignalReserved}:{occupiedOther}:{occupiedSelf}:{deadlock}:{lastReserved}";
+            if (!signalNodeDiagnosticKeys.Add(key))
+                return;
+
+            Trace.TraceInformation(
+                "[SignalNode] train={0} name='{1}' mode={2} reason={3} routeIndex={4} section={5} type={6} dir={7} endSignal={8} reservedBy={9} signalReserved={10} claimed={11} occupiedSelf={12} occupiedOther={13} deadlock={14} clearedM={15:0.0} lastReserved={16}",
+                train.Train.Number, train.Train.Name, train.Train.ControlMode, reason, routeIndex,
+                section.Index, section.CircuitType, direction, endSignal, reservationOwner,
+                section.CircuitState.SignalReserved, section.CircuitState.TrainClaimed.Count,
+                occupiedSelf, occupiedOther, deadlock, clearedDistanceM, lastReserved);
         }
 
         /// <summary></summary>
@@ -2045,6 +2115,8 @@ namespace Orts.Simulation.Signalling
             ArgumentNullException.ThrowIfNull(train);
             ArgumentNullException.ThrowIfNull(routePart);
 
+            TraceNodeRouteOnce(train, routePart);
+
             TrackCircuitRouteElement routeElement = null;
             List<int> sectionsInRoute = new List<int>();
 
@@ -2152,7 +2224,15 @@ namespace Orts.Simulation.Signalling
             }
 
             if (routeIndex < 0)
+            {
+                TrackCircuitSection presentSection = train.Train.PresentPosition[train.Direction].TrackCircuitSectionIndex >= 0 &&
+                    train.Train.PresentPosition[train.Direction].TrackCircuitSectionIndex < TrackCircuitSection.TrackCircuitList.Count
+                    ? TrackCircuitSection.TrackCircuitList[train.Train.PresentPosition[train.Direction].TrackCircuitSectionIndex]
+                    : null;
+                TraceNodeDecision(train, "invalid-route-index", routeIndex, presentSection,
+                    train.Train.PresentPosition[train.Direction].Direction, clearedDistanceM, lastReserved);
                 return;//by JTang
+            }
 
             int lastRouteIndex = routeIndex;
             float offset = 0.0f;
@@ -2311,6 +2391,7 @@ namespace Orts.Simulation.Signalling
                             if (!furthestRouteCleared && section.EndSignals[routeElement.Direction] != null)
                             {
                                 Signal endSignal = section.EndSignals[routeElement.Direction];
+                                TraceNodeDecision(train, "end-signal", routeIndex - 1, section, routeElement.Direction, clearedDistanceM, lastReserved);
                                 // check if signal enabled for other train - if so, keep in node control
                                 if (endSignal.EnabledTrain == null || endSignal.EnabledTrain == train)
                                 {
@@ -2325,6 +2406,7 @@ namespace Orts.Simulation.Signalling
                             if (clearedDistanceM > (train.Train.MaxDistanceCheckedAhead))
                             {
                                 endAuthority = EndAuthorityType.MaxDistance;
+                                TraceNodeDecision(train, "max-distance-before-signal", routeIndex - 1, section, routeElement.Direction, clearedDistanceM, lastReserved);
                                 furthestRouteCleared = true;
                             }
                         }
@@ -2332,6 +2414,7 @@ namespace Orts.Simulation.Signalling
                     // section is not available
                     else
                     {
+                        TraceNodeDecision(train, "section-not-clear", routeIndex, section, routeElement.Direction, clearedDistanceM, lastReserved);
                         lastRouteIndex = routeIndex - 1;
                         lastReserved = lastRouteIndex >= 0 ? routePart[lastRouteIndex].TrackCircuitSection.Index : -1;
                         routeAvailable = false;
@@ -2459,6 +2542,13 @@ namespace Orts.Simulation.Signalling
             train.Train.EndAuthorities[train.Direction].EndAuthorityType = endAuthority;
             train.Train.EndAuthorities[train.Direction].LastReservedSection = lastReserved;
             train.Train.EndAuthorities[train.Direction].Distance = clearedDistanceM;
+
+            if (lastReserved >= 0 && lastReserved < TrackCircuitSection.TrackCircuitList.Count)
+            {
+                TrackCircuitSection lastSection = TrackCircuitSection.TrackCircuitList[lastReserved];
+                TraceNodeDecision(train, $"authority-{endAuthority}", lastRouteIndex, lastSection,
+                    routeElement?.Direction ?? train.Train.PresentPosition[train.Direction].Direction, clearedDistanceM, lastReserved);
+            }
         }
 
         /// <summary>
