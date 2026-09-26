@@ -33,8 +33,15 @@ namespace ORTS.Settings
 
         static UserSettings()
         {
+#if RIEL_UNIX
+            string configured = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
+            string root = !string.IsNullOrEmpty(configured) && Path.IsPathRooted(configured)
+                ? configured
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config");
+            UserDataFolder = Path.Combine(root, "riel");
+#else
             UserDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ApplicationInfo.ProductName);
-            // TODO: If using INI file, move these to application directory as well.
+#endif
             if (!Directory.Exists(UserDataFolder)) Directory.CreateDirectory(UserDataFolder);
             DeletedSaveFolder = Path.Combine(UserDataFolder, "Deleted Saves");
             SavePackFolder = Path.Combine(UserDataFolder, "Save Packs");
@@ -472,7 +479,16 @@ namespace ORTS.Settings
         public UserSettings(IEnumerable<string> options)
             : base(SettingsStore.GetSettingStore(SettingsBase.SettingsFilePath, SettingsBase.RegistryKey, null))
         {
+#if RIEL_UNIX
+            string stateRoot = Environment.GetEnvironmentVariable("XDG_STATE_HOME");
+            if (string.IsNullOrEmpty(stateRoot) || !Path.IsPathRooted(stateRoot))
+                stateRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "state");
+            string logFolder = Path.Combine(stateRoot, "riel", "Logs");
+            Directory.CreateDirectory(logFolder);
+            CustomDefaultValues["LoggingPath"] = logFolder;
+#else
             CustomDefaultValues["LoggingPath"] = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+#endif
             CustomDefaultValues["ScreenshotPath"] = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), ApplicationInfo.ProductName);
             CustomDefaultValues["Multiplayer_User"] = Environment.UserName;
             Load(options);
