@@ -643,6 +643,7 @@ namespace Orts.Viewer3D.Popups
 
         [DllImport("gdi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern bool GetCharABCWidthsFloat(IntPtr hdc, uint firstChar, uint lastChar, out NativeStructs.AbcFloatWidth abcFloatWidths);
-    }#endif
+    }
+#endif
 
 }
