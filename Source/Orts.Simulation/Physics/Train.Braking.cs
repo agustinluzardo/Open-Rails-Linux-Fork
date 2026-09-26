@@ -44,7 +44,10 @@ namespace Orts.Simulation.Physics
                 ? TrainEvent.TrainBrakePressureIncrease
                 : pressureAfter < pressureBefore - 0.01
                     ? TrainEvent.TrainBrakePressureDecrease
-                    : TrainEvent.TrainBrakeChange;
+                    // The user explicitly requested brake initialization. Even if the
+                    // reservoir is already charged, send the charging trigger (MSTS 14)
+                    // rather than the brake-handle change trigger (MSTS 17).
+                    : TrainEvent.TrainBrakePressureIncrease;
 
             Trace.TraceInformation(
                 "[BrakeSound] User brake initialization: equal reservoir {0:F2} -> {1:F2} PSI, event={2}.",

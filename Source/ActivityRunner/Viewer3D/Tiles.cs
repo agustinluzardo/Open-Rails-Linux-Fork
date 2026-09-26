@@ -160,7 +160,7 @@ namespace Orts.ActivityRunner.Viewer3D
             Tile delta = currentLocation.Tile - tile.Tile;
             // Adjust x/z based on the tile we found - this may not be in the same TileX/Z as we requested due to large (e.g. 2x2) tiles.
             float x = currentLocation.Location.X + 1024 + 2048 * (delta.X);
-            float z = currentLocation.Location.Z + 1024 + 2048 * (delta.X - tile.Size);
+            float z = currentLocation.Location.Z + 1024 + 2048 * (delta.Z - tile.Size);
             z *= -1;
 
             // Convert x/z in meters to terrain tile samples and get the coordinates of the NW corner.

@@ -293,6 +293,7 @@ namespace Orts.ActivityRunner.Viewer3D
             }
 
             var numParticlesAdded = 0;
+            var firstParticleGroundHeight = 0f;
             var numToBeEmitted = (int)particlesToEmit;
             var numCanBeEmitted = GetCountFreeParticles();
             var numToEmit = Math.Min(numToBeEmitted, numCanBeEmitted);
@@ -302,6 +303,8 @@ namespace Orts.ActivityRunner.Viewer3D
                 WorldLocation location = new WorldLocation(worldLocation.Tile, worldLocation.Location.X + (float)((StaticRandom.NextDouble() - 0.5) * ParticleBoxWidthM),
                     0, worldLocation.Location.Z + (float)((StaticRandom.NextDouble() - 0.5) * ParticleBoxLengthM));
                 location = new WorldLocation(location.Tile, location.Location.X, heights.GetHeight(location, tiles, scenery), location.Location.Z);
+                if (numParticlesAdded == 0)
+                    firstParticleGroundHeight = location.Location.Y;
                 var position = new WorldPosition(location);
 
                 var time = MathHelper.Lerp(timeParticlesLastEmitted, currentTime, (float)i / numToEmit);
@@ -326,8 +329,9 @@ namespace Orts.ActivityRunner.Viewer3D
                 timeParticlesLastEmitted = currentTime;
                 if (!emissionDiagnosticLogged)
                 {
-                    Trace.TraceInformation("[Precipitation] emitted {0} particles at intensity {1:F6}; duration={2:F3}s active={3} new={4} free={5}",
-                        numParticlesAdded, particlesPerSecondPerM2, particleDuration, firstActiveParticle, firstNewParticle, firstFreeParticle);
+                    Trace.TraceInformation("[Precipitation] emitted {0} particles at intensity {1:F6}; duration={2:F3}s active={3} new={4} free={5}; cameraY={6:F1} firstGroundY={7:F1}",
+                        numParticlesAdded, particlesPerSecondPerM2, particleDuration, firstActiveParticle, firstNewParticle, firstFreeParticle,
+                        worldLocation.Location.Y, firstParticleGroundHeight);
                     emissionDiagnosticLogged = true;
                 }
             }
