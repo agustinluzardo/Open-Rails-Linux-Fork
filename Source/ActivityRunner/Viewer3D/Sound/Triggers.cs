@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Calc;
@@ -109,6 +110,20 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
             {
                 Triggered = false;
                 soundStream.RepeatedTrigger = this == soundStream.LastTriggered;
+
+                bool compressorEvent = TriggerId == TrainEvent.CompressorOn || TriggerId == TrainEvent.CompressorOff;
+                if (compressorEvent)
+                {
+                    string files = SoundCommand is PlaySoundCommand playCommand
+                        ? string.Join("|", playCommand.Files)
+                        : SoundCommand?.GetType().Name ?? "<null>";
+                    Trace.TraceInformation(
+                        "[SoundDiag] Compressor trigger event={0} sms={1} files={2} sourceVolume={3:0.###} streamVolume={4:0.###} calculatedGain={5:0.###} external={6} active={7}",
+                        TriggerId, soundStream.SoundSource.SMSFileName, files,
+                        soundStream.SoundSource.Volume, soundStream.Volume, soundStream.CalculatedVolume,
+                        soundStream.SoundSource.ExternalSource, soundStream.SoundSource.Active);
+                }
+
                 SoundCommand.Run();
                 soundStream.LastTriggered = this;
                 Signaled = true;
