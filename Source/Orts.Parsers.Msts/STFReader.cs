@@ -178,6 +178,7 @@ namespace Orts.Parsers.Msts
             var path = Path.GetDirectoryName(filename);
             if (Directory.Exists(path))
             {
+                filename = ContentPath.ResolveFile(filename) ?? ContentPath.Normalize(filename);
                 streamSTF = new StreamReader(filename, true); // was System.Text.Encoding.Unicode ); but I found some ASCII files, ie GLOBAL\SHAPES\milemarker.s
                 FileName = filename;
                 SimisSignature = streamSTF.ReadLine();
@@ -1929,6 +1930,7 @@ namespace Orts.Parsers.Msts
                         if (purefilename == "[[samename]]")
                             filename = Path.GetDirectoryName(filename) + @"\" + Path.GetFileName(FileName);
                         var includeFileName = Path.GetDirectoryName(FileName) + @"\" + filename;
+                        includeFileName = ContentPath.ResolveFile(includeFileName) ?? ContentPath.Normalize(includeFileName);
                         if (!File.Exists(includeFileName))
                             STFException.TraceWarning(this, string.Format("'{0}' not found", includeFileName));
                         includeReader = new STFReader(includeFileName, false);
@@ -3912,6 +3914,7 @@ namespace Orts.Parsers.Msts
                 throw new DirectoryNotFoundException(directory);
             }
 
+            fileName = ContentPath.ResolveFile(fileName) ?? ContentPath.Normalize(fileName);
             var stream = new StreamReader(fileName, true); // was System.Text.Encoding.Unicode ); but I found some ASCII files, ie GLOBAL\SHAPES\milemarker.s
             simisSignature = stream.ReadLine();
             return stream;
