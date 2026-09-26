@@ -320,10 +320,18 @@ SoundSource.SMSFileName, SoundSource.SoundStreams.Length, Triggers.Length - 1);
 
             if (SoundSource.ExternalSource && Program.Viewer.Camera.Style != CameraStyle.External && !SoundSource.Unattenuated)
             {
-                if (Program.Viewer.Camera.AttachedCar == null || ((MSTSWagon)Program.Viewer.Camera.AttachedCar).ExternalSoundPassThruPercent == -1)
-                    volume *= Program.Viewer.UserSettings.ExternalSoundPassThruPercent * 0.01f;
-                else
-                    volume *= ((MSTSWagon)Program.Viewer.Camera.AttachedCar).ExternalSoundPassThruPercent * 0.01f;
+                MSTSWagon attachedWagon = Program.Viewer.Camera.AttachedCar as MSTSWagon;
+                float passThru = attachedWagon == null || attachedWagon.ExternalSoundPassThruPercent == -1
+                    ? Program.Viewer.UserSettings.ExternalSoundPassThruPercent * 0.01f
+                    : attachedWagon.ExternalSoundPassThruPercent * 0.01f;
+
+                // Open Rails progressively removes sealed-cab attenuation as either
+                // active cab window opens. Riel previously always applied the raw
+                // pass-through percentage even with an open window.
+                float internalCorrection = attachedWagon == null
+                    ? 0
+                    : Math.Min(attachedWagon.SoundHeardInternallyCorrection[0] + attachedWagon.SoundHeardInternallyCorrection[1], 1);
+                volume *= passThru + (1 - passThru) * internalCorrection;
             }
 
             CalculatedVolume = volume;
