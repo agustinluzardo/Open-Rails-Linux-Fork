@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <TargetFramework Condition="'$(RielPlatform)' != 'windows'">net10.0</TargetFramework>
     <RielPlatform Condition="'$(RielPlatform)' == '' AND $([MSBuild]::IsOSPlatform('Windows'))">windows</RielPlatform>
     <RielPlatform Condition="'$(RielPlatform)' == ''">linux</RielPlatform>
     <RielGraphicsBackend Condition="'$(RielGraphicsBackend)' == '' AND '$(RielPlatform)' == 'windows'">WindowsDX</RielGraphicsBackend>
