@@ -14,10 +14,20 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Build native engine and Riel launchers
+
+      - name: Install build-time shader compiler dependency
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends wine64
+
+      - name: Build and test native Open Rails
         working-directory: Source
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: '1'
@@ -25,6 +35,58 @@ jobs:
           AVALONIA_TELEMETRY_OPTOUT: '1'
         run: |
           set -euo pipefail
+          dotnet test Tests/Tests.csproj -c Release -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
           dotnet build RunActivity/RunActivity.csproj -c Release -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
           dotnet build Launcher.Cli/Launcher.Cli.csproj -c Release -p:RielPlatform=linux
           dotnet build Launcher.Gui/Launcher.Gui.csproj -c Release -p:RielPlatform=linux
+
+      - name: Publish self-contained native bundle
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+          DOTNET_NOLOGO: '1'
+          AVALONIA_TELEMETRY_OPTOUT: '1'
+        run: |
+          set -euo pipefail
+          publish="${RUNNER_TEMP}/riel-publish"
+          mkdir -p "$publish"
+
+          dotnet publish Source/RunActivity/RunActivity.csproj -c Release -r linux-x64 --self-contained true \
+            -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL -p:IsPublishable=true -o "$publish"
+          dotnet publish Source/Launcher.Cli/Launcher.Cli.csproj -c Release -r linux-x64 --self-contained true \
+            -p:RielPlatform=linux -o "$publish"
+          dotnet publish Source/Launcher.Gui/Launcher.Gui.csproj -c Release -r linux-x64 --self-contained true \
+            -p:RielPlatform=linux -o "$publish"
+
+          mkdir -p "$publish/Content"
+          ./scripts/build-shaders.sh --profile OpenGL --output "$publish/Content" --check
+
+          test -x "$publish/RunActivity"
+          test -x "$publish/riel"
+          test -x "$publish/riel-gui"
+          test -f "$publish/Content/SceneryShader.mgfx"
+          test -f "$publish/Content/PrecipitationShader.mgfx"
+          test -f "$publish/Content/LightGlowShader.mgfx"
+
+      - name: Smoke portable launcher
+        env:
+          DOTNET_ROOT: /nonexistent-dotnet-runtime
+          DOTNET_MULTILEVEL_LOOKUP: '0'
+          XDG_CONFIG_HOME: ${{ runner.temp }}/riel-profile/config
+          XDG_DATA_HOME: ${{ runner.temp }}/riel-profile/data
+          XDG_STATE_HOME: ${{ runner.temp }}/riel-profile/state
+          XDG_CACHE_HOME: ${{ runner.temp }}/riel-profile/cache
+        run: |
+          set -euo pipefail
+          bundle="${RUNNER_TEMP}/riel-linux-x64"
+          mkdir -p "$bundle/app"
+          cp -a "${RUNNER_TEMP}/riel-publish/." "$bundle/app/"
+          install -m 755 packaging/linux/riel-portable "$bundle/riel"
+          "$bundle/riel" version
+          "$bundle/riel" content
+          tar -czf "${RUNNER_TEMP}/riel-linux-x64.tar.gz" -C "${RUNNER_TEMP}" riel-linux-x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: riel-native-linux-x64
+          path: ${{ runner.temp }}/riel-linux-x64.tar.gz
+          if-no-files-found: error
