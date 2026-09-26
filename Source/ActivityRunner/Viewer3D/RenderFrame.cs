@@ -271,12 +271,31 @@ namespace Orts.ActivityRunner.Viewer3D
                 if (shadowMap == null)
                 {
                     int shadowMapSize = game.UserSettings.ShadowMapResolution;
+
+                    // XNA/Open Rails uses SurfaceFormat.Rg32 for the two VSM moments
+                    // (depth and depth squared). On DirectX MonoGame maps that format to
+                    // R16G16_UNorm, but DesktopGL maps it to GL_RG16UI: an integer texture.
+                    // ShadowMap.fx writes float moments and SceneryShader.fx samples them
+                    // through a regular sampler2D, so the integer DesktopGL mapping is not
+                    // semantically compatible even though the render pass itself succeeds.
+                    //
+                    // Use an actual two-channel floating-point target on Linux. Vector2 maps
+                    // to GL_RG32F in MonoGame, preserving the VSM math and filtering expected
+                    // by the Open Rails shader. Keep the original format elsewhere.
+                    SurfaceFormat shadowMapFormat = OperatingSystem.IsLinux()
+                        ? SurfaceFormat.Vector2
+                        : SurfaceFormat.Rg32;
+
+                    Trace.TraceInformation(
+                        "[ShadowDiag] dynamic={0} cascades={1} resolution={2} format={3}",
+                        dynamicShadows, shadowMapCount, shadowMapSize, shadowMapFormat);
+
                     shadowMap = new RenderTarget2D[shadowMapCount];
                     shadowMapRenderTarget = new RenderTarget2D[shadowMapCount];
                     for (int shadowMapIndex = 0; shadowMapIndex < shadowMapCount; shadowMapIndex++)
                     {
-                        shadowMapRenderTarget[shadowMapIndex] = new RenderTarget2D(game.GraphicsDevice, shadowMapSize, shadowMapSize, false, SurfaceFormat.Rg32, DepthFormat.Depth16, 0, RenderTargetUsage.PreserveContents);
-                        shadowMap[shadowMapIndex] = new RenderTarget2D(game.GraphicsDevice, shadowMapSize, shadowMapSize, false, SurfaceFormat.Rg32, DepthFormat.Depth16, 0, RenderTargetUsage.PreserveContents);
+                        shadowMapRenderTarget[shadowMapIndex] = new RenderTarget2D(game.GraphicsDevice, shadowMapSize, shadowMapSize, false, shadowMapFormat, DepthFormat.Depth16, 0, RenderTargetUsage.PreserveContents);
+                        shadowMap[shadowMapIndex] = new RenderTarget2D(game.GraphicsDevice, shadowMapSize, shadowMapSize, false, shadowMapFormat, DepthFormat.Depth16, 0, RenderTargetUsage.PreserveContents);
                     }
                 }
 
