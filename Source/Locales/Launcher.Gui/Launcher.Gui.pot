@@ -1,0 +1,779 @@
+# Strings of the Riel launcher: the template for a translation.
+# Copyright (C) 2026 the Riel project
+# This file is distributed under the same license as Riel (GPL-3.0-or-later).
+#
+# To add a language: copy Launcher.Gui.pot to <language>.po - de.po, pt_BR.po - and fill in
+# every msgstr. An empty msgstr falls back to the English. Keep the {0} placeholders.
+msgid ""
+msgstr ""
+"Project-Id-Version: Riel launcher\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Reading content…"
+msgstr ""
+
+msgid "Choose the Microsoft Train Simulator folder"
+msgstr ""
+
+msgid "That folder does not exist"
+msgstr ""
+
+msgid "Nothing was found at {0}. Check the path, and that the disk it is on is mounted."
+msgstr ""
+
+msgid "This does not look like an installation"
+msgstr ""
+
+msgid "{0} has no ROUTES and GLOBAL folders, so its routes would not load. Add it anyway?"
+msgstr ""
+
+msgid "Add anyway"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Using {0}, the installation inside the folder chosen."
+msgstr ""
+
+msgid "Scanning {0}…"
+msgstr ""
+
+msgid "Added {0}: {1}."
+msgstr ""
+
+msgid "Added {0}, but no routes were found in it."
+msgstr ""
+
+msgid "Remove {0}?"
+msgstr ""
+
+msgid "Only the entry is removed. The folder and everything in it stay on disk."
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Removing…"
+msgstr ""
+
+msgid "Removed {0}."
+msgstr ""
+
+msgid "Scanning every folder…"
+msgstr ""
+
+msgid "Scanned again."
+msgstr ""
+
+msgid "That did not work"
+msgstr ""
+
+msgid "Something went wrong"
+msgstr ""
+
+msgid "{0} route"
+msgstr ""
+
+msgid "{0} routes"
+msgstr ""
+
+msgid "Check this computer"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "What the simulator needs, and whether it is here"
+msgstr ""
+
+msgid "Checking…"
+msgstr ""
+
+msgid "Everything the simulator needs is in place."
+msgstr ""
+
+msgid "Something the simulator needs is missing; the lines marked ✗ say what."
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "Some content could not be read"
+msgstr ""
+
+msgid "Everything else loaded. These will not work until the files are fixed or replaced; the first one: {0}"
+msgstr ""
+
+msgid "route"
+msgstr ""
+
+msgid "path"
+msgstr ""
+
+msgid "train"
+msgstr ""
+
+msgid "rolling stock"
+msgstr ""
+
+msgid "activity"
+msgstr ""
+
+msgid "timetable"
+msgstr ""
+
+msgid "Details"
+msgstr ""
+
+msgid "The simulator stopped"
+msgstr ""
+
+msgid "The simulator crashed"
+msgstr ""
+
+msgid "The simulator stopped because of an error"
+msgstr ""
+
+msgid "It exited with code {0} without saying why."
+msgstr ""
+
+msgid "It happened in {0}, called from {1}."
+msgstr ""
+
+msgid "managed code"
+msgstr ""
+
+msgid "code that could not be named"
+msgstr ""
+
+msgid "When the content was scanned, this route reported: {0}"
+msgstr ""
+
+msgid "Full log: {0}"
+msgstr ""
+
+msgid "No log was written; the simulator stopped before it got that far. Logs are kept in {0}"
+msgstr ""
+
+msgid "Copy details"
+msgstr ""
+
+msgid "Open the log"
+msgstr ""
+
+msgid "Try without sound"
+msgstr ""
+
+msgid "Try with basic graphics"
+msgstr ""
+
+msgid "Try without sound and with basic graphics"
+msgstr ""
+
+msgid "while starting"
+msgstr ""
+
+msgid "while opening its window"
+msgstr ""
+
+msgid "while setting up the graphics card"
+msgstr ""
+
+msgid "while showing its window for the first time"
+msgstr ""
+
+msgid "just after showing its window"
+msgstr ""
+
+msgid "while opening the sound device"
+msgstr ""
+
+msgid "while loading the route"
+msgstr ""
+
+msgid "while running"
+msgstr ""
+
+msgid "It was stopped by a crash in native code ({0})."
+msgstr ""
+
+msgid "It was stopped by a crash in native code ({0}) {1}."
+msgstr ""
+
+msgid "That points at the graphics driver. Try with basic graphics: if it works, the driver has trouble with full screen, antialiasing or shadows. Copy details and include them in a bug report; they name the exact place."
+msgstr ""
+
+msgid "That points at the sound system. Try without sound: if it works, the problem is between OpenAL and the sound server. Copy details and include them in a bug report; they name the exact place."
+msgstr ""
+
+msgid "That points at SDL or the window system. Try with basic graphics, which starts in a window rather than full screen. Copy details and include them in a bug report; they name the exact place."
+msgstr ""
+
+msgid "A crash like this happens in a driver or a system library, not in the route. Try without sound and with basic graphics: the one that works points at the part that fails. Copy details and include them in a bug report."
+msgstr ""
+
+msgid "A file the route or the train needs is missing. Routes often borrow objects or rolling stock from other content packs; the missing file is named above, and installing the pack it belongs to fixes it."
+msgstr ""
+
+msgid "A file could not be read because of its permissions. If the content is on a disk shared with Windows, check that your user can read it."
+msgstr ""
+
+msgid "The graphics card could not be set up. Check that its driver is installed; \"glxinfo | grep renderer\" should name the card rather than llvmpipe."
+msgstr ""
+
+msgid "A system library is missing. \"Check this computer\" in the main window lists which one."
+msgstr ""
+
+msgid "The launcher and the simulator disagreed about what to start. Choosing the route again usually fixes it."
+msgstr ""
+
+msgid "The content scan could not read this route's track data, so it cannot be driven. Content folders, then Scan again, lists which file is missing or broken."
+msgstr ""
+
+msgid "The computer ran out of memory. Closing other programs, or lowering the viewing distance, may help."
+msgstr ""
+
+msgid "The details below and the log say more. If it looks like a bug, reporting it with the log attached helps get it fixed."
+msgstr ""
+
+msgid "Spring"
+msgstr ""
+
+msgid "Summer"
+msgstr ""
+
+msgid "Autumn"
+msgstr ""
+
+msgid "Winter"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "Rain"
+msgstr ""
+
+msgid "Snow"
+msgstr ""
+
+msgid "Easy"
+msgstr ""
+
+msgid "Medium"
+msgstr ""
+
+msgid "Hard"
+msgstr ""
+
+msgid "{0} h {1} min"
+msgstr ""
+
+msgid "{0} min"
+msgstr ""
+
+msgid "{0} vehicle"
+msgstr ""
+
+msgid "{0} vehicles"
+msgstr ""
+
+msgid "No routes were found in the content folders. Check that each one is the folder holding ROUTES and GLOBAL."
+msgstr ""
+
+msgid "{0} in {1}."
+msgstr ""
+
+msgid "1 problem"
+msgstr ""
+
+msgid "{0} problems"
+msgstr ""
+
+msgid "An installation was found at {0}"
+msgstr ""
+
+msgid "Adding the folder…"
+msgstr ""
+
+msgid "Choose a route"
+msgstr ""
+
+msgid "Choose a route."
+msgstr ""
+
+msgid "Choose an activity, or explore the route instead."
+msgstr ""
+
+msgid "Choose a path to explore."
+msgstr ""
+
+msgid "Choose a train to explore with."
+msgstr ""
+
+msgid "Write the time as hours and minutes, like 08:30."
+msgstr ""
+
+msgid "Nothing to play yet"
+msgstr ""
+
+msgid "the saved game"
+msgstr ""
+
+msgid "Starting {0}…"
+msgstr ""
+
+msgid "without sound"
+msgstr ""
+
+msgid "with basic graphics"
+msgstr ""
+
+msgid "without sound and with basic graphics"
+msgstr ""
+
+msgid "Running {0}. The simulator window may take a moment to appear."
+msgstr ""
+
+msgid "Running {0} {1}. The simulator window may take a moment to appear."
+msgstr ""
+
+msgid "The simulator crashed."
+msgstr ""
+
+msgid "The simulator stopped because of an error."
+msgstr ""
+
+msgid "Finished {0}."
+msgstr ""
+
+msgid "Finished {0} {1}."
+msgstr ""
+
+msgid "Scanning content… {0}%"
+msgstr ""
+
+msgid "{0} content folder"
+msgstr ""
+
+msgid "{0} content folders"
+msgstr ""
+
+msgid "Play"
+msgstr ""
+
+msgid "Content folders"
+msgstr ""
+
+msgid "Each one is a Microsoft Train Simulator installation, or a copy of one: the folder that holds ROUTES and GLOBAL. It can be on any disk, or inside a Wine or Proton prefix. Riel only ever reads it."
+msgstr ""
+
+msgid "Folder"
+msgstr ""
+
+msgid "Paste a path, or browse for it"
+msgstr ""
+
+msgid "Browse…"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Scan again"
+msgstr ""
+
+msgid "No folders yet."
+msgstr ""
+
+msgid "Microsoft Train Simulator routes, natively on Linux"
+msgstr ""
+
+msgid "Dark"
+msgstr ""
+
+msgid "Routes"
+msgstr ""
+
+msgid "Search routes"
+msgstr ""
+
+msgid "Activity"
+msgstr ""
+
+msgid "This route has no activities. Explore it instead: pick a path and a train in the Explore tab."
+msgstr ""
+
+msgid "Explore"
+msgstr ""
+
+msgid "Path"
+msgstr ""
+
+msgid "Train"
+msgstr ""
+
+msgid "Search trains"
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Season"
+msgstr ""
+
+msgid "Weather"
+msgstr ""
+
+msgid "No content yet"
+msgstr ""
+
+msgid "Choose the folder where Microsoft Train Simulator is installed: the one that contains ROUTES and GLOBAL. It can be on any disk, or inside a Wine or Proton prefix."
+msgstr ""
+
+msgid "Use this one"
+msgstr ""
+
+msgid "Choose a folder"
+msgstr ""
+
+msgid "Continue saved game"
+msgstr ""
+
+msgid "Choose a saved game"
+msgstr ""
+
+msgid "Select the exact save to continue. Newest saves are shown first."
+msgstr ""
+
+msgid "No preview available"
+msgstr ""
+
+msgid "Continue"
+msgstr ""
+
+msgid "Select a save to see its route, train, game time and screenshot."
+msgstr ""
+
+msgid "Delete save"
+msgstr ""
+
+msgid "Restore deleted saves"
+msgstr ""
+
+msgid "Reading save details…"
+msgstr ""
+
+msgid "Unknown route"
+msgstr ""
+
+msgid "Unknown train"
+msgstr ""
+
+msgid "Game time"
+msgstr ""
+
+msgid "Save version"
+msgstr ""
+
+msgid "This save is incomplete and cannot be continued."
+msgstr ""
+
+msgid "Save details unavailable"
+msgstr ""
+
+msgid "Could not read this save: {0}"
+msgstr ""
+
+msgid "Delete saved game?"
+msgstr ""
+
+msgid "Move {0} and its screenshot and replay to Deleted Saves? You can restore them later."
+msgstr ""
+
+msgid "A deleted save with the same name already exists. Restore it first."
+msgstr ""
+
+msgid "Could not delete saved game"
+msgstr ""
+
+msgid "Saves restored"
+msgstr ""
+
+msgid "Restored {0} files."
+msgstr ""
+
+msgid "Could not restore saved games"
+msgstr ""
+
+msgid "Timetable"
+msgstr ""
+
+msgid "Timetable set"
+msgstr ""
+
+msgid "Day"
+msgstr ""
+
+msgid "Default weather"
+msgstr ""
+
+msgid "Choose a timetable set."
+msgstr ""
+
+msgid "Choose a timetable train."
+msgstr ""
+
+msgid "Monday"
+msgstr ""
+
+msgid "Tuesday"
+msgstr ""
+
+msgid "Wednesday"
+msgstr ""
+
+msgid "Thursday"
+msgstr ""
+
+msgid "Friday"
+msgstr ""
+
+msgid "Saturday"
+msgstr ""
+
+msgid "Sunday"
+msgstr ""
+
+msgid "Delete invalid saves"
+msgstr ""
+
+msgid "Delete invalid saves?"
+msgstr ""
+
+msgid "Move {0} invalid saves to Deleted Saves?"
+msgstr ""
+
+msgid "Replay from previous save"
+msgstr ""
+
+msgid "Replay from start"
+msgstr ""
+
+msgid "Import save pack"
+msgstr ""
+
+msgid "Export save pack"
+msgstr ""
+
+msgid "Replace save pack?"
+msgstr ""
+
+msgid "A save pack named {0} already exists. Replace it?"
+msgstr ""
+
+msgid "Replace"
+msgstr ""
+
+msgid "Save pack exported"
+msgstr ""
+
+msgid "Could not export save pack"
+msgstr ""
+
+msgid "Could not import save pack"
+msgstr ""
+
+msgid "The pack is empty, contains unsafe paths, or would overwrite an existing save."
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "These settings are used by the simulator when you press Play."
+msgstr ""
+
+msgid "General"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Video"
+msgstr ""
+
+msgid "Simulation"
+msgstr ""
+
+msgid "Keyboard"
+msgstr ""
+
+msgid "Data logger"
+msgstr ""
+
+msgid "Evaluation"
+msgstr ""
+
+msgid "Advanced"
+msgstr ""
+
+msgid "Display and resolution"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Detected resolution"
+msgstr ""
+
+msgid "Window mode"
+msgstr ""
+
+msgid "Use the selected monitor resolution automatically"
+msgstr ""
+
+msgid "Resolution width"
+msgstr ""
+
+msgid "Resolution height"
+msgstr ""
+
+msgid "Windowed mode uses the available desktop area; fullscreen uses the monitor size."
+msgstr ""
+
+msgid "Click a key, then press a new combination. Escape cancels the capture."
+msgstr ""
+
+msgid "Reset controls to Riel defaults"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Display {0}: {1} × {2}"
+msgstr ""
+
+msgid "Primary"
+msgstr ""
+
+msgid "No display detected"
+msgstr ""
+
+msgid "Driving and units"
+msgstr ""
+
+msgid "Sound"
+msgstr ""
+
+msgid "Rendering"
+msgstr ""
+
+msgid "Physics and operations"
+msgstr ""
+
+msgid "Recording"
+msgstr ""
+
+msgid "Trip evaluation"
+msgstr ""
+
+msgid "Network"
+msgstr ""
+
+msgid "Diagnostics and replay"
+msgstr ""
+
+msgid "Sound Volume Percent"
+msgstr ""
+
+msgid "Sound Detail Level"
+msgstr ""
+
+msgid "External Sound Pass Thru Percent"
+msgstr ""
+
+msgid "Vertical Sync"
+msgstr ""
+
+msgid "Multi Sampling Count"
+msgstr ""
+
+msgid "Dynamic Shadows"
+msgstr ""
+
+msgid "Shadow All Shapes"
+msgstr ""
+
+msgid "Model Instancing"
+msgstr ""
+
+msgid "Viewing Distance"
+msgstr ""
+
+msgid "Far Mountains Viewing Distance"
+msgstr ""
+
+msgid "Field Of View"
+msgstr ""
+
+msgid "Ambient Brightness"
+msgstr ""
+
+msgid "Shadow Map Resolution"
+msgstr ""
+
+msgid "Signal Light Glow"
+msgstr ""
+
+msgid "Advanced Adhesion"
+msgstr ""
+
+msgid "Weather Dependent Adhesion"
+msgstr ""
+
+msgid "Couplers Break"
+msgstr ""
+
+msgid "Simplified Controls"
+msgstr ""
+
+msgid "Track Gauge"
+msgstr ""
+
+msgid "Data Logger"
+msgstr ""
+
+msgid "Evaluation Train Speed"
+msgstr ""
+
+msgid "Evaluation Station Stops"
+msgstr ""
+
+msgid "Web Server"
+msgstr ""
+
+msgid "Profiling"
+msgstr ""
+
+msgid "Close Launcher While Playing"
+msgstr ""
+
+msgid "Could not start the simulator"
+msgstr ""
+
+msgid "Explore in Activity Mode"
+msgstr ""
+
+msgid "Use Open Rails activity-style exploration. Normal Explore is recommended for most routes."
+msgstr ""

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+	  What the command line and the graphical launcher share: the content configuration, the
+	  selections the simulator starts from, starting it and reading back why it stopped, and the
+	  checks behind "riel doctor". Both front ends stay thin; anything they would otherwise each
+	  implement lives here, so they cannot drift apart.
+	-->
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<AssemblyTitle>Riel Launcher Core</AssemblyTitle>
+		<Description>What the Riel launchers share</Description>
+		<RootNamespace>Riel.Launcher</RootNamespace>
+		<AssemblyName>Riel.Launcher.Core</AssemblyName>
+		<OutputPath>..\..\Program</OutputPath>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+	</PropertyGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="Tests.FreeTrainSimulator" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\FreeTrainSimulator.Common\FreeTrainSimulator.Common.csproj" />
+		<ProjectReference Include="..\FreeTrainSimulator.Models\FreeTrainSimulator.Models.csproj" />
+		<ProjectReference Include="..\FreeTrainSimulator.Models.Imported\FreeTrainSimulator.Models.Imported.csproj" />
+		<ProjectReference Include="..\Orts.Formats\Orts.Formats.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+	  The graphical launcher: pick a route and an activity, or a path and a train to explore
+	  with, and press Play. It sits on the same content model and the same saved selections as
+	  the riel command, through Launcher.Core, so either can be used and they agree.
+
+	  Avalonia draws with Skia. It is built against the SkiaSharp the engine already uses rather
+	  than the older one Avalonia asks for, because both land in one install directory and there
+	  can only be one libSkiaSharp there; Avalonia renders correctly on it.
+	-->
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<AssemblyTitle>Riel Launcher</AssemblyTitle>
+		<Description>Riel launcher</Description>
+		<RootNamespace>Riel.Launcher.Gui</RootNamespace>
+		<AssemblyName>riel-gui</AssemblyName>
+		<OutputPath>..\..\Program</OutputPath>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<!--
+		  Avalonia's build reports each project that uses it to the vendor, and runs that report
+		  only when this list is not empty. A distribution package is built without network access
+		  and should not phone anywhere, so it is emptied here, after Avalonia's props fill it.
+		-->
+		<UsedAvaloniaProducts></UsedAvaloniaProducts>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="12.1.3" />
+		<PackageReference Include="Avalonia.Desktop" Version="12.1.3" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.3" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Launcher.Core\Launcher.Core.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\**" />
+		<!-- Translations, in the GetText format the rest of the project uses, read at start up. -->
+		<EmbeddedResource Include="..\Locales\Launcher.Gui\*.po" LogicalName="Riel.Launcher.Gui.Locales.%(Filename).po" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,5 @@
+upstream_repository=openrails/openrails
+upstream_branch=master
+upstream_commit=6b2e724befb1693f3b6c1c73c1e84c2aeee9bff9
+migrated_from=c19a19e2b5d5230e0acb460e1cbf0a63a4863edc
+legacy_branch=legacy-fts

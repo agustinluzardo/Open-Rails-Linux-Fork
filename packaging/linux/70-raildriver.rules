@@ -1,0 +1,10 @@
+# Access to the RailDriver desk.
+#
+# The simulator talks to the desk through hidraw. Distributions do not grant a normal user access
+# to those nodes, so without this rule the desk is simply not detected and the game runs with the
+# keyboard alone. Members of the "input" group can use it once this is installed:
+#
+#   sudo usermod -aG input "$USER"      # then log out and back in
+#
+# 05f3 is PI Engineering; 00d2 is the RailDriver.
+KERNEL=="hidraw*", ATTRS{idVendor}=="05f3", ATTRS{idProduct}=="00d2", MODE="0660", GROUP="input", TAG+="uaccess"

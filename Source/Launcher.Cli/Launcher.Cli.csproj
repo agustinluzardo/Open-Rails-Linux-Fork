@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+	  The launcher for the Linux build.
+
+	  Upstream's launcher is a Windows Forms application, which the Linux build cannot compile.
+	  This is a command line front end over the same content model, so a profile configured here
+	  is the one the simulator reads.
+	-->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<AssemblyTitle>Riel Launcher</AssemblyTitle>
+		<Description>Riel launcher</Description>
+		<RootNamespace>Riel.Launcher</RootNamespace>
+		<AssemblyName>riel</AssemblyName>
+		<OutputPath>..\..\Program</OutputPath>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Launcher.Core\Launcher.Core.csproj" />
+	</ItemGroup>
+</Project>

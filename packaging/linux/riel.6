@@ -1,0 +1,134 @@
+.TH RIEL 6 "2026" "riel" "Games"
+.SH NAME
+riel \- drive Microsoft Train Simulator routes natively on Linux
+.SH SYNOPSIS
+.B riel
+.I command
+.RI [ arguments ]
+.SH DESCRIPTION
+.B riel
+reads the routes, activities, rolling stock and sounds of Microsoft Train Simulator and runs them
+as a native Linux program, without Wine.
+.PP
+There are two ways in, over the same content and the same saved selections. The graphical
+launcher, which the desktop entry opens, is where most people start: choose a route, then an
+activity or a path and a train, and press Play. The commands below do the same from a terminal.
+The simulator itself is not on
+.BR PATH .
+.SH COMMANDS
+.TP
+.B riel gui
+Open the graphical launcher.
+.TP
+.B riel start
+Start again with whatever was played last, from here or from the graphical launcher.
+.TP
+.B riel content
+List the configured content folders.
+.TP
+.BI "riel content add " "name path"
+Add a folder holding Microsoft Train Simulator content and scan it.
+.TP
+.BI "riel content remove " name
+Remove a folder.
+.TP
+.B riel content refresh
+Rescan every folder. Do this after adding or changing routes on disk.
+.TP
+.BI "riel routes [" folder ]
+List routes.
+.TP
+.BI "riel activities " route
+List a route's activities.
+.TP
+.BI "riel paths " route
+List a route's player paths.
+.TP
+.BI "riel consists [" folder ]
+List consists.
+.TP
+.BI "riel play " "route activity"
+Start an activity.
+.TP
+.BI "riel explore " "route path consist"
+Start an explore session. Accepts
+.BI \-\-time " HH:MM" \fR,
+.BI \-\-season " summer"
+and
+.BI \-\-weather " clear" \fR.
+.TP
+.B riel resume
+Continue the last save.
+.TP
+.BI "riel run \-\- " arguments
+Start the simulator with raw arguments, for the options this command does not wrap.
+.TP
+.B riel doctor
+Check that this machine can run the simulator and report what is missing.
+.TP
+.B riel version
+Print the version.
+.PP
+Routes, activities, paths and consists are matched on their name, case insensitively; a unique
+prefix is enough.
+.SH ENVIRONMENT
+.TP
+.B RIEL_MSTS_PATH
+Where Microsoft Train Simulator is installed. Set this when the content is somewhere the
+automatic search would not look; it checks the XDG data directory, the home directory, every disk
+mounted under
+.I /mnt
+or
+.I /media
+and a games folder inside each, and the Program Files folder of any Wine or Proton prefix.
+.TP
+.B RIEL_VULKAN
+Set to 1 to run the OpenGL renderer on Vulkan through Mesa's zink driver.
+.TP
+.B RIEL_SIMULATOR
+Path to the simulator binary, for running this command against a build directory.
+.TP
+.B RIEL_NO_SOUND
+Set to 1 to run without sound: no audio device is opened. For telling a sound driver crash apart
+from a graphics one.
+.TP
+.B RIEL_BASIC_GRAPHICS
+Set to 1 to run in a window, without antialiasing, dynamic shadows or hardware instancing. Only
+that run changes; the saved settings stay as they are.
+.SH FILES
+.TP
+.I ~/.config/riel
+Settings and profiles.
+.TP
+.I ~/.local/share/riel
+Saves.
+.TP
+.I ~/.local/state/riel/Logs
+Logs. Attach these to a bug report.
+.I Startup.log
+records how far the last run got while starting, and
+.I Crashes
+holds the reports .NET writes when the simulator crashes in native code.
+.TP
+.I ~/.cache/riel
+Scanned content indexes. Safe to delete; they are rebuilt on the next scan.
+.PP
+These follow the XDG base directory specification and move with the corresponding
+.BR XDG_ *_HOME
+variables.
+.SH NOTES
+Microsoft Train Simulator content refers to its own files with inconsistent capitalisation,
+which NTFS forgives and Linux file systems do not. Riel resolves those references case
+insensitively, so a route copied from a Windows machine loads unchanged.
+.PP
+A RailDriver desk needs read access to its hidraw device. The package installs a udev rule
+granting it to the
+.B input
+group; add yourself to that group and log back in.
+.SH SEE ALSO
+The documentation installed under
+.IR /usr/share/doc/riel .
+.SH BUGS
+Report at
+.UR https://github.com/agustinluzardo/Open-Rails-Linux-Fork/issues
+.UE .

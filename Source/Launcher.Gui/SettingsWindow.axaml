@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="using:Riel.Launcher.Gui"
+        x:Class="Riel.Launcher.Gui.SettingsWindow"
+        Title="Riel Settings" Width="1080" Height="760" MinWidth="860" MinHeight="570"
+        WindowStartupLocation="CenterOwner">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+    <StackPanel Grid.Row="0" Spacing="4">
+      <TextBlock Text="{l:T 'Settings'}" FontSize="24" FontWeight="SemiBold"/>
+      <TextBlock Text="{l:T 'These settings are used by the simulator when you press Play.'}" Opacity="0.7"/>
+      <TextBlock x:Name="StatusText" TextWrapping="Wrap" Foreground="OrangeRed"/>
+    </StackPanel>
+    <TabControl x:Name="SettingsTabs" Grid.Row="1" Margin="0,16">
+      <TabItem Header="{l:T 'General'}"><ScrollViewer><StackPanel x:Name="GeneralPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Audio'}"><ScrollViewer><StackPanel x:Name="AudioPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Video'}">
+        <ScrollViewer>
+          <StackPanel Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left">
+            <TextBlock Text="{l:T 'Display and resolution'}" FontSize="18" FontWeight="SemiBold" Margin="0,4,0,4"/>
+            <Grid ColumnDefinitions="230,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+              <TextBlock Grid.Row="0" Text="{l:T 'Monitor'}" VerticalAlignment="Center"/><ComboBox Grid.Row="0" Grid.Column="1" x:Name="DisplayBox" MinWidth="350"/>
+              <TextBlock Grid.Row="1" Text="{l:T 'Detected resolution'}" VerticalAlignment="Center"/><TextBlock Grid.Row="1" Grid.Column="1" x:Name="DetectedResolutionText" VerticalAlignment="Center"/>
+              <TextBlock Grid.Row="2" Text="{l:T 'Window mode'}" VerticalAlignment="Center"/><ComboBox Grid.Row="2" Grid.Column="1" x:Name="ScreenModeBox"/>
+              <CheckBox Grid.Row="3" Grid.ColumnSpan="2" x:Name="AutoResolutionBox" Content="{l:T 'Use the selected monitor resolution automatically'}"/>
+              <TextBlock Grid.Row="4" Text="{l:T 'Resolution width'}" VerticalAlignment="Center"/><NumericUpDown Grid.Row="4" Grid.Column="1" x:Name="WidthBox" Minimum="320" Maximum="16384" Increment="1"/>
+              <TextBlock Grid.Row="5" Text="{l:T 'Resolution height'}" VerticalAlignment="Center"/><NumericUpDown Grid.Row="5" Grid.Column="1" x:Name="HeightBox" Minimum="240" Maximum="8640" Increment="1"/>
+            </Grid>
+            <TextBlock Text="{l:T 'Windowed mode uses the available desktop area; fullscreen uses the monitor size.'}" TextWrapping="Wrap" Opacity="0.7"/>
+            <StackPanel x:Name="VideoPanel" Spacing="10"/>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="{l:T 'Simulation'}"><ScrollViewer><StackPanel x:Name="SimulationPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Keyboard'}">
+        <Grid RowDefinitions="Auto,*">
+          <TextBlock Margin="12,8" Text="{l:T 'Click a key, then press a new combination. Escape cancels the capture.'}" TextWrapping="Wrap"/>
+          <ScrollViewer Grid.Row="1"><StackPanel x:Name="KeyboardPanel" Spacing="4"/></ScrollViewer>
+        </Grid>
+      </TabItem>
+      <TabItem Header="{l:T 'Data logger'}"><ScrollViewer><StackPanel x:Name="DataPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Evaluation'}"><ScrollViewer><StackPanel x:Name="EvaluationPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'Advanced'}"><ScrollViewer><StackPanel x:Name="AdvancedPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+    </TabControl>
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+      <Button x:Name="ResetKeyboardButton" Content="{l:T 'Reset controls to Riel defaults'}" HorizontalAlignment="Left"/>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+        <Button x:Name="CancelButton" Content="{l:T 'Cancel'}"/><Button x:Name="SaveButton" Classes="accent" Content="{l:T 'Save'}"/>
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>

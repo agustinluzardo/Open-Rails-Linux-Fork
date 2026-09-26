@@ -1,0 +1,66 @@
+name: Migrate Riel to Open Rails upstream
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/migrate-openrails.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild main from Open Rails and preserve the Riel layer
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin legacy-fts
+          git remote add upstream https://github.com/openrails/openrails.git
+          git fetch --no-tags upstream master
+
+          rm -rf /tmp/riel-layer
+          mkdir -p /tmp/riel-layer
+
+          git archive origin/legacy-fts \
+            Source/Launcher.Cli \
+            Source/Launcher.Core \
+            Source/Launcher.Gui \
+            Source/Locales/Launcher.Gui \
+            Source/Riel.ico \
+            Source/Riel.slnx \
+            docs/linux \
+            packaging/linux \
+            scripts/build-shaders.sh \
+            .github/workflows/linux-portable.yml \
+            | tar -x -C /tmp/riel-layer
+
+          mkdir -p /tmp/riel-layer/.github/workflows
+          cp .github/workflows/migrate-openrails.yml /tmp/riel-layer/.github/workflows/migrate-openrails.yml
+
+          git switch --detach upstream/master
+          rm -rf .github/workflows
+          cp -a /tmp/riel-layer/. .
+
+          cat > .riel-openrails-base <<EOF
+          upstream_repository=openrails/openrails
+          upstream_branch=master
+          upstream_commit=$(git rev-parse upstream/master)
+          migrated_from=$GITHUB_SHA
+          legacy_branch=legacy-fts
+          EOF
+
+          git add -A
+          git commit -m "Rebase Riel on Open Rails upstream"
+          git push origin HEAD:main --force-with-lease=main:$GITHUB_SHA

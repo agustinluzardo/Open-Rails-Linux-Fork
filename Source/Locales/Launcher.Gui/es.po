@@ -1,0 +1,782 @@
+# Spanish translation of the Riel launcher.
+# Copyright (C) 2026 the Riel project
+# This file is distributed under the same license as Riel (GPL-3.0-or-later).
+#
+# To add a language: copy Launcher.Gui.pot to <language>.po - de.po, pt_BR.po - and fill in
+# every msgstr. An empty msgstr falls back to the English. Keep the {0} placeholders.
+msgid ""
+msgstr ""
+"Project-Id-Version: Riel launcher\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Reading content…"
+msgstr "Leyendo el contenido…"
+
+msgid "Choose the Microsoft Train Simulator folder"
+msgstr "Elegir la carpeta de Microsoft Train Simulator"
+
+msgid "That folder does not exist"
+msgstr "Esa carpeta no existe"
+
+msgid "Nothing was found at {0}. Check the path, and that the disk it is on is mounted."
+msgstr "No hay nada en {0}. Revisá la ruta, y que el disco donde está esté montado."
+
+msgid "This does not look like an installation"
+msgstr "Esto no parece una instalación"
+
+msgid "{0} has no ROUTES and GLOBAL folders, so its routes would not load. Add it anyway?"
+msgstr "{0} no tiene las carpetas ROUTES y GLOBAL, así que sus rutas no cargarían. ¿Agregarla igual?"
+
+msgid "Add anyway"
+msgstr "Agregar igual"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Using {0}, the installation inside the folder chosen."
+msgstr "Se usa {0}, la instalación que está dentro de la carpeta elegida."
+
+msgid "Scanning {0}…"
+msgstr "Escaneando {0}…"
+
+msgid "Added {0}: {1}."
+msgstr "Se agregó {0}: {1}."
+
+msgid "Added {0}, but no routes were found in it."
+msgstr "Se agregó {0}, pero no se encontraron rutas adentro."
+
+msgid "Remove {0}?"
+msgstr "¿Quitar {0}?"
+
+msgid "Only the entry is removed. The folder and everything in it stay on disk."
+msgstr "Solo se quita de la lista. La carpeta y todo lo que tiene quedan en el disco."
+
+msgid "Remove"
+msgstr "Quitar"
+
+msgid "Removing…"
+msgstr "Quitando…"
+
+msgid "Removed {0}."
+msgstr "Se quitó {0}."
+
+msgid "Scanning every folder…"
+msgstr "Escaneando todas las carpetas…"
+
+msgid "Scanned again."
+msgstr "Escaneo terminado."
+
+msgid "That did not work"
+msgstr "Eso no funcionó"
+
+msgid "Something went wrong"
+msgstr "Algo salió mal"
+
+msgid "{0} route"
+msgstr "{0} ruta"
+
+msgid "{0} routes"
+msgstr "{0} rutas"
+
+msgid "Check this computer"
+msgstr "Revisar esta computadora"
+
+msgid "Copy"
+msgstr "Copiar"
+
+msgid "Close"
+msgstr "Cerrar"
+
+msgid "What the simulator needs, and whether it is here"
+msgstr "Lo que necesita el simulador, y si está"
+
+msgid "Checking…"
+msgstr "Revisando…"
+
+msgid "Everything the simulator needs is in place."
+msgstr "Está todo lo que el simulador necesita."
+
+msgid "Something the simulator needs is missing; the lines marked ✗ say what."
+msgstr "Falta algo que el simulador necesita; las líneas marcadas con ✗ dicen qué."
+
+msgid "OK"
+msgstr "Aceptar"
+
+msgid "Some content could not be read"
+msgstr "Parte del contenido no se pudo leer"
+
+msgid "Everything else loaded. These will not work until the files are fixed or replaced; the first one: {0}"
+msgstr "Todo lo demás cargó. Esto no va a funcionar hasta que se arreglen o reemplacen los archivos; el primero: {0}"
+
+msgid "route"
+msgstr "ruta"
+
+msgid "path"
+msgstr "recorrido"
+
+msgid "train"
+msgstr "tren"
+
+msgid "rolling stock"
+msgstr "material rodante"
+
+msgid "activity"
+msgstr "actividad"
+
+msgid "timetable"
+msgstr "horario"
+
+msgid "Details"
+msgstr "Detalles"
+
+msgid "The simulator stopped"
+msgstr "El simulador se cerró"
+
+msgid "The simulator crashed"
+msgstr "El simulador se colgó y se cerró"
+
+msgid "The simulator stopped because of an error"
+msgstr "El simulador se cerró por un error"
+
+msgid "It exited with code {0} without saying why."
+msgstr "Terminó con el código {0} sin decir por qué."
+
+msgid "It happened in {0}, called from {1}."
+msgstr "Pasó en {0}, llamado desde {1}."
+
+msgid "managed code"
+msgstr "código administrado"
+
+msgid "code that could not be named"
+msgstr "código que no se pudo identificar"
+
+msgid "When the content was scanned, this route reported: {0}"
+msgstr "Al escanear el contenido, esta ruta dio: {0}"
+
+msgid "Full log: {0}"
+msgstr "Log completo: {0}"
+
+msgid "No log was written; the simulator stopped before it got that far. Logs are kept in {0}"
+msgstr "No se escribió ningún log: el simulador se cerró antes de llegar a eso. Los logs se guardan en {0}"
+
+msgid "Copy details"
+msgstr "Copiar detalles"
+
+msgid "Open the log"
+msgstr "Abrir el log"
+
+msgid "Try without sound"
+msgstr "Probar sin sonido"
+
+msgid "Try with basic graphics"
+msgstr "Probar con gráficos básicos"
+
+msgid "Try without sound and with basic graphics"
+msgstr "Probar sin sonido y con gráficos básicos"
+
+msgid "while starting"
+msgstr "mientras arrancaba"
+
+msgid "while opening its window"
+msgstr "mientras abría su ventana"
+
+msgid "while setting up the graphics card"
+msgstr "mientras preparaba la placa de video"
+
+msgid "while showing its window for the first time"
+msgstr "mientras mostraba su ventana por primera vez"
+
+msgid "just after showing its window"
+msgstr "justo después de mostrar su ventana"
+
+msgid "while opening the sound device"
+msgstr "mientras abría el dispositivo de sonido"
+
+msgid "while loading the route"
+msgstr "mientras cargaba la ruta"
+
+msgid "while running"
+msgstr "mientras corría"
+
+msgid "It was stopped by a crash in native code ({0})."
+msgstr "Lo cortó un fallo en código nativo ({0})."
+
+msgid "It was stopped by a crash in native code ({0}) {1}."
+msgstr "Lo cortó un fallo en código nativo ({0}) {1}."
+
+msgid "That points at the graphics driver. Try with basic graphics: if it works, the driver has trouble with full screen, antialiasing or shadows. Copy details and include them in a bug report; they name the exact place."
+msgstr "Eso apunta al driver de video. Probá con gráficos básicos: si anda, el driver tiene problemas con la pantalla completa, el antialiasing o las sombras. Copiá los detalles y mandalos en el reporte: dicen el lugar exacto."
+
+msgid "That points at the sound system. Try without sound: if it works, the problem is between OpenAL and the sound server. Copy details and include them in a bug report; they name the exact place."
+msgstr "Eso apunta al sistema de sonido. Probá sin sonido: si anda, el problema está entre OpenAL y el servidor de sonido. Copiá los detalles y mandalos en el reporte: dicen el lugar exacto."
+
+msgid "That points at SDL or the window system. Try with basic graphics, which starts in a window rather than full screen. Copy details and include them in a bug report; they name the exact place."
+msgstr "Eso apunta a SDL o al sistema de ventanas. Probá con gráficos básicos, que arranca en una ventana en vez de pantalla completa. Copiá los detalles y mandalos en el reporte: dicen el lugar exacto."
+
+msgid "A crash like this happens in a driver or a system library, not in the route. Try without sound and with basic graphics: the one that works points at the part that fails. Copy details and include them in a bug report."
+msgstr "Un fallo así pasa en un driver o en una biblioteca del sistema, no en la ruta. Probá sin sonido y con gráficos básicos: la opción que funcione señala la parte que falla. Copiá los detalles y mandalos en el reporte."
+
+msgid "A file the route or the train needs is missing. Routes often borrow objects or rolling stock from other content packs; the missing file is named above, and installing the pack it belongs to fixes it."
+msgstr "Falta un archivo que la ruta o el tren necesita. Las rutas suelen usar objetos o material rodante de otros paquetes de contenido; el archivo que falta figura arriba, e instalar el paquete al que pertenece lo soluciona."
+
+msgid "A file could not be read because of its permissions. If the content is on a disk shared with Windows, check that your user can read it."
+msgstr "Un archivo no se pudo leer por sus permisos. Si el contenido está en un disco compartido con Windows, revisá que tu usuario pueda leerlo."
+
+msgid "The graphics card could not be set up. Check that its driver is installed; \"glxinfo | grep renderer\" should name the card rather than llvmpipe."
+msgstr "No se pudo preparar la placa de video. Revisá que su driver esté instalado; \"glxinfo | grep renderer\" debería nombrar la placa y no llvmpipe."
+
+msgid "A system library is missing. \"Check this computer\" in the main window lists which one."
+msgstr "Falta una biblioteca del sistema. \"Revisar esta computadora\", en la ventana principal, dice cuál."
+
+msgid "The launcher and the simulator disagreed about what to start. Choosing the route again usually fixes it."
+msgstr "El lanzador y el simulador no coincidieron en qué arrancar. Volver a elegir la ruta suele solucionarlo."
+
+msgid "The content scan could not read this route's track data, so it cannot be driven. Content folders, then Scan again, lists which file is missing or broken."
+msgstr "El escaneo no pudo leer los datos de vía de esta ruta, así que no se puede manejar. En Carpetas de contenido, Volver a escanear dice qué archivo falta o está roto."
+
+msgid "The computer ran out of memory. Closing other programs, or lowering the viewing distance, may help."
+msgstr "La computadora se quedó sin memoria. Cerrar otros programas, o bajar la distancia de visión, puede ayudar."
+
+msgid "The details below and the log say more. If it looks like a bug, reporting it with the log attached helps get it fixed."
+msgstr "Los detalles de abajo y el log dicen más. Si parece un error del programa, reportarlo con el log adjunto ayuda a arreglarlo."
+
+msgid "Spring"
+msgstr "Primavera"
+
+msgid "Summer"
+msgstr "Verano"
+
+msgid "Autumn"
+msgstr "Otoño"
+
+msgid "Winter"
+msgstr "Invierno"
+
+msgid "Clear"
+msgstr "Despejado"
+
+msgid "Rain"
+msgstr "Lluvia"
+
+msgid "Snow"
+msgstr "Nieve"
+
+msgid "Easy"
+msgstr "Fácil"
+
+msgid "Medium"
+msgstr "Media"
+
+msgid "Hard"
+msgstr "Difícil"
+
+msgid "{0} h {1} min"
+msgstr "{0} h {1} min"
+
+msgid "{0} min"
+msgstr "{0} min"
+
+msgid "{0} vehicle"
+msgstr "{0} vehículo"
+
+msgid "{0} vehicles"
+msgstr "{0} vehículos"
+
+msgid "No routes were found in the content folders. Check that each one is the folder holding ROUTES and GLOBAL."
+msgstr "No se encontraron rutas en las carpetas de contenido. Revisá que cada una sea la carpeta que tiene ROUTES y GLOBAL."
+
+msgid "{0} in {1}."
+msgstr "{0} en {1}."
+
+msgid "1 problem"
+msgstr "1 problema"
+
+msgid "{0} problems"
+msgstr "{0} problemas"
+
+msgid "An installation was found at {0}"
+msgstr "Se encontró una instalación en {0}"
+
+msgid "Adding the folder…"
+msgstr "Agregando la carpeta…"
+
+msgid "Choose a route"
+msgstr "Elegí una ruta"
+
+msgid "Choose a route."
+msgstr "Elegí una ruta."
+
+msgid "Choose an activity, or explore the route instead."
+msgstr "Elegí una actividad, o explorá la ruta."
+
+msgid "Choose a path to explore."
+msgstr "Elegí un recorrido para explorar."
+
+msgid "Choose a train to explore with."
+msgstr "Elegí un tren para explorar."
+
+msgid "Write the time as hours and minutes, like 08:30."
+msgstr "Escribí la hora como horas y minutos, por ejemplo 08:30."
+
+msgid "Nothing to play yet"
+msgstr "Todavía no hay nada para jugar"
+
+msgid "the saved game"
+msgstr "la partida guardada"
+
+msgid "Starting {0}…"
+msgstr "Arrancando {0}…"
+
+msgid "without sound"
+msgstr "sin sonido"
+
+msgid "with basic graphics"
+msgstr "con gráficos básicos"
+
+msgid "without sound and with basic graphics"
+msgstr "sin sonido y con gráficos básicos"
+
+msgid "Running {0}. The simulator window may take a moment to appear."
+msgstr "Jugando {0}. La ventana del simulador puede tardar un momento en aparecer."
+
+msgid "Running {0} {1}. The simulator window may take a moment to appear."
+msgstr "Corriendo {0} {1}. La ventana del simulador puede tardar un momento en aparecer."
+
+msgid "The simulator crashed."
+msgstr "El simulador se colgó y se cerró."
+
+msgid "The simulator stopped because of an error."
+msgstr "El simulador se cerró por un error."
+
+msgid "Finished {0}."
+msgstr "Terminó {0}."
+
+msgid "Finished {0} {1}."
+msgstr "Terminó {0} {1}."
+
+msgid "Scanning content… {0}%"
+msgstr "Escaneando el contenido… {0}%"
+
+msgid "{0} content folder"
+msgstr "{0} carpeta de contenido"
+
+msgid "{0} content folders"
+msgstr "{0} carpetas de contenido"
+
+msgid "Play"
+msgstr "Jugar"
+
+msgid "Content folders"
+msgstr "Carpetas de contenido"
+
+msgid "Each one is a Microsoft Train Simulator installation, or a copy of one: the folder that holds ROUTES and GLOBAL. It can be on any disk, or inside a Wine or Proton prefix. Riel only ever reads it."
+msgstr "Cada una es una instalación de Microsoft Train Simulator, o una copia: la carpeta que tiene ROUTES y GLOBAL. Puede estar en cualquier disco, o dentro de un prefijo de Wine o Proton. Riel solo la lee, nunca la modifica."
+
+msgid "Folder"
+msgstr "Carpeta"
+
+msgid "Paste a path, or browse for it"
+msgstr "Pegá una ruta, o buscala"
+
+msgid "Browse…"
+msgstr "Buscar…"
+
+msgid "Name"
+msgstr "Nombre"
+
+msgid "Add"
+msgstr "Agregar"
+
+msgid "Scan again"
+msgstr "Volver a escanear"
+
+msgid "No folders yet."
+msgstr "Todavía no hay carpetas."
+
+msgid "Microsoft Train Simulator routes, natively on Linux"
+msgstr "Rutas de Microsoft Train Simulator, nativas en Linux"
+
+msgid "Dark"
+msgstr "Modo oscuro"
+
+msgid "Routes"
+msgstr "Rutas"
+
+msgid "Search routes"
+msgstr "Buscar rutas"
+
+msgid "Activity"
+msgstr "Actividad"
+
+msgid "This route has no activities. Explore it instead: pick a path and a train in the Explore tab."
+msgstr "Esta ruta no tiene actividades. Se puede explorar: elegí un recorrido y un tren en la pestaña Explorar."
+
+msgid "Explore"
+msgstr "Explorar"
+
+msgid "Path"
+msgstr "Recorrido"
+
+msgid "Train"
+msgstr "Tren"
+
+msgid "Search trains"
+msgstr "Buscar trenes"
+
+msgid "Time"
+msgstr "Hora"
+
+msgid "Season"
+msgstr "Estación"
+
+msgid "Weather"
+msgstr "Clima"
+
+msgid "No content yet"
+msgstr "Todavía no hay contenido"
+
+msgid "Choose the folder where Microsoft Train Simulator is installed: the one that contains ROUTES and GLOBAL. It can be on any disk, or inside a Wine or Proton prefix."
+msgstr "Elegí la carpeta donde está instalado Microsoft Train Simulator: la que tiene ROUTES y GLOBAL. Puede estar en cualquier disco, o dentro de un prefijo de Wine o Proton."
+
+msgid "Use this one"
+msgstr "Usar esta"
+
+msgid "Choose a folder"
+msgstr "Elegir una carpeta"
+
+msgid "Continue saved game"
+msgstr "Continuar partida guardada"
+
+msgid "Choose a saved game"
+msgstr "Elegir una partida guardada"
+
+msgid "Select the exact save to continue. Newest saves are shown first."
+msgstr "Elegí la partida que querés continuar. Las más recientes aparecen primero."
+
+msgid "No preview available"
+msgstr "No hay vista previa disponible"
+
+msgid "Continue"
+msgstr "Continuar"
+
+msgid "Select a save to see its route, train, game time and screenshot."
+msgstr "Elegí una partida para ver su ruta, tren, hora de juego y captura."
+
+msgid "Delete save"
+msgstr "Eliminar partida"
+
+msgid "Restore deleted saves"
+msgstr "Restaurar partidas eliminadas"
+
+msgid "Reading save details…"
+msgstr "Leyendo los datos de la partida…"
+
+msgid "Unknown route"
+msgstr "Ruta desconocida"
+
+msgid "Unknown train"
+msgstr "Tren desconocido"
+
+msgid "Game time"
+msgstr "Hora de juego"
+
+msgid "Save version"
+msgstr "Versión del guardado"
+
+msgid "This save is incomplete and cannot be continued."
+msgstr "Esta partida está incompleta y no se puede continuar."
+
+msgid "Save details unavailable"
+msgstr "No se pudieron leer los datos de la partida"
+
+msgid "Could not read this save: {0}"
+msgstr "No se pudo leer esta partida: {0}"
+
+msgid "Delete saved game?"
+msgstr "¿Eliminar esta partida?"
+
+msgid "Move {0} and its screenshot and replay to Deleted Saves? You can restore them later."
+msgstr "¿Mover {0}, su captura y su repetición a Partidas eliminadas? Podés restaurarlos después."
+
+msgid "A deleted save with the same name already exists. Restore it first."
+msgstr "Ya existe una partida eliminada con el mismo nombre. Restaurala primero."
+
+msgid "Could not delete saved game"
+msgstr "No se pudo eliminar la partida"
+
+msgid "Saves restored"
+msgstr "Partidas restauradas"
+
+msgid "Restored {0} files."
+msgstr "Se restauraron {0} archivos."
+
+msgid "Could not restore saved games"
+msgstr "No se pudieron restaurar las partidas"
+
+msgid "Timetable"
+msgstr "Horarios"
+
+msgid "Timetable set"
+msgstr "Conjunto de horarios"
+
+msgid "Day"
+msgstr "Día"
+
+msgid "Default weather"
+msgstr "Clima predeterminado"
+
+msgid "Choose a timetable set."
+msgstr "Elegí un conjunto de horarios."
+
+msgid "Choose a timetable train."
+msgstr "Elegí un tren del horario."
+
+msgid "Monday"
+msgstr "Lunes"
+
+msgid "Tuesday"
+msgstr "Martes"
+
+msgid "Wednesday"
+msgstr "Miércoles"
+
+msgid "Thursday"
+msgstr "Jueves"
+
+msgid "Friday"
+msgstr "Viernes"
+
+msgid "Saturday"
+msgstr "Sábado"
+
+msgid "Sunday"
+msgstr "Domingo"
+
+msgid "Delete invalid saves"
+msgstr "Eliminar partidas inválidas"
+
+msgid "Delete invalid saves?"
+msgstr "¿Eliminar las partidas inválidas?"
+
+msgid "Move {0} invalid saves to Deleted Saves?"
+msgstr "¿Mover {0} partidas inválidas a Partidas eliminadas?"
+
+msgid "Replay from previous save"
+msgstr "Repetir desde la partida anterior"
+
+msgid "Replay from start"
+msgstr "Repetir desde el inicio"
+
+msgid "Import save pack"
+msgstr "Importar paquete de partida"
+
+msgid "Export save pack"
+msgstr "Exportar paquete de partida"
+
+msgid "Replace save pack?"
+msgstr "¿Reemplazar el paquete?"
+
+msgid "A save pack named {0} already exists. Replace it?"
+msgstr "Ya existe un paquete llamado {0}. ¿Reemplazarlo?"
+
+msgid "Replace"
+msgstr "Reemplazar"
+
+msgid "Save pack exported"
+msgstr "Paquete de partida exportado"
+
+msgid "Could not export save pack"
+msgstr "No se pudo exportar el paquete de partida"
+
+msgid "Could not import save pack"
+msgstr "No se pudo importar el paquete de partida"
+
+msgid "The pack is empty, contains unsafe paths, or would overwrite an existing save."
+msgstr "El paquete está vacío, tiene rutas inseguras o sobrescribiría una partida existente."
+
+msgid "Settings"
+msgstr "Configuración"
+
+msgid "These settings are used by the simulator when you press Play."
+msgstr "El simulador usa estos ajustes al pulsar Jugar."
+
+msgid "General"
+msgstr "General"
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Video"
+msgstr "Vídeo"
+
+msgid "Simulation"
+msgstr "Simulación"
+
+msgid "Keyboard"
+msgstr "Teclado"
+
+msgid "Data logger"
+msgstr "Registro de datos"
+
+msgid "Evaluation"
+msgstr "Evaluación"
+
+msgid "Advanced"
+msgstr "Avanzado"
+
+msgid "Display and resolution"
+msgstr "Pantalla y resolución"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Detected resolution"
+msgstr "Resolución detectada"
+
+msgid "Window mode"
+msgstr "Modo de pantalla"
+
+msgid "Use the selected monitor resolution automatically"
+msgstr "Usar automáticamente la resolución del monitor seleccionado"
+
+msgid "Resolution width"
+msgstr "Ancho de resolución"
+
+msgid "Resolution height"
+msgstr "Alto de resolución"
+
+msgid "Windowed mode uses the available desktop area; fullscreen uses the monitor size."
+msgstr "El modo ventana usa el área disponible del escritorio; la pantalla completa usa el tamaño del monitor."
+
+msgid "Click a key, then press a new combination. Escape cancels the capture."
+msgstr "Elegí una tecla y pulsá la nueva combinación. Escape cancela la captura."
+
+msgid "Reset controls to Riel defaults"
+msgstr "Restablecer controles de Riel"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Display {0}: {1} × {2}"
+msgstr "Pantalla {0}: {1} × {2}"
+
+msgid "Primary"
+msgstr "Principal"
+
+msgid "No display detected"
+msgstr "No se detectó ninguna pantalla"
+
+msgid "Driving and units"
+msgstr "Conducción y unidades"
+
+msgid "Sound"
+msgstr "Sonido"
+
+msgid "Rendering"
+msgstr "Renderizado"
+
+msgid "Physics and operations"
+msgstr "Física y operaciones"
+
+msgid "Recording"
+msgstr "Grabación"
+
+msgid "Trip evaluation"
+msgstr "Evaluación del recorrido"
+
+msgid "Network"
+msgstr "Red"
+
+msgid "Diagnostics and replay"
+msgstr "Diagnóstico y repetición"
+
+msgid "Sound Volume Percent"
+msgstr "Volumen del sonido (%)"
+
+msgid "Sound Detail Level"
+msgstr "Detalle del sonido"
+
+msgid "External Sound Pass Thru Percent"
+msgstr "Sonido exterior en cabina (%)"
+
+msgid "Vertical Sync"
+msgstr "Sincronización vertical"
+
+msgid "Multi Sampling Count"
+msgstr "Antialiasing MSAA"
+
+msgid "Dynamic Shadows"
+msgstr "Sombras dinámicas"
+
+msgid "Shadow All Shapes"
+msgstr "Sombras en todos los objetos"
+
+msgid "Model Instancing"
+msgstr "Instancias de modelos"
+
+msgid "Viewing Distance"
+msgstr "Distancia de visión (m)"
+
+msgid "Far Mountains Viewing Distance"
+msgstr "Distancia de montañas (m)"
+
+msgid "Field Of View"
+msgstr "Campo de visión (grados)"
+
+msgid "Ambient Brightness"
+msgstr "Brillo ambiental"
+
+msgid "Shadow Map Resolution"
+msgstr "Resolución de sombras"
+
+msgid "Signal Light Glow"
+msgstr "Brillo de señales"
+
+msgid "Advanced Adhesion"
+msgstr "Adherencia avanzada"
+
+msgid "Weather Dependent Adhesion"
+msgstr "Adherencia según el clima"
+
+msgid "Couplers Break"
+msgstr "Rotura de enganches"
+
+msgid "Simplified Controls"
+msgstr "Controles simplificados"
+
+msgid "Track Gauge"
+msgstr "Ancho de vía (mm)"
+
+msgid "Data Logger"
+msgstr "Registrar datos"
+
+msgid "Evaluation Train Speed"
+msgstr "Evaluar velocidad del tren"
+
+msgid "Evaluation Station Stops"
+msgstr "Evaluar paradas en estaciones"
+
+msgid "Web Server"
+msgstr "Servidor web"
+
+msgid "Profiling"
+msgstr "Medir rendimiento"
+
+msgid "Close Launcher While Playing"
+msgstr "Cerrar el lanzador mientras jugás y volver a abrirlo al salir"
+
+msgid "Could not start the simulator"
+msgstr "No se pudo iniciar el simulador"
+
+msgid "Explore in Activity Mode"
+msgstr "Explorar en modo actividad"
+
+msgid "Use Open Rails activity-style exploration. Normal Explore is recommended for most routes."
+msgstr "Usa la exploración al estilo actividad de Open Rails. Para la mayoría de las rutas se recomienda Explorar normal."
