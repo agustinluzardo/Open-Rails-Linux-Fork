@@ -1,0 +1,21 @@
+name: Native Open Rails Linux
+
+on:
+  push:
+    branches: [native-openrails]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore native RunActivity
+        working-directory: Source
+        run: dotnet restore RunActivity/RunActivity.csproj -p:RielNativeLinux=true
+      - name: Build native RunActivity
+        working-directory: Source
+        run: dotnet build RunActivity/RunActivity.csproj -c Release --no-restore -p:RielNativeLinux=true
