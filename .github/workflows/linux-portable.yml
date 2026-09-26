@@ -18,7 +18,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: |
+            6.0.x
+            10.0.x
       - name: Compile Open Rails shaders for DesktopGL
         shell: pwsh
         run: |
@@ -63,8 +65,8 @@ jobs:
           AVALONIA_TELEMETRY_OPTOUT: '1'
         run: |
           set -euo pipefail
-          dotnet test Tests/Tests.csproj -c Release -p:TargetFramework=net10.0 -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
-          dotnet build RunActivity/RunActivity.csproj -c Release -p:TargetFramework=net10.0 -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
+          dotnet test Tests/Tests.csproj -c Release -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
+          dotnet build RunActivity/RunActivity.csproj -c Release -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
 
       - name: Publish native engine and launchers
         env:
@@ -74,19 +76,22 @@ jobs:
         run: |
           set -euo pipefail
           publish="${RUNNER_TEMP}/riel-publish"
-          mkdir -p "$publish/Content"
+          mkdir -p "$publish/engine/Content"
 
+          # The engine still targets .NET 6 while the Linux launchers target .NET 10.
+          # Keep their self-contained runtimes in different directories: publishing them
+          # into one directory overwrites framework DLLs and creates an unloadable hybrid.
           dotnet publish Source/RunActivity/RunActivity.csproj -c Release -r linux-x64 --self-contained true \
-            -p:TargetFramework=net10.0 -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL -p:IsPublishable=true -o "$publish"
+            -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL -p:IsPublishable=true -o "$publish/engine"
           dotnet publish Source/Launcher.Cli/Launcher.Cli.csproj -c Release -r linux-x64 --self-contained true \
-            -p:TargetFramework=net10.0 -p:RielPlatform=linux -o "$publish"
+            -p:RielPlatform=linux -o "$publish"
           dotnet publish Source/Launcher.Gui/Launcher.Gui.csproj -c Release -r linux-x64 --self-contained true \
-            -p:TargetFramework=net10.0 -p:RielPlatform=linux -o "$publish"
+            -p:RielPlatform=linux -o "$publish"
 
       - uses: actions/download-artifact@v4
         with:
           name: openrails-opengl-shaders
-          path: ${{ runner.temp }}/riel-publish/Content
+          path: ${{ runner.temp }}/riel-publish/engine/Content
 
       - name: Package and verify without an installed .NET runtime
         env:
@@ -101,24 +106,29 @@ jobs:
           publish="${RUNNER_TEMP}/riel-publish"
           bundle="${RUNNER_TEMP}/riel-linux-x64"
 
-          test -x "$publish/RunActivity"
+          test -x "$publish/engine/RunActivity"
           test -x "$publish/riel"
           test -x "$publish/riel-gui"
-          file "$publish/RunActivity" | grep -q 'ELF 64-bit'
+          file "$publish/engine/RunActivity" | grep -q 'ELF 64-bit'
+          test -s "$publish/engine/System.Security.Cryptography.dll"
           test -s "$publish/System.Security.Cryptography.dll"
-          grep -q '"tfm": "net10.0"' "$publish/RunActivity.runtimeconfig.json"
-          grep -q '"version": "10.0.' "$publish/RunActivity.runtimeconfig.json"
+          grep -q '"tfm": "net6.0"' "$publish/engine/RunActivity.runtimeconfig.json"
+          grep -q '"version": "6.0.' "$publish/engine/RunActivity.runtimeconfig.json"
+          grep -q '"tfm": "net10.0"' "$publish/riel.runtimeconfig.json"
+          grep -q '"version": "10.0.' "$publish/riel.runtimeconfig.json"
           for shader in CabShader DebugShader DriverMachineInterfaceShader LightConeShader LightGlowShader Loading ParticleEmitterShader PopupWindow PrecipitationShader SceneryShader ShadowMap SkyShader; do
-            test -s "$publish/Content/$shader.mgfx"
+            test -s "$publish/engine/Content/$shader.mgfx"
           done
 
           mkdir -p "$bundle/app"
           cp -a "$publish/." "$bundle/app/"
           install -m 755 packaging/linux/riel-portable "$bundle/riel"
           find "$bundle/app" -type f \( -name '*.pdb' -o -name '*.dbg' \) -delete
-          if [ -d "$bundle/app/runtimes" ]; then
-            find "$bundle/app/runtimes" -mindepth 1 -maxdepth 1 ! -name linux-x64 ! -name unix -exec rm -rf {} +
-          fi
+          for runtime_dir in "$bundle/app/runtimes" "$bundle/app/engine/runtimes"; do
+            if [ -d "$runtime_dir" ]; then
+              find "$runtime_dir" -mindepth 1 -maxdepth 1 ! -name linux-x64 ! -name unix -exec rm -rf {} +
+            fi
+          done
 
           "$bundle/riel" version
           "$bundle/riel" content
