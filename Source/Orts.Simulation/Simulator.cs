@@ -527,6 +527,17 @@ namespace Orts.Simulation
             }
             await ContainerManager.ContainerStations.RestoreDictionaryOnExistingItems(saveState.ContainerStations).ConfigureAwait(false);
 
+            // InitSimulator builds a normal session before a save is restored. From this point on
+            // every train comes from the snapshot, so no reference to the pre-restore session may
+            // survive. In particular, stale command receivers and dictionary entries can otherwise
+            // keep pointing at the discarded player locomotive.
+            PlayerLocomotive = null;
+            OriginalPlayerTrain = null;
+            TrainDictionary.Clear();
+            NameDictionary.Clear();
+            StartReference.Clear();
+            AutoGenDictionary.Clear();
+
             Trains = new TrainList(this);
             await Trains.RestoreCollectionCreateNewItems(saveState.Trains, this).ConfigureAwait(false);
             AI ??= new AI(this);
@@ -538,8 +549,21 @@ namespace Orts.Simulation
                 AutoGenDictionary.Add(train.Number, train);
             Trains.AddRange(AI.AITrains);
 
-            if (PlayerLocomotive?.Train is AITrain aiTrain)
-                aiTrain.AI = AI;
+            // Restore a live player-locomotive reference before the Viewer is constructed. The
+            // snapshot creates new Train/TrainCar instances, so keeping PlayerLocomotive from the
+            // pre-restore session makes controls act on an object which is no longer rendered.
+            if (!TimetableMode)
+            {
+                Train restoredPlayerTrain = Trains.FirstOrDefault(train =>
+                    train.TrainType == TrainType.Player ||
+                    train.TrainType == TrainType.AiPlayerDriven ||
+                    train.TrainType == TrainType.AiPlayerHosting);
+                if (restoredPlayerTrain != null)
+                {
+                    PlayerLocomotive = restoredPlayerTrain.LeadLocomotive as MSTSLocomotive ??
+                        restoredPlayerTrain.Cars.OfType<MSTSLocomotive>().FirstOrDefault(car => car.IsDriveable);
+                }
+            }
 
             // find player train
             foreach (Train train in Trains)
@@ -585,6 +609,9 @@ namespace Orts.Simulation
 
                 PlayerLocomotive = Trains[0].LeadLocomotive;
             }
+
+            if (PlayerLocomotive?.Train is AITrain aiTrain)
+                aiTrain.AI = AI;
 
             // Find original player train
             OriginalPlayerTrain = Trains.Find(item => item.Number == 0);

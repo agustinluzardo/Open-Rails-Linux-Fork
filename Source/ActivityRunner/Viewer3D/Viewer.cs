@@ -1813,7 +1813,16 @@ namespace Orts.ActivityRunner.Viewer3D
         {
             ArgumentNullException.ThrowIfNull(saveState, nameof(saveState));
             Train playerTrain = Simulator.Trains[saveState.PlayerTrainIndex];
-            PlayerLocomotive = playerTrain.Cars[saveState.PlayerLocomotiveIndex] as MSTSLocomotive;
+            PlayerLocomotive = playerTrain.Cars[saveState.PlayerLocomotiveIndex] as MSTSLocomotive ??
+                throw new InvalidDataException("Saved player locomotive is not a driveable locomotive.");
+
+            // Initialize() binds command receivers before the viewer snapshot is restored. Resume
+            // can change the exact player locomotive/cab here, so rebind both the visual viewer and
+            // every static command receiver to the restored TrainCar. Without this, e.g. H changes
+            // the discarded pre-restore locomotive while the visible train never changes lights.
+            PlayerLocomotiveViewer = World.Trains.GetViewer(PlayerLocomotive) ??
+                throw new InvalidDataException("Saved player locomotive has no loaded train viewer.");
+            SetCommandReceivers();
 
             int selected = saveState.SelectedTrainIndex;
             if (selected >= 0 && selected < Simulator.Trains.Count)

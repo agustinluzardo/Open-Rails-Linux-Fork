@@ -955,7 +955,12 @@ namespace Orts.ActivityRunner.Processes
             {
                 saveFile += FileNameExtensions.SaveFile;
             }
-            return Path.Combine(RuntimeInfo.UserDataFolder, saveFile);
+
+            string resolvedSave = Path.IsPathRooted(saveFile)
+                ? Path.GetFullPath(saveFile)
+                : Path.GetFullPath(Path.Combine(RuntimeInfo.UserDataFolder, saveFile));
+            Trace.TraceInformation("[SaveResume] requested save='{0}' resolved='{1}'", fileName, resolvedSave);
+            return resolvedSave;
         }
 
         private static long GetProcessBytesLoaded()
