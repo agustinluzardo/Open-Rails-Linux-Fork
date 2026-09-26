@@ -2,12 +2,22 @@
 using System;
 using System.IO;
 using ORTS.Common;
+using ORTS.Settings;
 using Xunit;
 
 namespace Tests.OrtsCommon
 {
     public class LinuxIniSettingsTests
     {
+        [Fact]
+        public void EngineUserSettingsLoadOnLinux()
+        {
+            var settings = new UserSettings(Array.Empty<string>());
+            Assert.NotNull(settings.Folders);
+            Assert.NotNull(settings.Input);
+            Assert.NotNull(settings.Content);
+        }
+
         [Fact]
         public void IniSettingsRoundTripWithoutWindowsProfileApi()
         {
