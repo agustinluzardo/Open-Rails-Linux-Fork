@@ -68,6 +68,11 @@ jobs:
           dotnet test Tests/Tests.csproj -c Release -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
           dotnet build RunActivity/RunActivity.csproj -c Release -p:RielPlatform=linux -p:RielGraphicsBackend=DesktopGL
 
+      - name: Install Linux audio runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libopenal1
+
       - name: Publish native engine and launchers
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: '1'
@@ -87,6 +92,11 @@ jobs:
             -p:RielPlatform=linux -o "$publish"
           dotnet publish Source/Launcher.Gui/Launcher.Gui.csproj -c Release -r linux-x64 --self-contained true \
             -p:RielPlatform=linux -o "$publish"
+
+          openal="$(ldconfig -p | awk '/libopenal\.so\.1 \(libc6,x86-64\)/ { print $NF; exit }')"
+          test -n "$openal"
+          cp -L "$openal" "$publish/engine/libopenal.so.1"
+          cp /usr/share/doc/libopenal1/copyright "$publish/engine/OPENAL-LICENSE.txt"
 
       - uses: actions/download-artifact@v4
         with:
@@ -112,6 +122,13 @@ jobs:
           file "$publish/engine/RunActivity" | grep -q 'ELF 64-bit'
           test -s "$publish/engine/System.Net.Http.dll"
           test -s "$publish/engine/System.Security.Cryptography.Algorithms.dll"
+          test -s "$publish/engine/libopenal.so.1"
+          strings "$publish/engine/RunActivity.dll" | grep -q 'libopenal.so.1'
+          if ldd "$publish/engine/libopenal.so.1" | grep -q 'not found'; then
+            echo "Bundled OpenAL has unresolved native dependencies" >&2
+            ldd "$publish/engine/libopenal.so.1" >&2
+            exit 1
+          fi
           test -s "$publish/System.Net.Http.dll"
           test -s "$publish/System.Security.Cryptography.dll"
           strings "$publish/engine/System.Net.Http.dll" | grep -q 'Version=6.0.0.0'
