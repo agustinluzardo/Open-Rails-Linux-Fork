@@ -282,7 +282,7 @@ namespace Orts.Viewer3D
             var numCanBeEmitted = GetCountFreeParticles();
             var numToEmit = Math.Min(numToBeEmitted, numCanBeEmitted);
 
-            bool includeSceneryHeight = Viewer.Simulator.WeatherType == Orts.Formats.Msts.WeatherType.Snow;
+            bool includeSceneryHeight = viewer.Simulator.WeatherType == Orts.Formats.Msts.WeatherType.Snow;
             for (var i = 0; i < numToEmit; i++)
             {
                 var temp = new WorldLocation(worldLocation.TileX, worldLocation.TileZ, worldLocation.Location.X + (float)((Viewer.Random.NextDouble() - 0.5) * ParticleBoxWidthM), 0, worldLocation.Location.Z + (float)((Viewer.Random.NextDouble() - 0.5) * ParticleBoxLengthM));
