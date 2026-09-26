@@ -42,6 +42,12 @@ namespace Orts.ActivityRunner.Viewer3D
         private float AnimationKey;
         private bool animationKeyInitialized;
 
+        /// <summary>
+        /// Current normalized animation position (0 closed/down, 1 open/up).
+        /// Used by the Open Rails-compatible cab sound pass-through calculation.
+        /// </summary>
+        public float AnimationFraction => FrameCount > 0 ? MathHelper.Clamp(AnimationKey / FrameCount, 0, 1) : 0;
+
         // List of the matrices we're animating for this part.
         public ImmutableArray<int> MatrixIndexes { get; private set; } = ImmutableArray<int>.Empty;
 
