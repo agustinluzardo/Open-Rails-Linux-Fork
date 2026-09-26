@@ -395,7 +395,6 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
                     if (ActiveInSource != null)
                     {
                         ActiveInSource.Uninitialize();
-                        ActiveInSource = inSources[curTrackSoundType];
                         if (0 <= curTrackSoundType && curTrackSoundType < inSources.Count)
                             ActiveInSource = inSources[curTrackSoundType];
                         else
@@ -405,9 +404,8 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
                     if (ActiveOutSource != null)
                     {
                         ActiveOutSource.Uninitialize();
-                        ActiveOutSource = outSources[curTrackSoundType];
                         if (0 <= curTrackSoundType && curTrackSoundType < outSources.Count)
-                            ActiveInSource = inSources[curTrackSoundType];
+                            ActiveOutSource = outSources[curTrackSoundType];
                         else
                             Trace.TraceWarning("Could not change outside sound region to {0}", curTrackSoundType);
                     }
