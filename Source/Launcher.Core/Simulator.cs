@@ -57,7 +57,7 @@ namespace Riel.Launcher
     /// <summary>Finds and starts the simulator.</summary>
     public static class Simulator
     {
-        private const string ExecutableName = "ActivityRunner";
+        private const string ExecutableName = "RunActivity";
 
         /// <summary>
         /// Finds the simulator: next to the launcher, where both the build output and the
