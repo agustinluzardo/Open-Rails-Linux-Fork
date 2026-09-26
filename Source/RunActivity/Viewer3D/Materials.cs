@@ -84,6 +84,7 @@ namespace Orts.Viewer3D
 
             if (string.IsNullOrEmpty(path)) return defaultTexture;
 
+            path = ContentPath.ResolveFile(path) ?? ContentPath.Normalize(path);
             var textureKey = path.ToLowerInvariant();
             if (Textures.ContainsKey(textureKey)) return Textures[textureKey];
 
@@ -101,14 +102,16 @@ namespace Orts.Viewer3D
                         {
                             var dds = Path.ChangeExtension(depthPath, ".dds");
                             var ace = Path.ChangeExtension(depthPath, ".ace");
-                            if (File.Exists(dds))
+                            var resolvedDds = ContentPath.ResolveFile(dds);
+                            if (resolvedDds != null)
                             {
-                                DDSLib.DDSFromFile(dds, GraphicsDevice, true, out Texture2D texture);
+                                DDSLib.DDSFromFile(resolvedDds, GraphicsDevice, true, out Texture2D texture);
                                 return Textures[textureKey] = texture;
                             }
-                            if (File.Exists(ace))
+                            var resolvedAce = ContentPath.ResolveFile(ace);
+                            if (resolvedAce != null)
                             {
-                                return Textures[textureKey] = Formats.Msts.AceFile.Texture2DFromFile(GraphicsDevice, ace);
+                                return Textures[textureKey] = Formats.Msts.AceFile.Texture2DFromFile(GraphicsDevice, resolvedAce);
                             }
                             if (defaultTexture != SharedMaterialManager.MissingTexture)
                             {
