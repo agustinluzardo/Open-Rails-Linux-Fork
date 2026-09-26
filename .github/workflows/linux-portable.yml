@@ -132,6 +132,11 @@ jobs:
           test -s "$publish/engine/libsndio.so.7"
           test "$(patchelf --print-rpath "$publish/engine/libopenal.so.1")" = '$ORIGIN'
           strings "$publish/engine/RunActivity.dll" | grep -q 'libopenal.so.1'
+          if strings "$publish/engine/RunActivity.dll" | grep -Eiq '(^|[^[:alnum:]_])(user32|kernel32|gdi32)\.dll([^[:alnum:]_]|$)'; then
+            echo "Linux RunActivity still contains a direct Win32 native-library import:" >&2
+            strings "$publish/engine/RunActivity.dll" | grep -Ei '(user32|kernel32|gdi32)\.dll' >&2
+            exit 1
+          fi
           if ldd "$publish/engine/libopenal.so.1" | grep -q 'not found'; then
             echo "Bundled OpenAL has unresolved native dependencies" >&2
             ldd "$publish/engine/libopenal.so.1" >&2
