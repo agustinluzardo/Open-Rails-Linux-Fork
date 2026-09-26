@@ -446,23 +446,43 @@ namespace Orts.Viewer3D.Popups
                 Boxes = new Rectangle[Characters.Length];
                 AbcWidths = new Vector3[Characters.Length];
 
-                // Boring device context for APIs.
+                var mergeIndex = 0;
+                var spacing = BoxSpacing + OutlineSize;
+                var x = spacing;
+                var y = spacing;
+                var height = (int)Math.Ceiling(Font.GetHeight()) + 1;
+#if RIEL_UNIX
+                for (var i = 0; i < Characters.Length; i++)
+                {
+                    if ((mergeIndex < mergeCharacters.Length) && (mergeCharacters[mergeIndex] == Characters[i]))
+                    {
+                        AbcWidths[i] = mergeAbcWidths[mergeIndex];
+                        mergeIndex++;
+                    }
+                    else
+                    {
+                        // Skia/fontconfig already performs glyph fallback. Measure the character
+                        // directly instead of asking GDI for ABC widths.
+                        int width = System.Windows.Forms.TextRenderer.MeasureText(Characters[i].ToString(), Font, System.Drawing.Size.Empty, Flags).Width;
+                        AbcWidths[i] = new Vector3(0, width, 0);
+                    }
+                    Boxes[i] = new Rectangle(x, y, (int)(AbcWidths[i].Y + 2 * OutlineSize), height + 2 * OutlineSize);
+                    x += Boxes[i].Width + BoxSpacing;
+                    if (x >= 256)
+                    {
+                        x = BoxSpacing;
+                        y += Boxes[i].Height + BoxSpacing;
+                    }
+                }
+#else
                 var hdc = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
                 NativeMethods.SelectObject(hdc, Font.ToHfont());
                 try
                 {
-                    // Get character glyph indices to identify those not supported by this font.
                     var charactersGlyphs = new short[Characters.Length];
                     if (NativeMethods.GetGlyphIndices(hdc, new String(Characters), Characters.Length, charactersGlyphs, NativeMethods.GgiFlags.MarkNonexistingGlyphs) != Characters.Length) throw new Exception();
-
-                    var mergeIndex = 0;
-                    var spacing = BoxSpacing + OutlineSize;
-                    var x = spacing;
-                    var y = spacing;
-                    var height = (int)Math.Ceiling(Font.GetHeight()) + 1;
                     for (var i = 0; i < Characters.Length; i++)
                     {
-                        // Copy ABC widths from merge data or calculate ourselves.
                         if ((mergeIndex < mergeCharacters.Length) && (mergeCharacters[mergeIndex] == Characters[i]))
                         {
                             AbcWidths[i] = mergeAbcWidths[mergeIndex];
@@ -475,26 +495,17 @@ namespace Orts.Viewer3D.Popups
                             AbcWidths[i] = new Vector3(characterAbcWidth.A, characterAbcWidth.B, characterAbcWidth.C);
                         }
                         else
-                        {
-                            // This is a bit of a cheat, but is used when the chosen font does not have the character itself but it will render anyway (e.g. through font fallback).
-                            AbcWidths[i] = new Vector3(0, System.Windows.Forms.TextRenderer.MeasureText(String.Format(" {0} ", Characters[i]), Font, System.Drawing.Size.Empty, Flags).Width - System.Windows.Forms.TextRenderer.MeasureText("  ", Font, System.Drawing.Size.Empty, Flags).Width, 0);
-                        }
+                            AbcWidths[i] = new Vector3(0, System.Windows.Forms.TextRenderer.MeasureText(Characters[i].ToString(), Font, System.Drawing.Size.Empty, Flags).Width, 0);
                         Boxes[i] = new Rectangle(x, y, (int)(Math.Max(0, AbcWidths[i].X) + AbcWidths[i].Y + Math.Max(0, AbcWidths[i].Z) + 2 * OutlineSize), height + 2 * OutlineSize);
                         x += Boxes[i].Width + BoxSpacing;
-                        if (x >= 256)
-                        {
-                            x = BoxSpacing;
-                            y += Boxes[i].Height + BoxSpacing;
-                        }
+                        if (x >= 256) { x = BoxSpacing; y += Boxes[i].Height + BoxSpacing; }
                     }
-
-                    // TODO: Copy boxes from the merge data.
                 }
                 finally
                 {
-                    // Cleanup.
                     NativeMethods.DeleteDC(hdc);
                 }
+#endif
                 BoxesMaxRight = Boxes.Max(b => b.Right);
                 BoxesMaxBottom = Boxes.Max(b => b.Bottom);
             }
