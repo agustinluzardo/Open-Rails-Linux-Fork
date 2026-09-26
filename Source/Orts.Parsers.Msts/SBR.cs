@@ -37,6 +37,7 @@ namespace Orts.Parsers.Msts
 
         public static SBR Open(string filename)
         {
+            filename = ContentPath.ResolveFile(filename) ?? ContentPath.Normalize(filename);
             Stream fb = new FileStream(filename, FileMode.Open, FileAccess.Read);
 
             byte[] buffer = new byte[34];
