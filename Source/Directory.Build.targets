@@ -39,12 +39,15 @@
     <Compile Remove="Viewer3D/Debugging/SoundDebugForm.cs" />
     <Compile Remove="Viewer3D/Debugging/SoundDebugForm.Designer.cs" />
     <Compile Remove="Viewer3D/Debugging/TimetableWindow.cs" />
+    <Compile Remove="Viewer3D/Debugging/MessageViewer.cs" />
+    <Compile Remove="Viewer3D/Debugging/MessageViewer.Designer.cs" />
     <Compile Remove="Viewer3D/Map/MapForm.cs" />
     <Compile Remove="Viewer3D/Map/MapForm.Designer.cs" />
     <Compile Remove="Viewer3D/Map/MapDataProvider.cs" />
     <Compile Remove="Viewer3D/Map/MapThemeProvider.cs" />
     <EmbeddedResource Remove="Viewer3D/Debugging/DebugViewerForm.resx" />
     <EmbeddedResource Remove="Viewer3D/Debugging/SoundDebugForm.resx" />
+    <EmbeddedResource Remove="Viewer3D/Debugging/MessageViewer.resx" />
     <EmbeddedResource Remove="Viewer3D/Map/MapForm.resx" />
   </ItemGroup>
 </Project>
