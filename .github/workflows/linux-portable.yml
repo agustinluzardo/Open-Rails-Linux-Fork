@@ -110,8 +110,12 @@ jobs:
           test -x "$publish/riel"
           test -x "$publish/riel-gui"
           file "$publish/engine/RunActivity" | grep -q 'ELF 64-bit'
-          test -s "$publish/engine/System.Security.Cryptography.dll"
+          test -s "$publish/engine/System.Net.Http.dll"
+          test -s "$publish/engine/System.Security.Cryptography.Algorithms.dll"
+          test -s "$publish/System.Net.Http.dll"
           test -s "$publish/System.Security.Cryptography.dll"
+          strings "$publish/engine/System.Net.Http.dll" | grep -q 'Version=6.0.0.0'
+          strings "$publish/System.Net.Http.dll" | grep -q 'Version=10.0.0.0'
           grep -q '"tfm": "net6.0"' "$publish/engine/RunActivity.runtimeconfig.json"
           grep -q '"version": "6.0.' "$publish/engine/RunActivity.runtimeconfig.json"
           grep -q '"tfm": "net10.0"' "$publish/riel.runtimeconfig.json"
