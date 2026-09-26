@@ -50,8 +50,7 @@ done
 [ -n "$output" ] || output="$source_root/Shaders/prebuilt/$profile"
 
 shader_sources=(
-    "$source_root/ActivityRunner/Content/Shaders"
-    "$source_root/FreeTrainSimulator.Graphics/Resources/Shaders"
+    "$source_root/RunActivity/Content"
 )
 
 say() { printf '%s\n' "$*"; }
