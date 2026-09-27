@@ -250,39 +250,51 @@ namespace Orts.Simulation.World
 
                 // Train is stopped.
                 else if ((train is AITrain || train.TrainType == TrainType.Player || train.TrainType == TrainType.Remote) && Math.Abs(speedMpS) <= Simulator.MaxStoppedMpS && frontDist <= reqDist && (train.ReservedTrackLengthM <= 0 || frontDist < train.ReservedTrackLengthM) && rearDist <= minimumDist)
+                {
                     // First test is to simulate a timeout if a train comes to a stop before minimumDist
                     if (frontDist > minimumDist && Simulator.Instance.Trains.Contains(train))
                         crossing.RemoveTrain(train);
                     // This test is to factor in the train sitting on the crossing at the start of the activity.
                     else
                         crossing.AddTrain(train);
+                }
 
                 // Train is travelling toward crossing below 11.1mph.
                 else if ((train is AITrain || train.TrainType == TrainType.Player || train.TrainType == TrainType.Static || train.TrainType == TrainType.Remote) && speedMpS > 0 && speedMpS <= minCrossingActivationSpeed && frontDist <= reqDist && (train.ReservedTrackLengthM <= 0 || frontDist < train.ReservedTrackLengthM) && rearDist <= minimumDist)
+                {
                     // This will allow a slow train to approach to the crossing's minmum distance without activating the crossing.
                     if (frontDist <= minimumDist + 65f) // Not all crossing systems operate the same so adding an additional 65 meters is only an option to improve operation.
                         crossing.AddTrain(train);
+                }
 
-                    // Checking for reverse movement when train is approaching crossing while travelling under 11.1mph.
-                    else if ((train is AITrain || train.TrainType == TrainType.Player) && speedMpS < 0 && absSpeedMpS <= minCrossingActivationSpeed && rearDist <= reqDist && (train.ReservedTrackLengthM <= 0 || rearDist < train.ReservedTrackLengthM) && frontDist <= minimumDist)
-                        // This will allow a slow train to approach a crossing to a certain point without activating the system.
-                        // First test covers front of train clearing crossing.
-                        // Second test covers rear of train approaching crossing.
-                        if (frontDist > 9.5) // The value of 9.5 which is within minimumDist is used to test against frontDist to give the best possible distance the gates should deactivate.
-                            crossing.RemoveTrain(train);
-                        else if (rearDist <= minimumDist + 65f) // Not all crossing systems operate the same so adding an additional 65 meters is only an option to improve operation.
-                            crossing.AddTrain(train);
+                // Checking for reverse movement when train is approaching crossing while travelling under 11.1mph.
+                else if ((train is AITrain || train.TrainType == TrainType.Player) && speedMpS < 0 && absSpeedMpS <= minCrossingActivationSpeed && rearDist <= reqDist && (train.ReservedTrackLengthM <= 0 || rearDist < train.ReservedTrackLengthM) && frontDist <= minimumDist)
+                {
+                    // This will allow a slow train to approach a crossing to a certain point without activating the system.
+                    // First test covers front of train clearing crossing.
+                    // Second test covers rear of train approaching crossing.
+                    if (frontDist > 9.5) // The value of 9.5 which is within minimumDist is used to test against frontDist to give the best possible distance the gates should deactivate.
+                        crossing.RemoveTrain(train);
+                    else if (rearDist <= minimumDist + 65f) // Not all crossing systems operate the same so adding an additional 65 meters is only an option to improve operation.
+                        crossing.AddTrain(train);
+                }
 
-                        // Checking for reverse movement through crossing when train is travelling above 11.1mph.
-                        else if ((train is AITrain || train.TrainType == TrainType.Player || train.TrainType == TrainType.Remote) && speedMpS < 0 && absSpeedMpS > minCrossingActivationSpeed && rearDist <= reqDist && (train.ReservedTrackLengthM <= 0 || rearDist < train.ReservedTrackLengthM) && frontDist <= minimumDist)
-                            crossing.AddTrain(train);
+                // Checking for reverse movement through crossing when train is travelling above 11.1mph.
+                else if ((train is AITrain || train.TrainType == TrainType.Player || train.TrainType == TrainType.Remote) && speedMpS < 0 && absSpeedMpS > minCrossingActivationSpeed && rearDist <= reqDist && (train.ReservedTrackLengthM <= 0 || rearDist < train.ReservedTrackLengthM) && frontDist <= minimumDist)
+                {
+                    crossing.AddTrain(train);
+                }
 
-                        // Player train travelling in forward direction above 11.1mph will activate the crossing.  
-                        else if ((train is AITrain || train.TrainType == TrainType.Player || train.TrainType == TrainType.Remote) && speedMpS > 0 && speedMpS > minCrossingActivationSpeed && frontDist <= reqDist && (train.ReservedTrackLengthM <= 0 || frontDist < train.ReservedTrackLengthM) && rearDist <= minimumDist)
-                            crossing.AddTrain(train);
+                // Player train travelling in forward direction above 11.1mph will activate the crossing.
+                else if ((train is AITrain || train.TrainType == TrainType.Player || train.TrainType == TrainType.Remote) && speedMpS > 0 && speedMpS > minCrossingActivationSpeed && frontDist <= reqDist && (train.ReservedTrackLengthM <= 0 || frontDist < train.ReservedTrackLengthM) && rearDist <= minimumDist)
+                {
+                    crossing.AddTrain(train);
+                }
 
-                        else
-                            crossing.RemoveTrain(train);
+                else
+                {
+                    crossing.RemoveTrain(train);
+                }
             }
         }
 
