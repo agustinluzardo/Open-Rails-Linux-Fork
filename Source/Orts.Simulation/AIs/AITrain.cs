@@ -63,7 +63,7 @@ namespace Orts.Simulation.AIs
         public float LastSpeedMpS;                       // previous speed
         public int Alpha10 = 10;                         // 10*alpha
 
-        private static readonly bool TraceStoppedAi = Environment.GetEnvironmentVariable("RIEL_TRACE_AI_STOPS") == "1";
+        private static readonly bool TraceStoppedAi = System.Environment.GetEnvironmentVariable("RIEL_TRACE_AI_STOPS") == "1";
         private double stoppedSince = double.NaN;
         private double lastStoppedTrace = double.NegativeInfinity;
 
