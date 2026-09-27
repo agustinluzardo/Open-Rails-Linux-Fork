@@ -2166,8 +2166,9 @@ namespace Orts.Simulation.Signalling
 
                     // reserve upto available section
                     int lastSectionIndex = 0;
+                    bool reservable = true;
 
-                    for (int i = 0; i < route.Count; i++)
+                    for (int i = 0; i < route.Count && reservable; i++)
                     {
                         TrackCircuitRouteElement routeElement = route[i];
                         TrackCircuitSection section = routeElement.TrackCircuitSection;
@@ -2184,13 +2185,13 @@ namespace Orts.Simulation.Signalling
                         }
                         else
                         {
-                            break;
+                            reservable = false;
                         }
                     }
 
                     // set pre-reserved or reserved for all other sections
 
-                    for (int i = lastSectionIndex++; i < route.Count; i++)
+                    for (int i = lastSectionIndex++; i < route.Count && reservable; i++)
                     {
                         TrackCircuitRouteElement routeElement = route[i];
                         TrackCircuitSection section = routeElement.TrackCircuitSection;
@@ -2209,7 +2210,7 @@ namespace Orts.Simulation.Signalling
                         }
                         else
                         {
-                            break;
+                            reservable = false;
                         }
                     }
                     EnabledTrain.Train.ClaimState = false;
