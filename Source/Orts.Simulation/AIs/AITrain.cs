@@ -655,12 +655,14 @@ namespace Orts.Simulation.AIs
             var station = StationStops.Count > 0 ? StationStops[0] : null;
             var signal = NextSignalObjects[Direction.Forward];
             Trace.TraceInformation(
-                "[AiProgress] time={0:F0} train={1} service={2} speed={3:F2} limit={4:F2} throttle={5:F1} brake={6:F1} traveled={7:F0} state={8} section={9} routeIndex={10} nextAction={11} stopDistance={12:F1} nextSignal={13} aspect={14} scheduledDepart={15} actualDepart={16} exitSignal={17} preUpdate={18}",
+                "[AiProgress] time={0:F0} train={1} service={2} speed={3:F2} limit={4:F2} throttle={5:F1} brake={6:F1} traveled={7:F0} state={8} section={9} routeIndex={10} nextAction={11} stopDistance={12:F1} nextSignal={13} aspect={14} scheduledDepart={15} actualDepart={16} exitSignal={17} preUpdate={18} allowed={19:F2} signalLimit={20:F2} trackLimit={21:F2} temporaryLimit={22:F2} absoluteSignalLimit={23:F2}",
                 clockTime, Number, Name, SpeedMpS, TrainMaxSpeedMpS, AITrainThrottlePercent,
                 AITrainBrakePercent, DistanceTravelledM, MovementState, position.TrackCircuitSectionIndex,
                 position.RouteListIndex, nextActionInfo?.NextAction, NextStopDistanceM,
                 signal?.Index, signal?.SignalLR(SignalFunctionType.Normal), station?.DepartTime,
-                station?.ActualDepart, station?.ExitSignal, PreUpdate);
+                station?.ActualDepart, station?.ExitSignal, PreUpdate, AllowedMaxSpeedMpS,
+                AllowedMaxSpeedSignalMpS, AllowedMaxSpeedLimitMpS, allowedMaxTempSpeedLimitMpS,
+                allowedAbsoluteMaxSpeedSignalMpS);
         }
 
         /// <summary>
