@@ -2197,307 +2197,305 @@ namespace Orts.Simulation.AIs
         /// </summary>
         public virtual void UpdateFollowingState(double elapsedClockSeconds, int presentTime)
         {
-            if (nextActionInfo != null && nextActionInfo.NextAction == AiActionType.TrainAhead && nextActionInfo.ActivateDistanceM - PresentPosition[Direction.Forward].DistanceTravelled < -5)
+            if (ControlMode != TrainControlMode.AutoNode || EndAuthorities[Direction.Forward].EndAuthorityType != EndAuthorityType.TrainAhead) // train is gone
+            {
+                MovementState = AiMovementState.Running;
+                ResetActions(true);
+            }
+            else
+            {
+                // check if train is in sections ahead
+                Dictionary<Train, float> trainInfo = null;
 
-                if (ControlMode != TrainControlMode.AutoNode || EndAuthorities[Direction.Forward].EndAuthorityType != EndAuthorityType.TrainAhead) // train is gone
+                // find other train
+                int startIndex = PresentPosition[Direction.Forward].RouteListIndex;
+                int endSectionIndex = EndAuthorities[Direction.Forward].LastReservedSection;
+                int endIndex = ValidRoutes[Direction.Forward].GetRouteIndex(endSectionIndex, startIndex);
+
+                TrackCircuitSection thisSection = ValidRoutes[Direction.Forward][PresentPosition[Direction.Forward].RouteListIndex].TrackCircuitSection;
+
+                trainInfo = thisSection.TestTrainAhead(this, PresentPosition[Direction.Forward].Offset, PresentPosition[Direction.Forward].Direction);
+                float addOffset = 0;
+                if (trainInfo.Count <= 0)
                 {
-                    MovementState = AiMovementState.Running;
-                    ResetActions(true);
+                    addOffset = thisSection.Length - PresentPosition[Direction.Forward].Offset;
                 }
                 else
                 {
-                    // check if train is in sections ahead
-                    Dictionary<Train, float> trainInfo = null;
+                    // ensure train in section is aware of this train in same section if this is required
+                    UpdateTrainOnEnteringSection(thisSection, trainInfo);
+                }
 
-                    // find other train
-                    int startIndex = PresentPosition[Direction.Forward].RouteListIndex;
-                    int endSectionIndex = EndAuthorities[Direction.Forward].LastReservedSection;
-                    int endIndex = ValidRoutes[Direction.Forward].GetRouteIndex(endSectionIndex, startIndex);
+                // train not in this section, try reserved sections ahead
+                for (int iIndex = startIndex + 1; iIndex <= endIndex && trainInfo.Count <= 0; iIndex++)
+                {
+                    TrackCircuitSection nextSection = ValidRoutes[Direction.Forward][iIndex].TrackCircuitSection;
+                    trainInfo = nextSection.TestTrainAhead(this, 0, ValidRoutes[Direction.Forward][iIndex].Direction);
+                }
 
-                    TrackCircuitSection thisSection = ValidRoutes[Direction.Forward][PresentPosition[Direction.Forward].RouteListIndex].TrackCircuitSection;
-
-                    trainInfo = thisSection.TestTrainAhead(this, PresentPosition[Direction.Forward].Offset, PresentPosition[Direction.Forward].Direction);
-                    float addOffset = 0;
+                // if train not ahead, try first section beyond last reserved
+                if (trainInfo.Count <= 0 && endIndex < ValidRoutes[Direction.Forward].Count - 1)
+                {
+                    TrackCircuitSection nextSection = ValidRoutes[Direction.Forward][endIndex + 1].TrackCircuitSection;
+                    trainInfo = nextSection.TestTrainAhead(this, 0, ValidRoutes[Direction.Forward][endIndex + 1].Direction);
                     if (trainInfo.Count <= 0)
                     {
-                        addOffset = thisSection.Length - PresentPosition[Direction.Forward].Offset;
+                        addOffset += nextSection.Length;
                     }
-                    else
-                    {
-                        // ensure train in section is aware of this train in same section if this is required
-                        UpdateTrainOnEnteringSection(thisSection, trainInfo);
-                    }
+                }
 
-                    // train not in this section, try reserved sections ahead
-                    for (int iIndex = startIndex + 1; iIndex <= endIndex && trainInfo.Count <= 0; iIndex++)
+                // train is found
+                if (trainInfo.Count > 0)  // found train
+                {
+                    foreach (KeyValuePair<Train, float> trainAhead in trainInfo) // always just one
                     {
-                        TrackCircuitSection nextSection = ValidRoutes[Direction.Forward][iIndex].TrackCircuitSection;
-                        trainInfo = nextSection.TestTrainAhead(this, 0, ValidRoutes[Direction.Forward][iIndex].Direction);
-                    }
+                        Train OtherTrain = trainAhead.Key;
 
-                    // if train not ahead, try first section beyond last reserved
-                    if (trainInfo.Count <= 0 && endIndex < ValidRoutes[Direction.Forward].Count - 1)
-                    {
-                        TrackCircuitSection nextSection = ValidRoutes[Direction.Forward][endIndex + 1].TrackCircuitSection;
-                        trainInfo = nextSection.TestTrainAhead(this, 0, ValidRoutes[Direction.Forward][endIndex + 1].Direction);
-                        if (trainInfo.Count <= 0)
+                        float distanceToTrain = trainAhead.Value + addOffset;
+
+                        // update action info with new position
+
+                        float keepDistanceTrainM = 0f;
+                        bool attachToTrain = attachTo == OtherTrain.Number;
+
+                        // <CScomment> Make check when this train in same section of OtherTrain or other train at less than 50m;
+                        // if other train is static or other train is in last section of this train, pass to passive coupling
+                        if (Math.Abs(OtherTrain.SpeedMpS) < 0.025f && distanceToTrain <= 2 * KeepDistanceMovingTrain)
                         {
-                            addOffset += nextSection.Length;
+                            if (OtherTrain.TrainType == TrainType.Static || (OtherTrain.PresentPosition[Direction.Forward].TrackCircuitSectionIndex ==
+                                TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath][TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath].Count - 1].TrackCircuitSection.Index
+                                || OtherTrain.PresentPosition[Direction.Backward].TrackCircuitSectionIndex ==
+                                TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath][TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath].Count - 1].TrackCircuitSection.Index) &&
+                                (TCRoute.ReversalInfo[TCRoute.ActiveSubPath].Valid || TCRoute.ActiveSubPath == TCRoute.TCRouteSubpaths.Count - 1)
+                                || UncondAttach)
+                            {
+                                attachToTrain = true;
+                                attachTo = OtherTrain.Number;
+                            }
+
                         }
-                    }
-
-                    // train is found
-                    if (trainInfo.Count > 0)  // found train
-                    {
-                        foreach (KeyValuePair<Train, float> trainAhead in trainInfo) // always just one
+                        if (Math.Abs(OtherTrain.SpeedMpS) >= 0.025f)
                         {
-                            Train OtherTrain = trainAhead.Key;
+                            keepDistanceTrainM = KeepDistanceMovingTrain;
+                        }
+                        else if (!attachToTrain)
+                        {
+                            keepDistanceTrainM = (OtherTrain.IsFreight || IsFreight) ? KeepDistanceStatTrainFreight : KeepDistanceStatTrainPassenger;
+                        }
 
-                            float distanceToTrain = trainAhead.Value + addOffset;
-
-                            // update action info with new position
-
-                            float keepDistanceTrainM = 0f;
-                            bool attachToTrain = attachTo == OtherTrain.Number;
-
-                            // <CScomment> Make check when this train in same section of OtherTrain or other train at less than 50m;
-                            // if other train is static or other train is in last section of this train, pass to passive coupling
-                            if (Math.Abs(OtherTrain.SpeedMpS) < 0.025f && distanceToTrain <= 2 * KeepDistanceMovingTrain)
-                            {
-                                if (OtherTrain.TrainType == TrainType.Static || (OtherTrain.PresentPosition[Direction.Forward].TrackCircuitSectionIndex ==
-                                    TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath][TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath].Count - 1].TrackCircuitSection.Index
-                                    || OtherTrain.PresentPosition[Direction.Backward].TrackCircuitSectionIndex ==
-                                    TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath][TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath].Count - 1].TrackCircuitSection.Index) &&
-                                    (TCRoute.ReversalInfo[TCRoute.ActiveSubPath].Valid || TCRoute.ActiveSubPath == TCRoute.TCRouteSubpaths.Count - 1)
-                                    || UncondAttach)
-                                {
-                                    attachToTrain = true;
-                                    attachTo = OtherTrain.Number;
-                                }
-
-                            }
-                            if (Math.Abs(OtherTrain.SpeedMpS) >= 0.025f)
-                            {
-                                keepDistanceTrainM = KeepDistanceMovingTrain;
-                            }
-                            else if (!attachToTrain)
-                            {
-                                keepDistanceTrainM = (OtherTrain.IsFreight || IsFreight) ? KeepDistanceStatTrainFreight : KeepDistanceStatTrainPassenger;
-                            }
-
-                            if (nextActionInfo != null && nextActionInfo.NextAction == AiActionType.TrainAhead)
+                        if (nextActionInfo != null && nextActionInfo.NextAction == AiActionType.TrainAhead)
+                        {
+                            NextStopDistanceM = distanceToTrain - keepDistanceTrainM;
+                        }
+                        else if (nextActionInfo != null)
+                        {
+                            float deltaDistance = nextActionInfo.ActivateDistanceM - DistanceTravelledM;
+                            if (nextActionInfo.RequiredSpeedMpS > 0.0f)
                             {
                                 NextStopDistanceM = distanceToTrain - keepDistanceTrainM;
                             }
-                            else if (nextActionInfo != null)
+                            else
                             {
-                                float deltaDistance = nextActionInfo.ActivateDistanceM - DistanceTravelledM;
-                                if (nextActionInfo.RequiredSpeedMpS > 0.0f)
+                                NextStopDistanceM = Math.Min(deltaDistance, (distanceToTrain - keepDistanceTrainM));
+                            }
+
+                            if (deltaDistance < distanceToTrain) // perform to normal braking to handle action
+                            {
+                                MovementState = AiMovementState.Braking;  // not following the train
+                                UpdateBrakingState(elapsedClockSeconds, presentTime);
+                                return;
+                            }
+                        }
+
+                        // check distance and speed
+                        if (Math.Abs(OtherTrain.SpeedMpS) < 0.025f)
+                        {
+                            float brakingDistance = SpeedMpS * SpeedMpS * 0.5f * (0.5f * MaxDecelMpSS);
+                            float reqspeed = (float)Math.Sqrt(distanceToTrain * MaxDecelMpSS);
+
+                            float maxspeed = Math.Max(reqspeed / 2, PresetCreepSpeed); // allow continue at creepspeed
+                            if (distanceToTrain < KeepDistanceStatTrainPassenger - 2.0f && attachToTrain)
+                                maxspeed = Math.Min(maxspeed, PresetCouplingSpeed);
+                            maxspeed = Math.Min(maxspeed, AllowedMaxSpeedMpS); // but never beyond valid speed limit
+
+                            // set brake or acceleration as required
+
+                            if (SpeedMpS > maxspeed)
+                            {
+                                AdjustControlsBrakeMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 10);
+                            }
+                            else if ((distanceToTrain - brakingDistance) > keepDistanceTrainM * 3.0f)
+                            {
+                                if (brakingDistance > distanceToTrain)
                                 {
-                                    NextStopDistanceM = distanceToTrain - keepDistanceTrainM;
+                                    AdjustControlsBrakeMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 10);
+                                }
+                                else if (SpeedMpS < maxspeed)
+                                {
+                                    AdjustControlsAccelMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 20);
+                                }
+                            }
+                            else if ((distanceToTrain - brakingDistance) > keepDistanceTrainM)
+                            {
+                                if (SpeedMpS > maxspeed)
+                                {
+                                    AdjustControlsBrakeMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 50);
+                                }
+                                else if (SpeedMpS > 0.25f * maxspeed)
+                                {
+                                    AdjustControlsBrakeOff();
                                 }
                                 else
                                 {
-                                    NextStopDistanceM = Math.Min(deltaDistance, (distanceToTrain - keepDistanceTrainM));
-                                }
-
-                                if (deltaDistance < distanceToTrain) // perform to normal braking to handle action
-                                {
-                                    MovementState = AiMovementState.Braking;  // not following the train
-                                    UpdateBrakingState(elapsedClockSeconds, presentTime);
-                                    return;
+                                    AdjustControlsAccelMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 10);
                                 }
                             }
-
-                            // check distance and speed
-                            if (Math.Abs(OtherTrain.SpeedMpS) < 0.025f)
+                            if (OtherTrain.UncoupledFrom == this)
                             {
-                                float brakingDistance = SpeedMpS * SpeedMpS * 0.5f * (0.5f * MaxDecelMpSS);
-                                float reqspeed = (float)Math.Sqrt(distanceToTrain * MaxDecelMpSS);
-
-                                float maxspeed = Math.Max(reqspeed / 2, PresetCreepSpeed); // allow continue at creepspeed
-                                if (distanceToTrain < KeepDistanceStatTrainPassenger - 2.0f && attachToTrain)
-                                    maxspeed = Math.Min(maxspeed, PresetCouplingSpeed);
-                                maxspeed = Math.Min(maxspeed, AllowedMaxSpeedMpS); // but never beyond valid speed limit
-
-                                // set brake or acceleration as required
-
-                                if (SpeedMpS > maxspeed)
+                                if (distanceToTrain > 5.0f)
                                 {
-                                    AdjustControlsBrakeMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 10);
+                                    UncoupledFrom = null;
+                                    OtherTrain.UncoupledFrom = null;
                                 }
-                                else if ((distanceToTrain - brakingDistance) > keepDistanceTrainM * 3.0f)
-                                {
-                                    if (brakingDistance > distanceToTrain)
-                                    {
-                                        AdjustControlsBrakeMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 10);
-                                    }
-                                    else if (SpeedMpS < maxspeed)
-                                    {
-                                        AdjustControlsAccelMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 20);
-                                    }
-                                }
-                                else if ((distanceToTrain - brakingDistance) > keepDistanceTrainM)
-                                {
-                                    if (SpeedMpS > maxspeed)
-                                    {
-                                        AdjustControlsBrakeMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 50);
-                                    }
-                                    else if (SpeedMpS > 0.25f * maxspeed)
-                                    {
-                                        AdjustControlsBrakeOff();
-                                    }
-                                    else
-                                    {
-                                        AdjustControlsAccelMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 10);
-                                    }
-                                }
-                                if (OtherTrain.UncoupledFrom == this)
-                                {
-                                    if (distanceToTrain > 5.0f)
-                                    {
-                                        UncoupledFrom = null;
-                                        OtherTrain.UncoupledFrom = null;
-                                    }
-                                    else
-                                        attachToTrain = false;
-                                }
-                                //                            if (distanceToTrain < keepDistanceStatTrainM_P - 4.0f || (distanceToTrain - brakingDistance) <= keepDistanceTrainM) // Other possibility
-                                if ((distanceToTrain - brakingDistance) <= keepDistanceTrainM)
-                                {
-                                    float reqMinSpeedMpS = attachToTrain ? PresetCouplingSpeed : 0;
-                                    bool thisTrainFront;
-                                    bool otherTrainFront;
-
-                                    if (attachToTrain && CheckCouplePosition(OtherTrain, out thisTrainFront, out otherTrainFront))
-                                    {
-                                        MovementState = AiMovementState.Stopped;
-                                        CoupleAI(OtherTrain, thisTrainFront, otherTrainFront);
-                                        AI.TrainListChanged = true;
-                                        attachTo = -1;
-                                    }
-                                    else if ((SpeedMpS - reqMinSpeedMpS) > 0.1f)
-                                    {
-                                        AdjustControlsBrakeMore(MaxDecelMpSS, elapsedClockSeconds, 50);
-
-                                        // if too close, force stop or slow down if coupling
-                                        if (distanceToTrain < 0.25 * keepDistanceTrainM)
-                                        {
-                                            foreach (TrainCar car in Cars)
-                                            {
-                                                //TODO: next code line has been modified to flip trainset physics in order to get viewing direction coincident with loco direction when using rear cab.
-                                                // To achieve the same result with other means, without flipping trainset physics, the line should be changed as follows:
-                                                //  car.SpeedMpS = car.Flipped ? -reqMinSpeedMpS : reqMinSpeedMpS;
-                                                car.SpeedMpS = car.Flipped ^ (car is MSTSLocomotive && car.Train.IsActualPlayerTrain && (car as MSTSLocomotive).UsingRearCab) ? -reqMinSpeedMpS : reqMinSpeedMpS;
-                                            }
-                                            SpeedMpS = reqMinSpeedMpS;
-                                        }
-                                    }
-                                    else if (attachToTrain)
-                                    {
-                                        AdjustControlsBrakeOff();
-                                        if (SpeedMpS < 0.2 * PresetCreepSpeed)
-                                        {
-                                            AdjustControlsAccelMore(0.2f * MaxAccelMpSSP, 0.0f, 20);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        MovementState = AiMovementState.Stopped;
-
-                                        // check if stopped in next station
-                                        // conditions : 
-                                        // next action must be station stop
-                                        // next station must be in this subroute
-                                        // if next train is AI and that trains state is STATION_STOP, station must be ahead of present position
-                                        // else this train must be in station section
-
-                                        bool otherTrainInStation = false;
-
-                                        if (OtherTrain.TrainType == TrainType.Ai || OtherTrain.TrainType == TrainType.AiPlayerHosting)
-                                        {
-                                            AITrain OtherAITrain = OtherTrain as AITrain;
-                                            otherTrainInStation = (OtherAITrain.MovementState == AiMovementState.StationStop);
-                                        }
-
-                                        bool thisTrainInStation = (nextActionInfo != null && nextActionInfo.NextAction == AiActionType.StationStop);
-                                        if (thisTrainInStation)
-                                            thisTrainInStation = (StationStops[0].SubrouteIndex == TCRoute.ActiveSubPath);
-                                        if (thisTrainInStation)
-                                        {
-                                            var thisStation = StationStops[0];
-                                            thisTrainInStation = CheckStationPosition(thisStation.PlatformItem, thisStation.Direction, thisStation.TrackCircuitSectionIndex);
-                                        }
-
-                                        if (thisTrainInStation)
-                                        {
-                                            MovementState = AiMovementState.StationStop;
-                                            StationStop thisStation = StationStops[0];
-
-                                            if (thisStation.StopType == StationStopType.Station)
-                                            {
-                                            }
-                                            else if (thisStation.StopType == StationStopType.WaitingPoint)
-                                            {
-                                                thisStation.ActualArrival = presentTime;
-
-                                                // delta time set
-                                                if (thisStation.DepartTime < 0)
-                                                {
-                                                    thisStation.ActualDepart = presentTime - thisStation.DepartTime; // depart time is negative!!
-                                                }
-                                                // actual time set
-                                                else
-                                                {
-                                                    thisStation.ActualDepart = thisStation.DepartTime;
-                                                }
-
-                                                // if waited behind other train, move remaining track sections to next subroute if required
-
-                                                // scan sections in backward order
-                                                TrackCircuitPartialPathRoute nextRoute = TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath + 1];
-
-                                                for (int iIndex = ValidRoutes[Direction.Forward].Count - 1; iIndex > PresentPosition[Direction.Forward].RouteListIndex; iIndex--)
-                                                {
-                                                    int nextSectionIndex = ValidRoutes[Direction.Forward][iIndex].TrackCircuitSection.Index;
-                                                    if (nextRoute.GetRouteIndex(nextSectionIndex, 0) <= 0)
-                                                    {
-                                                        nextRoute.Insert(0, ValidRoutes[Direction.Forward][iIndex]);
-                                                    }
-                                                    ValidRoutes[Direction.Forward].RemoveAt(iIndex);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                else
+                                    attachToTrain = false;
                             }
-                            else
+                            //                            if (distanceToTrain < keepDistanceStatTrainM_P - 4.0f || (distanceToTrain - brakingDistance) <= keepDistanceTrainM) // Other possibility
+                            if ((distanceToTrain - brakingDistance) <= keepDistanceTrainM)
                             {
-                                // check whether trains are running same direction or not
-                                bool runningAgainst = false;
-                                if (PresentPosition[Direction.Forward].TrackCircuitSectionIndex == OtherTrain.PresentPosition[Direction.Forward].TrackCircuitSectionIndex &&
-                                    PresentPosition[Direction.Forward].Direction != OtherTrain.PresentPosition[Direction.Forward].Direction)
-                                    runningAgainst = true;
-                                if ((SpeedMpS > (OtherTrain.SpeedMpS + SpeedHysteris) && !runningAgainst) ||
-                                    SpeedMpS > (MaxFollowSpeed + SpeedHysteris) ||
-                                    distanceToTrain < (keepDistanceTrainM - ClearingDistance))
+                                float reqMinSpeedMpS = attachToTrain ? PresetCouplingSpeed : 0;
+                                bool thisTrainFront;
+                                bool otherTrainFront;
+
+                                if (attachToTrain && CheckCouplePosition(OtherTrain, out thisTrainFront, out otherTrainFront))
                                 {
-                                    AdjustControlsBrakeMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 10);
+                                    MovementState = AiMovementState.Stopped;
+                                    CoupleAI(OtherTrain, thisTrainFront, otherTrainFront);
+                                    AI.TrainListChanged = true;
+                                    attachTo = -1;
                                 }
-                                else if ((SpeedMpS < (OtherTrain.SpeedMpS - SpeedHysteris) && !runningAgainst) &&
-                                           SpeedMpS < MaxFollowSpeed &&
-                                           distanceToTrain > (keepDistanceTrainM + ClearingDistance))
+                                else if ((SpeedMpS - reqMinSpeedMpS) > 0.1f)
                                 {
-                                    AdjustControlsAccelMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 2);
+                                    AdjustControlsBrakeMore(MaxDecelMpSS, elapsedClockSeconds, 50);
+
+                                    // if too close, force stop or slow down if coupling
+                                    if (distanceToTrain < 0.25 * keepDistanceTrainM)
+                                    {
+                                        foreach (TrainCar car in Cars)
+                                        {
+                                            //TODO: next code line has been modified to flip trainset physics in order to get viewing direction coincident with loco direction when using rear cab.
+                                            // To achieve the same result with other means, without flipping trainset physics, the line should be changed as follows:
+                                            //  car.SpeedMpS = car.Flipped ? -reqMinSpeedMpS : reqMinSpeedMpS;
+                                            car.SpeedMpS = car.Flipped ^ (car is MSTSLocomotive && car.Train.IsActualPlayerTrain && (car as MSTSLocomotive).UsingRearCab) ? -reqMinSpeedMpS : reqMinSpeedMpS;
+                                        }
+                                        SpeedMpS = reqMinSpeedMpS;
+                                    }
+                                }
+                                else if (attachToTrain)
+                                {
+                                    AdjustControlsBrakeOff();
+                                    if (SpeedMpS < 0.2 * PresetCreepSpeed)
+                                    {
+                                        AdjustControlsAccelMore(0.2f * MaxAccelMpSSP, 0.0f, 20);
+                                    }
+                                }
+                                else
+                                {
+                                    MovementState = AiMovementState.Stopped;
+
+                                    // check if stopped in next station
+                                    // conditions : 
+                                    // next action must be station stop
+                                    // next station must be in this subroute
+                                    // if next train is AI and that trains state is STATION_STOP, station must be ahead of present position
+                                    // else this train must be in station section
+
+                                    bool otherTrainInStation = false;
+
+                                    if (OtherTrain.TrainType == TrainType.Ai || OtherTrain.TrainType == TrainType.AiPlayerHosting)
+                                    {
+                                        AITrain OtherAITrain = OtherTrain as AITrain;
+                                        otherTrainInStation = (OtherAITrain.MovementState == AiMovementState.StationStop);
+                                    }
+
+                                    bool thisTrainInStation = (nextActionInfo != null && nextActionInfo.NextAction == AiActionType.StationStop);
+                                    if (thisTrainInStation)
+                                        thisTrainInStation = (StationStops[0].SubrouteIndex == TCRoute.ActiveSubPath);
+                                    if (thisTrainInStation)
+                                    {
+                                        var thisStation = StationStops[0];
+                                        thisTrainInStation = CheckStationPosition(thisStation.PlatformItem, thisStation.Direction, thisStation.TrackCircuitSectionIndex);
+                                    }
+
+                                    if (thisTrainInStation)
+                                    {
+                                        MovementState = AiMovementState.StationStop;
+                                        StationStop thisStation = StationStops[0];
+
+                                        if (thisStation.StopType == StationStopType.Station)
+                                        {
+                                        }
+                                        else if (thisStation.StopType == StationStopType.WaitingPoint)
+                                        {
+                                            thisStation.ActualArrival = presentTime;
+
+                                            // delta time set
+                                            if (thisStation.DepartTime < 0)
+                                            {
+                                                thisStation.ActualDepart = presentTime - thisStation.DepartTime; // depart time is negative!!
+                                            }
+                                            // actual time set
+                                            else
+                                            {
+                                                thisStation.ActualDepart = thisStation.DepartTime;
+                                            }
+
+                                            // if waited behind other train, move remaining track sections to next subroute if required
+
+                                            // scan sections in backward order
+                                            TrackCircuitPartialPathRoute nextRoute = TCRoute.TCRouteSubpaths[TCRoute.ActiveSubPath + 1];
+
+                                            for (int iIndex = ValidRoutes[Direction.Forward].Count - 1; iIndex > PresentPosition[Direction.Forward].RouteListIndex; iIndex--)
+                                            {
+                                                int nextSectionIndex = ValidRoutes[Direction.Forward][iIndex].TrackCircuitSection.Index;
+                                                if (nextRoute.GetRouteIndex(nextSectionIndex, 0) <= 0)
+                                                {
+                                                    nextRoute.Insert(0, ValidRoutes[Direction.Forward][iIndex]);
+                                                }
+                                                ValidRoutes[Direction.Forward].RemoveAt(iIndex);
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
+                        else
+                        {
+                            // check whether trains are running same direction or not
+                            bool runningAgainst = false;
+                            if (PresentPosition[Direction.Forward].TrackCircuitSectionIndex == OtherTrain.PresentPosition[Direction.Forward].TrackCircuitSectionIndex &&
+                                PresentPosition[Direction.Forward].Direction != OtherTrain.PresentPosition[Direction.Forward].Direction)
+                                runningAgainst = true;
+                            if ((SpeedMpS > (OtherTrain.SpeedMpS + SpeedHysteris) && !runningAgainst) ||
+                                SpeedMpS > (MaxFollowSpeed + SpeedHysteris) ||
+                                distanceToTrain < (keepDistanceTrainM - ClearingDistance))
+                            {
+                                AdjustControlsBrakeMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 10);
+                            }
+                            else if ((SpeedMpS < (OtherTrain.SpeedMpS - SpeedHysteris) && !runningAgainst) &&
+                                       SpeedMpS < MaxFollowSpeed &&
+                                       distanceToTrain > (keepDistanceTrainM + ClearingDistance))
+                            {
+                                AdjustControlsAccelMore(0.5f * MaxAccelMpSS, elapsedClockSeconds, 2);
+                            }
+                        }
                     }
-
-                    // train not found - keep moving, state will change next update
-                    else
-                        attachTo = -1;
                 }
+
+                // train not found - keep moving, state will change next update
+                else
+                    attachTo = -1;
+            }
         }
 
         /// <summary>
