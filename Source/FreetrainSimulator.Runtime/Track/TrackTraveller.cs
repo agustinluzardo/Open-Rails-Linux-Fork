@@ -1077,45 +1077,64 @@ namespace FreeTrainSimulator.Runtime.Track
             if (neighbor is EndNode)
                 return null;    // sectionOffset already pinned to the boundary by the caller; remaining is preserved for the caller to return as unconsumed.
 
-            if (neighbor is not JunctionNode junctionNode)
-                return null;
-
-            // Find which connector of the junction links back to our current VectorNode.
-            TrackNodeConnectorIndex junctionConnectors = trackDatabase.TrackNodeConnectors[junctionNode.NodeIndex];
-            int incomingIdx = -1;
-            for (int i = 0; i < junctionConnectors.TrackNodeConnectors.Length; i++)
-            {
-                if (junctionConnectors.TrackNodeConnectors[i].Link == node.NodeIndex)
-                {
-                    incomingIdx = i;
-                    break;
-                }
-            }
-
-            if (incomingIdx < 0)
-                return null;
-
+            // Open Rails' Traveller.NextTrackNode() can move directly from one vector node
+            // to another. This is especially important for the road database, where long
+            // car-spawner paths commonly contain vector-to-vector links with no junction
+            // node in between. Treating every non-junction neighbour as end-of-track made
+            // road travellers stop walking the route, so spawners never discovered most
+            // level crossings and cars ignored otherwise-working barriers.
             TrackNodeConnector outgoing;
-            if (incomingIdx < junctionConnectors.InboundCount)
+            VectorNode nextNode;
+
+            if (neighbor is VectorNode directNextNode)
             {
-                // Arrived from the stem → select the active branch (OutPin).
-                int switchState = TrackWorld.Instance.SwitchStates.TryGetValue(junctionNode.NodeIndex, out int state) ? state : 0;
-                ReadOnlySpan<TrackNodeConnector> outPins = junctionConnectors.OutConnectors;
-                if ((uint)switchState >= (uint)outPins.Length)
-                    switchState = 0;
-                outgoing = outPins[switchState];
+                outgoing = exitConnector;
+                nextNode = directNextNode;
+            }
+            else if (neighbor is JunctionNode junctionNode)
+            {
+                // Find which connector of the junction links back to our current VectorNode.
+                TrackNodeConnectorIndex junctionConnectors = trackDatabase.TrackNodeConnectors[junctionNode.NodeIndex];
+                int incomingIdx = -1;
+                for (int i = 0; i < junctionConnectors.TrackNodeConnectors.Length; i++)
+                {
+                    if (junctionConnectors.TrackNodeConnectors[i].Link == node.NodeIndex)
+                    {
+                        incomingIdx = i;
+                        break;
+                    }
+                }
+
+                if (incomingIdx < 0)
+                    return null;
+
+                if (incomingIdx < junctionConnectors.InboundCount)
+                {
+                    // Arrived from the stem → select the active branch (OutPin).
+                    int switchState = TrackWorld.Instance.SwitchStates.TryGetValue(junctionNode.NodeIndex, out int state) ? state : 0;
+                    ReadOnlySpan<TrackNodeConnector> outPins = junctionConnectors.OutConnectors;
+                    if ((uint)switchState >= (uint)outPins.Length)
+                        switchState = 0;
+                    outgoing = outPins[switchState];
+                }
+                else
+                {
+                    // Arrived from a branch → always exit through the stem.
+                    ReadOnlySpan<TrackNodeConnector> inPins = junctionConnectors.InConnectors;
+                    if (inPins.IsEmpty)
+                        return null;
+                    outgoing = inPins[0];
+                }
+
+                if (trackDatabase.TrackNodes[outgoing.Link] is not VectorNode junctionNextNode)
+                    return null;
+
+                nextNode = junctionNextNode;
             }
             else
             {
-                // Arrived from a branch → always exit through the stem.
-                ReadOnlySpan<TrackNodeConnector> inPins = junctionConnectors.InConnectors;
-                if (inPins.IsEmpty)
-                    return null;
-                outgoing = inPins[0];
-            }
-
-            if (trackDatabase.TrackNodes[outgoing.Link] is not VectorNode nextNode)
                 return null;
+            }
 
             node = nextNode;
 
