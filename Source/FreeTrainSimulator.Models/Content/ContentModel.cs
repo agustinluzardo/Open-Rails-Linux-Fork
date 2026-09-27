@@ -32,6 +32,17 @@ namespace FreeTrainSimulator.Models.Content
         [MemoryPackIgnore]
         public const string MinimumVersion = "0.1.0-dev.0";
 
+        /// <summary>
+        /// Revision of the MSTS-to-content import semantics. Bump this whenever an importer fix
+        /// changes the meaning of persisted route/activity/path data without changing its serialized shape.
+        /// Old caches do not contain the revision tag and are therefore rebuilt once.
+        /// </summary>
+        [MemoryPackIgnore]
+        public const string ImportRevision = "1";
+
+        [MemoryPackIgnore]
+        public const string ImportRevisionTag = "RielContentImportRevision";
+
         [MemoryPackIgnore]
         public static ContentModel None { get; } = default(ContentModel);
 

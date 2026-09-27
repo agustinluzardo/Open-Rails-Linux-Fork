@@ -27,8 +27,10 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler
                 {
                     _ = await ConvertContent(folderModel, refresh, cancellationToken).ConfigureAwait(false);
                     _ = Interlocked.Increment(ref completedCount);
-                    progressClient?.Report(completedCount * 100 / folderCount);
+                    progressClient?.Report(folderCount == 0 ? 100 : completedCount * 100 / folderCount);
                 }).ConfigureAwait(false);
+
+                contentModel = await ContentModelImportHandler.StampImportRevision(contentModel, cancellationToken).ConfigureAwait(false);
             }
             return contentModel;
         }
@@ -45,6 +47,8 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler
                 {
                     _ = await ConvertContent(folderModel, refresh, cancellationToken).ConfigureAwait(false);
                 }).ConfigureAwait(false);
+
+                contentModel = await ContentModelImportHandler.StampImportRevision(contentModel, cancellationToken).ConfigureAwait(false);
             }
             return contentModel;
         }
