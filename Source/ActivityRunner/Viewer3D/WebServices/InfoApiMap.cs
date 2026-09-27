@@ -244,6 +244,13 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
         {
             foreach (TrackItemBase trackItem in trackItems)
             {
+                // Some MSTS routes contain placeholder/invalid track items whose WorldLocation
+                // is WorldLocation.None. Converting those to lat/lon produces a remote outlier
+                // (typically around 0,0) and blows up the dispatcher bounding box, making the
+                // actual route appear as a tiny scribble in one corner.
+                if (trackItem is null || trackItem is EmptyTrackItem || trackItem.Location == WorldLocation.None)
+                    continue;
+
                 if (trackItem is not LevelCrossingTrackItem)
                 {
                     string itemName = trackItem switch
