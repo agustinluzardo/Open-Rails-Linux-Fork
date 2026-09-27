@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,6 +51,8 @@ using Orts.Simulation.Physics;
 using Orts.Simulation.RollingStocks;
 using Orts.Simulation.RollingStocks.SubSystems.Brakes.MSTS;
 using Orts.Simulation.RollingStocks.SubSystems.PowerSupplies;
+using Orts.Simulation.Multiplayer;
+using Orts.Simulation.Signalling;
 
 namespace Orts.ActivityRunner.Viewer3D.WebServices
 {
@@ -744,6 +747,9 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
             public string TrainType { get; init; }
             public string ControlMode { get; init; }
             public float SpeedMpS { get; init; }
+            public int CarCount { get; init; }
+            public bool IsFreight { get; init; }
+            public string Direction { get; init; }
             public LatLon Front { get; init; }
             public LatLon Rear { get; init; }
         }
@@ -755,11 +761,35 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
             public LatLon Location { get; init; }
         }
 
+        public sealed class DispatcherSignalInfo
+        {
+            public int Index { get; init; }
+            public string State { get; init; }
+            public string Aspect { get; init; }
+            public int? EnabledTrain { get; init; }
+            public bool CallOnEnabled { get; init; }
+            public LatLon Location { get; init; }
+        }
+
+        public sealed class DispatcherCommandRequest
+        {
+            public string Kind { get; set; }
+            public int Index { get; set; }
+            public string State { get; set; }
+        }
+
+        public sealed class DispatcherCommandResult
+        {
+            public bool Accepted { get; init; }
+            public string Message { get; init; }
+        }
+
         public sealed class DispatcherSnapshot
         {
             public double ClockTime { get; init; }
             public DispatcherTrainInfo[] Trains { get; init; }
             public DispatcherSwitchInfo[] Switches { get; init; }
+            public DispatcherSignalInfo[] Signals { get; init; }
         }
 
         [Route(HttpVerbs.Get, "/DISPATCHER")]
@@ -780,6 +810,9 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                         TrainType = train.TrainType.ToString(),
                         ControlMode = train.ControlMode.ToString(),
                         SpeedMpS = train.SpeedMpS,
+                        CarCount = train.Cars.Count,
+                        IsFreight = train.IsFreight,
+                        Direction = train.MUDirection.ToString(),
                         Front = GetLatLon(train.FrontLocation),
                         Rear = GetLatLon(train.RearLocation),
                     })
@@ -792,7 +825,65 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                         Location = GetLatLon(junction.Location),
                     })
                     .ToArray(),
+                Signals = simulator.SignalEnvironment.Signals
+                    .Where(signal => signal != null && signal.SignalNormal() && signal.TrackTraveller != null)
+                    .Select(signal => new DispatcherSignalInfo
+                    {
+                        Index = signal.Index,
+                        State = ((ISignal)signal).State.ToString(),
+                        Aspect = string.Join(", ", signal.SignalHeads.Select(head =>
+                            $"{head.SignalType.Name}: {head.SignalIndicationState}")),
+                        EnabledTrain = signal.EnabledTrain?.Train.Number,
+                        CallOnEnabled = ((ISignal)signal).CallOnEnabled,
+                        Location = GetLatLon(signal.TrackTraveller.Location),
+                    })
+                    .ToArray(),
             };
+        }
+
+        [Route(HttpVerbs.Post, "/DISPATCHER/COMMAND")]
+        public async Task<DispatcherCommandResult> DispatcherCommand()
+        {
+            // The optional web server may listen on the LAN. Never allow its anonymous
+            // clients to operate signals or junctions; the GUI connects over loopback.
+            if (!IPAddress.IsLoopback(HttpContext.RemoteEndPoint.Address))
+                return new DispatcherCommandResult { Message = "Local dispatcher only." };
+
+            DispatcherCommandRequest request = await HttpContext.GetRequestDataAsync<DispatcherCommandRequest>(
+                WebServer.DeserializationCallback<DispatcherCommandRequest>).ConfigureAwait(false);
+            if (request == null || MultiPlayerManager.IsMultiPlayer())
+                return new DispatcherCommandResult { Message = "Dispatcher commands unavailable." };
+
+            if (string.Equals(request.Kind, "signal", StringComparison.OrdinalIgnoreCase))
+            {
+                SignalState state;
+                if (!Enum.TryParse(request.State, true, out state) ||
+                    state is not (SignalState.Clear or SignalState.Lock or SignalState.Approach or SignalState.Manual or SignalState.CallOn))
+                    return new DispatcherCommandResult { Message = "Invalid signal state." };
+                Signal signal = viewer.Simulator.SignalEnvironment.Signals
+                    .FirstOrDefault(item => item != null && item.Index == request.Index && item.SignalNormal());
+                if (signal == null || (state == SignalState.CallOn && !((ISignal)signal).CallOnEnabled))
+                    return new DispatcherCommandResult { Message = "Signal unavailable." };
+                viewer.EnqueueWebCommand(() => ((ISignal)signal).State = state);
+                return new DispatcherCommandResult { Accepted = true, Message = "Signal command queued." };
+            }
+
+            if (string.Equals(request.Kind, "switch", StringComparison.OrdinalIgnoreCase))
+            {
+                SwitchState state;
+                if (!Enum.TryParse(request.State, true, out state) ||
+                    state is not (SwitchState.MainRoute or SwitchState.SideRoute))
+                    return new DispatcherCommandResult { Message = "Invalid switch position." };
+                if (!RuntimeDataResolver.Instance.TrackWorld.TrackDatabase.JunctionNodes
+                    .Any(junction => junction.NodeIndex == request.Index) ||
+                    viewer.Simulator.SignalEnvironment.GetJunctionSection(request.Index) == null)
+                    return new DispatcherCommandResult { Message = "Junction unavailable." };
+                viewer.EnqueueWebCommand(() => viewer.Simulator.SignalEnvironment.RequestSetSwitch(
+                    viewer.Simulator.SignalEnvironment.GetJunctionSection(request.Index), state));
+                return new DispatcherCommandResult { Accepted = true, Message = "Switch command queued; occupied switches cannot move." };
+            }
+
+            return new DispatcherCommandResult { Message = "Unknown dispatcher command." };
         }
         #endregion
 

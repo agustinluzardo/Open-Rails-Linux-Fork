@@ -89,6 +89,20 @@ departure times and the next signal aspect. Progress records sample moving train
 120 simulated seconds, including their speed, throttle, brakes and position.
 
 
+## Dispatcher
+
+Open the dispatcher from the running simulator. Click a train to inspect its live speed,
+control mode, direction and number of cars, or click **Centrar en el tren** to follow its
+location. Click a signal to inspect its aspect and choose automatic control, stop,
+approach, proceed or call-on (where supported). Click a junction to request the main
+or side route. The simulator rejects changes to occupied or reserved switches.
+Use the mouse wheel or **+ / −** to zoom around the pointer, drag to pan and
+**Centrar mapa** to fit the whole route. Labels appear progressively as you zoom
+in to avoid covering the tracks.
+
+Dispatcher controls operate only from the local machine and are disabled in multiplayer.
+The window uses the Riel icon in Xwayland.
+
 ## Status
 
 Riel runs MSTS routes and activities natively on Linux. The launcher screenshot above was captured
