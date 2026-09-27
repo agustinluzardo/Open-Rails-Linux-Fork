@@ -200,6 +200,9 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                         VectorSectionNode trVectorSectionLast = null;
                         foreach (VectorSectionNode vectorSection in vectorNode.VectorSections)
                         {
+                            if (vectorSection.Location == WorldLocation.None)
+                                continue;
+
                             LatLon latLonTo = ConvertToLatLon(vectorSection.Location);
                             AddToPointOnApiMap(vectorSection.Location, "red", TypeOfPointOnApiMap.Track, "track");
                             if (first)
@@ -219,8 +222,13 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                             if (connectors.Length == 2)
                             {
                                 int link = connectors[1].Link;
-                                LatLon latLonTo = ConvertToLatLon(trackDatabase.TrackNodes[link].Location);
-                                AddToLineOnApiMap(latLonFrom, latLonTo);
+                                if (link > 0 && link < trackDatabase.TrackNodes.Length &&
+                                    trackDatabase.TrackNodes[link] is TrackNodeBase linkedNode &&
+                                    linkedNode.Location != WorldLocation.None)
+                                {
+                                    LatLon latLonTo = ConvertToLatLon(linkedNode.Location);
+                                    AddToLineOnApiMap(latLonFrom, latLonTo);
+                                }
                             }
                         }
                     }
@@ -244,6 +252,13 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
         {
             foreach (TrackItemBase trackItem in trackItems)
             {
+                // Some MSTS routes contain placeholder/invalid track items whose WorldLocation
+                // is WorldLocation.None. Converting those to lat/lon produces a remote outlier
+                // (typically around 0,0) and blows up the dispatcher bounding box, making the
+                // actual route appear as a tiny scribble in one corner.
+                if (trackItem is null || trackItem is EmptyTrackItem || trackItem.Location == WorldLocation.None)
+                    continue;
+
                 if (trackItem is not LevelCrossingTrackItem)
                 {
                     string itemName = trackItem switch

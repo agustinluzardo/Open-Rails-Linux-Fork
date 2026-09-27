@@ -170,6 +170,10 @@ namespace Riel.Launcher.Gui
             private Vector pan;
             private bool panning;
             private Point lastPointer;
+            private double viewLatMin;
+            private double viewLatMax;
+            private double viewLonMin;
+            private double viewLonMax;
 
             public DispatcherMapControl()
             {
@@ -184,6 +188,7 @@ namespace Riel.Launcher.Gui
             public void SetMap(MapInit value)
             {
                 map = value;
+                RecalculateViewBounds();
                 Fit();
             }
 
@@ -195,10 +200,66 @@ namespace Riel.Launcher.Gui
 
             public void Fit()
             {
+                RecalculateViewBounds();
                 zoom = 1;
                 pan = default;
                 InvalidateVisual();
             }
+
+            private void RecalculateViewBounds()
+            {
+                viewLatMin = double.PositiveInfinity;
+                viewLatMax = double.NegativeInfinity;
+                viewLonMin = double.PositiveInfinity;
+                viewLonMax = double.NegativeInfinity;
+
+                // Use the actual track polyline as the authoritative viewport extent. Track-item
+                // metadata may legitimately contain placeholder locations and must never make the
+                // real route microscopic after pressing "Centrar mapa".
+                if (map?.LineOnApiMapList != null)
+                {
+                    foreach (MapLine line in map.LineOnApiMapList)
+                    {
+                        IncludeInView(line.LatLonFrom);
+                        IncludeInView(line.LatLonTo);
+                    }
+                }
+
+                // Very small/test routes may contain no line segments. Fall back to valid map points.
+                if (!HasValidViewBounds() && map?.PointOnApiMapList != null)
+                {
+                    foreach (MapPoint point in map.PointOnApiMapList)
+                        IncludeInView(point.LatLon);
+                }
+
+                // Last-resort compatibility with older API responses.
+                if (!HasValidViewBounds() && map != null &&
+                    double.IsFinite(map.LatMin) && double.IsFinite(map.LatMax) &&
+                    double.IsFinite(map.LonMin) && double.IsFinite(map.LonMax))
+                {
+                    viewLatMin = map.LatMin;
+                    viewLatMax = map.LatMax;
+                    viewLonMin = map.LonMin;
+                    viewLonMax = map.LonMax;
+                }
+            }
+
+            private void IncludeInView(LatLon point)
+            {
+                if (!float.IsFinite(point.Lat) || !float.IsFinite(point.Lon) ||
+                    point.Lat < -90 || point.Lat > 90 || point.Lon < -180 || point.Lon > 180)
+                    return;
+
+                viewLatMin = Math.Min(viewLatMin, point.Lat);
+                viewLatMax = Math.Max(viewLatMax, point.Lat);
+                viewLonMin = Math.Min(viewLonMin, point.Lon);
+                viewLonMax = Math.Max(viewLonMax, point.Lon);
+            }
+
+            private bool HasValidViewBounds()
+                => double.IsFinite(viewLatMin) && double.IsFinite(viewLatMax) &&
+                   double.IsFinite(viewLonMin) && double.IsFinite(viewLonMax) &&
+                   viewLatMax >= viewLatMin && viewLonMax >= viewLonMin;
 
             public override void Render(DrawingContext context)
             {
@@ -255,13 +316,13 @@ namespace Riel.Launcher.Gui
 
             private Point Project(LatLon point)
             {
-                double lonRange = Math.Max(1e-8, map.LonMax - map.LonMin);
-                double latRange = Math.Max(1e-8, map.LatMax - map.LatMin);
-                double width = Math.Max(1, Bounds.Width - 48);
-                double height = Math.Max(1, Bounds.Height - 48);
+                double lonRange = Math.Max(1e-8, viewLonMax - viewLonMin);
+                double latRange = Math.Max(1e-8, viewLatMax - viewLatMin);
+                double width = Math.Max(1, Bounds.Width - 72);
+                double height = Math.Max(1, Bounds.Height - 72);
                 double scale = Math.Min(width / lonRange, height / latRange) * zoom;
-                double centerLon = (map.LonMin + map.LonMax) * 0.5;
-                double centerLat = (map.LatMin + map.LatMax) * 0.5;
+                double centerLon = (viewLonMin + viewLonMax) * 0.5;
+                double centerLat = (viewLatMin + viewLatMax) * 0.5;
 
                 return new Point(
                     Bounds.Width * 0.5 + (point.Lon - centerLon) * scale + pan.X,
@@ -316,9 +377,27 @@ namespace Riel.Launcher.Gui
 
             private void OnPointerWheelChanged(object sender, PointerWheelEventArgs args)
             {
-                double factor = args.Delta.Y > 0 ? 1.18 : 1 / 1.18;
-                zoom = Math.Clamp(zoom * factor, 0.15, 30);
-                InvalidateVisual();
+                if (args.Delta.Y == 0)
+                    return;
+
+                Point pointer = args.GetPosition(this);
+                Point center = new Point(Bounds.Width * 0.5, Bounds.Height * 0.5);
+                double oldZoom = zoom;
+                double factor = Math.Pow(1.45, args.Delta.Y);
+                double newZoom = Math.Clamp(oldZoom * factor, 0.1, 250);
+
+                // Keep the geographic point below the mouse cursor fixed while zooming.
+                // This makes inspection of junctions/trains much quicker than zooming only
+                // toward the center of the window.
+                if (Math.Abs(newZoom - oldZoom) > double.Epsilon)
+                {
+                    Vector pointerFromMapCenter = pointer - center - pan;
+                    double ratio = newZoom / oldZoom;
+                    pan += pointerFromMapCenter * (1 - ratio);
+                    zoom = newZoom;
+                    InvalidateVisual();
+                }
+
                 args.Handled = true;
             }
         }
