@@ -64,8 +64,10 @@ namespace Orts.Simulation.AIs
         public int Alpha10 = 10;                         // 10*alpha
 
         private static readonly bool TraceStoppedAi = System.Environment.GetEnvironmentVariable("RIEL_TRACE_AI_STOPS") == "1";
+        private static readonly bool TraceAiProgress = System.Environment.GetEnvironmentVariable("RIEL_TRACE_AI_PROGRESS") == "1";
         private double stoppedSince = double.NaN;
         private double lastStoppedTrace = double.NegativeInfinity;
+        private double lastProgressTrace = double.NegativeInfinity;
 
         public bool PreUpdate;                           // pre update state
         internal AIActionItem nextActionInfo;              // no next action
@@ -595,6 +597,7 @@ namespace Orts.Simulation.AIs
             }
             LastSpeedMpS = SpeedMpS;
             TraceStoppedState(clockTime);
+            TraceProgressState(clockTime);
             //            Trace.TraceWarning ("Time {0} Train no. {1} Speed {2} AllowedMaxSpeed {3} Throttle percent {4} Distance travelled {5} Movement State {6} BrakePerCent {7}",
             //               clockTime, Number, SpeedMpS, AllowedMaxSpeedMpS, AITrainThrottlePercent, DistanceTravelledM, MovementState, AITrainBrakePercent);
         }
@@ -624,12 +627,40 @@ namespace Orts.Simulation.AIs
             lastStoppedTrace = clockTime;
             var position = PresentPosition[Direction.Forward];
             var authority = EndAuthorities[Direction.Forward];
+            var station = StationStops.Count > 0 ? StationStops[0] : null;
+            var signal = NextSignalObjects[Direction.Forward];
             Trace.TraceInformation(
-                "[AiStop] time={0:F0} train={1} service={2} stoppedFor={3:F0}s state={4} control={5} section={6} routeIndex={7} authority={8} reservedSection={9} authorityDistance={10:F1} nextSignal={11} signalDistance={12} nextAction={13} stopDistance={14:F1}",
+                "[AiStop] time={0:F0} train={1} service={2} stoppedFor={3:F0}s state={4} control={5} section={6} routeIndex={7} authority={8} reservedSection={9} authorityDistance={10:F1} nextSignal={11} aspect={12} signalDistance={13} nextAction={14} stopDistance={15:F1} scheduledDepart={16} actualDepart={17} exitSignal={18} preUpdate={19}",
                 clockTime, Number, Name, clockTime - stoppedSince, MovementState, ControlMode,
                 position.TrackCircuitSectionIndex, position.RouteListIndex, authority.EndAuthorityType,
-                authority.LastReservedSection, authority.Distance, NextSignalObjects[Direction.Forward],
-                DistanceToSignal, nextActionInfo?.GetType().Name, NextStopDistanceM);
+                authority.LastReservedSection, authority.Distance, signal?.Index,
+                signal?.SignalLR(SignalFunctionType.Normal), DistanceToSignal, nextActionInfo?.NextAction,
+                NextStopDistanceM, station?.DepartTime, station?.ActualDepart, station?.ExitSignal, PreUpdate);
+        }
+
+        /// <summary>
+        /// Sample AI motion during activity prerun to locate trains creeping between stations.
+        /// </summary>
+        private void TraceProgressState(double clockTime)
+        {
+            if (!TraceAiProgress || Math.Abs(SpeedMpS) < 0.02f)
+                return;
+            if (clockTime < lastProgressTrace)
+                lastProgressTrace = double.NegativeInfinity;
+            if (clockTime - lastProgressTrace < 120)
+                return;
+
+            lastProgressTrace = clockTime;
+            var position = PresentPosition[Direction.Forward];
+            var station = StationStops.Count > 0 ? StationStops[0] : null;
+            var signal = NextSignalObjects[Direction.Forward];
+            Trace.TraceInformation(
+                "[AiProgress] time={0:F0} train={1} service={2} speed={3:F2} limit={4:F2} throttle={5:F1} brake={6:F1} traveled={7:F0} state={8} section={9} routeIndex={10} nextAction={11} stopDistance={12:F1} nextSignal={13} aspect={14} scheduledDepart={15} actualDepart={16} exitSignal={17} preUpdate={18}",
+                clockTime, Number, Name, SpeedMpS, TrainMaxSpeedMpS, AITrainThrottlePercent,
+                AITrainBrakePercent, DistanceTravelledM, MovementState, position.TrackCircuitSectionIndex,
+                position.RouteListIndex, nextActionInfo?.NextAction, NextStopDistanceM,
+                signal?.Index, signal?.SignalLR(SignalFunctionType.Normal), station?.DepartTime,
+                station?.ActualDepart, station?.ExitSignal, PreUpdate);
         }
 
         /// <summary>
