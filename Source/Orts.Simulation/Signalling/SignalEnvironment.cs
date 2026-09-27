@@ -2577,15 +2577,20 @@ namespace Orts.Simulation.Signalling
             TrackCircuitSection firstSection = TrackCircuitSection.TrackCircuitList[firstSectionIndex];
             Train.TrainRouted train = firstSection.CircuitState.TrainReserved;
 
-            // if not reserved - no further route ahead
-            if (train == null || train != requiredTrain)
-            {
-                return;   // section reserved for other train - stop action
-            }
-
-            // if occupied by train - skip actions and proceed to next section
+            // Match Open Rails route teardown semantics: when the first section is
+            // occupied by this train, it may legitimately no longer be reserved.
+            // We must still walk forward and release this train's reservations ahead.
+            // Returning here leaves stale junction/track reservations behind and can
+            // progressively gridlock dense AI traffic during activity pre-run.
             if (!firstSection.CircuitState.OccupiedByThisTrain(requiredTrain))
             {
+                // if not reserved - no further route ahead
+                if (train == null)
+                    return;
+
+                if (train != requiredTrain)
+                    return;   // section reserved for other train - stop action
+
                 // unreserve first section
                 firstSection.UnreserveTrain(train, true);
             }
