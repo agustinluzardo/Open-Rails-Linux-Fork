@@ -19,8 +19,10 @@ namespace Orts.Simulation.World
 {
     public class RoadCarSpawner
     {
+        internal static readonly bool TraceCrossings = System.Environment.GetEnvironmentVariable("RIEL_TRACE_ROAD_CROSSINGS") == "1";
         private double lastSpawnedTime;
         private double nextSpawnTime;
+        private int crossingRevision = -1;
 
         public const float StopDistance = 10;
 
@@ -37,7 +39,7 @@ namespace Orts.Simulation.World
         //   assignment of a new instance (possibly cloned and then modified).
         public List<RoadCar> Cars { get; } = new List<RoadCar>();
         // Level crossing which interact with this spawner. Distances are used for speed curves and the list must be sorted by distance from spawner.
-        public List<RoadCarCrossing> Crossings { get; } = new List<RoadCarCrossing>();
+        public List<RoadCarCrossing> Crossings { get; private set; } = new List<RoadCarCrossing>();
 
         public TrackTraveller Traveller { get; private set; }
         public float Length { get; private set; }
@@ -74,12 +76,22 @@ namespace Orts.Simulation.World
                 Trace.TraceWarning("{0} car spawner {1} could not find road track near {2}", position, carSpawnerObj.UiD, startLocation);
             }
 
+            RefreshCrossings();
+        }
+
+        private void RefreshCrossings()
+        {
+            LevelCrossings levelCrossings = Simulator.Instance.LevelCrossings;
+            int revision = levelCrossings.RegistrationRevision;
+            if (revision == crossingRevision)
+                return;
+
             // Resolve crossings by reachability along the actual road path instead of relying on
             // TrackItemSelectors encountered while walking node-by-node.
             List<(float Distance, LevelCrossingItem Item)> reachableCrossings = new List<(float, LevelCrossingItem)>();
             float crossingSearchDistance = Length > 0 ? Length + TrackMergeDistance : float.MaxValue;
 
-            foreach (LevelCrossingItem crossingItem in Simulator.Instance.LevelCrossings.RoadCrossingItems.Values)
+            foreach (LevelCrossingItem crossingItem in levelCrossings.RoadCrossingItems.Values.Where(item => item.CrossingGroup != null))
             {
                 float distance = crossingItem.DistanceTo(Traveller, crossingSearchDistance);
                 if (distance >= 0 && (Length <= 0 || distance <= Length + TrackMergeDistance))
@@ -97,7 +109,7 @@ namespace Orts.Simulation.World
                 .ToHashSet();
 
             int recoveredCrossingGroups = 0;
-            foreach (IGrouping<LevelCrossing, LevelCrossingItem> crossingGroup in Simulator.Instance.LevelCrossings.TrackCrossingItems.Values
+            foreach (IGrouping<LevelCrossing, LevelCrossingItem> crossingGroup in levelCrossings.TrackCrossingItems.Values
                 .Where(item => item.CrossingGroup != null && !representedGroups.Contains(item.CrossingGroup))
                 .GroupBy(item => item.CrossingGroup))
             {
@@ -129,22 +141,35 @@ namespace Orts.Simulation.World
                 }
             }
 
-            Crossings = reachableCrossings
+            List<RoadCarCrossing> newCrossings = reachableCrossings
                 .OrderBy(crossing => crossing.Distance)
                 .Select(crossing => new RoadCarCrossing(crossing.Item, crossing.Distance, float.NaN))
                 .ToList();
 
+            // Existing cars may have already passed some of these crossings; each car
+            // recomputes its next index from its current position on the next update.
+            Crossings = newCrossings;
+            foreach (RoadCar car in Cars)
+                car.ResetCrossings();
+            crossingRevision = revision;
+
+            if (TraceCrossings)
+                Trace.TraceInformation("[RoadCrossing] spawner={0} revision={1} length={2:F1} stops={3} [{4}]",
+                    CarSpawnerObj.UiD, revision, Length, Crossings.Count,
+                    string.Join("; ", Crossings.Select(c => $"item={c.Item.TrackItemId} distance={c.Distance:F1} group={c.Item.CrossingGroup?.GetHashCode()}")));
+
             if (recoveredCrossingGroups > 0)
                 Trace.TraceInformation("[RoadCarSpawner] {0}: recovered {1} level-crossing group(s) from rail geometry; total stops={2}",
-                    carSpawnerObj.UiD, recoveredCrossingGroups, Crossings.Count);
-            else if (Crossings.Count == 0 && Simulator.Instance.LevelCrossings.TrackCrossingItems.Count > 0)
+                    CarSpawnerObj.UiD, recoveredCrossingGroups, Crossings.Count);
+            else if (TraceCrossings && Crossings.Count == 0 && revision > 0)
                 Trace.TraceWarning("[RoadCarSpawner] {0}: no reachable level crossings; roadItems={1}, railItems={2}, length={3:F1}m",
-                    carSpawnerObj.UiD, Simulator.Instance.LevelCrossings.RoadCrossingItems.Count,
-                    Simulator.Instance.LevelCrossings.TrackCrossingItems.Count, Length);
+                    CarSpawnerObj.UiD, levelCrossings.RoadCrossingItems.Count,
+                    levelCrossings.TrackCrossingItems.Count, Length);
         }
 
         public void Update(in ElapsedTime elapsedTime)
         {
+            RefreshCrossings();
             foreach (RoadCar car in Cars)
                 car.Update(elapsedTime);
 

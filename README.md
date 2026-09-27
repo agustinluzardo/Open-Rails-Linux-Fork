@@ -39,9 +39,10 @@ That is the change the rest of this project was built around.
   is driven through the kernel's hidraw interface.
 - **Files where they belong.** Settings, saves, logs and content indexes follow the XDG base
   directory specification instead of one folder holding all four.
-- **A launcher to pick and play.** Choose a route, then an activity or a path and a train, and
-  press Play. It follows the system language - Spanish is complete - and is dark unless switched
-  off. The same things are there from a terminal, as `riel`.
+- **A launcher to pick and play.** Choose a route and an activity, explore with a path and train,
+  or select a timetable service. It has content folders, settings, saved games, activity checks,
+  update checks and diagnostics under **Tools**. It follows the system language and supports
+  Spanish; dark mode can be switched off. Terminal commands are available as `riel`.
 - **Failures say why.** When a run fails, the launcher shows the cause in a sentence - the file
   that is missing, the route that could not be read - rather than a click that seems to do
   nothing. A content folder with a broken route still loads everything else, and names what it
@@ -59,7 +60,10 @@ makepkg -si                               # or build by hand: docs/linux/INSTALL
 Then open **Riel** from the applications menu, choose the folder that holds `ROUTES` and
 `GLOBAL`, pick a route and press Play.
 
-![The Riel launcher](docs/linux/launcher.png)
+![The current Riel launcher with Activity, Explore and Timetable tabs](docs/linux/launcher.png)
+
+The screenshot uses the synthetic test route included in this repository; your MSTS routes and
+activities appear in its place after you add a content folder.
 
 From a terminal the same is:
 
@@ -69,28 +73,23 @@ riel routes
 riel play "Marias Pass" "Coal Train"
 ```
 
-"Check this computer" in the launcher, or `riel doctor`, says whether this machine can run the
+**Tools → Check this computer** in the launcher, or `riel doctor`, says whether this machine can run the
 simulator and names what is missing. [**INSTALL.md**](docs/linux/INSTALL.md) covers installation
 and what to do when something does not work.
 
 ## Status
 
-Riel builds and starts natively: it creates its OpenGL device, loads all twelve compiled effects,
-brings up sound, runs its game loop and shuts down cleanly. The launcher has been driven end to end
-under a virtual display: adding a folder, picking an activity or a train to explore with, starting
-the simulator, and reporting its failure. The test suite passes on Linux — 578 tests in
-`Tests.FreeTrainSimulator`, 211 in `Tests.Orts`.
-
-What has not been verified is a real route being driven, because that needs MSTS content and a
-GPU, and the machine this was developed on had neither. Expect to find things when you first load
-a route; the launcher says what failed, and the logs in `~/.local/state/riel/Logs` have the rest.
+Riel runs MSTS routes and activities natively on Linux. The launcher screenshot above was captured
+from a current portable build running the repository's synthetic test route. Real route content is
+also being tested, and compatibility still varies by activity. If an activity fails, the logs in
+`~/.local/state/riel/Logs` help identify the cause.
 
 Known gaps:
 
 - The WPF Toolbox and TrackViewer are Windows only and are not part of this build.
 - Multiplayer builds but is untested here, and the launcher does not offer it yet.
-- Timetable mode is not in the launcher yet; `riel run` can start one with the simulator's own
-  arguments.
+- Some routes have AI traffic, signal and level-crossing behavior that differs from Open Rails;
+  these are active compatibility investigations.
 - The renderer is OpenGL. [ARCHITECTURE.md](docs/linux/ARCHITECTURE.md) explains why, and what a
   Vulkan backend would actually take; `RIEL_VULKAN=1` runs the same renderer on Vulkan through
   Mesa's zink in the meantime.
