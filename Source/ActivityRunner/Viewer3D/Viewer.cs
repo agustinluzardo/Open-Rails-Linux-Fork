@@ -134,6 +134,7 @@ namespace Orts.ActivityRunner.Viewer3D
         private Thread dispatcherThread;
         private Dispatcher.DispatcherWindow dispatcherWindow;
         private Dispatcher.InGameDispatcherMap dispatcherMap;
+        private Process externalDispatcherProcess;
 
 #pragma warning disable CA2213 // Disposable fields should be disposed
         private WindowManager<ViewerWindowType> windowManager;
@@ -1034,6 +1035,15 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private void ToggleDispatcherView()
         {
+            // DesktopGL cannot safely create the old second MonoGame GraphicsDevice in this
+            // process. On Linux the dispatcher therefore runs as a tiny Avalonia companion
+            // process and consumes the loopback-only simulator API. This restores the separate
+            // dispatcher window Open Rails users expect without sharing SDL/GL state.
+            if (OperatingSystem.IsLinux() && TryStartExternalDispatcher())
+                return;
+
+            // Keep the in-game map as a last-resort fallback (for example, an incomplete
+            // development install which has ActivityRunner but not riel-gui).
             if (dispatcherMap != null)
             {
                 dispatcherMap.Toggle();
@@ -1047,6 +1057,76 @@ namespace Orts.ActivityRunner.Viewer3D
             else
             {
                 dispatcherWindow?.BringToFront();
+            }
+        }
+
+        private bool TryStartExternalDispatcher()
+        {
+            try
+            {
+                if (externalDispatcherProcess != null)
+                {
+                    if (!externalDispatcherProcess.HasExited)
+                        return true;
+                    externalDispatcherProcess.Dispose();
+                    externalDispatcherProcess = null;
+                }
+
+                string applicationFolder = RuntimeInfo.ApplicationFolder;
+                string[] candidates =
+                {
+                    Path.Combine(applicationFolder, "riel-gui"),
+                    Path.Combine(AppContext.BaseDirectory, "riel-gui"),
+                    Path.GetFullPath(Path.Combine(applicationFolder, "..", "riel-gui")),
+                };
+                string executable = candidates.FirstOrDefault(File.Exists);
+                if (executable == null)
+                {
+                    Trace.TraceWarning("External dispatcher unavailable: riel-gui was not found beside the simulator.");
+                    return false;
+                }
+
+                ProcessStartInfo startInfo = new ProcessStartInfo(executable)
+                {
+                    UseShellExecute = false,
+                    WorkingDirectory = Path.GetDirectoryName(executable),
+                };
+                startInfo.ArgumentList.Add("--dispatcher");
+                startInfo.ArgumentList.Add($"http://127.0.0.1:{UserSettings.WebServerPort}");
+                externalDispatcherProcess = Process.Start(startInfo);
+                if (externalDispatcherProcess == null)
+                    return false;
+
+                Trace.TraceInformation($"External dispatcher started (pid {externalDispatcherProcess.Id}).");
+                return true;
+            }
+            catch (Exception error)
+            {
+                Trace.TraceWarning($"Could not start external dispatcher; using the in-game fallback: {error.Message}");
+                externalDispatcherProcess?.Dispose();
+                externalDispatcherProcess = null;
+                return false;
+            }
+        }
+
+        private void StopExternalDispatcher()
+        {
+            if (externalDispatcherProcess == null)
+                return;
+
+            try
+            {
+                if (!externalDispatcherProcess.HasExited)
+                    externalDispatcherProcess.Kill(entireProcessTree: true);
+            }
+            catch (Exception error) when (error is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException)
+            {
+                Trace.TraceWarning($"Could not close external dispatcher cleanly: {error.Message}");
+            }
+            finally
+            {
+                externalDispatcherProcess.Dispose();
+                externalDispatcherProcess = null;
             }
         }
 
@@ -1763,6 +1843,7 @@ namespace Orts.ActivityRunner.Viewer3D
                     dataDump?.Dispose();
                     dispatcherMap?.Dispose();
                     dispatcherWindow?.Dispose();
+                    StopExternalDispatcher();
                     // MouseCursor.Arrow and the other built-ins are shared singletons owned by
                     // MonoGame, so nothing here is ours to dispose.
                     actualCursor = null;
