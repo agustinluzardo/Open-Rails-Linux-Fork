@@ -74,28 +74,26 @@ namespace Orts.Simulation.World
                 Trace.TraceWarning("{0} car spawner {1} could not find road track near {2}", position, carSpawnerObj.UiD, startLocation);
             }
 
-            SortedList<float, LevelCrossingItem> sortedLevelCrossings = new SortedList<float, LevelCrossingItem>();
-            int lastNodeIndex = -1;
-            for (TrackTraveller? crossingTraveller = Traveller.AdvanceToNextSection(); crossingTraveller.HasValue; crossingTraveller = crossingTraveller.Value.AdvanceToNextSection())
-            {
-                int nodeIndex = crossingTraveller.Value.TrackNodeIndex;
-                if (nodeIndex == lastNodeIndex)
-                    continue;
+            // Resolve crossings by reachability along the actual road path instead of relying on
+            // TrackItemSelectors encountered while walking node-by-node. The immutable traveller port
+            // previously stopped at direct VectorNode -> VectorNode links, which made this scan silently
+            // miss every crossing beyond the first road node. Even with that traveller bug fixed, asking
+            // each known road crossing for its route distance is simpler and also handles crossings on the
+            // spawner's starting node.
+            List<(float Distance, LevelCrossingItem Item)> reachableCrossings = new List<(float, LevelCrossingItem)>();
+            float crossingSearchDistance = Length > 0 ? Length + TrackMergeDistance : float.MaxValue;
 
-                lastNodeIndex = nodeIndex;
-                // Road track has no junctions — every on-track node is a VectorNode.
-                if (RuntimeDataResolver.Instance.TrackWorld.RoadDatabase.TrackNodes[nodeIndex] is VectorNode &&
-                    RuntimeDataResolver.Instance.TrackWorld.RoadDatabase.TrackItemSelectors.TryGetValue(nodeIndex, out TrackItemIndex trackItemIndex))
-                {
-                    foreach (int trItemRef in trackItemIndex.TrackItems)
-                    {
-                        if (Simulator.Instance.LevelCrossings.RoadCrossingItems.TryGetValue(trItemRef, out LevelCrossingItem value))
-                            sortedLevelCrossings[value.DistanceTo(Traveller)] = value;
-                    }
-                }
+            foreach (LevelCrossingItem crossingItem in Simulator.Instance.LevelCrossings.RoadCrossingItems.Values)
+            {
+                float distance = crossingItem.DistanceTo(Traveller, crossingSearchDistance);
+                if (distance >= 0 && (Length <= 0 || distance <= Length + TrackMergeDistance))
+                    reachableCrossings.Add((distance, crossingItem));
             }
 
-            Crossings = sortedLevelCrossings.Select(slc => new RoadCarCrossing(slc.Value, slc.Key, float.NaN)).ToList();
+            Crossings = reachableCrossings
+                .OrderBy(crossing => crossing.Distance)
+                .Select(crossing => new RoadCarCrossing(crossing.Item, crossing.Distance, float.NaN))
+                .ToList();
         }
 
         public void Update(in ElapsedTime elapsedTime)
