@@ -773,6 +773,7 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
             public string Aspect { get; init; }
             public int? EnabledTrain { get; init; }
             public bool CallOnEnabled { get; init; }
+            public bool CanApproach { get; init; }
             public LatLon Location { get; init; }
         }
 
@@ -845,6 +846,8 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                             $"{head.SignalType.Name}: {head.SignalIndicationState}")),
                         EnabledTrain = signal.EnabledTrain?.Train.Number,
                         CallOnEnabled = ((ISignal)signal).CallOnEnabled,
+                        CanApproach = signal.SignalHeads.Any(head =>
+                            head.SignalFunction == SignalFunctionType.Normal && head.SupportsApproachAspect),
                         Location = GetLatLon(signal.TrackTraveller.Location),
                     })
                     .ToArray(),
@@ -876,6 +879,9 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                     .FirstOrDefault(item => item != null && item.Index == request.Index && item.SignalNormal());
                 if (signal == null || (state == SignalState.CallOn && !((ISignal)signal).CallOnEnabled))
                     return new DispatcherCommandResult { Message = "Signal unavailable." };
+                if (state == SignalState.Approach && !signal.SignalHeads.Any(head =>
+                    head.SignalFunction == SignalFunctionType.Normal && head.SupportsApproachAspect))
+                    return new DispatcherCommandResult { Message = "This signal has no approach aspect." };
                 viewer.EnqueueWebCommand(() => ((ISignal)signal).State = state);
                 return new DispatcherCommandResult { Accepted = true, Message = "Signal command queued." };
             }
