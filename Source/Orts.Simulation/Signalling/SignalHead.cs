@@ -529,6 +529,11 @@ namespace Orts.Simulation.Signalling
             }
         }
 
+        public bool SupportsApproachAspect =>
+            DefaultDrawState(SignalAspectState.Approach1) >= 0 ||
+            DefaultDrawState(SignalAspectState.Approach2) >= 0 ||
+            DefaultDrawState(SignalAspectState.Approach3) >= 0;
+
         public void RequestApproachAspect()
         {
             if (csSignalScript != null)
@@ -536,13 +541,20 @@ namespace Orts.Simulation.Signalling
                 csSignalScript.HandleEvent(SignalEvent.RequestApproachAspect);
                 csSignalScript.Update();
             }
-            else
+            else if (DefaultDrawState(SignalAspectState.Approach1) is int first && first >= 0)
             {
-                int drawState1 = DefaultDrawState(SignalAspectState.Approach1);
-                int drawState2 = DefaultDrawState(SignalAspectState.Approach2);
-
-                SignalIndicationState = drawState1 > 0 ? SignalAspectState.Approach1 : drawState2 > 0 ? SignalAspectState.Approach2 : SignalAspectState.Approach3;
-                DrawState = DefaultDrawState(SignalIndicationState);
+                SignalIndicationState = SignalAspectState.Approach1;
+                DrawState = first;
+            }
+            else if (DefaultDrawState(SignalAspectState.Approach2) is int second && second >= 0)
+            {
+                SignalIndicationState = SignalAspectState.Approach2;
+                DrawState = second;
+            }
+            else if (DefaultDrawState(SignalAspectState.Approach3) is int third && third >= 0)
+            {
+                SignalIndicationState = SignalAspectState.Approach3;
+                DrawState = third;
             }
         }
 

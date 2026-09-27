@@ -1574,8 +1574,12 @@ namespace Orts.Simulation.Signalling
 
             // update all normal heads first
 
-            if ((MultiPlayerManager.MultiplayerState == MultiplayerState.Client) || //client won't handle signal update
-                ((MultiPlayerManager.MultiplayerState == MultiplayerState.Dispatcher) && (HoldState == SignalHoldState.ManualApproach || HoldState == SignalHoldState.ManualLock || HoldState == SignalHoldState.ManualPass))) //if there were hold manually, will not update
+            // The dispatcher can also set a manual hold in single player. Updating the
+            // heads immediately afterwards would overwrite the requested aspect every tick.
+            if (MultiPlayerManager.MultiplayerState == MultiplayerState.Client ||
+                HoldState == SignalHoldState.ManualApproach ||
+                HoldState == SignalHoldState.ManualLock ||
+                HoldState == SignalHoldState.ManualPass)
                 return;
 
             foreach (SignalHead sigHead in SignalHeads)
