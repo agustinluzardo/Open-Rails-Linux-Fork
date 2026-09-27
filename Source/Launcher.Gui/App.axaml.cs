@@ -16,7 +16,9 @@
 // along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform;
 using Avalonia.Markup.Xaml;
 
 namespace Riel.Launcher.Gui
@@ -32,9 +34,15 @@ namespace Riel.Launcher.Gui
         {
             Appearance.Load();
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
                 desktop.MainWindow = Program.DispatcherBaseUrl == null
                     ? new MainWindow()
                     : new DispatcherWindow(Program.DispatcherBaseUrl);
+                // The dispatcher runs as a separate Xwayland window. Give it the same
+                // native icon as the launcher so the compositor does not show the X icon.
+                using var iconStream = AssetLoader.Open(new Uri("avares://riel-gui/Assets/riel.png"));
+                desktop.MainWindow.Icon = new WindowIcon(iconStream);
+            }
             base.OnFrameworkInitializationCompleted();
         }
     }
