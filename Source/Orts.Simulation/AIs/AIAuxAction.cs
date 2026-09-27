@@ -1030,6 +1030,13 @@ namespace Orts.Simulation.AIs
                 activateDistanceTravelledM = thisTrain.PresentPosition[FreeTrainSimulator.Common.Direction.Forward].DistanceTravelled;
             distancesM[0] = activateDistanceTravelledM;
 
+            if (thisTrain.Number == 167)
+            {
+                Trace.TraceInformation("[AiSigDelegate] train={0} phase=distance reschedule={1} currentSection={2} currentRouteIndex={3} actionSection={4} actionRouteIndex={5} left={6:F2} required={7:F2} traveled={8:F2} activate={9:F2} trigger={10:F2} speed={11:F3}",
+                    thisTrain.Number, reschedule, thisSectionIndex, actionIndex0, TCSectionIndex, actionRouteIndex,
+                    leftInSectionM, RequiredDistance, thisTrain.DistanceTravelledM, distancesM[0], distancesM[1], presentSpeedMpS);
+            }
+
             return (distancesM);
         }
 
@@ -1529,6 +1536,14 @@ namespace Orts.Simulation.AIs
             if (((AIAuxActionsRef)ActionRef).LinkedAuxAction)
                 return false;
             float[] distancesM = ((AIAuxActionsRef)ActionRef).CalculateDistancesToNextAction(thisTrain, SpeedMpS, reschedule);
+            if (thisTrain.Number == 167)
+            {
+                AIActSigDelegateRef traceRef = (AIActSigDelegateRef)ActionRef;
+                Trace.TraceInformation("[AiSigDelegate] train={0} phase=canActivate reschedule={1} speed={2:F3} traveled={3:F2} activate={4:F2} trigger={5:F2} section={6} routeIndex={7} subpath={8} absolute={9} linked={10} signal={11}",
+                    thisTrain.Number, reschedule, thisTrain.SpeedMpS, thisTrain.DistanceTravelledM, distancesM[0], distancesM[1],
+                    traceRef.TCSectionIndex, traceRef.RouteIndex, traceRef.SubrouteIndex, traceRef.IsAbsolute,
+                    traceRef.LinkedAuxAction, traceRef.EndSignalIndex);
+            }
             if (distancesM[0] < thisTrain.DistanceTravelledM && !((AIActSigDelegateRef)ActionRef).IsAbsolute) // trigger point
             {
                 if (thisTrain.SpeedMpS > 0f)
