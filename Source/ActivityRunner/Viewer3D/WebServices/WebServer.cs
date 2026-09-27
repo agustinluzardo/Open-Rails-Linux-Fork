@@ -37,6 +37,7 @@ using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.DebugInfo;
 using FreeTrainSimulator.Common.Input;
 using FreeTrainSimulator.Common.Position;
+using FreeTrainSimulator.Models.Signalling;
 
 using Microsoft.Xna.Framework;
 
