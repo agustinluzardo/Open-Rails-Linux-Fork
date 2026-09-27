@@ -33,10 +33,16 @@ namespace Riel.Launcher.Gui
                 StartupReportPath = args[1];
                 args = Array.Empty<string>();
             }
+            if (args.Length == 2 && args[0] == "--dispatcher")
+            {
+                DispatcherBaseUrl = args[1];
+                args = Array.Empty<string>();
+            }
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
 
         internal static string StartupReportPath { get; private set; }
+        internal static string DispatcherBaseUrl { get; private set; }
 
         /// <summary>Also the entry point Avalonia's designer looks for.</summary>
         public static AppBuilder BuildAvaloniaApp()
