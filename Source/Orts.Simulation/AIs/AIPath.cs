@@ -248,20 +248,30 @@ namespace Orts.Simulation.AIs
             WaitTimeS = pathNode.WaitInfo?.WaitTime ?? 0;
             Location = pathNode.Location;
 
-            switch (pathNode.NodeType)
+            // PathNodeType is a flags enum. Open Rails treats the PDP junction
+            // property independently from the TrPathNode reversal/wait flags:
+            // a reversal or waiting point may also sit on a junction. The old
+            // switch made these mutually exclusive and silently lost the
+            // JunctionIndex for combined nodes, which can corrupt every
+            // subpath built after a reversal.
+            if (pathNode.NodeType.Includes(PathNodeType.Junction))
             {
-                case PathNodeType _ when pathNode.NodeType.Includes(PathNodeType.Reversal):
-                    Type = TrainPathNodeType.Reverse;
-                    break;
-                case PathNodeType _ when pathNode.NodeType.Includes(PathNodeType.Wait):
-                    Type = TrainPathNodeType.Stop;
-                    break;
-                case PathNodeType _ when pathNode.NodeType.Includes(PathNodeType.Invalid) && timetableMode:
-                    Type = TrainPathNodeType.Invalid;
-                    break;
-                case PathNodeType _ when pathNode.NodeType.Includes(PathNodeType.Junction):
-                    JunctionIndex = FindJunctionOrEndIndex(Location, true);
-                    break;
+                JunctionIndex = FindJunctionOrEndIndex(Location, true);
+            }
+
+            if (pathNode.NodeType.Includes(PathNodeType.Reversal))
+            {
+                Type = TrainPathNodeType.Reverse;
+            }
+            else if (pathNode.NodeType.Includes(PathNodeType.Wait))
+            {
+                Type = pathNode.NodeType.Includes(PathNodeType.Invalid) && timetableMode
+                    ? TrainPathNodeType.Invalid
+                    : TrainPathNodeType.Stop;
+            }
+            else if (pathNode.NodeType.Includes(PathNodeType.Invalid) && timetableMode)
+            {
+                Type = TrainPathNodeType.Invalid;
             }
         }
 
