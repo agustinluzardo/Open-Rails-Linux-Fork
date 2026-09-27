@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,7 +31,9 @@ namespace FreeTrainSimulator.Models.Imported.ImportHandler.TrainSimulator
 
             contentModel = contentModel with
             {
-                ContentFolders = await FolderModelImportHandler.ExpandFolderModels(contentModel, cancellationToken).ConfigureAwait(false)
+                ContentFolders = await FolderModelImportHandler.ExpandFolderModels(contentModel, cancellationToken).ConfigureAwait(false),
+                Tags = (contentModel.Tags ?? ImmutableDictionary<string, string>.Empty)
+                    .SetItem(ContentModel.ImportRevisionTag, ContentModel.ImportRevision),
             };
             await Create(contentModel, (ModelBase)null, cancellationToken).ConfigureAwait(false);
             return contentModel;
