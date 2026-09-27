@@ -40,6 +40,7 @@ namespace Riel.Launcher.Gui
         private bool refreshing;
         private bool initialized;
         private readonly StackPanel details = new StackPanel { Spacing = 8, Margin = new Thickness(12) };
+        private readonly Dictionary<string, TextBlock> detailRows = new Dictionary<string, TextBlock>();
         private DispatcherSnapshot latest;
 
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
@@ -160,9 +161,13 @@ namespace Riel.Launcher.Gui
                 DispatcherSnapshot snapshot = await client.GetFromJsonAsync<DispatcherSnapshot>("API/DISPATCHER", JsonOptions);
                 if (snapshot != null)
                 {
+                    bool firstSnapshot = latest == null;
                     latest = snapshot;
                     map.SetSnapshot(snapshot);
-                    UpdateSelection();
+                    if (firstSnapshot)
+                        UpdateSelection();
+                    else
+                        UpdateLiveDetails();
                     TimeSpan clock = TimeSpan.FromSeconds((snapshot.ClockTime % 86400 + 86400) % 86400);
                     status.Text = $"{clock:hh\\:mm\\:ss}   •   {snapshot.Trains?.Length ?? 0} trains   •   Connected";
                 }
@@ -180,6 +185,7 @@ namespace Riel.Launcher.Gui
         private void UpdateSelection()
         {
             details.Children.Clear();
+            detailRows.Clear();
             string kind = map.SelectedKind;
             int index = map.SelectedIndex;
             if (kind == "train")
@@ -233,9 +239,13 @@ namespace Riel.Launcher.Gui
                 Row("Control", signal.State);
                 Row("Train", signal.EnabledTrain?.ToString(CultureInfo.CurrentCulture) ?? "—");
                 Heading("Change signal");
+                Row("Command", "Choose an aspect.");
                 AddCommand("System controlled", "signal", index, "Clear");
                 AddCommand("Stop", "signal", index, "Lock");
-                AddCommand("Approach", "signal", index, "Approach");
+                if (signal.CanApproach)
+                    AddCommand("Approach", "signal", index, "Approach");
+                else
+                    Row("Approach", "This signal has no approach aspect.");
                 AddCommand("Proceed", "signal", index, "Manual");
                 if (signal.CallOnEnabled)
                     AddCommand("Call on", "signal", index, "CallOn");
@@ -247,6 +257,7 @@ namespace Riel.Launcher.Gui
                     return;
                 Heading($"Switch {index}");
                 Row("Position", junction.Position == 0 ? "Route 0" : "Route 1");
+                Row("Command", "Choose a route.");
                 AddCommand("Main route", "switch", index, "MainRoute");
                 AddCommand("Side route", "switch", index, "SideRoute");
                 Row("Note", "Occupied or reserved switches cannot be thrown.");
@@ -275,16 +286,89 @@ namespace Riel.Launcher.Gui
             Text = value, FontSize = 17, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap,
         });
 
-        private void Row(string label, string value) => details.Children.Add(new TextBlock
+        private void Row(string label, string value)
         {
-            Text = label + ": " + value, FontSize = 13, TextWrapping = TextWrapping.Wrap,
-        });
+            TextBlock row = new TextBlock
+            {
+                Text = label + ": " + value, FontSize = 13, TextWrapping = TextWrapping.Wrap,
+            };
+            detailRows[label] = row;
+            details.Children.Add(row);
+        }
+
+        private void SetRow(string label, string value)
+        {
+            if (detailRows.TryGetValue(label, out TextBlock row))
+                row.Text = label + ": " + value;
+        }
+
+        private void UpdateLiveDetails()
+        {
+            int index = map.SelectedIndex;
+            if (map.SelectedKind == "train")
+            {
+                DispatcherTrainInfo train = latest.Trains?.FirstOrDefault(item => item.Number == index);
+                if (train == null)
+                {
+                    UpdateSelection();
+                    return;
+                }
+                SetRow("Service", train.Name);
+                SetRow("Locomotive", string.IsNullOrWhiteSpace(train.Locomotive) ? "—" : train.Locomotive);
+                SetRow("Next station", train.NextStation);
+                if (train.NextArrival.HasValue)
+                    SetRow("Arrival", TimeSpan.FromSeconds((train.NextArrival.Value % 86400 + 86400) % 86400).ToString(@"hh\:mm", CultureInfo.CurrentCulture));
+                if (train.NextDeparture.HasValue)
+                    SetRow("Departure", TimeSpan.FromSeconds((train.NextDeparture.Value % 86400 + 86400) % 86400).ToString(@"hh\:mm", CultureInfo.CurrentCulture));
+                SetRow("Control", train.ControlMode);
+                SetRow("Speed", $"{Math.Abs(train.SpeedMpS) * 3.6:F1} km/h");
+                SetRow("Direction", train.Direction);
+                SetRow("Cars", train.CarCount.ToString(CultureInfo.CurrentCulture));
+            }
+            else if (map.SelectedKind == "signal")
+            {
+                DispatcherSignalInfo signal = latest.Signals?.FirstOrDefault(item => item.Index == index);
+                if (signal == null)
+                {
+                    UpdateSelection();
+                    return;
+                }
+                SetRow("Aspect", signal.Aspect);
+                SetRow("Control", signal.State);
+                SetRow("Train", signal.EnabledTrain?.ToString(CultureInfo.CurrentCulture) ?? "—");
+            }
+            else if (map.SelectedKind == "switch")
+            {
+                DispatcherSwitchInfo junction = latest.Switches?.FirstOrDefault(item => item.NodeIndex == index);
+                if (junction == null)
+                {
+                    UpdateSelection();
+                    return;
+                }
+                SetRow("Position", junction.Position == 0 ? "Route 0" : "Route 1");
+            }
+            else if (map.SelectedKind != "point")
+            {
+                DispatcherTrainInfo player = latest.Trains?.FirstOrDefault(train =>
+                    string.Equals(train.TrainType, "Player", StringComparison.OrdinalIgnoreCase));
+                if (player != null && !detailRows.ContainsKey("Your train"))
+                {
+                    UpdateSelection();
+                    return;
+                }
+                if (player != null)
+                    SetRow("Your train", $"#{player.Number} · {player.Locomotive} · {player.Name}");
+                SetRow("Trains", (latest.Trains?.Length ?? 0).ToString(CultureInfo.CurrentCulture));
+                SetRow("Signals", (latest.Signals?.Length ?? 0).ToString(CultureInfo.CurrentCulture));
+            }
+        }
 
         private void AddCommand(string label, string kind, int index, string state)
         {
             Button button = new Button { Content = label, HorizontalAlignment = HorizontalAlignment.Stretch };
             button.Click += async (_, _) =>
             {
+                button.IsEnabled = false;
                 try
                 {
                     // StringContent sends an explicit Content-Length. EmbedIO's HttpListener
@@ -295,13 +379,17 @@ namespace Riel.Launcher.Gui
                     using HttpResponseMessage response = await client.PostAsync("API/DISPATCHER/COMMAND", body);
                     response.EnsureSuccessStatusCode();
                     DispatcherCommandResult result = await response.Content.ReadFromJsonAsync<DispatcherCommandResult>(JsonOptions);
-                    status.Text = result?.Message ?? "No response from simulator.";
+                    SetRow("Command", result?.Message ?? "No response from simulator.");
                     if (result?.Accepted == true)
                         await Refresh();
                 }
                 catch (Exception error) when (error is HttpRequestException or TaskCanceledException or JsonException)
                 {
-                    status.Text = "Could not send command to simulator.";
+                    SetRow("Command", "Could not send command to simulator.");
+                }
+                finally
+                {
+                    button.IsEnabled = true;
                 }
             };
             details.Children.Add(button);
@@ -745,6 +833,7 @@ namespace Riel.Launcher.Gui
             public string Aspect { get; set; } = "";
             public int? EnabledTrain { get; set; }
             public bool CallOnEnabled { get; set; }
+            public bool CanApproach { get; set; }
             public LatLon Location { get; set; }
         }
 
