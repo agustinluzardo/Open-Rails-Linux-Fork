@@ -1093,33 +1093,30 @@ namespace FreeTrainSimulator.Runtime.Track
             }
             else if (neighbor is JunctionNode junctionNode)
             {
-                // Find which connector of the junction links back to our current VectorNode.
                 TrackNodeConnectorIndex junctionConnectors = trackDatabase.TrackNodeConnectors[junctionNode.NodeIndex];
-                int incomingIdx = -1;
-                for (int i = 0; i < junctionConnectors.TrackNodeConnectors.Length; i++)
-                {
-                    if (junctionConnectors.TrackNodeConnectors[i].Link == node.NodeIndex)
-                    {
-                        incomingIdx = i;
-                        break;
-                    }
-                }
 
-                if (incomingIdx < 0)
-                    return null;
-
-                if (incomingIdx < junctionConnectors.InboundCount)
+                // Match Open Rails Traveller.NextTrackNode() exactly here. When the legacy
+                // traveller enters a junction, its temporary direction is taken from the
+                // vector node's exit TrPin.Direction. A positive MSTS TrPin direction is
+                // represented by TrackDirection.Reverse in the model, but legacy Traveller
+                // interprets that value as TravellerDirection.Forward while it is on the
+                // junction. Forward traversal selects SelectedRoute; backward traversal
+                // takes pin 0 (the stem). Do not infer this from the reciprocal junction
+                // pin group: malformed/legacy MSTS databases can disagree, and Open Rails
+                // deliberately follows the exit pin semantics.
+                if (exitConnector.Direction == TrackDirection.Reverse)
                 {
-                    // Arrived from the stem → select the active branch (OutPin).
-                    int switchState = TrackWorld.Instance.SwitchStates.TryGetValue(junctionNode.NodeIndex, out int state) ? state : 0;
                     ReadOnlySpan<TrackNodeConnector> outPins = junctionConnectors.OutConnectors;
+                    if (outPins.IsEmpty)
+                        return null;
+
+                    int switchState = TrackWorld.Instance.SwitchStates.TryGetValue(junctionNode.NodeIndex, out int state) ? state : 0;
                     if ((uint)switchState >= (uint)outPins.Length)
                         switchState = 0;
                     outgoing = outPins[switchState];
                 }
                 else
                 {
-                    // Arrived from a branch → always exit through the stem.
                     ReadOnlySpan<TrackNodeConnector> inPins = junctionConnectors.InConnectors;
                     if (inPins.IsEmpty)
                         return null;
