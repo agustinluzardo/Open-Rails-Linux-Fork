@@ -2956,6 +2956,13 @@ namespace Orts.Simulation.AIs
         /// </summary>
         public void BuildWaitingPointList(float clearingDistanceM)
         {
+            bool traceViaCircuitoQ = Number == 167 && string.Equals(Name, "Via Circuito Via Q", StringComparison.Ordinal);
+            if (traceViaCircuitoQ)
+            {
+                Trace.TraceInformation("[AiWaitPath] train={0} service={1} waitingPoints={2} clearingDistance={3:F2}",
+                    Number, Name, TCRoute.WaitingPoints.Count, clearingDistanceM);
+            }
+
             bool insertSigDelegate = true;
             // loop through all waiting points - back to front as the processing affects the actual routepaths
 
@@ -2963,6 +2970,11 @@ namespace Orts.Simulation.AIs
             for (int iWait = 0; iWait <= TCRoute.WaitingPoints.Count - 1; iWait++)
             {
                 WaitingPointDetail waitingPoint = TCRoute.WaitingPoints[iWait];
+                if (traceViaCircuitoQ)
+                {
+                    Trace.TraceInformation("[AiWaitPath] train={0} phase=scan index={1} subpath={2} section={3} offset={4} wait={5}",
+                        Number, iWait, waitingPoint.SubListIndex, waitingPoint.WaitingPointSection, waitingPoint.Offset, waitingPoint.WaitTime);
+                }
 
                 //check if waiting point is in existing subpath
                 if (waitingPoint.SubListIndex >= TCRoute.TCRouteSubpaths.Count)
@@ -3029,6 +3041,11 @@ namespace Orts.Simulation.AIs
                         distanceToEndOfWPSection += nextSection.Length;
                 }
                 signalIndex.Add(endSignalIndex);
+                if (traceViaCircuitoQ)
+                {
+                    Trace.TraceInformation("[AiWaitPath] train={0} phase=signal index={1} routeIndex={2} lastIndex={3} section={4} endSignal={5} distanceToEnd={6:F2}",
+                        Number, iWait, routeIndex, lastIndex, waitingPoint.WaitingPointSection, endSignalIndex, distanceToEndOfWPSection);
+                }
 
                 //<CSComment> TODO This is probably redundant now, however removing it would require extensive testing </CSComment>
                 // move backwards WPs within clearingDistanceM, except if of type Horn
@@ -3131,6 +3148,12 @@ namespace Orts.Simulation.AIs
                             delegateAction.SetSignalObject(Simulator.Instance.SignalEnvironment.Signals[signalIndex[iWait]]);
 
                             AuxActionsContainer.Add(delegateAction);
+                            if (traceViaCircuitoQ)
+                            {
+                                Trace.TraceInformation("[AiWaitPath] train={0} phase=delegate index={1} subpath={2} routeIndex={3} section={4} offset={5} wait={6} signal={7} absolute={8} delegateDelay={9}",
+                                    Number, iWait, waitingPoint.SubListIndex, lastIndex, thisRoute[lastIndex].TrackCircuitSection.Index,
+                                    waitingPoint.Offset, randomizedDelay, signalIndex[iWait], delegateAction.IsAbsolute, delegateAction.Delay);
+                            }
                         }
                     }
                 }
