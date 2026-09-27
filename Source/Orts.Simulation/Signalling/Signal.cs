@@ -716,16 +716,22 @@ namespace Orts.Simulation.Signalling
         /// </summary>
         internal SpeedInfo SignalSpeed(SignalFunctionType signalType)
         {
-            SpeedInfo set_speed = new SpeedInfo(null);
+            SignalAspectState leastRestrictiveAspect = SignalAspectState.Stop;
+            SpeedInfo speed = new SpeedInfo(null);
 
             foreach (SignalHead sigHead in SignalHeads)
             {
-                if (sigHead.SignalFunction == signalType && sigHead.SignalIndicationState >= SignalAspectState.Stop)
+                // Match Open Rails: the speed belongs to the least restrictive
+                // head with a speed indication, not simply the last head.
+                if (sigHead.SignalFunction == signalType &&
+                    sigHead.SignalIndicationState >= leastRestrictiveAspect &&
+                    sigHead.CurrentSpeedInfo != null)
                 {
-                    set_speed = sigHead.SpeedInfoSet[sigHead.SignalIndicationState];
+                    leastRestrictiveAspect = sigHead.SignalIndicationState;
+                    speed = sigHead.CurrentSpeedInfo;
                 }
             }
-            return set_speed;
+            return speed;
         }//this_sig_speed
 
         /// <summary>
