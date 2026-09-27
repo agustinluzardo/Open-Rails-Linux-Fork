@@ -77,15 +77,16 @@ riel play "Marias Pass" "Coal Train"
 simulator and names what is missing. [**INSTALL.md**](docs/linux/INSTALL.md) covers installation
 and what to do when something does not work.
 
-To trace AI trains that remain stopped in any activity, launch Riel from a terminal:
+To trace AI trains that remain stopped or move unusually slowly, launch Riel from a terminal:
 
 ```sh
-RIEL_TRACE_AI_STOPS=1 riel
+RIEL_TRACE_AI_STOPS=1 RIEL_TRACE_AI_PROGRESS=1 riel
 ```
 
 Run the affected activity in the launcher and inspect `~/.local/state/riel/Logs` for
-`[AiStop]`. Each record shows the train, its position, movement state, authority and next
-action. The first train that stops can explain why following signals stay red.
+`[AiStop]` and `[AiProgress]`. Stop records include the station's scheduled and actual
+departure times and the next signal aspect. Progress records sample moving trains every
+120 simulated seconds, including their speed, throttle, brakes and position.
 
 
 ## Status
