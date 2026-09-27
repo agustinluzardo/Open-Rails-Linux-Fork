@@ -862,9 +862,9 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
             DispatcherCommandRequest request = await HttpContext.GetRequestDataAsync<DispatcherCommandRequest>(
                 WebServer.DeserializationCallback<DispatcherCommandRequest>).ConfigureAwait(false);
             if (request == null)
-                return new DispatcherCommandResult { Message = "No se recibió la orden; reiniciá Riel con la última actualización." };
+                return new DispatcherCommandResult { Message = "No command was received. Restart Riel after updating." };
             if (MultiPlayerManager.IsMultiPlayer())
-                return new DispatcherCommandResult { Message = "Las órdenes del dispatcher no están disponibles en multijugador." };
+                return new DispatcherCommandResult { Message = "Dispatcher commands are unavailable in multiplayer." };
 
             if (string.Equals(request.Kind, "signal", StringComparison.OrdinalIgnoreCase))
             {
