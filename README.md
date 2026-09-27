@@ -91,14 +91,15 @@ departure times and the next signal aspect. Progress records sample moving train
 
 ## Dispatcher
 
-Open the dispatcher from the running simulator. Click a train to inspect its live speed,
-control mode, direction and number of cars, or click **Centrar en el tren** to follow its
-location. Click a signal to inspect its aspect and choose automatic control, stop,
+Open the dispatcher from the running simulator. The map always identifies your train by number,
+locomotive model and service. Click a train to inspect its live speed, control mode, direction,
+consist and next scheduled station, or click **Centrar en el tren** to follow its location.
+Stations and sidings show their names as you zoom in; click a station for platform details. Click a signal to inspect its aspect and choose automatic control, stop,
 approach, proceed or call-on (where supported). Click a junction to request the main
 or side route. The simulator rejects changes to occupied or reserved switches.
 Use the mouse wheel or **+ / −** to zoom around the pointer, drag to pan and
 **Centrar mapa** to fit the whole route. Labels appear progressively as you zoom
-in to avoid covering the tracks.
+in to avoid covering the tracks; close zoom also shows signal aspects and junction numbers.
 
 Dispatcher controls operate only from the local machine and are disabled in multiplayer.
 The window uses the Riel icon in Xwayland.

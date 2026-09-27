@@ -748,6 +748,11 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
             public string ControlMode { get; init; }
             public float SpeedMpS { get; init; }
             public int CarCount { get; init; }
+            public string Locomotive { get; init; }
+            public string NextStation { get; init; }
+            public int? NextArrival { get; init; }
+            public int? NextDeparture { get; init; }
+            public string[] Cars { get; init; }
             public bool IsFreight { get; init; }
             public string Direction { get; init; }
             public LatLon Front { get; init; }
@@ -811,6 +816,11 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                         ControlMode = train.ControlMode.ToString(),
                         SpeedMpS = train.SpeedMpS,
                         CarCount = train.Cars.Count,
+                        Locomotive = Path.GetFileNameWithoutExtension(train.LeadLocomotive?.WagFilePath ?? train.FirstCar?.WagFilePath ?? string.Empty),
+                        Cars = train.Cars.Take(12).Select(car => Path.GetFileNameWithoutExtension(car.WagFilePath ?? string.Empty)).ToArray(),
+                        NextStation = train.StationStops.FirstOrDefault()?.PlatformItem?.Name ?? string.Empty,
+                        NextArrival = train.StationStops.Count > 0 && train.StationStops[0].ArrivalTime > 0 ? train.StationStops[0].ArrivalTime : null,
+                        NextDeparture = train.StationStops.Count > 0 && train.StationStops[0].DepartTime > 0 ? train.StationStops[0].DepartTime : null,
                         IsFreight = train.IsFreight,
                         Direction = train.MUDirection.ToString(),
                         Front = GetLatLon(train.FrontLocation),
@@ -851,8 +861,10 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
 
             DispatcherCommandRequest request = await HttpContext.GetRequestDataAsync<DispatcherCommandRequest>(
                 WebServer.DeserializationCallback<DispatcherCommandRequest>).ConfigureAwait(false);
-            if (request == null || MultiPlayerManager.IsMultiPlayer())
-                return new DispatcherCommandResult { Message = "Dispatcher commands unavailable." };
+            if (request == null)
+                return new DispatcherCommandResult { Message = "No se recibió la orden; reiniciá Riel con la última actualización." };
+            if (MultiPlayerManager.IsMultiPlayer())
+                return new DispatcherCommandResult { Message = "Las órdenes del dispatcher no están disponibles en multijugador." };
 
             if (string.Equals(request.Kind, "signal", StringComparison.OrdinalIgnoreCase))
             {

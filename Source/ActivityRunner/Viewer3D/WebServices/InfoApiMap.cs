@@ -77,6 +77,8 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
         public string Color { get; set; }
         public TypeOfPointOnApiMap TypeOfPointOnApiMap { get; set; }
         public string Name { get; set; }
+        public string Category { get; set; }
+        public string Detail { get; set; }
     }
 
     public class LineOnApiMap
@@ -131,22 +133,24 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
             return latLon;
         }
 
-        private void AddToPointOnApiMap(in WorldLocation worldLocation, string color, TypeOfPointOnApiMap typeOfPointOnApiMap, string name)
+        private void AddToPointOnApiMap(in WorldLocation worldLocation, string color, TypeOfPointOnApiMap typeOfPointOnApiMap, string name, string category = null, string detail = null)
         {
             LatLon latLon = ConvertToLatLon(worldLocation);
 
             AddToPointOnApiMap(latLon,
-                color, typeOfPointOnApiMap, name);
+                color, typeOfPointOnApiMap, name, category, detail);
         }
 
-        private void AddToPointOnApiMap(LatLon latLon, string color, TypeOfPointOnApiMap typeOfPointOnApiMap, string name)
+        private void AddToPointOnApiMap(LatLon latLon, string color, TypeOfPointOnApiMap typeOfPointOnApiMap, string name, string category = null, string detail = null)
         {
             PointOnApiMap pointOnApiMap = new PointOnApiMap
             {
                 LatLon = latLon,
                 Color = color,
                 TypeOfPointOnApiMap = typeOfPointOnApiMap,
-                Name = name
+                Name = name,
+                Category = category,
+                Detail = detail,
             };
 
             if (pointOnApiMap.TypeOfPointOnApiMap == TypeOfPointOnApiMap.Named)
@@ -261,17 +265,24 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
 
                 if (trackItem is not LevelCrossingTrackItem)
                 {
-                    string itemName = trackItem switch
+                    if (trackItem is PlatformTrackItem platform)
                     {
-                        SidingTrackItem siding => siding.SidingName,
-                        PlatformTrackItem platform => platform.PlatformName,
-                        _ => null
-                    };
-
-                    if (!string.IsNullOrEmpty(itemName))
-                        AddToPointOnApiMap(trackItem.Location, "green", TypeOfPointOnApiMap.Named, $"{itemName.Replace("'", "", StringComparison.OrdinalIgnoreCase)}, {trackItem.GetType().Name}");
+                        string station = string.IsNullOrWhiteSpace(platform.StationName)
+                            ? platform.PlatformName : platform.StationName;
+                        if (!string.IsNullOrWhiteSpace(station))
+                            AddToPointOnApiMap(trackItem.Location, "green", TypeOfPointOnApiMap.Named,
+                                station, "Estación", platform.PlatformName);
+                    }
+                    else if (trackItem is SidingTrackItem siding && !string.IsNullOrWhiteSpace(siding.SidingName))
+                    {
+                        AddToPointOnApiMap(trackItem.Location, "green", TypeOfPointOnApiMap.Named,
+                            siding.SidingName, "Desvío");
+                    }
                     else
-                        AddToPointOnApiMap(trackItem.Location, "blue", TypeOfPointOnApiMap.Other, $"{trackItem.GetType().Name}");
+                    {
+                        AddToPointOnApiMap(trackItem.Location, "blue", TypeOfPointOnApiMap.Other,
+                            trackItem.GetType().Name);
+                    }
                 }
             }
         }
