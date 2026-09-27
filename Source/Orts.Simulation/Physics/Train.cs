@@ -3325,6 +3325,7 @@ namespace Orts.Simulation.Physics
             if (double.IsNaN(distance))
                 distance = 0;//sanity check
 
+            TrackTraveller previousFront = FrontTrackTraveller;
             RearTrackTraveller = RearTrackTraveller.Move((float)distance);
 
             // Walk TrackTraveller through cars for positioning (primary)
@@ -3379,9 +3380,58 @@ namespace Orts.Simulation.Physics
 
             // Derive legacy front traveller from total train length (single walk, not per-car)
             FrontTrackTraveller = trackTraveller;
+            if (this is AITrain && TraceAiTrainNumbers.Contains(Number) && previousFront.OnTrack &&
+                previousFront.TrackNodeIndex != FrontTrackTraveller.TrackNodeIndex)
+            {
+                TraceAiTravellerNodeChange(previousFront, FrontTrackTraveller);
+            }
             Length = length;
             DistanceTravelled += (float)distance;
         } // CalculatePositionOfCars
+
+        // Report the actual geometry walk, before it is converted to a track-circuit position.
+        // The signal/route trace alone cannot distinguish a physical junction choice from a
+        // later route-index or occupancy error. Enabled only for RIEL_TRACE_AI_TRAINS numbers.
+        private void TraceAiTravellerNodeChange(TrackTraveller previous, TrackTraveller current)
+        {
+            var database = TrackWorld.Instance.TrackDatabase;
+            var connectors = database.TrackNodeConnectors[previous.TrackNodeIndex].TrackNodeConnectors;
+            var exit = connectors[previous.Direction == TrackDirection.Ahead ? 1 : 0];
+            var neighbor = database.TrackNodes[exit.Link];
+            int junctionIndex = -1;
+            int switchState = -1;
+            int chosenPin = -1;
+            int expectedNode = exit.Link;
+
+            if (neighbor is FreeTrainSimulator.Models.Track.JunctionNode junction)
+            {
+                junctionIndex = junction.NodeIndex;
+                var junctionConnectors = database.TrackNodeConnectors[junctionIndex];
+                if (exit.Direction == TrackDirection.Reverse)
+                {
+                    switchState = TrackWorld.Instance.SwitchStates.TryGetValue(junctionIndex, out int state) ? state : 0;
+                    if ((uint)switchState >= (uint)junctionConnectors.OutConnectors.Length)
+                        switchState = 0;
+                    chosenPin = junctionConnectors.InboundCount + switchState;
+                }
+                else
+                {
+                    chosenPin = 0;
+                }
+
+                if ((uint)chosenPin < (uint)junctionConnectors.TrackNodeConnectors.Length)
+                    expectedNode = junctionConnectors.TrackNodeConnectors[chosenPin].Link;
+            }
+
+            Trace.TraceInformation(
+                "[AiTraveller] time={0:F1} train={1} fromNode={2} fromSection={3} fromDirection={4} fromOffset={5:F2} exitLink={6} exitDirection={7} junction={8} switch={9} chosenPin={10} expectedNode={11} toNode={12} toSection={13} toDirection={14} toOffset={15:F2} previousTc={16} previousRouteIndex={17}",
+                simulator.ClockTime, Number, previous.TrackNodeIndex, previous.SectionIndex,
+                previous.Direction, previous.VectorNodeOffset, exit.Link, exit.Direction,
+                junctionIndex, switchState, chosenPin, expectedNode, current.TrackNodeIndex,
+                current.SectionIndex, current.Direction, current.VectorNodeOffset,
+                PresentPosition[Direction.Forward].TrackCircuitSectionIndex,
+                PresentPosition[Direction.Forward].RouteListIndex);
+        }
 
         public void CalculatePositionOfEOT()
         {
