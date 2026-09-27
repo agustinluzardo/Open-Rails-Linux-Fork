@@ -846,7 +846,7 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
         {
             // The optional web server may listen on the LAN. Never allow its anonymous
             // clients to operate signals or junctions; the GUI connects over loopback.
-            if (!IPAddress.IsLoopback(HttpContext.Request.RemoteEndPoint.Address))
+            if (!IPAddress.IsLoopback(HttpContext.RemoteEndPoint.Address))
                 return new DispatcherCommandResult { Message = "Local dispatcher only." };
 
             DispatcherCommandRequest request = await HttpContext.GetRequestDataAsync<DispatcherCommandRequest>(
