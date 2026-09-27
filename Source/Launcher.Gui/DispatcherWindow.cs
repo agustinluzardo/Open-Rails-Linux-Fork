@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -187,15 +188,40 @@ namespace Riel.Launcher.Gui
                 if (train == null)
                     return;
                 Heading($"Tren {train.Number}");
-                Row("Nombre", train.Name);
+                Row("Servicio", train.Name);
+                Row("Locomotora", string.IsNullOrWhiteSpace(train.Locomotive) ? "—" : train.Locomotive);
+                if (!string.IsNullOrWhiteSpace(train.NextStation))
+                {
+                    Row("Próxima estación", train.NextStation);
+                    if (train.NextArrival.HasValue)
+                        Row("Llegada", TimeSpan.FromSeconds((train.NextArrival.Value % 86400 + 86400) % 86400).ToString(@"hh\:mm", CultureInfo.CurrentCulture));
+                    if (train.NextDeparture.HasValue)
+                        Row("Salida", TimeSpan.FromSeconds((train.NextDeparture.Value % 86400 + 86400) % 86400).ToString(@"hh\:mm", CultureInfo.CurrentCulture));
+                }
                 Row("Tipo", train.TrainType + (train.IsFreight ? " · carga" : " · pasajeros"));
                 Row("Control", train.ControlMode);
                 Row("Velocidad", $"{Math.Abs(train.SpeedMpS) * 3.6:F1} km/h");
                 Row("Dirección", train.Direction);
                 Row("Vagones", train.CarCount.ToString(CultureInfo.CurrentCulture));
+                if (train.Cars != null && train.Cars.Length > 0)
+                    Row("Formación", string.Join(" · ", train.Cars.Where(car => !string.IsNullOrWhiteSpace(car))));
                 Button follow = new Button { Content = "Centrar en el tren" };
                 follow.Click += (_, _) => map.CenterAt(train.Front);
                 details.Children.Add(follow);
+            }
+            else if (kind == "point")
+            {
+                MapPoint point = map.SelectedPoint;
+                if (point == null)
+                    return;
+                Heading(point.Category ?? "Lugar");
+                Row("Nombre", point.Name);
+                if (!string.IsNullOrWhiteSpace(point.Detail) && point.Detail != point.Name)
+                    Row("Andén / vía", point.Detail);
+                Row("Ubicación", $"{point.LatLon.Lat:F5}, {point.LatLon.Lon:F5}");
+                Button center = new Button { Content = "Centrar acá" };
+                center.Click += (_, _) => map.CenterAt(point.LatLon);
+                details.Children.Add(center);
             }
             else if (kind == "signal")
             {
@@ -228,6 +254,15 @@ namespace Riel.Launcher.Gui
             else
             {
                 Heading("Dispatcher");
+                DispatcherTrainInfo player = latest?.Trains?.FirstOrDefault(train =>
+                    string.Equals(train.TrainType, "Player", StringComparison.OrdinalIgnoreCase));
+                if (player != null)
+                {
+                    Row("Tu tren", $"#{player.Number} · {player.Locomotive} · {player.Name}");
+                    Button locate = new Button { Content = "Centrar en mi tren" };
+                    locate.Click += (_, _) => map.CenterAt(player.Front);
+                    details.Children.Add(locate);
+                }
                 Row("Mapa", "Seleccioná un tren, una señal o un cambio de vía.");
                 Row("Navegación", "Arrastrá para mover; usá la rueda o +/− para acercar.");
                 Row("Trenes", (latest?.Trains?.Length ?? 0).ToString(CultureInfo.CurrentCulture));
@@ -252,8 +287,12 @@ namespace Riel.Launcher.Gui
             {
                 try
                 {
-                    using HttpResponseMessage response = await client.PostAsJsonAsync("API/DISPATCHER/COMMAND",
-                        new { Kind = kind, Index = index, State = state });
+                    // StringContent sends an explicit Content-Length. EmbedIO's HttpListener
+                    // can otherwise receive an empty chunked JSON body on some runtimes.
+                    using var body = new StringContent(
+                        JsonSerializer.Serialize(new { Kind = kind, Index = index, State = state }),
+                        Encoding.UTF8, "application/json");
+                    using HttpResponseMessage response = await client.PostAsync("API/DISPATCHER/COMMAND", body);
                     response.EnsureSuccessStatusCode();
                     DispatcherCommandResult result = await response.Content.ReadFromJsonAsync<DispatcherCommandResult>(JsonOptions);
                     status.Text = result?.Message ?? "Sin respuesta del simulador.";
@@ -299,6 +338,9 @@ namespace Riel.Launcher.Gui
             public event Action SelectionChanged;
             public string SelectedKind { get; private set; }
             public int SelectedIndex { get; private set; } = -1;
+            public MapPoint SelectedPoint => SelectedKind == "point" && SelectedIndex >= 0 &&
+                SelectedIndex < (map?.PointOnApiMapList?.Count ?? 0)
+                ? map.PointOnApiMapList[SelectedIndex] : null;
             private double viewLatMin;
             private double viewLatMax;
             private double viewLonMin;
@@ -417,7 +459,15 @@ namespace Riel.Launcher.Gui
                 }
 
                 var labels = new List<Rect>();
-                if (map.PointOnApiMapList != null && zoom >= 7)
+                DispatcherTrainInfo playerTrain = snapshot?.Trains?.FirstOrDefault(train =>
+                    string.Equals(train.TrainType, "Player", StringComparison.OrdinalIgnoreCase));
+                if (playerTrain != null)
+                {
+                    string identity = $"TU TREN  #{playerTrain.Number}  ·  {playerTrain.Locomotive}  ·  {playerTrain.Name}";
+                    context.FillRectangle(BackgroundBrush, new Rect(5, 5, Math.Min(Bounds.Width - 10, 680), 35));
+                    TryLabel(context, identity, new Point(13, 11), 15, PlayerBrush, labels);
+                }
+                if (map.PointOnApiMapList != null && zoom >= 3)
                 {
                     foreach (MapPoint point in map.PointOnApiMapList)
                     {
@@ -426,8 +476,13 @@ namespace Riel.Launcher.Gui
                         Point p = Project(point.LatLon);
                         if (!Visible(p))
                             continue;
-                        context.DrawEllipse(NamedPointBrush, null, p, 2.5, 2.5);
-                        TryLabel(context, point.Name.Split(',')[0], p + new Vector(6, -11), 12, NamedPointBrush, labels);
+                        context.DrawEllipse(NamedPointBrush,
+                            SelectedKind == "point" && SelectedPoint == point ? new Pen(LabelBrush, 2) : null,
+                            p, 3.5, 3.5);
+                        string locationLabel = (point.Category == "Estación" ? "Est. " : "") + point.Name;
+                        if (zoom >= 18 && !string.IsNullOrWhiteSpace(point.Detail) && point.Detail != point.Name)
+                            locationLabel += " · " + point.Detail;
+                        TryLabel(context, locationLabel, p + new Vector(6, -11), 13, NamedPointBrush, labels);
                     }
                 }
 
@@ -438,7 +493,11 @@ namespace Riel.Launcher.Gui
                         Point p = Project(junction.Location);
                         IBrush brush = junction.Position == 0 ? SwitchMainBrush : SwitchSideBrush;
                         if (Visible(p))
+                        {
                             context.DrawEllipse(brush, SelectedKind == "switch" && SelectedIndex == junction.NodeIndex ? new Pen(LabelBrush, 2) : null, p, 4, 4);
+                            if (zoom >= 22)
+                                TryLabel(context, $"Cambio {junction.NodeIndex} · Ruta {junction.Position}", p + new Vector(7, -15), 12, brush, labels);
+                        }
                     }
                 }
 
@@ -453,6 +512,8 @@ namespace Riel.Launcher.Gui
                             : signal.Aspect.Contains("Approach", StringComparison.OrdinalIgnoreCase) ? SwitchSideBrush
                             : SwitchMainBrush;
                         context.DrawEllipse(aspect, SelectedKind == "signal" && SelectedIndex == signal.Index ? new Pen(LabelBrush, 2) : null, p, 4, 4);
+                        if (zoom >= 22)
+                            TryLabel(context, $"Señal {signal.Index} · {signal.Aspect}", p + new Vector(7, 4), 12, aspect, labels);
                     }
                 }
 
@@ -471,8 +532,12 @@ namespace Riel.Launcher.Gui
 
                     if (!player && zoom < 2 && !(SelectedKind == "train" && SelectedIndex == train.Number))
                         continue;
-                    string name = string.IsNullOrWhiteSpace(train.Name) ? $"#{train.Number}" : $"{train.Number} · {train.Name}";
-                    TryLabel(context, name, front + new Vector(8, -16), player ? 14 : 13, LabelBrush, labels);
+                    string name = $"#{train.Number} · {train.Locomotive}";
+                    if (zoom >= 10 && !string.IsNullOrWhiteSpace(train.Name) && train.Name != train.Locomotive)
+                        name += " · " + train.Name;
+                    Point anchor = Visible(front) ? front : rear;
+                    if (Visible(anchor))
+                        TryLabel(context, name, anchor + new Vector(8, -16), player ? 14 : 13, LabelBrush, labels);
                 }
             }
 
@@ -572,6 +637,15 @@ namespace Riel.Launcher.Gui
                         double distance = Distance(Project(junction.Location), pointer);
                         if (distance < best) { best = distance; kind = "switch"; index = junction.NodeIndex; }
                     }
+                if (map?.PointOnApiMapList != null && zoom >= 3)
+                    for (int i = 0; i < map.PointOnApiMapList.Count; i++)
+                    {
+                        MapPoint point = map.PointOnApiMapList[i];
+                        if (point.TypeOfPointOnApiMap != 1)
+                            continue;
+                        double distance = Distance(Project(point.LatLon), pointer);
+                        if (distance < best) { best = distance; kind = "point"; index = i; }
+                    }
                 SelectedKind = kind;
                 SelectedIndex = index;
                 SelectionChanged?.Invoke();
@@ -620,6 +694,8 @@ namespace Riel.Launcher.Gui
             public LatLon LatLon { get; set; }
             public int TypeOfPointOnApiMap { get; set; }
             public string Name { get; set; }
+            public string Category { get; set; }
+            public string Detail { get; set; }
         }
 
         private sealed class MapLine
@@ -644,6 +720,11 @@ namespace Riel.Launcher.Gui
             public string ControlMode { get; set; }
             public float SpeedMpS { get; set; }
             public int CarCount { get; set; }
+            public string Locomotive { get; set; }
+            public string NextStation { get; set; }
+            public int? NextArrival { get; set; }
+            public int? NextDeparture { get; set; }
+            public string[] Cars { get; set; }
             public bool IsFreight { get; set; }
             public string Direction { get; set; }
             public LatLon Front { get; set; }
