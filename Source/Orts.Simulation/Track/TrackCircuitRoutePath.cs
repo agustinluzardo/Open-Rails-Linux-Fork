@@ -803,6 +803,37 @@ namespace Orts.Simulation.Track
             // search for loops
 
             LoopSearch();
+
+            // Diagnostic counterpart to AIPathResolve. Keep this scoped to the path which
+            // reproduces Toshiba Platence so normal route startup logs do not explode.
+            if (string.Equals(aiPath.PathName, "Plaza C Via Circuito Dsc", StringComparison.OrdinalIgnoreCase))
+            {
+                Trace.TraceInformation("[AiTCRoute] path={0} train={1} subpaths={2}", aiPath.PathName, trainNumber, TCRouteSubpaths.Count);
+                for (int diagnosticSubpath = 0; diagnosticSubpath < TCRouteSubpaths.Count; diagnosticSubpath++)
+                {
+                    TrackCircuitPartialPathRoute diagnosticRoute = TCRouteSubpaths[diagnosticSubpath];
+                    Trace.TraceInformation("[AiTCRoute] path={0} train={1} subpath={2} count={3}",
+                        aiPath.PathName, trainNumber, diagnosticSubpath, diagnosticRoute.Count);
+
+                    for (int routeIndex = 0; routeIndex < diagnosticRoute.Count; routeIndex++)
+                    {
+                        TrackCircuitRouteElement diagnosticElement = diagnosticRoute[routeIndex];
+                        TrackCircuitSection diagnosticSection = diagnosticElement.TrackCircuitSection;
+
+                        // The current failure is observed around routeIndex 238 and TrackNode 841.
+                        // Log the requested window plus every occurrence of node 841, even if route
+                        // construction moves the window while we align semantics with Open Rails.
+                        if ((routeIndex < 230 || routeIndex > 245) && diagnosticSection.OriginalIndex != 841)
+                            continue;
+
+                        Trace.TraceInformation(
+                            "[AiTCRoute] path={0} train={1} subpath={2} routeIndex={3} tc={4} originalNode={5} direction={6} type={7}",
+                            aiPath.PathName, trainNumber, diagnosticSubpath, routeIndex,
+                            diagnosticSection.Index, diagnosticSection.OriginalIndex,
+                            diagnosticElement.Direction, diagnosticSection.CircuitType);
+                    }
+                }
+            }
         }
 
         //
