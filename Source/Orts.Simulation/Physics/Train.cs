@@ -2595,7 +2595,7 @@ namespace Orts.Simulation.Physics
                                     firstObject.ActualSpeed, allowedAbsoluteMaxSpeedSignalMpS, AllowedMaxSpeedMpS,
                                     string.Join(",", firstObject.SignalDetails.SignalHeads
                                         .Where(head => head.SignalFunction == SignalFunctionType.Normal)
-                                        .Select(head => `${head.SignalIndicationState}:${(IsFreight ? head.CurrentSpeedInfo?.FreightSpeed : head.CurrentSpeedInfo?.PassengerSpeed)}`)));
+                                        .Select(head => $"{head.SignalIndicationState}:{(IsFreight ? head.CurrentSpeedInfo?.FreightSpeed : head.CurrentSpeedInfo?.PassengerSpeed)}")));
                             }
                             allowedAbsoluteMaxSpeedSignalMpS = temp1MaxSpeedMpS == -1 ? simulator.RouteModel.SpeedRestrictions[SpeedRestrictionType.Route] : temp1MaxSpeedMpS;
                         }
