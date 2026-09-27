@@ -112,7 +112,11 @@ namespace FreeTrainSimulator.Runtime.Track
                 ContentByTile[MapContentType.JunctionNodes] = new TileIndexedList<JunctionNode>(TrackDatabase.JunctionNodes);
                 ContentByTile[MapContentType.EndNodes] = new TileIndexedList<EndNode>(TrackDatabase.EndNodes);
 
-                SwitchStates = TrackDatabase.JunctionNodes.ToDictionary(j => j.NodeIndex, j => j.MainRoute);
+                // Open Rails starts TrJunctionNode.SelectedRoute at 0. MainRoute describes the
+                // shape's preferred/straight route, not the simulator's initial physical switch state.
+                // Starting at MainRoute can send a train down a different branch before signalling has
+                // explicitly aligned the switch, hiding OUT_OF_PATH conditions and corrupting AI traffic.
+                SwitchStates = TrackDatabase.JunctionNodes.ToDictionary(j => j.NodeIndex, _ => 0);
             }
             else
             {

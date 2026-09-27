@@ -19,7 +19,6 @@ namespace Orts.Simulation.World
         public const float VisualHeightAdjustment = 0.1f;
         private const float AccelerationFactor = 5;
         private const float BrakingFactor = 5;
-        private const float BrakingMinFactor = 1;
         private float speedMax;
         private int nextCrossingIndex;
 
@@ -103,12 +102,21 @@ namespace Orts.Simulation.World
         {
             List<RoadCarCrossing> crossings = Spawner.Crossings;
 
-            // We skip any crossing that we have passed (Travelled + Length / 2) or are too close to stop at (+ Speed * BrakingMinFactor).
-            // We skip any crossing that is part of the same group as the previous.
-            while (nextCrossingIndex < crossings.Count
-                && ((Travelled + Length / 2 + Speed * BrakingMinFactor > crossings[nextCrossingIndex].Distance)
-                || (nextCrossingIndex > 0 && crossings[nextCrossingIndex].Item.CrossingGroup != null && crossings[nextCrossingIndex].Item.CrossingGroup == crossings[nextCrossingIndex - 1].Item.CrossingGroup)))
+            // Keep monitoring a crossing until the whole vehicle has physically cleared it.
+            // The old Open Rails-era shortcut also discarded a crossing when the car merely became
+            // "too close to stop". With the migrated crossing update order that can happen just before
+            // HasTrain becomes true, so the car permanently forgets a barrier which is already lowering.
+            while (nextCrossingIndex < crossings.Count)
             {
+                RoadCarCrossing crossing = crossings[nextCrossingIndex];
+                bool sameGroupAsPrevious = nextCrossingIndex > 0
+                    && crossing.Item.CrossingGroup != null
+                    && crossing.Item.CrossingGroup == crossings[nextCrossingIndex - 1].Item.CrossingGroup;
+                bool rearClearedCrossing = Travelled - Length / 2 > crossing.Distance + RoadCarSpawner.TrackHalfWidth;
+
+                if (!sameGroupAsPrevious && !rearClearedCrossing)
+                    break;
+
                 nextCrossingIndex++;
             }
 
@@ -118,8 +126,16 @@ namespace Orts.Simulation.World
             {
                 if (crossings[i].Item.CrossingGroup != null && crossings[i].Item.CrossingGroup.HasTrain)
                 {
-                    // TODO: Stopping distance for level crossings!
-                    stopDistances.Add(crossings[i].Distance - RoadCarSpawner.StopDistance);
+                    float carFront = Travelled + Length / 2;
+
+                    // Once the front has entered the crossing, keep moving so the vehicle clears the rails.
+                    // Otherwise stop at the normal stop line. If the gates activate late and that line is
+                    // already behind the car, stop immediately instead of driving through the closed crossing.
+                    if (carFront < crossings[i].Distance)
+                    {
+                        float stopLine = crossings[i].Distance - RoadCarSpawner.StopDistance;
+                        stopDistances.Add(Math.Max(stopLine, carFront));
+                    }
                     break;
                 }
             }
@@ -137,7 +153,9 @@ namespace Orts.Simulation.World
             // Calculate whether we're too close to the minimum stopping distance (and need to slow down) or going too slowly (and need to speed up).
             var stopDistance = stopDistances.Count > 0 ? stopDistances.Min() - Travelled - Length / 2 : float.MaxValue;
             var slowingDistance = BrakingFactor * Length;
-            if (stopDistance < slowingDistance)
+            if (stopDistance <= 0)
+                Speed = 0;
+            else if (stopDistance < slowingDistance)
                 Speed = speedMax * (float)Math.Sin((Math.PI / 2) * (stopDistance / slowingDistance));
             else if (Speed < speedMax)
                 Speed = (float)Math.Min(Speed + AccelerationFactor / Length * elapsedTime.ClockSeconds, speedMax);
