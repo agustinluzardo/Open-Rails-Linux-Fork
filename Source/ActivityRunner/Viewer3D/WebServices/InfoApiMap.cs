@@ -271,12 +271,12 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
                             ? platform.PlatformName : platform.StationName;
                         if (!string.IsNullOrWhiteSpace(station))
                             AddToPointOnApiMap(trackItem.Location, "green", TypeOfPointOnApiMap.Named,
-                                station, "Estación", platform.PlatformName);
+                                station, "Station", platform.PlatformName);
                     }
                     else if (trackItem is SidingTrackItem siding && !string.IsNullOrWhiteSpace(siding.SidingName))
                     {
                         AddToPointOnApiMap(trackItem.Location, "green", TypeOfPointOnApiMap.Named,
-                            siding.SidingName, "Desvío");
+                            siding.SidingName, "Siding");
                     }
                     else
                     {
