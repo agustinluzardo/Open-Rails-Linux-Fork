@@ -32,7 +32,9 @@ namespace Riel.Launcher.Gui
         {
             Appearance.Load();
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                desktop.MainWindow = new MainWindow();
+                desktop.MainWindow = Program.DispatcherBaseUrl == null
+                    ? new MainWindow()
+                    : new DispatcherWindow(Program.DispatcherBaseUrl);
             base.OnFrameworkInitializationCompleted();
         }
     }
