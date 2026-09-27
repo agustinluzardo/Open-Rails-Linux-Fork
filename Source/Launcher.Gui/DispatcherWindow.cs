@@ -73,7 +73,7 @@ namespace Riel.Launcher.Gui
 
             Button fit = new Button
             {
-                Content = "Centrar mapa",
+                Content = "Fit map",
                 Margin = new Thickness(12, 8, 8, 8),
                 VerticalAlignment = VerticalAlignment.Center,
             };
@@ -81,13 +81,13 @@ namespace Riel.Launcher.Gui
 
             TextBlock hint = new TextBlock
             {
-                Text = "Clic: seleccionar   •   Arrastrar: mover   •   Rueda: zoom",
+                Text = "Click: select   •   Drag: pan   •   Wheel: zoom",
                 Opacity = 0.65,
                 Margin = new Thickness(12, 0, 16, 0),
                 VerticalAlignment = VerticalAlignment.Center,
             };
 
-            status.Text = "Conectando con Riel…";
+            status.Text = "Connecting to Riel…";
             status.Margin = new Thickness(8, 0, 12, 0);
 
             DockPanel toolbar = new DockPanel { LastChildFill = true };
@@ -164,12 +164,12 @@ namespace Riel.Launcher.Gui
                     map.SetSnapshot(snapshot);
                     UpdateSelection();
                     TimeSpan clock = TimeSpan.FromSeconds((snapshot.ClockTime % 86400 + 86400) % 86400);
-                    status.Text = $"{clock:hh\\:mm\\:ss}   •   {snapshot.Trains?.Length ?? 0} trenes   •   Conectado";
+                    status.Text = $"{clock:hh\\:mm\\:ss}   •   {snapshot.Trains?.Length ?? 0} trains   •   Connected";
                 }
             }
             catch (Exception error) when (error is HttpRequestException or TaskCanceledException or JsonException)
             {
-                status.Text = initialized ? "Reconectando con el simulador…" : "Esperando al simulador…";
+                status.Text = initialized ? "Reconnecting to simulator…" : "Waiting for simulator…";
             }
             finally
             {
@@ -187,25 +187,25 @@ namespace Riel.Launcher.Gui
                 DispatcherTrainInfo train = latest?.Trains?.FirstOrDefault(item => item.Number == index);
                 if (train == null)
                     return;
-                Heading($"Tren {train.Number}");
-                Row("Servicio", train.Name);
-                Row("Locomotora", string.IsNullOrWhiteSpace(train.Locomotive) ? "—" : train.Locomotive);
+                Heading($"Train {train.Number}");
+                Row("Service", train.Name);
+                Row("Locomotive", string.IsNullOrWhiteSpace(train.Locomotive) ? "—" : train.Locomotive);
                 if (!string.IsNullOrWhiteSpace(train.NextStation))
                 {
-                    Row("Próxima estación", train.NextStation);
+                    Row("Next station", train.NextStation);
                     if (train.NextArrival.HasValue)
-                        Row("Llegada", TimeSpan.FromSeconds((train.NextArrival.Value % 86400 + 86400) % 86400).ToString(@"hh\:mm", CultureInfo.CurrentCulture));
+                        Row("Arrival", TimeSpan.FromSeconds((train.NextArrival.Value % 86400 + 86400) % 86400).ToString(@"hh\:mm", CultureInfo.CurrentCulture));
                     if (train.NextDeparture.HasValue)
-                        Row("Salida", TimeSpan.FromSeconds((train.NextDeparture.Value % 86400 + 86400) % 86400).ToString(@"hh\:mm", CultureInfo.CurrentCulture));
+                        Row("Departure", TimeSpan.FromSeconds((train.NextDeparture.Value % 86400 + 86400) % 86400).ToString(@"hh\:mm", CultureInfo.CurrentCulture));
                 }
-                Row("Tipo", train.TrainType + (train.IsFreight ? " · carga" : " · pasajeros"));
+                Row("Type", train.TrainType + (train.IsFreight ? " · freight" : " · passenger"));
                 Row("Control", train.ControlMode);
-                Row("Velocidad", $"{Math.Abs(train.SpeedMpS) * 3.6:F1} km/h");
-                Row("Dirección", train.Direction);
-                Row("Vagones", train.CarCount.ToString(CultureInfo.CurrentCulture));
+                Row("Speed", $"{Math.Abs(train.SpeedMpS) * 3.6:F1} km/h");
+                Row("Direction", train.Direction);
+                Row("Cars", train.CarCount.ToString(CultureInfo.CurrentCulture));
                 if (train.Cars != null && train.Cars.Length > 0)
-                    Row("Formación", string.Join(" · ", train.Cars.Where(car => !string.IsNullOrWhiteSpace(car))));
-                Button follow = new Button { Content = "Centrar en el tren" };
+                    Row("Consist", string.Join(" · ", train.Cars.Where(car => !string.IsNullOrWhiteSpace(car))));
+                Button follow = new Button { Content = "Center on train" };
                 follow.Click += (_, _) => map.CenterAt(train.Front);
                 details.Children.Add(follow);
             }
@@ -214,12 +214,12 @@ namespace Riel.Launcher.Gui
                 MapPoint point = map.SelectedPoint;
                 if (point == null)
                     return;
-                Heading(point.Category ?? "Lugar");
-                Row("Nombre", point.Name);
+                Heading(point.Category ?? "Location");
+                Row("Name", point.Name);
                 if (!string.IsNullOrWhiteSpace(point.Detail) && point.Detail != point.Name)
-                    Row("Andén / vía", point.Detail);
-                Row("Ubicación", $"{point.LatLon.Lat:F5}, {point.LatLon.Lon:F5}");
-                Button center = new Button { Content = "Centrar acá" };
+                    Row("Platform / track", point.Detail);
+                Row("Location", $"{point.LatLon.Lat:F5}, {point.LatLon.Lon:F5}");
+                Button center = new Button { Content = "Center here" };
                 center.Click += (_, _) => map.CenterAt(point.LatLon);
                 details.Children.Add(center);
             }
@@ -228,28 +228,28 @@ namespace Riel.Launcher.Gui
                 DispatcherSignalInfo signal = latest?.Signals?.FirstOrDefault(item => item.Index == index);
                 if (signal == null)
                     return;
-                Heading($"Señal {signal.Index}");
-                Row("Aspecto", signal.Aspect);
+                Heading($"Signal {signal.Index}");
+                Row("Aspect", signal.Aspect);
                 Row("Control", signal.State);
-                Row("Tren", signal.EnabledTrain?.ToString(CultureInfo.CurrentCulture) ?? "—");
-                Heading("Cambiar señal");
-                AddCommand("Control automático", "signal", index, "Clear");
-                AddCommand("Parada", "signal", index, "Lock");
-                AddCommand("Precaución", "signal", index, "Approach");
-                AddCommand("Vía libre", "signal", index, "Manual");
+                Row("Train", signal.EnabledTrain?.ToString(CultureInfo.CurrentCulture) ?? "—");
+                Heading("Change signal");
+                AddCommand("System controlled", "signal", index, "Clear");
+                AddCommand("Stop", "signal", index, "Lock");
+                AddCommand("Approach", "signal", index, "Approach");
+                AddCommand("Proceed", "signal", index, "Manual");
                 if (signal.CallOnEnabled)
-                    AddCommand("Autorizar rebase", "signal", index, "CallOn");
+                    AddCommand("Call on", "signal", index, "CallOn");
             }
             else if (kind == "switch")
             {
                 DispatcherSwitchInfo junction = latest?.Switches?.FirstOrDefault(item => item.NodeIndex == index);
                 if (junction == null)
                     return;
-                Heading($"Cambio de vía {index}");
-                Row("Posición", junction.Position == 0 ? "Ruta 0" : "Ruta 1");
-                AddCommand("Ruta principal", "switch", index, "MainRoute");
-                AddCommand("Ruta desviada", "switch", index, "SideRoute");
-                Row("Nota", "Si está ocupado o reservado, el cambio se rechaza.");
+                Heading($"Switch {index}");
+                Row("Position", junction.Position == 0 ? "Route 0" : "Route 1");
+                AddCommand("Main route", "switch", index, "MainRoute");
+                AddCommand("Side route", "switch", index, "SideRoute");
+                Row("Note", "Occupied or reserved switches cannot be thrown.");
             }
             else
             {
@@ -258,15 +258,15 @@ namespace Riel.Launcher.Gui
                     string.Equals(train.TrainType, "Player", StringComparison.OrdinalIgnoreCase));
                 if (player != null)
                 {
-                    Row("Tu tren", $"#{player.Number} · {player.Locomotive} · {player.Name}");
-                    Button locate = new Button { Content = "Centrar en mi tren" };
+                    Row("Your train", $"#{player.Number} · {player.Locomotive} · {player.Name}");
+                    Button locate = new Button { Content = "Center on my train" };
                     locate.Click += (_, _) => map.CenterAt(player.Front);
                     details.Children.Add(locate);
                 }
-                Row("Mapa", "Seleccioná un tren, una señal o un cambio de vía.");
-                Row("Navegación", "Arrastrá para mover; usá la rueda o +/− para acercar.");
-                Row("Trenes", (latest?.Trains?.Length ?? 0).ToString(CultureInfo.CurrentCulture));
-                Row("Señales", (latest?.Signals?.Length ?? 0).ToString(CultureInfo.CurrentCulture));
+                Row("Map", "Select a train, signal, station or switch.");
+                Row("Navigation", "Drag to pan; use the wheel or +/− to zoom.");
+                Row("Trains", (latest?.Trains?.Length ?? 0).ToString(CultureInfo.CurrentCulture));
+                Row("Signals", (latest?.Signals?.Length ?? 0).ToString(CultureInfo.CurrentCulture));
             }
         }
 
@@ -295,13 +295,13 @@ namespace Riel.Launcher.Gui
                     using HttpResponseMessage response = await client.PostAsync("API/DISPATCHER/COMMAND", body);
                     response.EnsureSuccessStatusCode();
                     DispatcherCommandResult result = await response.Content.ReadFromJsonAsync<DispatcherCommandResult>(JsonOptions);
-                    status.Text = result?.Message ?? "Sin respuesta del simulador.";
+                    status.Text = result?.Message ?? "No response from simulator.";
                     if (result?.Accepted == true)
                         await Refresh();
                 }
                 catch (Exception error) when (error is HttpRequestException or TaskCanceledException or JsonException)
                 {
-                    status.Text = "No se pudo enviar la orden al simulador.";
+                    status.Text = "Could not send command to simulator.";
                 }
             };
             details.Children.Add(button);
@@ -398,7 +398,7 @@ namespace Riel.Launcher.Gui
 
                 // Use the actual track polyline as the authoritative viewport extent. Track-item
                 // metadata may legitimately contain placeholder locations and must never make the
-                // real route microscopic after pressing "Centrar mapa".
+                // real route microscopic after pressing "Fit map".
                 if (map?.LineOnApiMapList != null)
                 {
                     foreach (MapLine line in map.LineOnApiMapList)
@@ -463,7 +463,7 @@ namespace Riel.Launcher.Gui
                     string.Equals(train.TrainType, "Player", StringComparison.OrdinalIgnoreCase));
                 if (playerTrain != null)
                 {
-                    string identity = $"TU TREN  #{playerTrain.Number}  ·  {playerTrain.Locomotive}  ·  {playerTrain.Name}";
+                    string identity = $"YOUR TRAIN  #{playerTrain.Number}  ·  {playerTrain.Locomotive}  ·  {playerTrain.Name}";
                     context.FillRectangle(BackgroundBrush, new Rect(5, 5, Math.Min(Bounds.Width - 10, 680), 35));
                     TryLabel(context, identity, new Point(13, 11), 15, PlayerBrush, labels);
                 }
@@ -479,7 +479,7 @@ namespace Riel.Launcher.Gui
                         context.DrawEllipse(NamedPointBrush,
                             SelectedKind == "point" && SelectedPoint == point ? new Pen(LabelBrush, 2) : null,
                             p, 3.5, 3.5);
-                        string locationLabel = (point.Category == "Estación" ? "Est. " : "") + point.Name;
+                        string locationLabel = (point.Category == "Station" ? "Station: " : "") + point.Name;
                         if (zoom >= 18 && !string.IsNullOrWhiteSpace(point.Detail) && point.Detail != point.Name)
                             locationLabel += " · " + point.Detail;
                         TryLabel(context, locationLabel, p + new Vector(6, -11), 13, NamedPointBrush, labels);
@@ -496,7 +496,7 @@ namespace Riel.Launcher.Gui
                         {
                             context.DrawEllipse(brush, SelectedKind == "switch" && SelectedIndex == junction.NodeIndex ? new Pen(LabelBrush, 2) : null, p, 4, 4);
                             if (zoom >= 22)
-                                TryLabel(context, $"Cambio {junction.NodeIndex} · Ruta {junction.Position}", p + new Vector(7, -15), 12, brush, labels);
+                                TryLabel(context, $"Switch {junction.NodeIndex} · Route {junction.Position}", p + new Vector(7, -15), 12, brush, labels);
                         }
                     }
                 }
@@ -513,7 +513,7 @@ namespace Riel.Launcher.Gui
                             : SwitchMainBrush;
                         context.DrawEllipse(aspect, SelectedKind == "signal" && SelectedIndex == signal.Index ? new Pen(LabelBrush, 2) : null, p, 4, 4);
                         if (zoom >= 22)
-                            TryLabel(context, $"Señal {signal.Index} · {signal.Aspect}", p + new Vector(7, 4), 12, aspect, labels);
+                            TryLabel(context, $"Signal {signal.Index} · {signal.Aspect}", p + new Vector(7, 4), 12, aspect, labels);
                     }
                 }
 
