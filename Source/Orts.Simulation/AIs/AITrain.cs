@@ -63,6 +63,10 @@ namespace Orts.Simulation.AIs
         public float LastSpeedMpS;                       // previous speed
         public int Alpha10 = 10;                         // 10*alpha
 
+        private static readonly bool TraceStoppedAi = System.Environment.GetEnvironmentVariable("RIEL_TRACE_AI_STOPS") == "1";
+        private double stoppedSince = double.NaN;
+        private double lastStoppedTrace = double.NegativeInfinity;
+
         public bool PreUpdate;                           // pre update state
         internal AIActionItem nextActionInfo;              // no next action
         internal AIActionItem nextGenAction;               // Can't remove GenAction if already active but we need to manage the normal Action, so
@@ -590,8 +594,42 @@ namespace Orts.Simulation.AIs
 
             }
             LastSpeedMpS = SpeedMpS;
+            TraceStoppedState(clockTime);
             //            Trace.TraceWarning ("Time {0} Train no. {1} Speed {2} AllowedMaxSpeed {3} Throttle percent {4} Distance travelled {5} Movement State {6} BrakePerCent {7}",
             //               clockTime, Number, SpeedMpS, AllowedMaxSpeedMpS, AITrainThrottlePercent, DistanceTravelledM, MovementState, AITrainBrakePercent);
+        }
+
+        /// <summary>
+        /// Optional activity-wide report for AI trains that remain stopped. Keeps normal runs quiet.
+        /// </summary>
+        private void TraceStoppedState(double clockTime)
+        {
+            if (!TraceStoppedAi)
+                return;
+
+            if (Math.Abs(SpeedMpS) >= 0.02f)
+            {
+                stoppedSince = double.NaN;
+                return;
+            }
+
+            if (double.IsNaN(stoppedSince) || clockTime < stoppedSince)
+                stoppedSince = clockTime;
+            if (clockTime < lastStoppedTrace)
+                lastStoppedTrace = double.NegativeInfinity;
+
+            if (clockTime - stoppedSince < 30 || clockTime - lastStoppedTrace < 60)
+                return;
+
+            lastStoppedTrace = clockTime;
+            var position = PresentPosition[Direction.Forward];
+            var authority = EndAuthorities[Direction.Forward];
+            Trace.TraceInformation(
+                "[AiStop] time={0:F0} train={1} service={2} stoppedFor={3:F0}s state={4} control={5} section={6} routeIndex={7} authority={8} reservedSection={9} authorityDistance={10:F1} nextSignal={11} signalDistance={12} nextAction={13} stopDistance={14:F1}",
+                clockTime, Number, Name, clockTime - stoppedSince, MovementState, ControlMode,
+                position.TrackCircuitSectionIndex, position.RouteListIndex, authority.EndAuthorityType,
+                authority.LastReservedSection, authority.Distance, NextSignalObjects[Direction.Forward],
+                DistanceToSignal, nextActionInfo?.GetType().Name, NextStopDistanceM);
         }
 
         /// <summary>
