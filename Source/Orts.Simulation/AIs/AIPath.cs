@@ -114,6 +114,17 @@ namespace Orts.Simulation.AIs
 
             FindSidingEnds();
 
+            // Temporary high-value diagnostics for the path that exposes the Toshiba Platence
+            // AI divergence. This does not alter route selection: it records both the current
+            // FTS TrackTraveller result and the candidates an Open Rails-style 2.5 m / 0.5 m
+            // PAT capture test would accept, so the first mismatched PDP can be identified.
+            if (!fatalerror && string.Equals(PathName, "Plaza C Via Circuito Dsc", StringComparison.OrdinalIgnoreCase))
+            {
+                Trace.TraceInformation("[AIPathResolve] path={0} nodes={1}", PathName, Nodes.Count);
+                foreach (AIPathNode pathNode in Nodes)
+                    pathNode.TraceTrackResolution(PathName);
+            }
+
             if (fatalerror)
                 Nodes = null; // invalid path - do not return any nodes
         }
@@ -296,6 +307,124 @@ namespace Orts.Simulation.AIs
             IsFacingPoint = otherNode.IsFacingPoint;
         }
 
+
+        private readonly record struct PathTrackCandidate(int TrackNodeIndex, int VectorSectionIndex, double LateralDistance, double LongitudinalDistance);
+
+        /// <summary>
+        /// Diagnostic-only comparison between the current FTS nearest-section lookup and the
+        /// capture semantics used by the legacy Open Rails Traveller for MSTS PAT points.
+        /// Open Rails ignores elevation, accepts up to 2.5 m lateral centerline offset, and
+        /// allows a 0.5 m longitudinal margin beyond each vector-section end.
+        /// </summary>
+        internal void TraceTrackResolution(string pathName)
+        {
+            WorldLocation planarLocation = Location.SetElevation(0);
+            TrackTraveller? selected = TrackTraveller.InitializeTraveller(planarLocation);
+            List<PathTrackCandidate> openRailsCandidates = FindOpenRailsPathCandidates(planarLocation);
+
+            int openRailsNode = openRailsCandidates.Count > 0 ? openRailsCandidates[0].TrackNodeIndex : -1;
+            int openRailsSection = openRailsCandidates.Count > 0 ? openRailsCandidates[0].VectorSectionIndex : -1;
+            double openRailsDistance = openRailsCandidates.Count > 0 ? openRailsCandidates[0].LateralDistance : double.NaN;
+            double selectedDistance = selected.HasValue
+                ? Math.Sqrt(WorldLocation.GetDistanceSquared2D(planarLocation, selected.Value.Location))
+                : double.NaN;
+
+            string candidateSummary = openRailsCandidates.Count == 0
+                ? "<none>"
+                : string.Join(", ", openRailsCandidates.Take(3).Select(candidate =>
+                    $"{candidate.TrackNodeIndex}/{candidate.VectorSectionIndex}:{candidate.LateralDistance:F3}m@{candidate.LongitudinalDistance:F2}m"));
+
+            Trace.TraceInformation(
+                "[AIPathResolve] path={0} node={1} location={2} type={3} junction={4} mainTVN={5} sidingTVN={6} facing={7} " +
+                "ftsNode={8} ftsSection={9} ftsDistance={10:F3}m orNode={11} orSection={12} orDistance={13:F3}m candidates=[{14}]",
+                pathName, Index, Location, Type, JunctionIndex, NextMainTVNIndex, NextSidingTVNIndex, IsFacingPoint,
+                selected?.TrackNodeIndex ?? -1, selected?.SectionIndex ?? -1, selectedDistance,
+                openRailsNode, openRailsSection, openRailsDistance, candidateSummary);
+        }
+
+        private static List<PathTrackCandidate> FindOpenRailsPathCandidates(in WorldLocation planarLocation)
+        {
+            const double maximumCenterlineOffset = 2.5;
+            const double initErrorMargin = 0.5;
+
+            TrackWorld trackWorld = RuntimeDataResolver.Instance.TrackWorld;
+            TrackDatabase trackDatabase = trackWorld.TrackDatabase;
+            List<PathTrackCandidate> candidates = new List<PathTrackCandidate>();
+
+            // Legacy Open Rails walks track nodes in database order and keeps the first
+            // qualifying vector section from each node. Order is therefore relevant for
+            // equal-distance parallel tracks.
+            foreach (VectorNode vectorNode in trackDatabase.VectorNodes.OrderBy(node => node.NodeIndex))
+            {
+                for (int sectionIndex = 0; sectionIndex < vectorNode.VectorSections.Length; sectionIndex++)
+                {
+                    VectorSectionNode section = vectorNode.VectorSections[sectionIndex];
+                    if (!trackWorld.SectionGeometry.TryGetValue(section, out SectionGeometry geometry) || !geometry.HasGeometry)
+                        continue;
+
+                    if (!TryOpenRailsPathCandidate(planarLocation, section, geometry, maximumCenterlineOffset, initErrorMargin,
+                        out double lateralDistance, out double longitudinalDistance))
+                        continue;
+
+                    candidates.Add(new PathTrackCandidate(vectorNode.NodeIndex, sectionIndex, lateralDistance, longitudinalDistance));
+                    break;
+                }
+            }
+
+            return candidates
+                .OrderBy(candidate => candidate.LateralDistance)
+                .ThenBy(candidate => candidate.TrackNodeIndex)
+                .ToList();
+        }
+
+        private static bool TryOpenRailsPathCandidate(in WorldLocation location, VectorSectionNode section, SectionGeometry geometry,
+            double maximumCenterlineOffset, double initErrorMargin, out double lateralDistance, out double longitudinalDistance)
+        {
+            lateralDistance = double.MaxValue;
+            longitudinalDistance = double.NaN;
+
+            if (!geometry.Curved)
+            {
+                var segment = WorldLocation.GetDistanceVector(section.Location, section.EndLocation);
+                var toPoint = WorldLocation.GetDistanceVector(section.Location, location);
+                segment.Y = 0;
+                toPoint.Y = 0;
+
+                double segmentLength = Math.Sqrt((double)segment.X * segment.X + (double)segment.Z * segment.Z);
+                if (segmentLength <= 1e-9)
+                    return false;
+
+                longitudinalDistance = ((double)toPoint.X * segment.X + (double)toPoint.Z * segment.Z) / segmentLength;
+                lateralDistance = Math.Abs((double)toPoint.X * segment.Z - (double)toPoint.Z * segment.X) / segmentLength;
+
+                return lateralDistance <= maximumCenterlineOffset
+                    && longitudinalDistance >= -initErrorMargin
+                    && longitudinalDistance <= geometry.Length + initErrorMargin;
+            }
+
+            if (geometry.Radius <= 0)
+                return false;
+
+            var centerToPoint = WorldLocation.GetDistanceVector(geometry.ArcCenter, location);
+            centerToPoint.Y = 0;
+            double radialDistance = Math.Sqrt((double)centerToPoint.X * centerToPoint.X + (double)centerToPoint.Z * centerToPoint.Z);
+            lateralDistance = Math.Abs(radialDistance - geometry.Radius);
+            if (lateralDistance > maximumCenterlineOffset)
+                return false;
+
+            double uLength = Math.Sqrt((double)geometry.U.X * geometry.U.X + (double)geometry.U.Z * geometry.U.Z);
+            double vLength = Math.Sqrt((double)geometry.V.X * geometry.V.X + (double)geometry.V.Z * geometry.V.Z);
+            if (uLength <= 1e-9 || vLength <= 1e-9)
+                return false;
+
+            double dotU = ((double)centerToPoint.X * geometry.U.X + (double)centerToPoint.Z * geometry.U.Z) / uLength;
+            double dotV = ((double)centerToPoint.X * geometry.V.X + (double)centerToPoint.Z * geometry.V.Z) / vLength;
+            double angle = Math.Atan2(dotV, dotU);
+            longitudinalDistance = angle * geometry.Radius;
+
+            return longitudinalDistance >= -initErrorMargin
+                && longitudinalDistance <= geometry.Length + initErrorMargin;
+        }
 
         public ValueTask<AiPathNodeSaveState> Snapshot()
         {
