@@ -39,15 +39,21 @@ namespace Orts.ActivityRunner.Processes
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         private bool disposedValue;
         private readonly int portNumber;
+        private readonly bool publicAccess;
 
         public WebServerProcess(GameHost game)
         {
             ArgumentNullException.ThrowIfNull(game);
 
-            if (!game.UserSettings.WebServer)
-                return;
+            // The dispatcher uses the HTTP API even when the optional LAN web server is disabled.
+            // Keep that internal API loopback-only unless the user explicitly enabled WebServer.
+            publicAccess = game.UserSettings.WebServer;
             portNumber = game.UserSettings.WebServerPort;
-            thread = new Thread(WebServerThread);
+            thread = new Thread(WebServerThread)
+            {
+                Name = publicAccess ? "Riel web server" : "Riel local dispatcher API",
+                IsBackground = true,
+            };
         }
 
         public void Start()
@@ -72,7 +78,8 @@ namespace Orts.ActivityRunner.Processes
             EndPointManager.UseIpv6 = true;
             try
             {
-                using (EmbedIO.WebServer server = WebServer.CreateWebServer($"http://*:{portNumber}", contentPath))
+                string prefix = publicAccess ? $"http://*:{portNumber}" : $"http://127.0.0.1:{portNumber}";
+                using (EmbedIO.WebServer server = WebServer.CreateWebServer(prefix, contentPath))
                     server.RunAsync(cancellationTokenSource.Token).Wait();
             }
             catch (AggregateException ex) when (cancellationTokenSource.IsCancellationRequested &&
