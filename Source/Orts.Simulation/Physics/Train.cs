@@ -2585,6 +2585,18 @@ namespace Orts.Simulation.Physics
                         float temp1MaxSpeedMpS = IsFreight ? firstObject.SpeedInfo.FreightSpeed : firstObject.SpeedInfo.PassengerSpeed;
                         if (firstObject.SignalDetails.SignalType == SignalCategory.Signal)
                         {
+                            if (this is AITrain tracedTrain && TraceAiTrainNumbers.Contains(Number))
+                            {
+                                Trace.TraceInformation(
+                                    "[AiSignalSpeed] time={0:F1} train={1} signal={2} aspect={3} speed={4:F2} actualSpeed={5:F2} oldAbsolute={6:F2} oldAllowed={7:F2} heads=[{8}]",
+                                    tracedTrain.PreUpdate ? tracedTrain.AI.ClockTime : simulator.ClockTime,
+                                    Number, firstObject.SignalDetails.Index,
+                                    firstObject.SignalDetails.SignalLR(SignalFunctionType.Normal), temp1MaxSpeedMpS,
+                                    firstObject.ActualSpeed, allowedAbsoluteMaxSpeedSignalMpS, AllowedMaxSpeedMpS,
+                                    string.Join(",", firstObject.SignalDetails.SignalHeads
+                                        .Where(head => head.SignalFunction == SignalFunctionType.Normal)
+                                        .Select(head => `${head.SignalIndicationState}:${(IsFreight ? head.CurrentSpeedInfo?.FreightSpeed : head.CurrentSpeedInfo?.PassengerSpeed)}`)));
+                            }
                             allowedAbsoluteMaxSpeedSignalMpS = temp1MaxSpeedMpS == -1 ? simulator.RouteModel.SpeedRestrictions[SpeedRestrictionType.Route] : temp1MaxSpeedMpS;
                         }
                         else if (!firstObject.SpeedInfo.Reset)
@@ -3425,7 +3437,8 @@ namespace Orts.Simulation.Physics
 
             Trace.TraceInformation(
                 "[AiTraveller] time={0:F1} train={1} fromNode={2} fromSection={3} fromDirection={4} fromOffset={5:F2} exitLink={6} exitDirection={7} junction={8} switch={9} chosenPin={10} expectedNode={11} toNode={12} toSection={13} toDirection={14} toOffset={15:F2} previousTc={16} previousRouteIndex={17}",
-                simulator.ClockTime, Number, previous.TrackNodeIndex, previous.SectionIndex,
+                this is AITrain aiTrain && aiTrain.PreUpdate ? aiTrain.AI.ClockTime : simulator.ClockTime,
+                Number, previous.TrackNodeIndex, previous.SectionIndex,
                 previous.Direction, previous.VectorNodeOffset, exit.Link, exit.Direction,
                 junctionIndex, switchState, chosenPin, expectedNode, current.TrackNodeIndex,
                 current.SectionIndex, current.Direction, current.VectorNodeOffset,
