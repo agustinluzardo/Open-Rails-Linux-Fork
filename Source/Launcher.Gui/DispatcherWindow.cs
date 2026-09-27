@@ -540,11 +540,14 @@ namespace Riel.Launcher.Gui
                 if (!panning)
                     return;
                 panning = false;
-                if ((args.GetPosition(this) - pressPointer).Length < 5)
+                if (Distance(args.GetPosition(this), pressPointer) < 5)
                     SelectAt(args.GetPosition(this));
                 args.Pointer.Capture(null);
                 args.Handled = true;
             }
+
+            private static double Distance(Point a, Point b)
+                => Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
 
             private void SelectAt(Point pointer)
             {
@@ -554,19 +557,19 @@ namespace Riel.Launcher.Gui
                 if (snapshot?.Trains != null)
                     foreach (DispatcherTrainInfo train in snapshot.Trains)
                     {
-                        double distance = (Project(train.Front) - pointer).Length;
+                        double distance = Distance(Project(train.Front), pointer);
                         if (distance < best) { best = distance; kind = "train"; index = train.Number; }
                     }
                 if (snapshot?.Signals != null && zoom >= 2)
                     foreach (DispatcherSignalInfo signal in snapshot.Signals)
                     {
-                        double distance = (Project(signal.Location) - pointer).Length;
+                        double distance = Distance(Project(signal.Location), pointer);
                         if (distance < best) { best = distance; kind = "signal"; index = signal.Index; }
                     }
                 if (snapshot?.Switches != null)
                     foreach (DispatcherSwitchInfo junction in snapshot.Switches)
                     {
-                        double distance = (Project(junction.Location) - pointer).Length;
+                        double distance = Distance(Project(junction.Location), pointer);
                         if (distance < best) { best = distance; kind = "switch"; index = junction.NodeIndex; }
                     }
                 SelectedKind = kind;
