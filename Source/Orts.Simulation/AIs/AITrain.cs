@@ -260,11 +260,11 @@ namespace Orts.Simulation.AIs
                 AITrainBrakePercent = 0;
 
                 FirstCar.CurrentElevationPercent = -100f * FirstCar.WorldPosition.XNAMatrix.M32;
-                // give it a bit more gas if it is uphill
-                if (FirstCar.CurrentElevationPercent > 2.0)
+                // Match Open Rails gradient convention: negative elevation percent is uphill
+                // in the train's direction of travel, positive is downhill.
+                if (FirstCar.CurrentElevationPercent < -2.0f)
                     initialThrottlepercent = 40f;
-                // better block gas if it is downhill
-                else if (FirstCar.CurrentElevationPercent < -1.0)
+                else if (FirstCar.CurrentElevationPercent > 1.0f)
                     initialThrottlepercent = 0f;
                 AdjustControlsBrakeOff();
                 AITrainThrottlePercent = initialThrottlepercent;
