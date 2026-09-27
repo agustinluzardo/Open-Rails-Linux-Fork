@@ -155,6 +155,12 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
         /// <summary>
         /// Determine latitude/longitude position of the current TrainCar
         /// </summary>
+        private static LatLon GetLatLon(in WorldLocation worldLocation)
+        {
+            (double lat, double lon) = EarthCoordinates.ConvertWTC(worldLocation);
+            return new LatLon(MathHelper.ToDegrees((float)lat), MathHelper.ToDegrees((float)lon));
+        }
+
         private static LatLonDirection GetLocomotiveLatLonDirection()
         {
             ref readonly WorldPosition worldPosition = ref Simulator.Instance.PlayerLocomotive.WorldPosition;
@@ -727,6 +733,66 @@ namespace Orts.ActivityRunner.Viewer3D.WebServices
         public double Time()
         {
             return viewer.Simulator.ClockTime;
+        }
+        #endregion
+
+        #region /API/DISPATCHER
+        public sealed class DispatcherTrainInfo
+        {
+            public int Number { get; init; }
+            public string Name { get; init; }
+            public string TrainType { get; init; }
+            public string ControlMode { get; init; }
+            public float SpeedMpS { get; init; }
+            public LatLon Front { get; init; }
+            public LatLon Rear { get; init; }
+        }
+
+        public sealed class DispatcherSwitchInfo
+        {
+            public int NodeIndex { get; init; }
+            public int Position { get; init; }
+            public LatLon Location { get; init; }
+        }
+
+        public sealed class DispatcherSnapshot
+        {
+            public double ClockTime { get; init; }
+            public DispatcherTrainInfo[] Trains { get; init; }
+            public DispatcherSwitchInfo[] Switches { get; init; }
+        }
+
+        [Route(HttpVerbs.Get, "/DISPATCHER")]
+        public DispatcherSnapshot Dispatcher()
+        {
+            Simulator simulator = viewer.Simulator;
+            var trackWorld = RuntimeDataResolver.Instance.TrackWorld;
+
+            return new DispatcherSnapshot
+            {
+                ClockTime = simulator.ClockTime,
+                Trains = simulator.Trains
+                    .Where(train => train != null && train.FrontTrackTraveller.OnTrack && train.RearTrackTraveller.OnTrack)
+                    .Select(train => new DispatcherTrainInfo
+                    {
+                        Number = train.Number,
+                        Name = train.Name ?? string.Empty,
+                        TrainType = train.TrainType.ToString(),
+                        ControlMode = train.ControlMode.ToString(),
+                        SpeedMpS = train.SpeedMpS,
+                        Front = GetLatLon(train.FrontLocation),
+                        Rear = GetLatLon(train.RearLocation),
+                    })
+                    .ToArray(),
+                Switches = trackWorld.TrackDatabase.JunctionNodes
+                    .Select(junction => new DispatcherSwitchInfo
+                    {
+                        NodeIndex = junction.NodeIndex,
+                        Position = trackWorld.SwitchStates.TryGetValue(junction.NodeIndex, out int state) ? state : 0,
+                        Location = GetLatLon(junction.Location),
+                    })
+                    .ToArray(),
+            };
         }
         #endregion
 
