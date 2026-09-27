@@ -20,14 +20,21 @@ namespace Orts.Simulation.Track
     {
         private readonly List<TrackCircuitRouteElement> list;
         private ILookup<int, int> items;
-        private ILookup<int, TrackDirection> routeDirections;
 
         #region interface implementation
         public int Count => list.Count;
 
         public bool IsReadOnly => false;
 
-        public TrackCircuitRouteElement this[int index] { get => list[index]; set => list[index] = value; }
+        public TrackCircuitRouteElement this[int index]
+        {
+            get => list[index];
+            set
+            {
+                list[index] = value;
+                items = null;
+            }
+        }
 
         public int IndexOf(TrackCircuitRouteElement item)
         {
@@ -38,28 +45,24 @@ namespace Orts.Simulation.Track
         {
             list.Insert(index, item);
             items = null;
-            routeDirections = null;
         }
 
         public void RemoveAt(int index)
         {
             list.RemoveAt(index);
             items = null;
-            routeDirections = null;
         }
 
         public void Add(TrackCircuitRouteElement item)
         {
             list.Add(item);
             items = null;
-            routeDirections = null;
         }
 
         public void Clear()
         {
             list.Clear();
             items = null;
-            routeDirections = null;
         }
 
         public bool Contains(TrackCircuitRouteElement item)
@@ -75,7 +78,6 @@ namespace Orts.Simulation.Track
         public bool Remove(TrackCircuitRouteElement item)
         {
             items = null;
-            routeDirections = null;
             return list.Remove(item);
         }
 
@@ -93,7 +95,6 @@ namespace Orts.Simulation.Track
         {
             list.RemoveRange(index, count);
             items = null;
-            routeDirections = null;
         }
         #endregion
 
@@ -140,7 +141,6 @@ namespace Orts.Simulation.Track
             ArgumentNullException.ThrowIfNull(saveState, nameof(saveState));
             list.Clear();
             items = null;
-            routeDirections = null;
 
             if (saveState.RouteElements != null)
             {
@@ -261,11 +261,10 @@ namespace Orts.Simulation.Track
         //
         public ILookup<int, TrackDirection> ConvertRoute()
         {
-            if (routeDirections == null)
-            {
-                routeDirections = list.ToLookup(item => item.TrackCircuitSection.Index, item => item.Direction);
-            }
-            return routeDirections;
+            // Open Rails rebuilds this view every time. Route element directions can
+            // change in-place during reversals/rerouting, so caching the lookup can
+            // leave deadlock detection working with stale directions indefinitely.
+            return list.ToLookup(item => item.TrackCircuitSection.Index, item => item.Direction);
         }
 
         //================================================================================================//
