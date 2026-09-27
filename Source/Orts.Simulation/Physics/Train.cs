@@ -119,6 +119,12 @@ namespace Orts.Simulation.Physics
         public List<TrainCar> Cars { get; } = new List<TrainCar>();           // listed front to back
 #pragma warning restore CA1002 // Do not expose generic lists
         public int Number { get; internal set; }
+        // Emit only on section/route transitions to keep the activity log usable.
+        private static readonly HashSet<int> TraceAiTrainNumbers =
+            (System.Environment.GetEnvironmentVariable("RIEL_TRACE_AI_TRAINS") ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(value => int.TryParse(value, out int number) ? number : -1)
+            .ToHashSet();
         public string Name { get; internal set; }
         public string TcsParametersFileName { get; internal set; }
         public static int TotalNumber { get; private set; } = 1; // start at 1 (0 is reserved for player train)
@@ -4010,6 +4016,22 @@ namespace Orts.Simulation.Physics
             UpdateTrackCircuitPosition(PresentPosition[Direction.Backward], RearTrackTraveller);
             routeIndex = ValidRoutes[Direction.Forward].GetRouteIndex(PresentPosition[Direction.Backward].TrackCircuitSectionIndex, 0);
             PresentPosition[Direction.Backward].RouteListIndex = routeIndex;
+
+            if (TraceAiTrainNumbers.Contains(Number) && this is AITrain &&
+                (PreviousPosition[Direction.Forward].TrackCircuitSectionIndex != PresentPosition[Direction.Forward].TrackCircuitSectionIndex ||
+                 PreviousPosition[Direction.Forward].RouteListIndex != PresentPosition[Direction.Forward].RouteListIndex))
+            {
+                TrackCircuitPosition front = PresentPosition[Direction.Forward];
+                int next = front.RouteListIndex + 1;
+                int nextSection = next >= 0 && next < ValidRoutes[Direction.Forward].Count
+                    ? ValidRoutes[Direction.Forward][next].TrackCircuitSection.Index : -1;
+                Trace.TraceInformation("[AiRoute] train={0} name={1} subpath={2} node={3} vectorSection={4} vectorOffset={5:F2} travellerDirection={6} tc={7} tcOffset={8:F2} tcDirection={9} routeIndex={10}/{11} nextTc={12} rearTc={13} previousTc={14} previousRouteIndex={15}",
+                    Number, Name, TCRoute?.ActiveSubPath, FrontTrackTraveller.TrackNodeIndex,
+                    FrontTrackTraveller.SectionIndex, FrontTrackTraveller.VectorNodeOffset, FrontTrackTraveller.Direction,
+                    front.TrackCircuitSectionIndex, front.Offset, front.Direction, front.RouteListIndex,
+                    ValidRoutes[Direction.Forward].Count, nextSection, PresentPosition[Direction.Backward].TrackCircuitSectionIndex,
+                    PreviousPosition[Direction.Forward].TrackCircuitSectionIndex, PreviousPosition[Direction.Forward].RouteListIndex);
+            }
 
             if (jumpRequested) // jump do be performed in multiplayer mode when train re-enters game in different position
             {

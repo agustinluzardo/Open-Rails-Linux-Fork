@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Calc;
@@ -21,6 +22,8 @@ namespace Orts.Simulation.World
         private const float BrakingFactor = 5;
         private float speedMax;
         private int nextCrossingIndex;
+        private int loggedCrossingIndex = -1;
+        private bool loggedHasTrain;
 
         private WorldPosition position;
 
@@ -98,6 +101,12 @@ namespace Orts.Simulation.World
             IgnoreXRotation = Simulator.Instance.CarSpawnerLists[this.CarSpawnerListIdx].IgnoreXRotation;
         }
 
+        internal void ResetCrossings()
+        {
+            nextCrossingIndex = 0;
+            loggedCrossingIndex = -1;
+        }
+
         public void Update(in ElapsedTime elapsedTime)
         {
             List<RoadCarCrossing> crossings = Spawner.Crossings;
@@ -118,6 +127,21 @@ namespace Orts.Simulation.World
                     break;
 
                 nextCrossingIndex++;
+            }
+
+            if (RoadCarSpawner.TraceCrossings && nextCrossingIndex < crossings.Count)
+            {
+                RoadCarCrossing next = crossings[nextCrossingIndex];
+                bool hasTrain = next.Item.CrossingGroup?.HasTrain == true;
+                if (next.Distance - Travelled < 150 &&
+                    (loggedCrossingIndex != nextCrossingIndex || loggedHasTrain != hasTrain))
+                {
+                    Trace.TraceInformation("[RoadCrossing] spawner={0} car={1} next={2} item={3} distance={4:F1} front={5:F1} group={6} HasTrain={7}",
+                        Spawner.CarSpawnerObj.UiD, Type, nextCrossingIndex, next.Item.TrackItemId,
+                        next.Distance, Travelled + Length / 2, next.Item.CrossingGroup?.GetHashCode(), hasTrain);
+                    loggedCrossingIndex = nextCrossingIndex;
+                    loggedHasTrain = hasTrain;
+                }
             }
 
             // Calculate all the distances to items we need to stop at (level crossings, other cars).

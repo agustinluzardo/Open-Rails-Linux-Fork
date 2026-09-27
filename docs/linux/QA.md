@@ -41,6 +41,14 @@ Also test the Quit button and quitting during loading. In launcher Settings, tes
 load/save/reopen, resetting bindings, Ctrl/Shift/Alt combinations, Escape cancelling
 a capture, and video settings (especially fullscreen with an existing profile).
 
+For a route with blocked AI trains, start the launcher with
+`RIEL_TRACE_AI_TRAINS=167,198,7,89 riel gui` to log the front track node, section, travel
+direction, track circuit, route index and next section whenever one of these services changes
+section. Replace the numbers with the services shown in the log. For cars ignoring level crossings, use
+`RIEL_TRACE_ROAD_CROSSINGS=1 riel gui` to log each spawner's discovered crossing groups and
+changes to `HasTrain` as a car approaches. These diagnostic options add entries to the normal
+simulator log; compare them with the matching crossing or train in an Open Rails run.
+
 The default F1 Help, F4 Track Monitor, Escape Pause Menu and Alt+F4 Quit bindings match
 Open Rails. Some bindings inherited from Free Train Simulator differ: Driving is
 Ctrl+F5 here rather than F5, and Train Operations is F9 here rather than Ctrl+Alt+F9.

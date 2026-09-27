@@ -22,6 +22,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Common.Position;
@@ -38,6 +39,8 @@ namespace Orts.Simulation.World
 {
     public class LevelCrossings
     {
+        private int registrationRevision;
+        public int RegistrationRevision => Volatile.Read(ref registrationRevision);
         public FrozenDictionary<int, LevelCrossingItem> TrackCrossingItems { get; }
         public FrozenDictionary<int, LevelCrossingItem> RoadCrossingItems { get; }
         public Dictionary<LevelCrossingItem, LevelCrossingItem> RoadToTrackCrossingItems { get; } = new Dictionary<LevelCrossingItem, LevelCrossingItem>();
@@ -86,7 +89,11 @@ namespace Orts.Simulation.World
                 for (int i = 0; i < roadItems.Length; i++)
                     if (!RoadToTrackCrossingItems.ContainsKey(roadItems[i]))
                         RoadToTrackCrossingItems.Add(roadItems[i], trackItems[i]);
-            return new LevelCrossing(trackItems.Union(roadItems), warningTime, minimumDistance);
+            LevelCrossing crossing = new LevelCrossing(trackItems.Union(roadItems), warningTime, minimumDistance);
+            // World tiles load incrementally. A road-car spawner may already exist when
+            // the shape which associates its road items with this crossing is loaded.
+            Interlocked.Increment(ref registrationRevision);
+            return crossing;
         }
 
         public void Update(double elapsedTime)
@@ -334,6 +341,7 @@ namespace Orts.Simulation.World
         public ref readonly WorldLocation Location => ref trackItem.Location;
         public LevelCrossing CrossingGroup { get; internal set; }
         public int TrackIndex => vectorNode?.NodeIndex ?? -1;
+        public int TrackItemId => trackItem?.TrackItemIndex ?? -1;
         private readonly FreeTrainSimulator.Models.Track.TrackItemBase trackItem;
 
         public static LevelCrossingItem None { get; } = new LevelCrossingItem();
