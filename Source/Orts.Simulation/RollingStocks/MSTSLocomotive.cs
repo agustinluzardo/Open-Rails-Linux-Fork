@@ -1284,9 +1284,15 @@ namespace Orts.Simulation.RollingStocks
 
             ThrottleController = (MSTSNotchController)sourceLocomotive.ThrottleController.Clone();
             SteamHeatController = (MSTSNotchController)sourceLocomotive.SteamHeatController.Clone();
-            TrainBrakeController = ScriptedBrakeController.From(TrainBrakeController, this);
-            EngineBrakeController = ScriptedBrakeController.From(EngineBrakeController, this);
-            BrakemanBrakeController = ScriptedBrakeController.From(BrakemanBrakeController, this);
+            // Clone the parsed controller definitions from the cached source locomotive.
+            // Cloning from this instance here leaves repeated locomotives with the constructor's
+            // empty/default controller instead of the ENG-defined one. That becomes visible after
+            // Ctrl+E when the repeated rear locomotive is promoted to lead: service brake commands
+            // are received, but its controller can remain at 0 while emergency braking still works.
+            // This matches Open Rails' copy semantics.
+            TrainBrakeController = ScriptedBrakeController.From(sourceLocomotive.TrainBrakeController, this);
+            EngineBrakeController = ScriptedBrakeController.From(sourceLocomotive.EngineBrakeController, this);
+            BrakemanBrakeController = ScriptedBrakeController.From(sourceLocomotive.BrakemanBrakeController, this);
             DynamicBrakeController = sourceLocomotive.DynamicBrakeController != null ? (MSTSNotchController)sourceLocomotive.DynamicBrakeController.Clone() : null;
             DistributedPowerThrottleController = (MSTSNotchController)ThrottleController.Clone();
             if (DynamicBrakeController != null)
