@@ -187,14 +187,15 @@ namespace Orts.Simulation.World
             List<RoadCarCrossing> crossings = Crossings;
             if (crossings.Any(c => float.IsNaN(c.TrackHeight)))
             {
-                Crossings.Clear();
-                Crossings.AddRange(crossings.Select(c =>
+                // Build the adjusted list before replacing it. Clearing Crossings here also
+                // cleared the local `crossings` reference, leaving every car with no stops.
+                Crossings = crossings.Select(c =>
                 {
                     if (!float.IsNaN(c.TrackHeight) || !Simulator.Instance.LevelCrossings.RoadToTrackCrossingItems.TryGetValue(c.Item, out LevelCrossingItem value))
                         return c;
                     float height = value.Location.Location.Y + TrackRailHeight - c.Item.Location.Location.Y;
                     return new RoadCarCrossing(c.Item, c.Distance, height <= TrainRailHeightMaximum ? height : 0);
-                }));
+                }).ToList();
             }
         }
 
