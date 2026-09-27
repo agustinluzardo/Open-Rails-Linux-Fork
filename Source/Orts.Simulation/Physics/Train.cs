@@ -4013,6 +4013,43 @@ namespace Orts.Simulation.Physics
             routeIndex = ValidRoutes[Direction.Forward].GetRouteIndex(PresentPosition[Direction.Forward].TrackCircuitSectionIndex, 0);
             PresentPosition[Direction.Forward].RouteListIndex = routeIndex;
 
+            // Diagnostic for the Toshiba Platence AI cascade. A circuit path can visit the
+            // same TC section more than once. The legacy update above searches from zero,
+            // so record whether that would bind the train to an old occurrence instead of
+            // the occurrence at/after its previous route position. This does not alter
+            // routing; it only exposes an ambiguity which NYMG may handle differently.
+            if (Number == 167 && this is AITrain &&
+                PreviousPosition[Direction.Forward].TrackCircuitSectionIndex != PresentPosition[Direction.Forward].TrackCircuitSectionIndex)
+            {
+                int currentSectionIndex = PresentPosition[Direction.Forward].TrackCircuitSectionIndex;
+                int previousRouteIndex = PreviousPosition[Direction.Forward].RouteListIndex;
+                List<int> matchingRouteIndices = new List<int>();
+                for (int diagnosticIndex = 0; diagnosticIndex < ValidRoutes[Direction.Forward].Count; diagnosticIndex++)
+                {
+                    if (ValidRoutes[Direction.Forward][diagnosticIndex].TrackCircuitSection.Index == currentSectionIndex)
+                        matchingRouteIndices.Add(diagnosticIndex);
+                }
+
+                int progressiveRouteIndex = previousRouteIndex >= 0
+                    ? ValidRoutes[Direction.Forward].GetRouteIndex(currentSectionIndex, previousRouteIndex)
+                    : -1;
+                string matches = string.Join(",", matchingRouteIndices.Select(index =>
+                    $"{index}:{ValidRoutes[Direction.Forward][index].Direction}"));
+
+                bool selectedDirectionMatches = routeIndex >= 0 &&
+                    ValidRoutes[Direction.Forward][routeIndex].Direction == PresentPosition[Direction.Forward].Direction;
+                bool progressiveDirectionMatches = progressiveRouteIndex >= 0 &&
+                    ValidRoutes[Direction.Forward][progressiveRouteIndex].Direction == PresentPosition[Direction.Forward].Direction;
+
+                Trace.TraceInformation(
+                    "[AiRouteMatch] train={0} tc={1} tcDirection={2} previousTc={3} previousRouteIndex={4} selectedFromZero={5} selectedDirectionMatches={6} progressiveFromPrevious={7} progressiveDirectionMatches={8} matches=[{9}] travellerNode={10} travellerSection={11} travellerDirection={12} vectorOffset={13:F2}",
+                    Number, currentSectionIndex, PresentPosition[Direction.Forward].Direction,
+                    PreviousPosition[Direction.Forward].TrackCircuitSectionIndex, previousRouteIndex,
+                    routeIndex, selectedDirectionMatches, progressiveRouteIndex, progressiveDirectionMatches,
+                    matches, FrontTrackTraveller.TrackNodeIndex, FrontTrackTraveller.SectionIndex,
+                    FrontTrackTraveller.Direction, FrontTrackTraveller.VectorNodeOffset);
+            }
+
             UpdateTrackCircuitPosition(PresentPosition[Direction.Backward], RearTrackTraveller);
             routeIndex = ValidRoutes[Direction.Forward].GetRouteIndex(PresentPosition[Direction.Backward].TrackCircuitSectionIndex, 0);
             PresentPosition[Direction.Backward].RouteListIndex = routeIndex;
