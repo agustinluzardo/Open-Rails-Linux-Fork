@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
