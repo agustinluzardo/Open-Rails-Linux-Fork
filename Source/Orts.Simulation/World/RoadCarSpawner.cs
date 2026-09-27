@@ -75,11 +75,7 @@ namespace Orts.Simulation.World
             }
 
             // Resolve crossings by reachability along the actual road path instead of relying on
-            // TrackItemSelectors encountered while walking node-by-node. The immutable traveller port
-            // previously stopped at direct VectorNode -> VectorNode links, which made this scan silently
-            // miss every crossing beyond the first road node. Even with that traveller bug fixed, asking
-            // each known road crossing for its route distance is simpler and also handles crossings on the
-            // spawner's starting node.
+            // TrackItemSelectors encountered while walking node-by-node.
             List<(float Distance, LevelCrossingItem Item)> reachableCrossings = new List<(float, LevelCrossingItem)>();
             float crossingSearchDistance = Length > 0 ? Length + TrackMergeDistance : float.MaxValue;
 
@@ -90,10 +86,61 @@ namespace Orts.Simulation.World
                     reachableCrossings.Add((distance, crossingItem));
             }
 
+            // Some legacy routes contain a working rail crossing/world barrier but an RDB crossing
+            // item which is absent, malformed or cannot be snapped by the migrated road model. In
+            // that case the original road-car code has no stop point at all, so every car drives
+            // through even though the barrier is active. Recover one stop point per crossing group
+            // by projecting the rail crossing's world position onto this road route.
+            HashSet<LevelCrossing> representedGroups = reachableCrossings
+                .Where(crossing => crossing.Item.CrossingGroup != null)
+                .Select(crossing => crossing.Item.CrossingGroup)
+                .ToHashSet();
+
+            int recoveredCrossingGroups = 0;
+            foreach (IGrouping<LevelCrossing, LevelCrossingItem> crossingGroup in Simulator.Instance.LevelCrossings.TrackCrossingItems.Values
+                .Where(item => item.CrossingGroup != null && !representedGroups.Contains(item.CrossingGroup))
+                .GroupBy(item => item.CrossingGroup))
+            {
+                float bestDistance = float.MaxValue;
+                LevelCrossingItem bestItem = null;
+
+                foreach (LevelCrossingItem railItem in crossingGroup)
+                {
+                    TrackTraveller? projectedRoadTraveller = TrackTraveller.InitializeTraveller(
+                        railItem.Location, TrackDirection.Ahead, TrackDataBaseType.Road);
+                    if (!projectedRoadTraveller.HasValue)
+                        continue;
+
+                    float? routeDistance = Traveller.DistanceTo(projectedRoadTraveller.Value, crossingSearchDistance);
+                    if (!routeDistance.HasValue || routeDistance.Value < 0 ||
+                        (Length > 0 && routeDistance.Value > Length + TrackMergeDistance) ||
+                        routeDistance.Value >= bestDistance)
+                        continue;
+
+                    bestDistance = routeDistance.Value;
+                    bestItem = railItem;
+                }
+
+                if (bestItem != null)
+                {
+                    reachableCrossings.Add((bestDistance, bestItem));
+                    representedGroups.Add(crossingGroup.Key);
+                    recoveredCrossingGroups++;
+                }
+            }
+
             Crossings = reachableCrossings
                 .OrderBy(crossing => crossing.Distance)
                 .Select(crossing => new RoadCarCrossing(crossing.Item, crossing.Distance, float.NaN))
                 .ToList();
+
+            if (recoveredCrossingGroups > 0)
+                Trace.TraceInformation("[RoadCarSpawner] {0}: recovered {1} level-crossing group(s) from rail geometry; total stops={2}",
+                    carSpawnerObj.UiD, recoveredCrossingGroups, Crossings.Count);
+            else if (Crossings.Count == 0 && Simulator.Instance.LevelCrossings.TrackCrossingItems.Count > 0)
+                Trace.TraceWarning("[RoadCarSpawner] {0}: no reachable level crossings; roadItems={1}, railItems={2}, length={3:F1}m",
+                    carSpawnerObj.UiD, Simulator.Instance.LevelCrossings.RoadCrossingItems.Count,
+                    Simulator.Instance.LevelCrossings.TrackCrossingItems.Count, Length);
         }
 
         public void Update(in ElapsedTime elapsedTime)
