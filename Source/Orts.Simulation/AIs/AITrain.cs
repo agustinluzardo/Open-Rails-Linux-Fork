@@ -631,7 +631,7 @@ namespace Orts.Simulation.AIs
             var signal = NextSignalObjects[Direction.Forward];
             var lead = LeadLocomotive;
             Trace.TraceInformation(
-                "[AiStop] time={0:F0} train={1} service={2} stoppedFor={3:F0}s state={4} control={5} section={6} routeIndex={7} authority={8} reservedSection={9} authorityDistance={10:F1} nextSignal={11} aspect={12} signalDistance={13} nextAction={14} stopDistance={15:F1} scheduledDepart={16} actualDepart={17} exitSignal={18} preUpdate={19} allowed={20:F2} aiThrottle={21:F1} aiBrake={22:F1} leadCar={23} leadThrottle={24:F1} tractionAuthorized={25} tcsMaxThrottle={26:F1} motiveForce={27:F0} brakeForce={28:F0} frictionForce={29:F0} totalForce={30:F0} brakePipe={31:F1} equalReservoir={32:F1} frontNode={33} rearNode={34} frontAtEnd={35} rearAtEnd={36}",
+                "[AiStop] time={0:F0} train={1} service={2} stoppedFor={3:F0}s state={4} control={5} section={6} routeIndex={7} authority={8} reservedSection={9} authorityDistance={10:F1} nextSignal={11} aspect={12} signalDistance={13} nextAction={14} stopDistance={15:F1} scheduledDepart={16} actualDepart={17} exitSignal={18} preUpdate={19} allowed={20:F2} aiThrottle={21:F1} aiBrake={22:F1} leadCar={23} leadThrottle={24:F1} tractionAuthorized={25} tcsMaxThrottle={26:F1} motiveForce={27:F0} brakeForce={28:F0} frictionForce={29:F0} totalForce={30:F0} brakePipe={31:F1} equalReservoir={32:F1} frontNode={33} rearNode={34} frontAtEnd={35} rearAtEnd={36} muDirection={37} locoDirection={38} mainPower={39} tractiveForce={40:F0} powerReduction={41:F2} handbrake={42:F0} brakesStuck={43} trainMotiveForce={44:F0} pantograph={45} dieselEngine={46}",
                 clockTime, Number, Name, clockTime - stoppedSince, MovementState, ControlMode,
                 position.TrackCircuitSectionIndex, position.RouteListIndex, authority.EndAuthorityType,
                 authority.LastReservedSection, authority.Distance, signal?.Index,
@@ -643,7 +643,12 @@ namespace Orts.Simulation.AIs
                 lead?.FrictionForceN, lead?.TotalForceN, lead?.BrakeSystem?.BrakeLine1PressurePSI,
                 BrakeSystem.EqualReservoirPressurePSIorInHg, FrontTrackTraveller.TrackNodeIndex,
                 RearTrackTraveller.TrackNodeIndex, FrontTrackTraveller.IsNearEndOfTrack(),
-                RearTrackTraveller.Reverse().IsNearEndOfTrack());
+                RearTrackTraveller.Reverse().IsNearEndOfTrack(), MUDirection, lead?.Direction,
+                lead?.LocomotivePowerSupply?.MainPowerSupplyState, lead?.TractiveForceN,
+                lead?.PowerReduction, lead?.BrakeSystem?.HandbrakePercent, lead?.BrakesStuck,
+                Cars.Sum(car => car.MotiveForceN),
+                (lead as MSTSElectricLocomotive)?.Pantographs.State.ToString(),
+                (lead as MSTSDieselLocomotive)?.DieselEngines.State.ToString());
         }
 
         /// <summary>
