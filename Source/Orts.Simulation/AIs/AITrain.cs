@@ -68,6 +68,7 @@ namespace Orts.Simulation.AIs
         private double stoppedSince = double.NaN;
         private double lastStoppedTrace = double.NegativeInfinity;
         private double lastProgressTrace = double.NegativeInfinity;
+        private double lastStationaryThrottleStep = double.NegativeInfinity;
 
         public bool PreUpdate;                           // pre update state
         internal AIActionItem nextActionInfo;              // no next action
@@ -596,7 +597,7 @@ namespace Orts.Simulation.AIs
 
             }
             LastSpeedMpS = SpeedMpS;
-            TraceStoppedState(clockTime);
+            TraceStoppedState(clockTime, elapsedClockSeconds);
             TraceProgressState(clockTime);
             //            Trace.TraceWarning ("Time {0} Train no. {1} Speed {2} AllowedMaxSpeed {3} Throttle percent {4} Distance travelled {5} Movement State {6} BrakePerCent {7}",
             //               clockTime, Number, SpeedMpS, AllowedMaxSpeedMpS, AITrainThrottlePercent, DistanceTravelledM, MovementState, AITrainBrakePercent);
@@ -605,7 +606,7 @@ namespace Orts.Simulation.AIs
         /// <summary>
         /// Optional activity-wide report for AI trains that remain stopped. Keeps normal runs quiet.
         /// </summary>
-        private void TraceStoppedState(double clockTime)
+        private void TraceStoppedState(double clockTime, double elapsedClockSeconds)
         {
             if (!TraceStoppedAi)
                 return;
@@ -631,7 +632,7 @@ namespace Orts.Simulation.AIs
             var signal = NextSignalObjects[Direction.Forward];
             var lead = LeadLocomotive;
             Trace.TraceInformation(
-                "[AiStop] time={0:F0} train={1} service={2} stoppedFor={3:F0}s state={4} control={5} section={6} routeIndex={7} authority={8} reservedSection={9} authorityDistance={10:F1} nextSignal={11} aspect={12} signalDistance={13} nextAction={14} stopDistance={15:F1} scheduledDepart={16} actualDepart={17} exitSignal={18} preUpdate={19} allowed={20:F2} aiThrottle={21:F1} aiBrake={22:F1} leadCar={23} leadThrottle={24:F1} tractionAuthorized={25} tcsMaxThrottle={26:F1} motiveForce={27:F0} brakeForce={28:F0} frictionForce={29:F0} totalForce={30:F0} brakePipe={31:F1} equalReservoir={32:F1} frontNode={33} rearNode={34} frontAtEnd={35} rearAtEnd={36} muDirection={37} locoDirection={38} mainPower={39} tractiveForce={40:F0} powerReduction={41:F2} handbrake={42:F0} brakesStuck={43} trainMotiveForce={44:F0} pantograph={45} dieselEngine={46}",
+                "[AiStop] time={0:F0} train={1} service={2} stoppedFor={3:F0}s state={4} control={5} section={6} routeIndex={7} authority={8} reservedSection={9} authorityDistance={10:F1} nextSignal={11} aspect={12} signalDistance={13} nextAction={14} stopDistance={15:F1} scheduledDepart={16} actualDepart={17} exitSignal={18} preUpdate={19} allowed={20:F2} aiThrottle={21:F1} aiBrake={22:F1} leadCar={23} leadThrottle={24:F1} tractionAuthorized={25} tcsMaxThrottle={26:F1} motiveForce={27:F0} brakeForce={28:F0} frictionForce={29:F0} totalForce={30:F0} brakePipe={31:F1} equalReservoir={32:F1} frontNode={33} rearNode={34} frontAtEnd={35} rearAtEnd={36} muDirection={37} locoDirection={38} mainPower={39} tractiveForce={40:F0} powerReduction={41:F2} handbrake={42:F0} brakesStuck={43} trainMotiveForce={44:F0} pantograph={45} dieselEngine={46} speed={47:F5} lastSpeed={48:F5} elapsed={49:F5} maxAccel={50:F2} maxForce={51:F0} maxPower={52:F0} tractionCurve={53} curveForceAtFull={54:F0}",
                 clockTime, Number, Name, clockTime - stoppedSince, MovementState, ControlMode,
                 position.TrackCircuitSectionIndex, position.RouteListIndex, authority.EndAuthorityType,
                 authority.LastReservedSection, authority.Distance, signal?.Index,
@@ -648,7 +649,10 @@ namespace Orts.Simulation.AIs
                 lead?.PowerReduction, lead?.BrakeSystem?.HandbrakePercent, lead?.BrakesStuck,
                 Cars.Sum(car => car.MotiveForceN),
                 (lead as MSTSElectricLocomotive)?.Pantographs.State.ToString(),
-                (lead as MSTSDieselLocomotive)?.DieselEngines.State.ToString());
+                (lead as MSTSDieselLocomotive)?.DieselEngines.State.ToString(),
+                SpeedMpS, LastSpeedMpS, elapsedClockSeconds, MaxAccelMpSS,
+                lead?.MaxForceN, lead?.MaxPowerW, lead?.TractiveForceCurves != null,
+                lead?.TractiveForceCurves?.Get(1, 0));
         }
 
         /// <summary>
@@ -2192,7 +2196,24 @@ namespace Orts.Simulation.AIs
         {
 
             // check speed
-            if (((SpeedMpS - LastSpeedMpS) / elapsedClockSeconds) < 0.5 * MaxAccelMpSS)
+            // A train can oscillate around zero while its brakes release. In that case the
+            // instantaneous acceleration is misleading and a low throttle notch may produce
+            // no tractive force at all. Keep raising the throttle until it actually moves.
+            bool stationary = !PreUpdate && Math.Abs(SpeedMpS) < 0.02f;
+            if (stationary &&
+                (NextSignalObjects[Direction.Forward] == null ||
+                 NextSignalObjects[Direction.Forward].SignalLR(SignalFunctionType.Normal) != SignalAspectState.Stop ||
+                 DistanceToSignal.GetValueOrDefault(float.PositiveInfinity) > SignalApproachDistance))
+            {
+                if (simulator.ClockTime < lastStationaryThrottleStep ||
+                    simulator.ClockTime - lastStationaryThrottleStep >= 1)
+                {
+                    AdjustControlsAccelMore(Efficiency * 0.5f * MaxAccelMpSS, elapsedClockSeconds, 10);
+                    lastStationaryThrottleStep = simulator.ClockTime;
+                }
+            }
+            else if (!stationary && elapsedClockSeconds > 0 &&
+                     ((SpeedMpS - LastSpeedMpS) / elapsedClockSeconds) < 0.5 * MaxAccelMpSS)
             {
                 int stepSize = (!PreUpdate) ? 10 : 40;
                 float corrFactor = (!PreUpdate) ? 0.5f : 1.0f;

@@ -899,6 +899,15 @@ namespace Orts.Simulation.AIs
                 }
             }
 
+            if (Environment.GetEnvironmentVariable("RIEL_TRACE_AI_STOPS") == "1")
+            {
+                Trace.TraceInformation(
+                    "[AiPlacement] time={0:F0} train={1} service={2} placed={3} nextStart={4} preUpdate={5} section={6} reason={7}",
+                    ClockTime, train.Number, train.Name, validPosition, train.StartTime, simulator.PreUpdate,
+                    validPosition ? train.PresentPosition[Direction.Forward].TrackCircuitSectionIndex : -1,
+                    validPosition ? "-" : train.InitialPlacementFailureReason ?? "route unavailable");
+            }
+
             return validPosition;
         }
 
