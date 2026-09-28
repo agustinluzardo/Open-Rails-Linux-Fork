@@ -44,11 +44,8 @@ namespace Orts.ActivityRunner.Viewer3D
         private volatile List<TrainCar> VisibleCars = new List<TrainCar>();
         private volatile TrainCar PlayerCar;
         private TrainCar preparedPlayerCar;
-        private static readonly TimeSpan IntermediatePublishInterval = TimeSpan.FromMilliseconds(100);
         private readonly ConcurrentDictionary<int, byte> selectedTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> sceneHeightTrainTraces = new();
-        private readonly ConcurrentDictionary<int, byte> loadingTrainTraces = new();
-        private readonly ConcurrentDictionary<int, byte> loadedTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> deferredTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> publishedTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> preparedTrainTraces = new();
@@ -87,7 +84,11 @@ namespace Orts.ActivityRunner.Viewer3D
                 foreach (TrainCar previousCar in cars.Keys)
                     if (previousCar.Train is AITrain previousTrain)
                         publishedAiTrains.Add(previousTrain);
-                long lastPublication = 0;
+                // A new consist is published only after every visible car has been processed.
+                // Keep existing consists on screen while loading newly visible cars.
+                var remainingAiCars = visibleCars.Where(car => car.Train is AITrain)
+                    .GroupBy(car => (AITrain)car.Train)
+                    .ToDictionary(group => group.Key, group => group.Count());
                 for (int index = 0; index < visibleCars.Count; index++)
                 {
                     if (cancellation.IsCancellationRequested)
@@ -99,7 +100,8 @@ namespace Orts.ActivityRunner.Viewer3D
                             newCars.Add(car, trainCarViewer);
                         else
                         {
-                            TraceVisual(car, "load-started", loadingTrainTraces);
+                            long loadStarted = Stopwatch.GetTimestamp();
+                            TraceVisualCar(car, "load-started", 0);
                             TrainCarViewer loaded = LoadCar(car);
                             newCars.Add(car, loaded);
                             if (loaded != null)
@@ -110,26 +112,9 @@ namespace Orts.ActivityRunner.Viewer3D
                                     preparedPlayerCar = playerCar;
                                     playerReady = true;
                                 }
-                                TraceVisual(car, "model-loaded", loadedTrainTraces);
+                                TraceVisualCar(car, "model-loaded", Stopwatch.GetElapsedTime(loadStarted).TotalMilliseconds);
                                 if (!playerReady && car.Train is AITrain)
                                     TraceVisual(car, "player-not-ready", deferredTrainTraces);
-                                // The next model may take several seconds. Let the renderer
-                                // show the first car of every new AI train immediately. Rate
-                                // limit additional cars, so a slow next model cannot delay a
-                                // new train that finished inside the 100 ms interval.
-                                if (playerReady && car.Train is AITrain aiTrain && index + 1 < visibleCars.Count &&
-                                    (!publishedAiTrains.Contains(aiTrain) || lastPublication == 0 ||
-                                     Stopwatch.GetElapsedTime(lastPublication) >= IntermediatePublishInterval))
-                                {
-                                    Cars = VisibleSnapshot(visibleCars, newCars, cars);
-                                    foreach (TrainCar publishedCar in newCars.Keys)
-                                    {
-                                        if (publishedCar.Train is AITrain publishedTrain)
-                                            publishedAiTrains.Add(publishedTrain);
-                                        TraceVisual(publishedCar, "published", publishedTrainTraces);
-                                    }
-                                    lastPublication = Stopwatch.GetTimestamp();
-                                }
                             }
                         }
                     }
@@ -137,9 +122,20 @@ namespace Orts.ActivityRunner.Viewer3D
                     {
                         Trace.WriteLine(new FileLoadException(car.WagFilePath, error));
                     }
+                    if (car.Train is AITrain aiTrain && --remainingAiCars[aiTrain] == 0 &&
+                        playerReady && index + 1 < visibleCars.Count)
+                    {
+                        publishedAiTrains.Add(aiTrain);
+                        Cars = VisibleSnapshot(visibleCars, newCars, cars, publishedAiTrains);
+                        foreach (TrainCar publishedCar in Cars.Keys)
+                            TraceVisual(publishedCar, "published", publishedTrainTraces);
+                    }
                 }
-                Cars = newCars;
-                foreach (TrainCar car in newCars.Keys)
+                foreach (var train in remainingAiCars)
+                    if (train.Value == 0)
+                        publishedAiTrains.Add(train.Key);
+                Cars = VisibleSnapshot(visibleCars, newCars, cars, publishedAiTrains);
+                foreach (TrainCar car in Cars.Keys)
                     TraceVisual(car, "published", publishedTrainTraces);
                 // For cars no longer visible, remove their attached sounds.
                 foreach (var car in cars)
@@ -159,11 +155,14 @@ namespace Orts.ActivityRunner.Viewer3D
         private static Dictionary<TrainCar, TrainCarViewer> VisibleSnapshot(
             List<TrainCar> visibleCars,
             Dictionary<TrainCar, TrainCarViewer> loadedCars,
-            Dictionary<TrainCar, TrainCarViewer> previousCars)
+            Dictionary<TrainCar, TrainCarViewer> previousCars,
+            HashSet<AITrain> publishedAiTrains)
         {
             var snapshot = new Dictionary<TrainCar, TrainCarViewer>(visibleCars.Count);
             foreach (TrainCar car in visibleCars)
             {
+                if (car.Train is AITrain aiTrain && !publishedAiTrains.Contains(aiTrain))
+                    continue;
                 if (loadedCars.TryGetValue(car, out TrainCarViewer viewer) ||
                     previousCars.TryGetValue(car, out viewer))
                     snapshot.Add(car, viewer);
@@ -216,11 +215,18 @@ namespace Orts.ActivityRunner.Viewer3D
                         if (Math.Abs(car.WorldPosition.WorldLocation.Location.Y - cameraLocation.Location.Y) < 150)
                             TraceVisual(car, "scene-height", sceneHeightTrainTraces);
                     }
-            // The simulator's train-list order need not match what the player sees.
-            // Load nearby cars before distant services when new AI trains appear.
-            visibleCars.Sort(1, visibleCars.Count - 1, Comparer<TrainCar>.Create((a, b) =>
-                WorldLocation.GetDistanceSquared(cameraLocation, a.WorldPosition.WorldLocation).CompareTo(
-                    WorldLocation.GetDistanceSquared(cameraLocation, b.WorldPosition.WorldLocation))));
+            // Load one complete consist at a time so a nearby train can appear
+            // whole without waiting for interleaved models of other trains.
+            var orderedCars = visibleCars.Skip(1)
+                .GroupBy(car => car.Train)
+                .OrderBy(group => group.Key == playerCar?.Train ? 0 : 1)
+                .ThenBy(group => group.Average(car => WorldLocation.GetDistanceSquared(
+                    cameraLocation, car.WorldPosition.WorldLocation)))
+                .SelectMany(group => group.OrderBy(car => WorldLocation.GetDistanceSquared(
+                    cameraLocation, car.WorldPosition.WorldLocation)))
+                .ToList();
+            visibleCars.RemoveRange(1, visibleCars.Count - 1);
+            visibleCars.AddRange(orderedCars);
             VisibleCars = visibleCars;
             PlayerCar = playerCar;
         }
@@ -248,9 +254,23 @@ namespace Orts.ActivityRunner.Viewer3D
                 !recorded.TryAdd(train.Number, 0))
                 return;
 
-            Trace.TraceInformation("[AiVisual] wallUtc={0:O} simTime={1:F1} train={2} stage={3} car={4} heightM={5:F1}",
+            Trace.TraceInformation("[AiVisual] wallUtc={0:O} simTime={1:F1} train={2} stage={3} car={4} heightM={5:F1} distanceM={6:F1} trainCars={7}",
                 DateTime.UtcNow, Viewer.Simulator.ClockTime, train.Number, stage, car.CarID,
-                car.WorldPosition.WorldLocation.Location.Y - Viewer.Camera.CameraWorldLocation.Location.Y);
+                car.WorldPosition.WorldLocation.Location.Y - Viewer.Camera.CameraWorldLocation.Location.Y,
+                Math.Sqrt(WorldLocation.GetDistanceSquared(Viewer.Camera.CameraWorldLocation,
+                    car.WorldPosition.WorldLocation)), train.Cars.Count);
+        }
+
+        private void TraceVisualCar(TrainCar car, string stage, double elapsedMs)
+        {
+            if (car.Train is not AITrain train ||
+                !tracedAiTrainNumbers.GetOrAdd(train.Number, static number => DiagnosticTrace.AiTrain(number)))
+                return;
+
+            Trace.TraceInformation("[AiVisual] wallUtc={0:O} simTime={1:F1} train={2} stage={3} car={4} elapsedMs={5:F0} distanceM={6:F1} trainCars={7}",
+                DateTime.UtcNow, Viewer.Simulator.ClockTime, train.Number, stage, car.CarID, elapsedMs,
+                Math.Sqrt(WorldLocation.GetDistanceSquared(Viewer.Camera.CameraWorldLocation,
+                    car.WorldPosition.WorldLocation)), train.Cars.Count);
         }
 
         private TrainCarViewer LoadCar(TrainCar car)
