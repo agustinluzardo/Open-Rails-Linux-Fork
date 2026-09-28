@@ -56,6 +56,7 @@ namespace Riel.Launcher.Gui
         private ContentModel content;
         private List<RouteItem> routes = new List<RouteItem>();
         private List<ConsistItem> consists = new List<ConsistItem>();
+        private IReadOnlyList<PathModelHeader> routePaths = Array.Empty<PathModelHeader>();
         private FolderModel consistsFolder;
         private string detectedInstallation;
 
@@ -64,6 +65,7 @@ namespace Riel.Launcher.Gui
         private bool running;
         private bool hasSave;
         private bool suppressRouteChanged;
+        private bool applyingTimePreset;
 
         /// <summary>
         /// Counts route changes, so the answer to an earlier one that arrives late - its lists read
@@ -85,6 +87,7 @@ namespace Riel.Launcher.Gui
             SelectChoice(TimetableSeasonBox, SeasonType.Summer);
             SelectChoice(TimetableWeatherBox, WeatherType.Clear);
             SelectChoice(TimetableDayBox, DayOfWeek.Monday);
+            SetTimePresets(Array.Empty<ActivityItem>());
 
             RouteFilter.TextChanged += (_, _) => ApplyRouteFilter();
             RouteList.SelectionChanged += (_, _) =>
@@ -99,6 +102,21 @@ namespace Riel.Launcher.Gui
             ConsistList.SelectionChanged += (_, _) => UpdateButtons();
             ConsistList.DoubleTapped += (_, _) => Guarded(Play);
             PathBox.SelectionChanged += (_, _) => UpdateButtons();
+            TimePresetBox.SelectionChanged += (_, _) =>
+            {
+                if (TimePresetBox.SelectedItem is string selectedTime)
+                {
+                    applyingTimePreset = true;
+                    TimeBox.Text = selectedTime;
+                    applyingTimePreset = false;
+                }
+            };
+            TimeBox.TextChanged += (_, _) =>
+            {
+                if (!applyingTimePreset)
+                    TimePresetBox.SelectedItem = null;
+                UpdateButtons();
+            };
             ExploreActivityModeBox.IsCheckedChanged += (_, _) => UpdateButtons();
             ModeTabs.SelectionChanged += (_, _) => UpdateButtons();
             TimetableBox.SelectionChanged += (_, _) => TimetableChanged();
@@ -374,6 +392,7 @@ namespace Riel.Launcher.Gui
 
             if (item == null)
             {
+                routePaths = Array.Empty<PathModelHeader>();
                 RouteTitle.Text = routes.Count == 0 ? string.Empty : T("Choose a route");
                 RouteDescription.Text = string.Empty;
                 ActivityList.ItemsSource = null;
@@ -381,7 +400,6 @@ namespace Riel.Launcher.Gui
                 LocomotiveBox.ItemsSource = null;
                 TimetableBox.ItemsSource = null;
                 TimetableTrainList.ItemsSource = null;
-                ActivityDescription.Text = string.Empty;
                 NoActivities.IsVisible = false;
                 UpdateButtons();
                 return;
@@ -389,6 +407,19 @@ namespace Riel.Launcher.Gui
 
             RouteTitle.Text = item.Name;
             RouteDescription.Text = item.Route.Description?.Trim() ?? string.Empty;
+            routePaths = Array.Empty<PathModelHeader>();
+            ActivityList.ItemsSource = null;
+            PathBox.ItemsSource = null;
+            TimetableBox.ItemsSource = null;
+            TimetableTrainList.ItemsSource = null;
+            if (item.Folder != consistsFolder)
+            {
+                consists = new List<ConsistItem>();
+                consistsFolder = null;
+                LocomotiveBox.ItemsSource = null;
+                ConsistList.ItemsSource = null;
+            }
+            UpdateButtons();
 
             Task<ImmutableArray<ActivityModelHeader>> activitiesTask = item.Route.GetActivities(closing.Token);
             Task<ImmutableArray<PathModelHeader>> pathsTask = item.Route.GetPaths(closing.Token);
@@ -413,10 +444,10 @@ namespace Riel.Launcher.Gui
                     new Choice<string>(null, T("All locomotives"))
                 };
                 locomotives.AddRange(consists
-                    .Where(consist => !string.IsNullOrWhiteSpace(consist.LocomotiveReference))
-                    .GroupBy(consist => consist.LocomotiveReference, StringComparer.OrdinalIgnoreCase)
+                    .Where(consist => !string.IsNullOrWhiteSpace(consist.LocomotiveKey))
+                    .GroupBy(consist => consist.LocomotiveKey, StringComparer.OrdinalIgnoreCase)
                     .Select(group => new Choice<string>(group.Key,
-                        group.Select(consist => consist.LocomotiveName).FirstOrDefault(name => !string.IsNullOrWhiteSpace(name)) ?? group.Key))
+                        group.First().LocomotiveName))
                     .OrderBy(choice => choice.Name, StringComparer.CurrentCultureIgnoreCase));
                 LocomotiveBox.ItemsSource = locomotives;
                 LocomotiveBox.SelectedIndex = 0;
@@ -436,6 +467,8 @@ namespace Riel.Launcher.Gui
             ActivityList.ItemsSource = activityItems;
             ActivityList.SelectedIndex = activityItems.Count > 0 ? 0 : -1;
             NoActivities.IsVisible = activityItems.Count == 0;
+            SetTimePresets(activityItems);
+            routePaths = paths;
 
             // Only paths a player can drive belong in the list; a route that marks none still
             // gets them all rather than an empty box.
@@ -471,7 +504,6 @@ namespace Riel.Launcher.Gui
 
         private void ActivityChanged()
         {
-            ActivityDescription.Text = (ActivityList.SelectedItem as ActivityItem)?.Description ?? string.Empty;
             UpdateButtons();
         }
 
@@ -483,9 +515,9 @@ namespace Riel.Launcher.Gui
 
             IEnumerable<ConsistItem> filtered = consists;
             if (!string.IsNullOrWhiteSpace(locomotive))
-                filtered = filtered.Where(consist => string.Equals(consist.LocomotiveReference, locomotive, StringComparison.OrdinalIgnoreCase));
+                filtered = filtered.Where(consist => string.Equals(consist.LocomotiveKey, locomotive, StringComparison.OrdinalIgnoreCase));
             if (filter.Length > 0)
-                filtered = filtered.Where(consist => consist.Name.Contains(filter, StringComparison.CurrentCultureIgnoreCase));
+                filtered = filtered.Where(consist => consist.SearchText.Contains(filter, StringComparison.CurrentCultureIgnoreCase));
 
             List<ConsistItem> shown = filtered.ToList();
             ConsistList.ItemsSource = shown;
@@ -527,11 +559,13 @@ namespace Riel.Launcher.Gui
                 PathBox.SelectedItem = (PathBox.ItemsSource as IEnumerable<PathItem>)?
                     .FirstOrDefault(path => string.Equals(path.Path.Id, saved.PathId, StringComparison.OrdinalIgnoreCase)) ?? PathBox.SelectedItem;
                 ConsistItem consist = consists.FirstOrDefault(item => string.Equals(item.Consist.Id, saved.WagonSetId, StringComparison.OrdinalIgnoreCase));
-                string locomotiveId = saved.LocomotiveId ?? consist?.LocomotiveReference;
+                string locomotiveId = consist?.LocomotiveKey ?? saved.LocomotiveId;
                 if (!string.IsNullOrWhiteSpace(locomotiveId))
                 {
                     LocomotiveBox.SelectedItem = (LocomotiveBox.ItemsSource as IEnumerable<Choice<string>>)?
                         .FirstOrDefault(choice => string.Equals(choice.Value, locomotiveId, StringComparison.OrdinalIgnoreCase))
+                        ?? (LocomotiveBox.ItemsSource as IEnumerable<Choice<string>>)?
+                            .FirstOrDefault(choice => choice.Value?.StartsWith(locomotiveId + "\0", StringComparison.OrdinalIgnoreCase) == true)
                         ?? LocomotiveBox.SelectedItem;
                 }
                 if (consist != null)
@@ -591,7 +625,7 @@ namespace Riel.Launcher.Gui
                 return (null, null, T("Choose a path to explore."));
             if (ConsistList.SelectedItem is not ConsistItem consist)
                 return (null, null, T("Choose a train to explore with."));
-            if (!TimeOnly.TryParse(TimeBox.Text?.Trim(), CultureInfo.InvariantCulture, out TimeOnly time))
+            if (!TimeOnly.TryParseExact(TimeBox.Text?.Trim(), "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly time))
                 return (null, null, T("Write the time as hours and minutes, like 08:30."));
 
             SeasonType season = (SeasonBox.SelectedItem as Choice<SeasonType>)?.Value ?? SeasonType.Summer;
@@ -607,6 +641,90 @@ namespace Riel.Launcher.Gui
             PlayButton.IsEnabled = !running && selections != null;
             ResumeButton.IsEnabled = !running && hasSave;
             ToolTip.SetTip(PlayButton, missing);
+            UpdateSelectionDetails();
+        }
+
+        private void SetTimePresets(IEnumerable<ActivityItem> activities)
+        {
+            // Include actual departure times from this route alongside useful times of day.
+            string[] presets = new[] { "00:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00" }
+                .Concat(activities.Select(activity => activity.Activity.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture)))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(time => time, StringComparer.Ordinal)
+                .ToArray();
+            TimePresetBox.ItemsSource = presets;
+        }
+
+        private void UpdateSelectionDetails()
+        {
+            if (RouteList.SelectedItem is not RouteItem route)
+            {
+                SelectionDetailsPanel.IsVisible = false;
+                return;
+            }
+
+            SelectionDetailsPanel.IsVisible = true;
+            DetailsTitle.Text = route.Name;
+            DetailsSummary.Text = F("Content folder: {0}", route.Folder.Name);
+            DetailsRoute.Text = string.Empty;
+            DetailsDescription.Text = route.Route.Description?.Trim() ?? string.Empty;
+            DetailsCars.Text = string.Empty;
+
+            if (ModeTabs.SelectedIndex == ActivityTab && ActivityList.SelectedItem is ActivityItem activity)
+            {
+                DetailsTitle.Text = activity.Name;
+                DetailsSummary.Text = activity.Summary;
+                DetailsRoute.Text = DescribePath(activity.Activity.PathId);
+                DetailsDescription.Text = activity.Description;
+                DetailsCars.Text = DescribeTrain(activity.Activity.ConsistId);
+            }
+            else if (ModeTabs.SelectedIndex == ExploreTab)
+            {
+                if (PathBox.SelectedItem is PathItem path)
+                {
+                    DetailsTitle.Text = path.Name;
+                    DetailsRoute.Text = DescribePath(path.Path.Id);
+                }
+                if (ConsistList.SelectedItem is ConsistItem consist)
+                {
+                    DetailsSummary.Text = consist.Name;
+                    DetailsCars.Text = DescribeTrain(consist);
+                }
+            }
+            else if (ModeTabs.SelectedIndex == TimetableTab && TimetableTrainList.SelectedItem is TimetableTrainItem train)
+            {
+                DetailsTitle.Text = train.Name;
+                DetailsSummary.Text = train.Summary;
+                DetailsRoute.Text = DescribePath(train.Model.Path);
+                DetailsDescription.Text = train.Model.Briefing?.Trim() ?? string.Empty;
+                DetailsCars.Text = DescribeTrain(train.Model.WagonSet);
+            }
+        }
+
+        private string DescribePath(string id)
+        {
+            PathModelHeader path = routePaths.FirstOrDefault(model => string.Equals(model.Id, id, StringComparison.OrdinalIgnoreCase));
+            if (path == null)
+                return string.IsNullOrWhiteSpace(id) ? string.Empty : F("Path: {0}", id);
+            if (!string.IsNullOrWhiteSpace(path.Start) && !string.IsNullOrWhiteSpace(path.End))
+                return F("Starting at {0} · Heading towards {1}", path.Start, path.End);
+            return F("Path: {0}", string.IsNullOrWhiteSpace(path.Name) ? path.Id : path.Name);
+        }
+
+        private string DescribeTrain(string id)
+        {
+            ConsistItem train = consists.FirstOrDefault(model => string.Equals(model.Consist.Id, id, StringComparison.OrdinalIgnoreCase));
+            return train == null ? string.IsNullOrWhiteSpace(id) ? string.Empty : F("Train: {0}", id) : DescribeTrain(train);
+        }
+
+        private static string DescribeTrain(ConsistItem train)
+        {
+            string heading = string.IsNullOrWhiteSpace(train.LocomotiveName)
+                ? F("Train: {0}", train.Name)
+                : F("Train: {0} · Locomotive: {1}", train.Name, train.LocomotiveName);
+            string cars = string.Join(" · ", train.Consist.TrainCars.Select((car, index) =>
+                $"{index + 1}. {(!string.IsNullOrWhiteSpace(car?.Name) ? car.Name : car?.Reference)}"));
+            return cars.Length == 0 ? heading : $"{heading}\n{train.Detail}: {cars}";
         }
 
         // ------------------------------------------------------------------------------ playing

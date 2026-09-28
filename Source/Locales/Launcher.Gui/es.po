@@ -793,6 +793,45 @@ msgstr "Servidor web"
 msgid "Profiling"
 msgstr "Medir rendimiento"
 
+msgid "Suggested times"
+msgstr "Horarios sugeridos"
+
+msgid "Choose a suggested time or enter your own (HH:mm)."
+msgstr "Elegí un horario sugerido o escribí el tuyo (HH:mm)."
+
+msgid "Content folder: {0}"
+msgstr "Carpeta de contenido: {0}"
+
+msgid "Starting at {0} · Heading towards {1}"
+msgstr "Salida: {0} · Destino: {1}"
+
+msgid "Path: {0}"
+msgstr "Recorrido: {0}"
+
+msgid "Train: {0}"
+msgstr "Tren: {0}"
+
+msgid "Train: {0} · Locomotive: {1}"
+msgstr "Tren: {0} · Locomotora: {1}"
+
+msgid "Driver vigilance (Z resets the alarm)"
+msgstr "Hombre muerto (Z reconoce la alarma)"
+
+msgid "Driver vigilance in outside views"
+msgstr "Hombre muerto también en vistas externas"
+
+msgid "When the locomotive has a vigilance monitor, an unanswered alarm eventually applies the brakes. Press Z to acknowledge it."
+msgstr "Si la locomotora tiene un monitor de vigilancia, una alarma sin respuesta termina aplicando los frenos. Pulsá Z para reconocerla."
+
+msgid "The simulator did not write a test summary. Check the test log."
+msgstr "El simulador no escribió el resumen de la prueba. Revisá el registro de pruebas."
+
+msgid "The simulator could not start."
+msgstr "No se pudo iniciar el simulador."
+
+msgid "The test summary is incomplete. Check the test log."
+msgstr "El resumen de la prueba está incompleto. Revisá el registro de pruebas."
+
 msgid "Close Launcher While Playing"
 msgstr "Cerrar el lanzador mientras jugás y volver a abrirlo al salir"
 

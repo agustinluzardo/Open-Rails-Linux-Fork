@@ -177,11 +177,17 @@ namespace Riel.Launcher.Gui
                     ?? throw new InvalidOperationException($"Unknown setting {name}");
                 string label = name == "ComputerTrainDoors"
                     ? Translation.T("Open AI train doors at stations")
+                    : name == "Alerter"
+                    ? Translation.T("Driver vigilance (Z resets the alarm)")
+                    : name == "AlerterExternal"
+                    ? Translation.T("Driver vigilance in outside views")
                     : Translation.T(System.Text.RegularExpressions.Regex.Replace(name, "(?<=[a-z0-9])(?=[A-Z])", " "));
                 Control control;
                 if (property.PropertyType == typeof(bool))
                 {
                     control = new CheckBox { Content = label };
+                    if (name == "Alerter")
+                        ToolTip.SetTip(control, Translation.T("When the locomotive has a vigilance monitor, an unanswered alarm eventually applies the brakes. Press Z to acknowledge it."));
                     panel.Children.Add(control);
                 }
                 else

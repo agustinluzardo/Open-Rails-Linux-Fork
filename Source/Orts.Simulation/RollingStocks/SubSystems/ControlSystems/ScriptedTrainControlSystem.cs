@@ -236,7 +236,10 @@ namespace Orts.Simulation.RollingStocks.SubSystems.ControlSystems
                 // TrainControlSystem getters
                 script.IsTrainControlEnabled = () => Locomotive == Locomotive.Train.LeadLocomotive && Locomotive.Train.TrainType != TrainType.AiPlayerHosting;
                 script.IsAutopiloted = () => Locomotive == Simulator.PlayerLocomotive && Locomotive.Train.TrainType == TrainType.AiPlayerHosting;
-                script.IsAlerterEnabled = () => Simulator.UserSettings.Alerter && Simulator.UserSettings.AlerterExternal && !Simulator.PlayerIsInCab;
+                // The external-view option extends the alerter outside the cab; the main
+                // alerter setting must always enable it while driving from the cab.
+                script.IsAlerterEnabled = () => Simulator.UserSettings.Alerter &&
+                    (Simulator.PlayerIsInCab || Simulator.UserSettings.AlerterExternal);
                 script.IsSpeedControlEnabled = () => Simulator.UserSettings.SpeedControl;
                 script.IsLowVoltagePowerSupplyOn = () => Locomotive.LocomotivePowerSupply.LowVoltagePowerSupplyOn;
                 script.IsCabPowerSupplyOn = () => Locomotive.LocomotivePowerSupply.CabPowerSupplyOn;

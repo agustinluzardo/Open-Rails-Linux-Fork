@@ -19,6 +19,8 @@ using FreeTrainSimulator.Models.Content;
 using FreeTrainSimulator.Models.Settings;
 using FreeTrainSimulator.Models.Shim;
 
+using Riel.Launcher;
+
 using static Riel.Launcher.Gui.Translation;
 
 namespace Riel.Launcher.Gui
@@ -134,6 +136,10 @@ namespace Riel.Launcher.Gui
             catch (OperationCanceledException) when (closing.IsCancellationRequested)
             {
             }
+            catch (Exception error)
+            {
+                await Dialogs.Message(this, T("Test activities"), error.Message);
+            }
             finally
             {
                 Progress.IsIndeterminate = false;
@@ -172,7 +178,17 @@ namespace Riel.Launcher.Gui
                     item.Result = T("Testing…");
                     item.Errors = item.Load = item.FPS = string.Empty;
 
-                    TestActivityModel tested = await RunTestTask(item.Model, DefaultSettingsBox.IsChecked == true, token);
+                    TestActivityModel tested;
+                    try
+                    {
+                        tested = await RunTestTask(item.Model, DefaultSettingsBox.IsChecked == true, token);
+                    }
+                    catch (Exception error) when (error is not OperationCanceledException)
+                    {
+                        item.Result = T("Failed");
+                        item.Errors = error.Message;
+                        break;
+                    }
                     item.Result = tested.Passed ? T("Passed") : T("Failed");
                     item.Errors = tested.Errors ?? string.Empty;
                     item.Load = tested.Load ?? string.Empty;
@@ -201,6 +217,7 @@ namespace Riel.Launcher.Gui
                 Id = ProfileModel.TestingProfile,
                 Name = ProfileModel.TestingProfile,
                 LogFileName = LogFileName,
+                LogFilePath = userSettings.LogFilePath,
                 LogLevel = TraceEventType.Verbose,
                 ErrorDialogEnabled = false,
                 PauseAtStart = false,
@@ -236,16 +253,17 @@ namespace Riel.Launcher.Gui
 
             long summaryPosition = new FileInfo(summaryFilePath).Length;
 
+            string executable = Path.GetFullPath(Simulator.Locate());
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
-                FileName = RuntimeInfo.ActivityRunnerExecutable,
-                Arguments = $"/Profile={ProfileModel.TestingProfile}",
-                WorkingDirectory = AppContext.BaseDirectory,
+                FileName = executable,
+                WorkingDirectory = Path.GetDirectoryName(executable),
                 RedirectStandardError = true,
                 UseShellExecute = false,
             };
+            startInfo.ArgumentList.Add($"/Profile={ProfileModel.TestingProfile}");
 
-            bool passed = await RunProcess(startInfo, cancellationToken);
+            (bool passed, string processError) = await RunProcess(startInfo, cancellationToken);
             string errors = string.Empty;
             string load = string.Empty;
             string fps = string.Empty;
@@ -260,36 +278,58 @@ namespace Riel.Launcher.Gui
                     string[] csv = line.Split(',');
                     if (csv.Length >= 8)
                     {
+                        passed &= string.Equals(csv[2].Trim(), "Yes", StringComparison.OrdinalIgnoreCase);
                         errors = $"{csv[3]}/{csv[4]}/{csv[5]}";
                         if (float.TryParse(csv[6], NumberStyles.Float, CultureInfo.InvariantCulture, out float loadSeconds))
                             load = $"{loadSeconds:F1}s";
                         if (float.TryParse(csv[7], NumberStyles.Float, CultureInfo.InvariantCulture, out float frameRate))
                             fps = $"{frameRate:F1}";
                     }
+                    else
+                    {
+                        passed = false;
+                        errors = T("The test summary is incomplete. Check the test log.");
+                    }
                 }
                 else
                 {
                     passed = false;
+                    errors = string.IsNullOrWhiteSpace(processError)
+                        ? T("The simulator did not write a test summary. Check the test log.")
+                        : processError;
                 }
             }
 
             return activity with { Tested = true, Passed = passed, Errors = errors, Load = load, FPS = fps };
         }
 
-        private static async Task<bool> RunProcess(ProcessStartInfo startInfo, CancellationToken cancellationToken)
+        private static async Task<(bool Passed, string Error)> RunProcess(ProcessStartInfo startInfo, CancellationToken cancellationToken)
         {
             using Process process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             if (!process.Start())
-                return false;
+                return (false, T("The simulator could not start."));
 
-            await process.WaitForExitAsync(cancellationToken);
-            if (process.ExitCode != 0)
+            // Drain stderr during the test so a full pipe cannot block the simulator from exiting.
+            Task<string> errorTask = process.StandardError.ReadToEndAsync();
+            try
             {
-                string error = await process.StandardError.ReadToEndAsync(cancellationToken);
-                if (!string.IsNullOrWhiteSpace(error))
-                    Trace.TraceWarning(error);
+                await process.WaitForExitAsync(cancellationToken);
             }
-            return process.ExitCode == 0;
+            catch (OperationCanceledException)
+            {
+                try
+                {
+                    if (!process.HasExited)
+                        process.Kill(entireProcessTree: true);
+                }
+                catch (InvalidOperationException) { } // The process exited after the check.
+                await process.WaitForExitAsync(CancellationToken.None);
+                throw;
+            }
+            string error = (await errorTask).Trim();
+            if (process.ExitCode != 0 && error.Length > 0)
+                Trace.TraceWarning(error);
+            return (process.ExitCode == 0, error.Length > 240 ? error.Substring(error.Length - 240) : error);
         }
 
         private static void OpenFile(string file)

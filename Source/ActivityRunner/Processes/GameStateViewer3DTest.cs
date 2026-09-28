@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,10 +47,16 @@ namespace Orts.ActivityRunner.Processes
                 using (StreamWriter writer = File.AppendText(summaryFileName))
                 {
                     // Route, Activity, Passed, Errors, Warnings, Infos, Load Time, Frame Rate
-                    writer.WriteLine($"{Simulator.Instance.RouteModel?.Name?.Replace(",", ";", StringComparison.OrdinalIgnoreCase)},{Simulator.Instance.ActivityModel?.Name?.Replace(",", ";", StringComparison.OrdinalIgnoreCase)},{(passed ? "Yes" : "No")}," +
-                        $"{traceListener?.EventCount(TraceEventType.Critical) ?? 0 + traceListener?.EventCount(TraceEventType.Error) ?? 0}," +
-                        $"{traceListener?.EventCount(TraceEventType.Warning) ?? 0}," +
-                        $"{traceListener?.EventCount(TraceEventType.Information) ?? 0},{loadTime:F1},{MetricCollector.Instance.Metrics[SlidingMetric.FrameRate].SmoothedValue:F1}");
+                    int errors = (traceListener?.EventCount(TraceEventType.Critical) ?? 0) +
+                        (traceListener?.EventCount(TraceEventType.Error) ?? 0);
+                    writer.WriteLine(string.Format(CultureInfo.InvariantCulture,
+                        "{0},{1},{2},{3},{4},{5},{6:F1},{7:F1}",
+                        Simulator.Instance.RouteModel?.Name?.Replace(',', ';'),
+                        Simulator.Instance.ActivityModel?.Name?.Replace(',', ';'),
+                        passed ? "Yes" : "No", errors,
+                        traceListener?.EventCount(TraceEventType.Warning) ?? 0,
+                        traceListener?.EventCount(TraceEventType.Information) ?? 0,
+                        loadTime, MetricCollector.Instance.Metrics[SlidingMetric.FrameRate].SmoothedValue));
                 }
             }
             catch (IOException) { }// Ignore any errors

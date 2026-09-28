@@ -17,6 +17,7 @@
 
 using System;
 using System.Globalization;
+using System.Linq;
 
 using FreeTrainSimulator.Common;
 using FreeTrainSimulator.Models.Content;
@@ -103,9 +104,13 @@ namespace Riel.Launcher.Gui
     /// <summary>A consist to explore with.</summary>
     public sealed class ConsistItem
     {
+        private readonly string searchText;
+
         public ConsistItem(WagonSetModel consist)
         {
             Consist = consist;
+            searchText = string.Join(" ", new[] { Name, LocomotiveName, LocomotiveReference }
+                .Concat(Consist.TrainCars.Select(car => car?.Name)));
         }
 
         public WagonSetModel Consist { get; }
@@ -114,6 +119,9 @@ namespace Riel.Launcher.Gui
         public string LocomotiveName => string.IsNullOrWhiteSpace(Consist.Locomotive?.Name)
             ? Consist.Locomotive?.Reference
             : Consist.Locomotive.Name;
+        // The folder alone is not enough: several different engines can share TRAINSET subfolders.
+        public string LocomotiveKey => Consist.Locomotive == null ? null : $"{LocomotiveReference}\0{LocomotiveName}";
+        public string SearchText => searchText;
         public string Detail => Translation.Count(Consist.TrainCars.Length, "{0} vehicle", "{0} vehicles");
     }
 

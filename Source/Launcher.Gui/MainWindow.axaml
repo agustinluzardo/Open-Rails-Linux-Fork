@@ -66,10 +66,22 @@
             <TextBlock x:Name="RouteDescription" Classes="secondary" TextWrapping="Wrap" MaxLines="3" TextTrimming="WordEllipsis" />
           </StackPanel>
 
+          <Border x:Name="SelectionDetailsPanel" DockPanel.Dock="Bottom" Classes="panel" Margin="0,10,0,0" MaxHeight="140" IsVisible="False">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <StackPanel Spacing="4">
+                <TextBlock x:Name="DetailsTitle" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock x:Name="DetailsSummary" TextWrapping="Wrap" />
+                <TextBlock x:Name="DetailsRoute" Classes="secondary" TextWrapping="Wrap" />
+                <TextBlock x:Name="DetailsDescription" TextWrapping="Wrap" />
+                <TextBlock x:Name="DetailsCars" Classes="secondary small" TextWrapping="Wrap" />
+              </StackPanel>
+            </ScrollViewer>
+          </Border>
+
           <TabControl x:Name="ModeTabs">
 
             <TabItem Header="{l:T 'Activity'}">
-              <Grid RowDefinitions="*,Auto" Margin="0,8,0,0">
+              <Grid Margin="0,8,0,0">
                 <ListBox x:Name="ActivityList">
                   <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="l:ActivityItem">
@@ -83,16 +95,12 @@
                 <TextBlock x:Name="NoActivities" IsVisible="False" Classes="secondary" TextWrapping="Wrap"
                            HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" MaxWidth="420"
                            Text="{l:T 'This route has no activities. Explore it instead: pick a path and a train in the Explore tab.'}" />
-                <Border Grid.Row="1" Classes="panel" Margin="0,10,0,0" MaxHeight="170">
-                  <ScrollViewer>
-                    <TextBlock x:Name="ActivityDescription" TextWrapping="Wrap" />
-                  </ScrollViewer>
-                </Border>
               </Grid>
             </TabItem>
 
             <TabItem Header="{l:T 'Explore'}">
-              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto" Margin="0,12,0,0">
+              <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,12,8,0">
                 <TextBlock Grid.Row="0" Text="{l:T 'Path'}" VerticalAlignment="Center" Margin="0,0,16,0" />
                 <ComboBox Grid.Row="0" Grid.Column="1" x:Name="PathBox" HorizontalAlignment="Stretch" Height="36" MaxDropDownHeight="320">
                   <ComboBox.ItemTemplate><DataTemplate x:DataType="l:PathItem"><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" MaxLines="1" ToolTip.Tip="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
@@ -110,7 +118,7 @@
                 <TextBlock Grid.Row="2" Text="{l:T 'Train'}" VerticalAlignment="Top" Margin="0,18,16,0" />
                 <DockPanel Grid.Row="2" Grid.Column="1" Margin="0,12,0,0">
                   <TextBox DockPanel.Dock="Top" x:Name="ConsistFilter" PlaceholderText="{l:T 'Search trains'}" Margin="0,0,0,6" />
-                  <ListBox x:Name="ConsistList" MinHeight="120">
+                  <ListBox x:Name="ConsistList" Height="130">
                     <ListBox.ItemTemplate>
                       <DataTemplate x:DataType="l:ConsistItem">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Margin="0,1">
@@ -123,7 +131,11 @@
                 </DockPanel>
 
                 <TextBlock Grid.Row="3" Text="{l:T 'Time'}" VerticalAlignment="Center" Margin="0,12,16,0" />
-                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TimeBox" Text="12:00" Width="110" HorizontalAlignment="Left" Margin="0,12,0,0" />
+                <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+                  <ComboBox x:Name="TimePresetBox" Width="160" PlaceholderText="{l:T 'Suggested times'}" />
+                  <TextBox x:Name="TimeBox" Text="12:00" Width="90" PlaceholderText="HH:mm" MaxLength="5"
+                           ToolTip.Tip="{l:T 'Choose a suggested time or enter your own (HH:mm).'}" />
+                </StackPanel>
 
                 <TextBlock Grid.Row="4" Text="{l:T 'Season'}" VerticalAlignment="Center" Margin="0,12,16,0" />
                 <ComboBox Grid.Row="4" Grid.Column="1" x:Name="SeasonBox" MinWidth="180" Margin="0,12,0,0" />
@@ -136,13 +148,15 @@
                           Content="{l:T 'Explore in Activity Mode'}"
                           ToolTip.Tip="{l:T 'Use Open Rails activity-style exploration. Normal Explore is recommended for most routes.'}" />
               </Grid>
+              </ScrollViewer>
             </TabItem>
             <TabItem Header="{l:T 'Timetable'}">
-              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" Margin="0,12,0,0">
+              <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,12,8,0">
                 <TextBlock Text="{l:T 'Timetable set'}" VerticalAlignment="Center" Margin="0,0,14,0" />
                 <ComboBox x:Name="TimetableBox" Grid.Column="1" HorizontalAlignment="Stretch" />
                 <TextBlock Grid.Row="1" Text="{l:T 'Train'}" VerticalAlignment="Center" Margin="0,12,14,0" />
-                <ListBox x:Name="TimetableTrainList" Grid.Row="2" Grid.Column="1" Margin="0,12,0,0">
+                <ListBox x:Name="TimetableTrainList" Grid.Row="2" Grid.Column="1" Margin="0,12,0,0" Height="130">
                   <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="l:TimetableTrainItem">
                       <StackPanel Spacing="2" Margin="0,3">
@@ -162,6 +176,7 @@
                   <ComboBox x:Name="TimetableWeatherFileBox" MinWidth="190" />
                 </StackPanel>
               </Grid>
+              </ScrollViewer>
             </TabItem>
           </TabControl>
         </DockPanel>

@@ -22,7 +22,8 @@ namespace FreeTrainSimulator.Models.Handler
 
             string key = contentModel.Hierarchy();
 
-            if (!modelSetTaskCache.TryGetValue(key, out Task<ImmutableArray<ActivityModelHeader>> modelSetTask) || modelSetTask.IsFaulted)
+            if (!modelSetTaskCache.TryGetValue(key, out Task<ImmutableArray<ActivityModelHeader>> modelSetTask) ||
+                modelSetTask.IsFaulted || modelSetTask.IsCanceled)
             {
                 modelSetTaskCache[key] = modelSetTask = LoadActivities(contentModel, cancellationToken);
             }
