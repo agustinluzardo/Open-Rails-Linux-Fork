@@ -47,7 +47,9 @@ namespace Orts.ActivityRunner.Viewer3D
         private static readonly TimeSpan IntermediatePublishInterval = TimeSpan.FromMilliseconds(100);
         private readonly ConcurrentDictionary<int, byte> selectedTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> sceneHeightTrainTraces = new();
+        private readonly ConcurrentDictionary<int, byte> loadingTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> loadedTrainTraces = new();
+        private readonly ConcurrentDictionary<int, byte> deferredTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> publishedTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> preparedTrainTraces = new();
         private readonly ConcurrentDictionary<int, bool> tracedAiTrainNumbers = new();
@@ -70,10 +72,21 @@ namespace Orts.ActivityRunner.Viewer3D
             var visibleCars = VisibleCars;
             var visibleSet = new HashSet<TrainCar>(visibleCars);
             var cars = Cars;
+            TrainCar playerCar = PlayerCar;
+            bool playerReady = playerCar != null && playerCar == preparedPlayerCar && cars.ContainsKey(playerCar);
+            if (!playerReady && playerCar != null && cars.TryGetValue(playerCar, out TrainCarViewer existingPlayer))
+            {
+                existingPlayer.LoadForPlayer();
+                preparedPlayerCar = playerCar;
+                playerReady = true;
+            }
             if (visibleCars.Any(c => !cars.ContainsKey(c)) || cars.Keys.Any(c => !visibleSet.Contains(c)))
             {
                 var newCars = new Dictionary<TrainCar, TrainCarViewer>(visibleCars.Count);
-                bool playerReady = PlayerCar != null && PlayerCar == preparedPlayerCar && cars.ContainsKey(PlayerCar);
+                var publishedAiTrains = new HashSet<AITrain>();
+                foreach (TrainCar previousCar in cars.Keys)
+                    if (previousCar.Train is AITrain previousTrain)
+                        publishedAiTrains.Add(previousTrain);
                 long lastPublication = 0;
                 for (int index = 0; index < visibleCars.Count; index++)
                 {
@@ -86,20 +99,35 @@ namespace Orts.ActivityRunner.Viewer3D
                             newCars.Add(car, trainCarViewer);
                         else
                         {
+                            TraceVisual(car, "load-started", loadingTrainTraces);
                             TrainCarViewer loaded = LoadCar(car);
                             newCars.Add(car, loaded);
                             if (loaded != null)
                             {
+                                if (car == playerCar && !playerReady)
+                                {
+                                    loaded.LoadForPlayer();
+                                    preparedPlayerCar = playerCar;
+                                    playerReady = true;
+                                }
                                 TraceVisual(car, "model-loaded", loadedTrainTraces);
+                                if (!playerReady && car.Train is AITrain)
+                                    TraceVisual(car, "player-not-ready", deferredTrainTraces);
                                 // The next model may take several seconds. Let the renderer
-                                // show cars as they finish loading, with at most one immutable
-                                // snapshot per 100 ms. Previously visible cars stay present.
-                                if (playerReady && car.Train is AITrain && index + 1 < visibleCars.Count &&
-                                    (lastPublication == 0 || Stopwatch.GetElapsedTime(lastPublication) >= IntermediatePublishInterval))
+                                // show the first car of every new AI train immediately. Rate
+                                // limit additional cars, so a slow next model cannot delay a
+                                // new train that finished inside the 100 ms interval.
+                                if (playerReady && car.Train is AITrain aiTrain && index + 1 < visibleCars.Count &&
+                                    (!publishedAiTrains.Contains(aiTrain) || lastPublication == 0 ||
+                                     Stopwatch.GetElapsedTime(lastPublication) >= IntermediatePublishInterval))
                                 {
                                     Cars = VisibleSnapshot(visibleCars, newCars, cars);
                                     foreach (TrainCar publishedCar in newCars.Keys)
+                                    {
+                                        if (publishedCar.Train is AITrain publishedTrain)
+                                            publishedAiTrains.Add(publishedTrain);
                                         TraceVisual(publishedCar, "published", publishedTrainTraces);
+                                    }
                                     lastPublication = Stopwatch.GetTimestamp();
                                 }
                             }
@@ -222,7 +250,8 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private TrainCarViewer LoadCar(TrainCar car)
         {
-            Trace.Write("C");
+            if (DiagnosticTrace.LoadMarkers)
+                Trace.Write("C");
             TrainCarViewer carViewer =
                 car is MSTSDieselLocomotive ? new MSTSDieselLocomotiveViewer(Viewer, car as MSTSDieselLocomotive) :
                 car is MSTSElectricLocomotive ? new MSTSElectricLocomotiveViewer(Viewer, car as MSTSElectricLocomotive) :

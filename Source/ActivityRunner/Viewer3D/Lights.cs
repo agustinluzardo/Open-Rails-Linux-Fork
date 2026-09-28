@@ -37,6 +37,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Models;
+using Orts.Simulation;
 using Orts.Simulation.RollingStocks;
 
 namespace Orts.ActivityRunner.Viewer3D
@@ -149,7 +150,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 foreach (var lightPrimitive in LightPrimitives)
                     lightPrimitive.UpdateState(this);
 
-                if (Car == Viewer.PlayerLocomotive)
+                if (DiagnosticTrace.LightDiagnostics && Car == Viewer.PlayerLocomotive)
                 {
                     Trace.TraceInformation(
                         "[LightDiag] headlight={0} leadHeadlight={1} leadIndex={2} playerIndex={3} primitives={4} enabled={5} cones={6} enabledCones={7}",

@@ -197,7 +197,8 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private WorldFile LoadWorldFile(int tileX, int tileZ, bool visible)
         {
-            Trace.Write("W");
+            if (DiagnosticTrace.LoadMarkers)
+                Trace.Write("W");
             try
             {
                 return new WorldFile(viewer, tileX, tileZ, visible);

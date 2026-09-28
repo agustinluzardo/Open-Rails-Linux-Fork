@@ -50,6 +50,7 @@ using Orts.ActivityRunner.Viewer3D.RollingStock;
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Files;
 using Orts.Formats.Msts.Models;
+using Orts.Simulation;
 using Orts.Simulation.RollingStocks;
 
 namespace Orts.ActivityRunner.Viewer3D.Sound
@@ -310,7 +311,7 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
                     SoundStreams = SoundStreams.Add(new SoundStream(mstsStream, eventSource, this));
                 }
 
-                if (Car?.Train?.IsActualPlayerTrain == true)
+                if (DiagnosticTrace.SoundDiagnostics && Car?.Train?.IsActualPlayerTrain == true)
                 {
                     int triggerCount = 0;
                     int discreteCount = 0;
@@ -725,4 +726,3 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
         }
     }
 }
-

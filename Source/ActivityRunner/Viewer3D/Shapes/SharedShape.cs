@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Orts.Simulation;
 
 namespace Orts.ActivityRunner.Viewer3D.Shapes
 {
@@ -77,7 +78,8 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
         /// </summary>
         private void LoadContent()
         {
-            Trace.Write("S");
+            if (DiagnosticTrace.LoadMarkers)
+                Trace.Write("S");
             var filePath = FilePath;
             // commented lines allow reading the animation block from an additional file in an Openrails subfolder
             //           string dir = Path.GetDirectoryName(filePath);

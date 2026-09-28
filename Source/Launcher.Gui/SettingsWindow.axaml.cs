@@ -158,7 +158,9 @@ namespace Riel.Launcher.Gui
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap, Opacity = 0.7
             });
             AddOptions(AdvancedPanel, "TraceAiStops", "TraceAiProgress", "TraceAiTrainNumbers",
-                "TraceSignalDiagnostics", "TraceRoadCrossings");
+                "TraceSignalDiagnostics", "TraceRoadCrossings", "TraceAiRouteResolution",
+                "TraceSoundDiagnostics", "TraceLightDiagnostics", "TraceLoadMarkers");
+            AddOptions(AdvancedPanel, "SuppressMissingPlatformWarnings");
         }
 
         private static void AddGroup(StackPanel panel, string title) => panel.Children.Add(new TextBlock

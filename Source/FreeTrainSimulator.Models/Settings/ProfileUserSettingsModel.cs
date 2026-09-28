@@ -261,6 +261,11 @@ namespace FreeTrainSimulator.Models.Settings
         public string TraceAiTrainNumbers { get; set; }
         public bool TraceSignalDiagnostics { get; set; }
         public bool TraceRoadCrossings { get; set; }
+        public bool TraceAiRouteResolution { get; set; }
+        public bool TraceSoundDiagnostics { get; set; }
+        public bool TraceLightDiagnostics { get; set; }
+        public bool TraceLoadMarkers { get; set; }
+        public bool SuppressMissingPlatformWarnings { get; set; }
 
         [MemoryPackOnDeserialized]
         private void ApplyCompatibilityDefaults()

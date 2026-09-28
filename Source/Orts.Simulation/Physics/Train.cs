@@ -4075,7 +4075,7 @@ namespace Orts.Simulation.Physics
             // so record whether that would bind the train to an old occurrence instead of
             // the occurrence at/after its previous route position. This does not alter
             // routing; it only exposes an ambiguity which NYMG may handle differently.
-            if (Number == 167 && this is AITrain &&
+            if (DiagnosticTrace.AiRouteResolution && Number == 167 && this is AITrain &&
                 PreviousPosition[Direction.Forward].TrackCircuitSectionIndex != PresentPosition[Direction.Forward].TrackCircuitSectionIndex)
             {
                 int currentSectionIndex = PresentPosition[Direction.Forward].TrackCircuitSectionIndex;
@@ -9112,7 +9112,8 @@ namespace Orts.Simulation.Physics
                     serviceTraffic.DistanceDownPath, clearingDistanceM, ref beginActiveSubroute, ref activeSubrouteNodeIndex);
                 if (!validStop)
                 {
-                    Trace.TraceInformation($"Train {Number} Service {Name}: cannot find platform {serviceTraffic.PlatformStartID}");
+                    if (!DiagnosticTrace.SuppressMissingPlatformWarnings)
+                        Trace.TraceInformation($"Train {Number} Service {Name}: cannot find platform {serviceTraffic.PlatformStartID}");
                 }
             }
         }
@@ -9220,9 +9221,10 @@ namespace Orts.Simulation.Physics
 
                 if (routeIndex < 0)
                 {
-                    Trace.TraceWarning($"Train {Number} Service {Name} : platform {platformStartID} is not on route; " +
-                        $"platform sections {platform.TCSectionIndex[0]}/{platform.TCSectionIndex[^1]}, " +
-                        $"searched subroutes {beginActiveSubroute}-{Math.Min(activeSubroute, TCRoute.TCRouteSubpaths.Count - 1)}");
+                    if (!DiagnosticTrace.SuppressMissingPlatformWarnings)
+                        Trace.TraceWarning($"Train {Number} Service {Name} : platform {platformStartID} is not on route; " +
+                            $"platform sections {platform.TCSectionIndex[0]}/{platform.TCSectionIndex[^1]}, " +
+                            $"searched subroutes {beginActiveSubroute}-{Math.Min(activeSubroute, TCRoute.TCRouteSubpaths.Count - 1)}");
                     return false;
                 }
 
@@ -10998,7 +11000,8 @@ namespace Orts.Simulation.Physics
 
                 if (routeIndex < 0)
                 {
-                    Trace.TraceWarning($"Train {Number} Service {Name} : platform {platformStartID} is not on route");
+                    if (!DiagnosticTrace.SuppressMissingPlatformWarnings)
+                        Trace.TraceWarning($"Train {Number} Service {Name} : platform {platformStartID} is not on route");
                     return null;
                 }
 

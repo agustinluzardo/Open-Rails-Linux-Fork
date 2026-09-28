@@ -831,7 +831,8 @@ namespace Orts.Simulation.Timetables
 
                 if (routeIndex < 0)
                 {
-                    Trace.TraceWarning($"Train {Name} ({Number}) : platform {platformStartID} is not on route");
+                    if (!DiagnosticTrace.SuppressMissingPlatformWarnings)
+                        Trace.TraceWarning($"Train {Name} ({Number}) : platform {platformStartID} is not on route");
                     return (null);
                 }
 
@@ -10732,4 +10733,3 @@ namespace Orts.Simulation.Timetables
         }
     }
 }
-

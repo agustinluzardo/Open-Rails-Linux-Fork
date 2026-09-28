@@ -129,7 +129,7 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
                 soundStream.RepeatedTrigger = this == soundStream.LastTriggered;
 
                 bool compressorEvent = TriggerId == TrainEvent.CompressorOn || TriggerId == TrainEvent.CompressorOff;
-                if (compressorEvent)
+                if (DiagnosticTrace.SoundDiagnostics && compressorEvent)
                 {
                     string files = SoundCommand is PlaySoundCommand playCommand
                         ? string.Join("|", playCommand.Files)

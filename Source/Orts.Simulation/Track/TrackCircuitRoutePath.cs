@@ -806,7 +806,8 @@ namespace Orts.Simulation.Track
 
             // Diagnostic counterpart to AIPathResolve. Keep this scoped to the path which
             // reproduces Toshiba Platence so normal route startup logs do not explode.
-            if (string.Equals(aiPath.PathName, "Plaza C Via Circuito Dsc", StringComparison.OrdinalIgnoreCase))
+            if (DiagnosticTrace.AiRouteResolution &&
+                string.Equals(aiPath.PathName, "Plaza C Via Circuito Dsc", StringComparison.OrdinalIgnoreCase))
             {
                 Trace.TraceInformation("[AiTCRoute] path={0} train={1} subpaths={2}", aiPath.PathName, trainNumber, TCRouteSubpaths.Count);
                 for (int diagnosticSubpath = 0; diagnosticSubpath < TCRouteSubpaths.Count; diagnosticSubpath++)

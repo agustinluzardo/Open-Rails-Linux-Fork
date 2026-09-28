@@ -114,11 +114,10 @@ namespace Orts.Simulation.AIs
 
             FindSidingEnds();
 
-            // Temporary high-value diagnostics for the path that exposes the Toshiba Platence
-            // AI divergence. This does not alter route selection: it records both the current
-            // FTS TrackTraveller result and the candidates an Open Rails-style 2.5 m / 0.5 m
-            // PAT capture test would accept, so the first mismatched PDP can be identified.
-            if (!fatalerror && string.Equals(PathName, "Plaza C Via Circuito Dsc", StringComparison.OrdinalIgnoreCase))
+            // The candidate search walks the route for every path node. Run it only when
+            // explicitly diagnosing track resolution, including during activity startup.
+            if (DiagnosticTrace.AiRouteResolution && !fatalerror &&
+                string.Equals(PathName, "Plaza C Via Circuito Dsc", StringComparison.OrdinalIgnoreCase))
             {
                 Trace.TraceInformation("[AIPathResolve] path={0} nodes={1}", PathName, Nodes.Count);
                 foreach (AIPathNode pathNode in Nodes)
