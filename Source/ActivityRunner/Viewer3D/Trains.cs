@@ -40,13 +40,17 @@ namespace Orts.ActivityRunner.Viewer3D
         // THREAD SAFETY:
         //   All accesses must be done in local variables. No modifications to the objects are allowed except by
         //   assignment of a new instance (possibly cloned and then modified).
-        public Dictionary<TrainCar, TrainCarViewer> Cars = new Dictionary<TrainCar, TrainCarViewer>();
-        private List<TrainCar> VisibleCars = new List<TrainCar>();
-        private TrainCar PlayerCar;
+        public volatile Dictionary<TrainCar, TrainCarViewer> Cars = new Dictionary<TrainCar, TrainCarViewer>();
+        private volatile List<TrainCar> VisibleCars = new List<TrainCar>();
+        private volatile TrainCar PlayerCar;
+        private TrainCar preparedPlayerCar;
+        private static readonly TimeSpan IntermediatePublishInterval = TimeSpan.FromMilliseconds(100);
         private readonly ConcurrentDictionary<int, byte> selectedTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> sceneHeightTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> loadedTrainTraces = new();
+        private readonly ConcurrentDictionary<int, byte> publishedTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> preparedTrainTraces = new();
+        private readonly ConcurrentDictionary<int, bool> tracedAiTrainNumbers = new();
 
         public TrainDrawer(Viewer viewer)
         {
@@ -64,46 +68,79 @@ namespace Orts.ActivityRunner.Viewer3D
         {
             var cancellation = Viewer.LoaderProcess.CancellationToken;
             var visibleCars = VisibleCars;
+            var visibleSet = new HashSet<TrainCar>(visibleCars);
             var cars = Cars;
-            if (visibleCars.Any(c => !cars.ContainsKey(c)) || cars.Keys.Any(c => !visibleCars.Contains(c)))
+            if (visibleCars.Any(c => !cars.ContainsKey(c)) || cars.Keys.Any(c => !visibleSet.Contains(c)))
             {
-                var newCars = new Dictionary<TrainCar, TrainCarViewer>();
-                foreach (var car in visibleCars)
+                var newCars = new Dictionary<TrainCar, TrainCarViewer>(visibleCars.Count);
+                bool playerReady = PlayerCar != null && PlayerCar == preparedPlayerCar && cars.ContainsKey(PlayerCar);
+                long lastPublication = 0;
+                for (int index = 0; index < visibleCars.Count; index++)
                 {
                     if (cancellation.IsCancellationRequested)
                         break;
+                    TrainCar car = visibleCars[index];
                     try
-					{
+                    {
                         if (cars.TryGetValue(car, out TrainCarViewer trainCarViewer))
-							newCars.Add(car, trainCarViewer);
-						else
-						{
-							TrainCarViewer loaded = LoadCar(car);
-							newCars.Add(car, loaded);
-							if (loaded != null)
-								TraceVisual(car, "model-loaded", loadedTrainTraces);
-						}
-					}
-					catch (Exception error) 
+                            newCars.Add(car, trainCarViewer);
+                        else
+                        {
+                            TrainCarViewer loaded = LoadCar(car);
+                            newCars.Add(car, loaded);
+                            if (loaded != null)
+                            {
+                                TraceVisual(car, "model-loaded", loadedTrainTraces);
+                                // The next model may take several seconds. Let the renderer
+                                // show cars as they finish loading, with at most one immutable
+                                // snapshot per 100 ms. Previously visible cars stay present.
+                                if (playerReady && car.Train is AITrain && index + 1 < visibleCars.Count &&
+                                    (lastPublication == 0 || Stopwatch.GetElapsedTime(lastPublication) >= IntermediatePublishInterval))
+                                {
+                                    Cars = VisibleSnapshot(visibleCars, newCars, cars);
+                                    foreach (TrainCar publishedCar in newCars.Keys)
+                                        TraceVisual(publishedCar, "published", publishedTrainTraces);
+                                    lastPublication = Stopwatch.GetTimestamp();
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception error)
                     {
                         Trace.WriteLine(new FileLoadException(car.WagFilePath, error));
                     }
                 }
                 Cars = newCars;
-				//for those cars not visible now, will unload them (to remove attached sound)
-				foreach (var car in cars)
-				{
-					if (!visibleCars.Contains(car.Key))
-					{
-						car.Value.Unload();
-					}
-				}
-			}
+                foreach (TrainCar car in newCars.Keys)
+                    TraceVisual(car, "published", publishedTrainTraces);
+                // For cars no longer visible, remove their attached sounds.
+                foreach (var car in cars)
+                    if (!visibleSet.Contains(car.Key))
+                        car.Value.Unload();
+            }
 
             // Ensure the player locomotive has a cab view loaded and anything else they need.
             cars = Cars;
             if (PlayerCar != null && cars.TryGetValue(PlayerCar, out TrainCarViewer value))
+            {
                 value.LoadForPlayer();
+                preparedPlayerCar = PlayerCar;
+            }
+        }
+
+        private static Dictionary<TrainCar, TrainCarViewer> VisibleSnapshot(
+            List<TrainCar> visibleCars,
+            Dictionary<TrainCar, TrainCarViewer> loadedCars,
+            Dictionary<TrainCar, TrainCarViewer> previousCars)
+        {
+            var snapshot = new Dictionary<TrainCar, TrainCarViewer>(visibleCars.Count);
+            foreach (TrainCar car in visibleCars)
+            {
+                if (loadedCars.TryGetValue(car, out TrainCarViewer viewer) ||
+                    previousCars.TryGetValue(car, out viewer))
+                    snapshot.Add(car, viewer);
+            }
+            return snapshot;
         }
 
         internal void Mark()
@@ -137,20 +174,22 @@ namespace Orts.ActivityRunner.Viewer3D
         {
             var visibleCars = new List<TrainCar>();
             var removeDistance = Viewer.UserSettings.ViewingDistance * 1.5f;
-            visibleCars.Add(Viewer.PlayerLocomotive);
+            var playerCar = Viewer.PlayerLocomotive;
+            var cameraLocation = Viewer.Camera.CameraWorldLocation;
+            visibleCars.Add(playerCar);
             foreach (var train in Viewer.Simulator.Trains)
                 foreach (var car in train.Cars)
-                    if (WorldLocation.ApproximateDistance(Viewer.Camera.CameraWorldLocation, car.WorldPosition.WorldLocation) < removeDistance && car != Viewer.PlayerLocomotive)
+                    if (car != playerCar && WorldLocation.ApproximateDistance(cameraLocation, car.WorldPosition.WorldLocation) < removeDistance)
                     {
                         visibleCars.Add(car);
                         TraceVisual(car, "selected", selectedTrainTraces);
                         // AI models can be selected while still hidden 1000 m below the track.
                         // Record when the car first reaches roughly the camera's height as well.
-                        if (Math.Abs(car.WorldPosition.WorldLocation.Location.Y - Viewer.Camera.CameraWorldLocation.Location.Y) < 150)
+                        if (Math.Abs(car.WorldPosition.WorldLocation.Location.Y - cameraLocation.Location.Y) < 150)
                             TraceVisual(car, "scene-height", sceneHeightTrainTraces);
                     }
             VisibleCars = visibleCars;
-            PlayerCar = Viewer.Simulator.PlayerLocomotive;
+            PlayerCar = playerCar;
         }
 
         public void PrepareFrame(RenderFrame frame, in ElapsedTime elapsedTime)
@@ -171,7 +210,8 @@ namespace Orts.ActivityRunner.Viewer3D
         // frame for one AI service. Wall time distinguishes a slow renderer from a late spawn.
         private void TraceVisual(TrainCar car, string stage, ConcurrentDictionary<int, byte> recorded)
         {
-            if (car?.Train is not AITrain train || !DiagnosticTrace.AiTrain(train.Number) ||
+            if (car?.Train is not AITrain train || recorded.ContainsKey(train.Number) ||
+                !tracedAiTrainNumbers.GetOrAdd(train.Number, static number => DiagnosticTrace.AiTrain(number)) ||
                 !recorded.TryAdd(train.Number, 0))
                 return;
 
