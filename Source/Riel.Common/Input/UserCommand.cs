@@ -260,6 +260,7 @@ namespace Riel.Common.Input
         [Description("Display Train Forces Window")] DisplayTrainForcesWindow,
         [Description("Control Window Left")] ControlWindowLeft,
         [Description("Control Window Right")] ControlWindowRight,
+        [Description("Display System Information")] DisplaySystemInformation,
     }
 
     /// <summary>

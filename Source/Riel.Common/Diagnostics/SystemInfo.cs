@@ -17,6 +17,7 @@ namespace Riel.Common.Diagnostics
     {
         private readonly int processorCount = Environment.ProcessorCount;
         private readonly MetricCollector metricCollector = MetricCollector.Instance;
+        private readonly HardwareTemperatures hardwareTemperatures = new HardwareTemperatures();
 
         public SystemInfo(Game game) : base(true)
         {
@@ -34,6 +35,8 @@ namespace Riel.Common.Diagnostics
             this["Adapter"] = null;
             this["Resolution"] = null;
             this["CPU"] = null;
+            this["CPU temperature"] = null;
+            this["GPU temperature"] = null;
             this["Memory"] = null;
             this[".0"] = null;
             this["Frame rate"] = null;
@@ -48,6 +51,9 @@ namespace Riel.Common.Diagnostics
                 this["Game Time"] = $"{FormatStrings.FormatTime(gameTime.TotalGameTime.TotalSeconds)}";// Simulator.Instance != null ? $"{FormatStrings.FormatTime(Simulator.Instance.ClockTime)}" : null;
                 this["Frame rate"] = $"{metricCollector.Metrics[SlidingMetric.FrameRate].SmoothedValue:0}";
                 this["CPU"] = $"{metricCollector.Metrics[SlidingMetric.ProcessorTime].SmoothedValue / processorCount:N0}% total / {metricCollector.Metrics[SlidingMetric.ProcessorTime].SmoothedValue:0}% of single core ({processorCount} logical cores)";
+                (string cpuTemperature, string gpuTemperature) = hardwareTemperatures.Read(Info.SystemInfo.GraphicAdapterName);
+                this["CPU temperature"] = cpuTemperature;
+                this["GPU temperature"] = gpuTemperature;
                 this["Memory"] = $"{Environment.WorkingSet >> 20} MB";
                 base.Update(gameTime);
             }
