@@ -16,8 +16,8 @@ namespace Riel.Launcher
     /// <summary>Installs only a tested, checksummed portable build from the main release channel.</summary>
     internal static class Updates
     {
-        private const string MainBranch = "https://api.github.com/repos/agustinluzardo/Riel-Linux/branches/main";
-        private const string ReleaseByTag = "https://api.github.com/repos/agustinluzardo/Riel-Linux/releases/tags/";
+        private const string Repository = "https://api.github.com/repos/agustinluzardo/Riel-Linux/";
+        private const string PreviousRepository = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/";
         private const string ArchiveName = "riel-linux-x64.zip";
 
         internal static async Task<int> Run(bool checkOnly, CancellationToken cancellationToken)
@@ -32,14 +32,26 @@ namespace Riel.Launcher
             // Rollbacks and rebuilt commits can make release timestamps differ from
             // main's actual history, which previously made the launcher offer a stale
             // build or miss the current one entirely.
-            using JsonDocument branch = JsonDocument.Parse(await client.GetStringAsync(MainBranch, cancellationToken).ConfigureAwait(false));
+            string repository = Repository;
+            string branchJson;
+            try
+            {
+                branchJson = await client.GetStringAsync(repository + "branches/main", cancellationToken).ConfigureAwait(false);
+            }
+            catch (HttpRequestException e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Keep updates working while the repository is being renamed.
+                repository = PreviousRepository;
+                branchJson = await client.GetStringAsync(repository + "branches/main", cancellationToken).ConfigureAwait(false);
+            }
+            using JsonDocument branch = JsonDocument.Parse(branchJson);
             string mainCommit = branch.RootElement.GetProperty("commit").GetProperty("sha").GetString();
             if (string.IsNullOrWhiteSpace(mainCommit) || mainCommit.Length < 12)
                 throw new LauncherException("GitHub did not return a valid main commit.");
 
             string commit = mainCommit.Substring(0, 12);
             string tag = "main-" + commit;
-            using HttpResponseMessage releaseResponse = await client.GetAsync(ReleaseByTag + tag, cancellationToken).ConfigureAwait(false);
+            using HttpResponseMessage releaseResponse = await client.GetAsync(repository + "releases/tags/" + tag, cancellationToken).ConfigureAwait(false);
             if (releaseResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 Console.WriteLine("No tested Riel build has been published for current main (" + commit + ") yet.");
