@@ -48,7 +48,7 @@ track monitor - is drawn by rasterizing it with `System.Drawing` into a bitmap a
 as a texture. .NET 7 removed the Unix implementation of `System.Drawing.Common`, so the type is
 simply absent here.
 
-`Source/FreeTrainSimulator.Common/Compatibility/` provides the slice of GDI+ the engine uses -
+`Source/Riel.Common/Compatibility/` provides the slice of GDI+ the engine uses -
 `Font`, `Graphics`, `Bitmap`, `Brush`, `Pen`, `GraphicsPath` and their supporting enums - backed by
 [SkiaSharp][skia], in the same namespaces the engine already imports. The call sites compile
 unchanged on both platforms, which keeps upstream merges cheap. The geometry types (`Color`,
@@ -262,7 +262,7 @@ Source/
   Directory.Build.props        platform and backend selection
   Directory.Build.targets      package swaps, per-platform sources, shaders
   Riel.slnx                    the Linux solution
-  FreeTrainSimulator.Common/
+  Riel.Common/
     Compatibility/             GDI+ over SkiaSharp
     Display/                   displays, dialogs, SDL
     Info/UserFolders.*.cs      XDG directories

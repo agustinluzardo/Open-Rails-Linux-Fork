@@ -79,7 +79,7 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\FreeTrainSimulator.Common\FreeTrainSimulator.Common.csproj" />
+		<ProjectReference Include="..\Riel.Common\Riel.Common.csproj" />
 		<ProjectReference Include="..\Orts.Simulation\Orts.Simulation.csproj" />
 		<ProjectReference Include="..\FreeTrainSimulator.Graphics\FreeTrainSimulator.Graphics.csproj" />
 	</ItemGroup>

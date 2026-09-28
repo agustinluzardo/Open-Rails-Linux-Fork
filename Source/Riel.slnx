@@ -27,7 +27,7 @@
     <Project Path="Test/Tests.Orts/Tests.Orts.csproj" />
   </Folder>
   <Project Path="ActivityRunner/ActivityRunner.csproj" />
-  <Project Path="FreeTrainSimulator.Common/FreeTrainSimulator.Common.csproj" />
+  <Project Path="Riel.Common/Riel.Common.csproj" />
   <Project Path="FreeTrainSimulator.Graphics/FreeTrainSimulator.Graphics.csproj" />
   <Project Path="FreeTrainSimulator.Models.Imported/FreeTrainSimulator.Models.Imported.csproj" />
   <Project Path="FreeTrainSimulator.Models/FreeTrainSimulator.Models.csproj" />

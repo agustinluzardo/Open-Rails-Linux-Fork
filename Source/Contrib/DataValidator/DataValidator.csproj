@@ -10,7 +10,7 @@
     <Configurations>Debug;Release;CodeAnalysis</Configurations>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\FreeTrainSimulator.Common\FreeTrainSimulator.Common.csproj" />
+    <ProjectReference Include="..\..\Riel.Common\Riel.Common.csproj" />
     <ProjectReference Include="..\..\Orts.Formats\Orts.Formats.csproj" />
   </ItemGroup>
 </Project>

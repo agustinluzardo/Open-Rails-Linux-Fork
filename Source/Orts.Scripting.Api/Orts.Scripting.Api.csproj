@@ -9,6 +9,6 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\FreeTrainSimulator.Common\FreeTrainSimulator.Common.csproj" />
+	  <ProjectReference Include="..\Riel.Common\Riel.Common.csproj" />
 	</ItemGroup>
 </Project>
