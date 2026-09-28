@@ -41,7 +41,7 @@ Worth having, none required:
 
 ## Arch Linux: download without compiling
 
-Open the latest successful [Portable Linux package](https://github.com/agustinluzardo/Open-Rails-Linux-Fork/actions/workflows/linux-portable.yml)
+Open the latest successful [Portable Linux package](https://github.com/agustinluzardo/Riel-Linux/actions/workflows/linux-portable.yml)
 run, download the `riel-linux-x64` artifact and extract its ZIP. Then extract the
 `riel-linux-x64.tar.gz` inside it. In a terminal:
 
@@ -70,8 +70,8 @@ sudo pacman -S --needed sdl2 openal fontconfig zlib libx11 libxcursor libxext \
 ### Build an Arch package from source
 
 ```sh
-git clone https://github.com/agustinluzardo/Open-Rails-Linux-Fork.git
-cd Open-Rails-Linux-Fork/packaging/arch
+git clone https://github.com/agustinluzardo/Riel-Linux.git
+cd Riel-Linux/packaging/arch
 makepkg -si
 ```
 
@@ -87,8 +87,8 @@ tag, and set `sha256sums` accordingly.
 Any distribution, no packaging involved:
 
 ```sh
-git clone https://github.com/agustinluzardo/Open-Rails-Linux-Fork.git
-cd Open-Rails-Linux-Fork/Source
+git clone https://github.com/agustinluzardo/Riel-Linux.git
+cd Riel-Linux/Source
 dotnet build Riel.slnx -c Release
 ```
 

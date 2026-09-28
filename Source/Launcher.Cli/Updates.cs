@@ -16,8 +16,8 @@ namespace Riel.Launcher
     /// <summary>Installs only a tested, checksummed portable build from the main release channel.</summary>
     internal static class Updates
     {
-        private const string MainBranch = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/branches/main";
-        private const string ReleaseByTag = "https://api.github.com/repos/agustinluzardo/Open-Rails-Linux-Fork/releases/tags/";
+        private const string MainBranch = "https://api.github.com/repos/agustinluzardo/Riel-Linux/branches/main";
+        private const string ReleaseByTag = "https://api.github.com/repos/agustinluzardo/Riel-Linux/releases/tags/";
         private const string ArchiveName = "riel-linux-x64.zip";
 
         internal static async Task<int> Run(bool checkOnly, CancellationToken cancellationToken)

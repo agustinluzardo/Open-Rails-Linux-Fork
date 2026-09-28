@@ -1,23 +1,21 @@
-# Contributing to Riel
+# Contributing to Riel Linux
 
-Riel is the Linux platform layer over [Free Train Simulator][fts], which is a fork of
-[Open Rails][or]. That split decides where a change belongs.
+Riel Linux is developed here as a Linux simulator. Its code has historical roots in
+[Free Train Simulator][fts] and [Open Rails][or], with their copyright and GPL terms intact.
 
 ## Where does this change go?
 
-**Here**, if it is about running on Linux: path resolution, the drawing and interop replacements,
-the shader pipeline, the `riel` command, packaging, or anything under `docs/linux/`.
+**Here**. Fixes to simulation, signalling, timetables, content formats, the interface and Linux
+integration are all welcome in this repository. Include a reproducer or a comparison with
+expected MSTS content behavior when a change affects a route or activity.
 
-**Upstream**, if it is about the simulation: physics, signalling, timetables, content formats, the
-in-game interface. Those fixes help every user of both projects, not only the ones on Linux, and
-sending them upstream is also how this fork stays cheap to merge. Where Open Rails and Free Train
-Simulator disagree about how a piece of MSTS content should behave, Open Rails is the reference.
-
-If you are not sure, open an issue and say what you found; sorting that out is easy.
+Changes can also be proposed to other projects independently. Riel Linux's issues, fixes and
+releases do not depend on an upstream merge. Open Rails is useful for checking content behavior;
+we test and integrate each fix in Riel Linux itself.
 
 ## Reporting a problem
 
-Open an [issue](https://github.com/agustinluzardo/Open-Rails-Linux-Fork/issues) with:
+Open an [issue](https://github.com/agustinluzardo/Riel-Linux/issues) with:
 
 - the output of `riel doctor`,
 - the log from `~/.local/state/riel/Logs`,
@@ -28,8 +26,7 @@ the file that could not be found, and that name is usually the whole bug.
 
 ## Working on the code
 
-`docs/linux/ARCHITECTURE.md` explains how the port is put together and, in its last section, what
-to keep in mind so upstream merges stay cheap. The short version:
+`docs/linux/ARCHITECTURE.md` explains how the Linux build is put together. The short version:
 
 - Platform-specific code goes in `*.Unix.cs` and `*.Windows.cs` files, not in `#if` blocks
   scattered through shared code.
@@ -52,8 +49,7 @@ dotnet test Test/Tests.Orts/Tests.Orts.csproj
 dotnet test Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj
 ```
 
-Riel is GPL-3.0-or-later, as Open Rails and Free Train Simulator are; contributions are under the
-same licence.
+Riel Linux is GPL-3.0-or-later; contributions are under the same licence.
 
 [fts]: https://github.com/perpetualKid/FreeTrainSimulator
 [or]: https://github.com/openrails/openrails

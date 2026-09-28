@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="Riel Linux, simulador ferroviario nativo para Linux">
+  <defs>
+    <linearGradient id="night" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14283a"/>
+      <stop offset="0.55" stop-color="#0d1724"/>
+      <stop offset="1" stop-color="#080d15"/>
+    </linearGradient>
+    <linearGradient id="track" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8099ad"/>
+      <stop offset="1" stop-color="#edf4fa"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#203447"/>
+      <stop offset="1" stop-color="#101d2a"/>
+    </linearGradient>
+    <clipPath id="frame"><rect width="1280" height="640" rx="30"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="1280" height="640" fill="url(#night)"/>
+    <path d="M0 575H1280M0 599H1280M0 622H1280" stroke="#243e52" stroke-opacity=".4"/>
+    <path d="M760 0L1120 640M884 0L1244 640M560 0L920 640" stroke="#395269" stroke-opacity=".13" stroke-width="2"/>
+    <path d="M700 0C842 84 842 193 1055 251S1177 461 1280 515" fill="none" stroke="#5b7892" stroke-opacity=".15" stroke-width="2"/>
+    <path d="M660 0C802 84 802 193 1015 251S1137 461 1240 515" fill="none" stroke="#5b7892" stroke-opacity=".12" stroke-width="2"/>
+    <rect x="70" y="130" width="328" height="328" rx="70" fill="url(#card)" stroke="#43637a" stroke-opacity=".55" stroke-width="2"/>
+    <circle cx="236" cy="233" r="29" fill="#ffbb38"/>
+    <path d="M223 261L137 416M249 261L335 416" fill="none" stroke="url(#track)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M197 305H276M180 334H291M160 365H311M141 402H331" fill="none" stroke="#907054" stroke-width="9" stroke-linecap="round"/>
+    <path d="M200 306H273" stroke="#bd9872" stroke-opacity=".5" stroke-width="2"/>
+    <text x="472" y="252" font-family="DejaVu Sans, sans-serif" font-size="98" font-weight="bold" letter-spacing="-4" fill="#f7fbff">Riel<tspan x="719" fill="#82badb">Linux</tspan></text>
+    <rect x="475" y="289" width="55" height="6" rx="3" fill="#ffbb38"/>
+    <text x="472" y="351" font-family="DejaVu Sans, sans-serif" font-size="27" fill="#d2deea">Native railway simulation for Linux</text>
+    <text x="475" y="406" font-family="DejaVu Sans, sans-serif" font-size="18" letter-spacing="2.2" fill="#8ba7bb">ROUTES   ·   ACTIVITIES   ·   TIMETABLES</text>
+    <path d="M475 472H1208" stroke="#577087" stroke-opacity=".58"/>
+    <text x="475" y="509" font-family="DejaVu Sans, sans-serif" font-size="18" fill="#9cb2c5">A Linux train simulator, built to run your MSTS content.</text>
+    <path d="M68 532H397" stroke="#43637a" stroke-opacity=".5"/>
+    <text x="72" y="565" font-family="DejaVu Sans, sans-serif" font-size="15" letter-spacing="3" fill="#829eb3">R I E L   /   L I N U X</text>
+  </g>
+</svg>

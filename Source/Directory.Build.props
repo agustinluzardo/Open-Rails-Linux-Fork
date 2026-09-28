@@ -1,6 +1,6 @@
 ﻿<Project>
 	<!--
-	  Open Rails Linux Fork - cross platform selection.
+	  Riel Linux - cross platform selection.
 
 	  RielPlatform          windows | linux   (host OS by default, override with -p:RielPlatform=...)
 	  RielGraphicsBackend   WindowsDX | DesktopGL

@@ -5,7 +5,7 @@ pkgver=0.1.0
 pkgrel=1
 pkgdesc="Drive Microsoft Train Simulator routes natively on Linux, without Wine"
 arch=('x86_64')
-url="https://github.com/agustinluzardo/Open-Rails-Linux-Fork"
+url="https://github.com/agustinluzardo/Riel-Linux"
 license=('GPL-3.0-or-later')
 
 depends=(
@@ -45,7 +45,7 @@ sha256sums=('SKIP')
 # compiler, which does not run here, so building them at package time would mean pulling in Wine
 # for something whose result is identical every time. See docs/linux/ARCHITECTURE.md.
 
-_srcdir="Open-Rails-Linux-Fork"
+_srcdir="Riel-Linux"
 _install_dir="/usr/lib/$pkgname"
 
 prepare() {

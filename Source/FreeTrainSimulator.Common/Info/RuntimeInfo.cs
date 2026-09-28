@@ -18,8 +18,8 @@ namespace FreeTrainSimulator.Common.Info
 
         public static readonly string ProductName = VersionInfo.ProductName();
 
-        public const string WikiLink = "https://github.com/agustinluzardo/Open-Rails-Linux-Fork/wiki";
-        public const string WhatsNewLinkTemplate = "https://github.com/agustinluzardo/Open-Rails-Linux-Fork/blob/main/WHATSNEW.md";
+        public const string WikiLink = "https://github.com/agustinluzardo/Riel-Linux/wiki";
+        public const string WhatsNewLinkTemplate = "https://github.com/agustinluzardo/Riel-Linux/blob/main/WHATSNEW.md";
 
         /// <summary>
         /// returns the Application as part of the product family, like "Free Train Simulator"

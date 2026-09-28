@@ -1,12 +1,11 @@
-<img src="docs/linux/riel.png" width="96" align="left" alt="">
+<p align="center"><img src="docs/linux/riel-linux-social.png" width="960" alt="Riel Linux — native railway simulation for Linux"></p>
 
-# Riel
+# Riel Linux
 
 **Drive Microsoft Train Simulator routes natively on Linux.**
 
-*riel* is Spanish for the rail a train runs on.
-
-<br clear="left">
+*Riel* is Spanish for the rail a train runs on. The simulator, launcher, packaging and releases
+are developed here as a Linux project.
 
 MSTS content under Wine is a frustrating experience: custom routes fail to load, performance is
 poor, and every problem has two possible causes. Riel is a train simulator built as a Linux
@@ -40,9 +39,11 @@ That is the change the rest of this project was built around.
 - **Files where they belong.** Settings, saves, logs and content indexes follow the XDG base
   directory specification instead of one folder holding all four.
 - **A launcher to pick and play.** Choose a route and an activity, explore with a path and train,
-  or select a timetable service. It has content folders, settings, saved games, activity checks,
-  update checks and diagnostics under **Tools**. It follows the system language and supports
-  Spanish; dark mode can be switched off. Terminal commands are available as `riel`.
+  or select a timetable service. Suggested times include departures from the route's activities;
+  the information panel shows the selected path, locomotive and vehicles. It has content folders,
+  settings, saved games, activity checks, update checks and diagnostics under **Tools**. It
+  follows the system language and supports Spanish; dark mode can be switched off. Terminal
+  commands are available as `riel`.
 - **Failures say why.** When a run fails, the launcher shows the cause in a sentence - the file
   that is missing, the route that could not be read - rather than a click that seems to do
   nothing. A content folder with a broken route still loads everything else, and names what it
@@ -52,18 +53,18 @@ That is the change the rest of this project was built around.
 ## Getting started
 
 ```sh
-git clone https://github.com/agustinluzardo/Open-Rails-Linux-Fork.git
-cd Open-Rails-Linux-Fork/packaging/arch
+git clone https://github.com/agustinluzardo/Riel-Linux.git
+cd Riel-Linux/packaging/arch
 makepkg -si                               # or build by hand: docs/linux/INSTALL.md
 ```
 
 Then open **Riel** from the applications menu, choose the folder that holds `ROUTES` and
 `GLOBAL`, pick a route and press Play.
 
-![The current Riel launcher with Activity, Explore and Timetable tabs](docs/linux/launcher.png)
+![Illustration of the current Riel launcher showing route, activity and train details](docs/linux/launcher-preview.svg)
 
-The screenshot uses the synthetic test route included in this repository; your MSTS routes and
-activities appear in its place after you add a content folder.
+This illustration follows the current launcher layout and uses the synthetic test route included
+in this repository. Your routes and activities appear in its place after you add a content folder.
 
 From a terminal the same is:
 
@@ -107,9 +108,8 @@ The window uses the Riel icon in Xwayland.
 
 ## Status
 
-Riel runs MSTS routes and activities natively on Linux. The launcher screenshot above was captured
-from a current portable build running the repository's synthetic test route. Real route content is
-also being tested, and compatibility still varies by activity. If an activity fails, the logs in
+Riel Linux runs MSTS routes and activities natively on Linux. Real route content is still being
+tested, and compatibility varies by activity. If an activity fails, the logs in
 `~/.local/state/riel/Logs` help identify the cause.
 
 Known gaps:
@@ -122,22 +122,22 @@ Known gaps:
   Vulkan backend would actually take; `RIEL_VULKAN=1` runs the same renderer on Vulkan through
   Mesa's zink in the meantime.
 
-## Where the code comes from
+## Credits and code history
 
-The simulation is not new work. Riel forks [Free Train Simulator][fts], a modernised .NET fork of
-[Open Rails][or], and what this project adds is the platform layer: the path resolution above,
-the drawing and interop replacements, the shader pipeline, the launcher and the packaging.
-Physics, signalling, timetables and the content formats are theirs, and the credit for them is
-theirs.
+Riel Linux is developed and distributed independently. Its code descends from
+[Free Train Simulator][fts] and [Open Rails][or], whose contributors built much of the original
+simulation, formats, physics and timetables. Riel's Linux integration, launcher, packaging and
+ongoing simulation and compatibility fixes are developed in this repository. Neither of those
+projects needs to be installed to run Riel Linux.
 
-Fixes that are not Linux specific belong upstream in one of those two projects rather than here.
-Where the two engines disagree about how a piece of MSTS content should behave, Open Rails is the
-reference. [ARCHITECTURE.md](docs/linux/ARCHITECTURE.md) describes how to merge from upstream
-without a fight; the upstream README is kept at [docs/UPSTREAM-README.md](docs/UPSTREAM-README.md).
+We retain the original copyright notices and GPL terms. Open Rails remains a useful behavior
+reference when testing MSTS content; Riel Linux owns its fixes and release decisions.
+[ARCHITECTURE.md](docs/linux/ARCHITECTURE.md) documents the history and integration details;
+the upstream README is kept at [docs/UPSTREAM-README.md](docs/UPSTREAM-README.md).
 
 [fts]: https://github.com/perpetualKid/FreeTrainSimulator
 [or]: https://github.com/openrails/openrails
 
 ## Licence
 
-GPL-3.0-or-later, as Open Rails and Free Train Simulator are. See [LICENSE](LICENSE).
+GPL-3.0-or-later. See [LICENSE](LICENSE) and the credits above.

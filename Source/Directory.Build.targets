@@ -1,6 +1,6 @@
 <Project>
 	<!--
-	  Open Rails Linux Fork - platform fix-ups.
+	  Riel Linux - platform fix-ups.
 
 	  Imported after every project body, so it can rewrite the item groups the
 	  upstream project files declare. Keeping the platform switches here instead

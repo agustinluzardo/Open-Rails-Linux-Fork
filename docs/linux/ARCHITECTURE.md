@@ -1,15 +1,16 @@
-# How Riel works
+# How Riel Linux works
 
-Riel runs Microsoft Train Simulator content as a native Linux program. It is a fork of
-[Free Train Simulator][fts], which is itself a modernized fork of [Open Rails][or]: the simulation
-is theirs, and what Riel adds is the platform layer described here.
+Riel Linux runs Microsoft Train Simulator content as a native Linux program. Its codebase
+descends from [Free Train Simulator][fts] and [Open Rails][or]. Both projects contributed
+substantial simulation code. Riel Linux now develops its own launcher, platform integration and
+simulation fixes in this repository; this document explains the Linux architecture and history.
 
 [fts]: https://github.com/perpetualKid/FreeTrainSimulator
 [or]: https://github.com/openrails/openrails
 
-## Why this base
+## Code lineage
 
-Open Rails and Free Train Simulator are the same engine at different ages.
+Open Rails and Free Train Simulator share an engine lineage.
 
 Open Rails is the original: fifteen years of physics, signalling, timetables, cab views and
 content compatibility, and the larger community. It targets .NET 6 with the `-windows` framework,
@@ -22,13 +23,12 @@ window system that draws its own interface rather than hosting Windows Forms, an
 already separated from the game logic. The simulation - the part that took fifteen years - is the
 same code, kept in sync with Open Rails.
 
-Riel is based on Free Train Simulator because the modernization it has already done is exactly
-what a Linux port needs. Starting from Open Rails would have meant doing that work first and then
-porting. What Riel adds is the platform layer: everything below is the difference between the two.
+Riel Linux started from Free Train Simulator because the .NET and graphics modernization provided
+a workable foundation for Linux. The original port added the platform layer described below;
+Riel Linux also makes independent changes to its simulator, launcher and content behavior.
 
-Open Rails remains the reference for content behaviour. Where the two engines differ on how a
-piece of MSTS content should behave, Open Rails is right by definition - it is what content authors
-test against - and such differences belong upstream in Free Train Simulator rather than here.
+Open Rails can help diagnose differences in how MSTS content runs. We verify those differences
+against route data and test cases, then maintain Riel Linux's own fixes here.
 
 ## What had to be replaced
 
@@ -226,29 +226,23 @@ version as the `MonoGame.Framework` package. They were out of step upstream, and
 compiler talks to the Wine bridge differently, which fails in a way that looks like a broken
 prefix rather than a version mismatch.
 
-## Keeping up with upstream
+## Selective upstream integration
 
-The fork is a real fork: the full history is there, and upstream is a remote.
-
-```sh
-git remote add upstream-fts https://github.com/perpetualKid/FreeTrainSimulator.git
-git fetch upstream-fts
-git merge upstream-fts/development
-```
-
-Three things keep that merge cheap:
+The git history preserves the original projects' work and licence notices. Changes from other
+projects can be reviewed and integrated selectively after testing against Riel Linux. There is
+no automatic dependency on upstream releases. Three patterns keep integration manageable:
 
 **The platform switches live in one place.** `Source/Directory.Build.props` picks the target
 framework and graphics backend from the host OS; `Source/Directory.Build.targets` swaps the MonoGame
 package, drops the Windows-only packages, and decides which sources compile. Upstream project files
-are almost untouched.
+still have clear platform boundaries.
 
 **Platform specific code is in its own files.** A file named `*.Windows.cs` is compiled only for the
 Windows build and `*.Unix.cs` only for this one, so the two implementations of a partial class sit
 side by side and neither is edited when the other changes.
 
 **The compatibility layer keeps call sites identical.** Providing GDI+ under its own name means the
-ten files that rasterize text are byte for byte upstream's.
+text rasterization sites do not need a separate port.
 
 What does conflict, and where to look when it does:
 
