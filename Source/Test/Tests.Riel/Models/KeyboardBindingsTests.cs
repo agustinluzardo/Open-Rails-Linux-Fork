@@ -31,5 +31,17 @@ namespace Tests.Riel.Models
             Assert.IsTrue(quit.IsKeyDown(new KeyboardState(Keys.F4, Keys.RightAlt)));
             Assert.IsFalse(quit.IsKeyDown(new KeyboardState(Keys.F4)));
         }
+
+        [TestMethod]
+        public void SystemInformationShortcutKeepsTheExistingHudBinding()
+        {
+            ProfileKeyboardSettingsModel settings = MemoryPackSerializer.Deserialize<ProfileKeyboardSettingsModel>(
+                MemoryPackSerializer.Serialize(new ProfileKeyboardSettingsModel()));
+
+            Assert.IsTrue(settings.UserCommands[UserCommand.DisplaySystemInformation].IsKeyDown(new KeyboardState(Keys.F3)));
+            Assert.IsFalse(settings.UserCommands[UserCommand.DisplaySystemInformation].IsKeyDown(new KeyboardState(Keys.F3, Keys.LeftAlt)));
+            Assert.IsTrue(settings.UserCommands[UserCommand.DisplayHUD].IsKeyDown(new KeyboardState(Keys.F5, Keys.LeftAlt)));
+            Assert.IsFalse(settings.UserCommands[UserCommand.DisplayHUD].IsKeyDown(new KeyboardState(Keys.F5)));
+        }
     }
 }

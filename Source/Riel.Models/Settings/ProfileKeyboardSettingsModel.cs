@@ -265,6 +265,7 @@ namespace Riel.Models.Settings
             commands[UserCommand.DisplayCompassWindow] = new UserCommandKeyInput(0x0B);
             commands[UserCommand.DisplayHelpWindow] = new UserCommandModifiableKeyInput(0x3B, commands[UserCommand.DisplayNextWindowTab]);
             commands[UserCommand.DisplayHUD] = new UserCommandModifiableKeyInput(0x3F, KeyModifiers.Alt, commands[UserCommand.DisplayNextWindowTab]);
+            commands[UserCommand.DisplaySystemInformation] = new UserCommandKeyInput(Keys.F3);
             commands[UserCommand.DisplayHUDScrollLeft] = new UserCommandKeyInput(0x4B, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.DisplayHUDScrollRight] = new UserCommandKeyInput(0x4D, KeyModifiers.Control | KeyModifiers.Shift);
             commands[UserCommand.DisplayHUDScrollUp] = new UserCommandKeyInput(0x48, KeyModifiers.Control | KeyModifiers.Shift);
@@ -336,7 +337,10 @@ namespace Riel.Models.Settings
 
             foreach (UserCommand command in EnumExtension.GetValues<UserCommand>())
             {
-                UserCommands[command].UniqueDescriptor = userCommands[command];
+                // Older profiles have no entry for this newly appended command. Preserve its F3
+                // default while still restoring existing bindings and their modifiers verbatim.
+                if (command != UserCommand.DisplaySystemInformation || userCommands[command] != 0)
+                    UserCommands[command].UniqueDescriptor = userCommands[command];
             }
 
             if (migrateF5Defaults)
