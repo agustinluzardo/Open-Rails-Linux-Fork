@@ -144,7 +144,7 @@ namespace Orts.ActivityRunner.Viewer3D.Sound
                     }
             }
 
-            ALSoundSource = new ALSoundSource(soundSource.EnvironmentSound, rolloffFactor);
+            ALSoundSource = new ALSoundSource(soundSource.EnvironmentSound, rolloffFactor, mstsStream.FrequencyCurve != null);
 
             if (mstsStream.Triggers != null)
                 foreach (Trigger trigger in mstsStream.Triggers)

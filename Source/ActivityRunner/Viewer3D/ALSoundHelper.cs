@@ -554,6 +554,7 @@ namespace Orts.ActivityRunner.Viewer3D
         private const int QUEUELENGHT = 16;
         private bool looping;
         private readonly float rolloffFactor = 1;
+        private readonly bool hasFrequencyCurve;
         private int soundSourceID = -1;
 
         private readonly SoundItem[] soundQueue = new SoundItem[QUEUELENGHT];
@@ -594,11 +595,12 @@ namespace Orts.ActivityRunner.Viewer3D
         /// </summary>
         /// <param name="isEnv">True if environment sound</param>
         /// <param name="rolloffFactor">The number indicating the fade speed by the distance</param>
-        public ALSoundSource(bool isEnv, float rolloffFactor)
+        public ALSoundSource(bool isEnv, float rolloffFactor, bool hasFrequencyCurve = false)
         {
             soundSourceID = -1;
             soundQueue[queueTail].PlayState = PlayState.NOP;
             this.rolloffFactor = rolloffFactor;
+            this.hasFrequencyCurve = hasFrequencyCurve;
         }
 
         private bool mustActivate;
@@ -897,8 +899,21 @@ namespace Orts.ActivityRunner.Viewer3D
                                 needsFrequentUpdate = soundQueue[queueTail % QUEUELENGHT].InitItemPlay(soundSourceID);
                                 float sampleRate = SampleRate;
                                 SampleRate = soundQueue[queueTail % QUEUELENGHT].SoundPiece.Frequency;
-                                if (sampleRate != SampleRate && SampleRate != 0)
+                                // A stream without a frequency curve plays each WAV at its
+                                // native rate. Carrying the previous WAV's rate into the next
+                                // one can make announcements play increasingly fast or slow.
+                                if (!hasFrequencyCurve)
+                                    PlaybackSpeed = 1f;
+                                else if (sampleRate > 0 && sampleRate != SampleRate && SampleRate > 0)
                                     PlaybackSpeed *= sampleRate / SampleRate;
+
+                                if (DiagnosticTrace.SoundDiagnostics &&
+                                    soundQueue[queueTail % QUEUELENGHT].PlayMode == PlayMode.OneShot &&
+                                    Car?.Car?.Train?.IsActualPlayerTrain == true)
+                                    Trace.TraceInformation(
+                                        "[SoundDiag] one-shot wallUtc={0:O} car={1} file={2} sampleHz={3:F0} pitch={4:F3} queued={5}",
+                                        DateTime.UtcNow, Car.Car.CarID, soundQueue[queueTail % QUEUELENGHT].SoundPiece.Name,
+                                        SampleRate, PlaybackSpeed, queueHeader - queueTail);
 
                                 Start();
                                 needsFrequentUpdate |= soundQueue[queueTail % QUEUELENGHT].SoundPiece.ReleasedWithJump;

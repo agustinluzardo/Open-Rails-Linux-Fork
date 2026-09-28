@@ -216,6 +216,11 @@ namespace Orts.ActivityRunner.Viewer3D
                         if (Math.Abs(car.WorldPosition.WorldLocation.Location.Y - cameraLocation.Location.Y) < 150)
                             TraceVisual(car, "scene-height", sceneHeightTrainTraces);
                     }
+            // The simulator's train-list order need not match what the player sees.
+            // Load nearby cars before distant services when new AI trains appear.
+            visibleCars.Sort(1, visibleCars.Count - 1, Comparer<TrainCar>.Create((a, b) =>
+                WorldLocation.GetDistanceSquared(cameraLocation, a.WorldPosition.WorldLocation).CompareTo(
+                    WorldLocation.GetDistanceSquared(cameraLocation, b.WorldPosition.WorldLocation))));
             VisibleCars = visibleCars;
             PlayerCar = playerCar;
         }
