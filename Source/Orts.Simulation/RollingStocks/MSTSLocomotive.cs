@@ -1462,7 +1462,10 @@ namespace Orts.Simulation.RollingStocks
 
         public bool IsLeadLocomotive()
         {
-            return Train.LeadLocomotive == this;
+            // AI consists have no selected cab (LeadLocomotiveIndex == -1). The
+            // LeadLocomotive getter falls back to the first engine for inspection,
+            // but that must not let its manual controller overwrite the AI throttle.
+            return Train.LeadLocomotiveIndex >= 0 && Train.LeadLocomotive == this;
         }
 
         protected void ParseCombData(string lowercasetoken, STFReader stf)
