@@ -80,15 +80,8 @@ namespace Orts.ActivityRunner.Viewer3D
             if (visibleCars.Any(c => !cars.ContainsKey(c)) || cars.Keys.Any(c => !visibleSet.Contains(c)))
             {
                 var newCars = new Dictionary<TrainCar, TrainCarViewer>(visibleCars.Count);
-                var publishedAiTrains = new HashSet<AITrain>();
-                foreach (TrainCar previousCar in cars.Keys)
-                    if (previousCar.Train is AITrain previousTrain)
-                        publishedAiTrains.Add(previousTrain);
-                // A new consist is published only after every visible car has been processed.
-                // Keep existing consists on screen while loading newly visible cars.
-                var remainingAiCars = visibleCars.Where(car => car.Train is AITrain)
-                    .GroupBy(car => (AITrain)car.Train)
-                    .ToDictionary(group => group.Key, group => group.Count());
+                // Load in the simulator's original train order and publish the
+                // entire visible scene in one snapshot, as before AI streaming.
                 for (int index = 0; index < visibleCars.Count; index++)
                 {
                     if (cancellation.IsCancellationRequested)
@@ -122,19 +115,8 @@ namespace Orts.ActivityRunner.Viewer3D
                     {
                         Trace.WriteLine(new FileLoadException(car.WagFilePath, error));
                     }
-                    if (car.Train is AITrain aiTrain && --remainingAiCars[aiTrain] == 0 &&
-                        playerReady && index + 1 < visibleCars.Count)
-                    {
-                        publishedAiTrains.Add(aiTrain);
-                        Cars = VisibleSnapshot(visibleCars, newCars, cars, publishedAiTrains);
-                        foreach (TrainCar publishedCar in Cars.Keys)
-                            TraceVisual(publishedCar, "published", publishedTrainTraces);
-                    }
                 }
-                foreach (var train in remainingAiCars)
-                    if (train.Value == 0)
-                        publishedAiTrains.Add(train.Key);
-                Cars = VisibleSnapshot(visibleCars, newCars, cars, publishedAiTrains);
+                Cars = newCars;
                 foreach (TrainCar car in Cars.Keys)
                     TraceVisual(car, "published", publishedTrainTraces);
                 // For cars no longer visible, remove their attached sounds.
@@ -150,24 +132,6 @@ namespace Orts.ActivityRunner.Viewer3D
                 value.LoadForPlayer();
                 preparedPlayerCar = PlayerCar;
             }
-        }
-
-        private static Dictionary<TrainCar, TrainCarViewer> VisibleSnapshot(
-            List<TrainCar> visibleCars,
-            Dictionary<TrainCar, TrainCarViewer> loadedCars,
-            Dictionary<TrainCar, TrainCarViewer> previousCars,
-            HashSet<AITrain> publishedAiTrains)
-        {
-            var snapshot = new Dictionary<TrainCar, TrainCarViewer>(visibleCars.Count);
-            foreach (TrainCar car in visibleCars)
-            {
-                if (car.Train is AITrain aiTrain && !publishedAiTrains.Contains(aiTrain))
-                    continue;
-                if (loadedCars.TryGetValue(car, out TrainCarViewer viewer) ||
-                    previousCars.TryGetValue(car, out viewer))
-                    snapshot.Add(car, viewer);
-            }
-            return snapshot;
         }
 
         internal void Mark()
@@ -215,18 +179,6 @@ namespace Orts.ActivityRunner.Viewer3D
                         if (Math.Abs(car.WorldPosition.WorldLocation.Location.Y - cameraLocation.Location.Y) < 150)
                             TraceVisual(car, "scene-height", sceneHeightTrainTraces);
                     }
-            // Load one complete consist at a time so a nearby train can appear
-            // whole without waiting for interleaved models of other trains.
-            var orderedCars = visibleCars.Skip(1)
-                .GroupBy(car => car.Train)
-                .OrderBy(group => group.Key == playerCar?.Train ? 0 : 1)
-                .ThenBy(group => group.Average(car => WorldLocation.GetDistanceSquared(
-                    cameraLocation, car.WorldPosition.WorldLocation)))
-                .SelectMany(group => group.OrderBy(car => WorldLocation.GetDistanceSquared(
-                    cameraLocation, car.WorldPosition.WorldLocation)))
-                .ToList();
-            visibleCars.RemoveRange(1, visibleCars.Count - 1);
-            visibleCars.AddRange(orderedCars);
             VisibleCars = visibleCars;
             PlayerCar = playerCar;
         }
