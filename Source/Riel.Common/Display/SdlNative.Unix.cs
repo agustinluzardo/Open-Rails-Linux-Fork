@@ -20,7 +20,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace FreeTrainSimulator.Common.Display
+namespace Riel.Common.Display
 {
     /// <summary>
     /// The parts of SDL the game needs beyond what MonoGame exposes.

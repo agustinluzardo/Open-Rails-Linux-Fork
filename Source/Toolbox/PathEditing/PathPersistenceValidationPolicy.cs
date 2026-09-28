@@ -2,10 +2,10 @@ using System;
 using System.Linq;
 using System.Threading;
 
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Models.Content;
+using Riel.Runtime.Track;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     /// <summary>
     /// Central policy for materializing resolved paths and deciding whether normal persistence is safe.

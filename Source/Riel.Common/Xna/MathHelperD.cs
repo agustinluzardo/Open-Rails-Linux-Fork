@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FreeTrainSimulator.Common.Xna
+namespace Riel.Common.Xna
 {
     public static class MathHelperD
     {

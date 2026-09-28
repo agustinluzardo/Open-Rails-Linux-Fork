@@ -24,13 +24,13 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Display;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Logging;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.DebugInfo;
+using Riel.Common.Display;
+using Riel.Common.Info;
+using Riel.Common.Logging;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 using Microsoft.Xna.Framework;
 
@@ -284,7 +284,7 @@ namespace Orts.ActivityRunner.Processes
                         ">>> Click OK to report this error on the GitHub bug tracker <<<",
                         MessageDialogButtons.OkCancel, MessageDialogIcon.Error);
                 if (openTracker == MessageDialogResult.Ok)
-                    FreeTrainSimulator.Common.Info.SystemInfo.OpenBrowser(LoggingUtil.BugTrackerUrl);
+                    Riel.Common.Info.SystemInfo.OpenBrowser(LoggingUtil.BugTrackerUrl);
             }
             // Stop the world!
             Exit();

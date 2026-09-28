@@ -28,13 +28,13 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.ImportHandler;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Common.Native;
+using Riel.Models.Content;
+using Riel.Models.Imported.ImportHandler;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 using Riel.Launcher;
 

@@ -52,17 +52,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Signalling;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Api;
+using Riel.Common.Calc;
+using Riel.Common.DebugInfo;
+using Riel.Common.Position;
+using Riel.Common.Xna;
+using Riel.Models.Imported.State;
+using Riel.Models.Signalling;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using GetText;
 
@@ -3409,7 +3409,7 @@ namespace Orts.Simulation.Physics
             int chosenPin = -1;
             int expectedNode = exit.Link;
 
-            if (neighbor is FreeTrainSimulator.Models.Track.JunctionNode junction)
+            if (neighbor is Riel.Models.Track.JunctionNode junction)
             {
                 junctionIndex = junction.NodeIndex;
                 var junctionConnectors = database.TrackNodeConnectors[junctionIndex];

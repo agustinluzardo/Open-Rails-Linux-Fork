@@ -23,9 +23,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Models.Imported.State;
 
 using Microsoft.Xna.Framework;
 

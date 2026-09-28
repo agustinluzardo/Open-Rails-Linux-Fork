@@ -1,6 +1,6 @@
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Toolbox.ToolWindows;
 
-namespace FreeTrainSimulator.Toolbox.Hosting
+namespace Riel.Toolbox.Hosting
 {
     /// <summary>
     /// Groups hosted-mode bridges published by the MonoGame toolbox window to the WPF shell.

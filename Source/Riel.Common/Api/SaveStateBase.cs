@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 using MemoryPack;
 
-namespace FreeTrainSimulator.Common.Api
+namespace Riel.Common.Api
 {
     // Base class for save states
     // All derived classed will be serialized using MemoryPack

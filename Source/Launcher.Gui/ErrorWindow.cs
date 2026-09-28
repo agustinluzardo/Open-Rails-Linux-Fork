@@ -29,7 +29,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 
-using FreeTrainSimulator.Common.Info;
+using Riel.Common.Info;
 
 using static Riel.Launcher.Gui.Translation;
 

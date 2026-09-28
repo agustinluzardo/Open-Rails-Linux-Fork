@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace FreeTrainSimulator.Common.Native
+namespace Riel.Common.Native
 {
     public static partial class NativeMethods
     {

@@ -18,7 +18,7 @@
 using System;
 using System.IO;
 
-namespace FreeTrainSimulator.Common.Info
+namespace Riel.Common.Info
 {
     /// <summary>
     /// Where the simulator keeps a user's files.

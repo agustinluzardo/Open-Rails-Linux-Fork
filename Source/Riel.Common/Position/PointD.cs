@@ -2,7 +2,7 @@
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Position
+namespace Riel.Common.Position
 {
     public readonly struct PointD : IEquatable<PointD>
     {

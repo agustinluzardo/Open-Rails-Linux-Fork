@@ -19,11 +19,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common;
+using Riel.Common.Api;
+using Riel.Common.Calc;
+using Riel.Common.DebugInfo;
+using Riel.Models.Imported.State;
 
 using Microsoft.Xna.Framework;
 

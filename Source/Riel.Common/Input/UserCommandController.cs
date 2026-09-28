@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
     /// <summary>
     /// Non-Generic base class just to enable holder-properties in non-generic types

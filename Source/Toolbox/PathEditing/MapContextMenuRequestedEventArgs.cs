@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Immutable;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     /// <summary>
     /// Describes a request to show the map context menu, raised by the hosted game after hit testing the

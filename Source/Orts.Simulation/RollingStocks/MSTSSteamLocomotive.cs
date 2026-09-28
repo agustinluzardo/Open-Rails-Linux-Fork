@@ -68,12 +68,12 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.DebugInfo;
+using Riel.Common.Info;
+using Riel.Common.Xna;
+using Riel.Models.Imported.State;
 
 using Microsoft.Xna.Framework;
 

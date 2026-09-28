@@ -3,11 +3,11 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-using FreeTrainSimulator.Common.Calc;
+using Riel.Common.Calc;
 
 using GetText;
 
-namespace FreeTrainSimulator.Common
+namespace Riel.Common
 {
     /// <summary>
     /// Class to convert various quantities (so a value with a unit) into nicely formatted strings for display

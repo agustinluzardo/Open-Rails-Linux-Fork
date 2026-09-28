@@ -1,0 +1,36 @@
+﻿namespace Riel.Online
+{
+    public enum MessageType
+    {
+        Unknown = 0,
+        Server,
+        Lost,
+        Chat,
+        Aider,
+        Quit,
+        TimeCheck,
+        TrainEvent,
+        Weather,
+        Control,
+        TrainControl,
+        SignalReset,
+        Exhaust,
+        Move,
+        RemoveTrain,
+        SwitchStates,
+        SwitchChange,
+        SignalStates,
+        SignalChange,
+        LocomotiveInfo,
+        LocomotiveChange,
+        MovingTable,
+        PlayerTrainChange,
+        PlayerState,
+        TrainState,
+        TrainFlip,
+        TrainRequest,
+        TrainUpdate,
+        TrainCouple,
+        TrainUncouple,
+    }
+}

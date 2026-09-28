@@ -1,5 +1,5 @@
 ﻿using System;
 
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("FreeTrainSimulator")]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Tests.FreeTrainSimulator")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Riel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Tests.Riel")]
 [assembly: CLSCompliant(false)]

@@ -8,23 +8,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics.MapView;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
-using FreeTrainSimulator.Toolbox.PathEditing;
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Common.Input;
+using Riel.Common.Position;
+using Riel.Graphics.MapView;
+using Riel.Models.Content;
+using Riel.Models.Shim;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
+using Riel.Toolbox.PathEditing;
+using Riel.Toolbox.ToolWindows;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace FreeTrainSimulator.Toolbox
+namespace Riel.Toolbox
 {
     public partial class GameWindow : Game
     {

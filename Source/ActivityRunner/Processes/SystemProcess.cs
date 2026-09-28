@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Diagnostics;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.DebugInfo;
+using Riel.Common.Diagnostics;
 
 using Microsoft.Xna.Framework;
 

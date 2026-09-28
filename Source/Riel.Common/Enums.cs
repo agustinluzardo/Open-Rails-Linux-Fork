@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace FreeTrainSimulator.Common
+namespace Riel.Common
 {
     #region General
     public enum CompatibilityMode

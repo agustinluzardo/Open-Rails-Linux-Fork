@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Toolbox.Hosting;
-using FreeTrainSimulator.Toolbox.PopupWindows;
+using Riel.Common.DebugInfo;
+using Riel.Toolbox.Hosting;
+using Riel.Toolbox.PopupWindows;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Hosted-mode bridge that surfaces the read-only debug/graphics information providers as a dockable

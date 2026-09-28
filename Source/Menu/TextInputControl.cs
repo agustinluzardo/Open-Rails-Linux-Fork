@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 using GetText;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     public partial class TextInputControl : UserControl
     {

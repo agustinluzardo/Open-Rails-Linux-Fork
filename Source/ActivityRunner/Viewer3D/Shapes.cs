@@ -31,9 +31,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common.Position;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

@@ -1,6 +1,6 @@
 ﻿using System;
 
-using FreeTrainSimulator.Online;
+using Riel.Online;
 
 using MagicOnion;
 using MagicOnion.Server;

@@ -19,9 +19,9 @@
 
 using System.IO;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Common.Native;
 
 using Microsoft.Xna.Framework.Graphics;
 

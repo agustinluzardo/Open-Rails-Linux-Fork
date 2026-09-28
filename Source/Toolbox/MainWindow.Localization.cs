@@ -6,7 +6,7 @@ using System.Threading;
 using GetText;
 using GetText.Wpf;
 
-namespace FreeTrainSimulator.Toolbox
+namespace Riel.Toolbox
 {
     // WPF-side localization coordinator. The hosted game thread owns the gettext catalog and raises
     // GameWindow.LanguageChanged (initial load and every later switch); the host control re-raises it on the

@@ -19,7 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using FreeTrainSimulator.Common.Position;
+using Riel.Common.Position;
 
 using Orts.Formats.Msts.Models;
 using Orts.Formats.Msts.Parsers;

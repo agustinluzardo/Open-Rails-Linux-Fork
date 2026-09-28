@@ -25,19 +25,19 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Api;
+using Riel.Common.Calc;
+using Riel.Common.Info;
+using Riel.Common.Position;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
+using Riel.Models.Imported.State;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using GetText;
 

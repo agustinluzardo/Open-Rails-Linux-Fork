@@ -50,11 +50,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Position;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Microsoft.Xna.Framework;
 

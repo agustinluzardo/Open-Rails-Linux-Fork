@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace FreeTrainSimulator.Common.Calc
+namespace Riel.Common.Calc
 {
     public class SmoothedData
     {

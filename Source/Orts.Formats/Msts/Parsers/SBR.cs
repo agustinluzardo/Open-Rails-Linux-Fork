@@ -21,8 +21,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common;
+using Riel.Common.Native;
 
 using Microsoft.Xna.Framework;
 

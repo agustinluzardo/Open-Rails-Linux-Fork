@@ -20,7 +20,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
-namespace FreeTrainSimulator.Common.Native
+namespace Riel.Common.Native
 {
     /// <summary>
     /// Resolves MSTS content paths on case sensitive file systems.

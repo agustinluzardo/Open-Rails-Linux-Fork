@@ -19,9 +19,9 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common.Input;
+using Riel.Common.Input;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     /// <summary>
     /// A control for viewing and altering keyboard input settings, in combination with <see cref="KeyInputEditControl"/>.

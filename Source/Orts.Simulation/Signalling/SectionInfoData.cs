@@ -20,7 +20,7 @@
 using System;
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 namespace Orts.Simulation.Signalling
 {

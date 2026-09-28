@@ -2,10 +2,10 @@
 using System.Diagnostics;
 using System.Threading;
 
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Calc;
+using Riel.Common.Native;
 
-namespace FreeTrainSimulator.Common.Diagnostics
+namespace Riel.Common.Diagnostics
 {
     public sealed class Profiler
     {

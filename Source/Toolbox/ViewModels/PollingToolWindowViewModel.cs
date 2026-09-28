@@ -1,6 +1,6 @@
 using System;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Base class for the hosted, pull-model tool-window view models. Encapsulates the lifecycle every

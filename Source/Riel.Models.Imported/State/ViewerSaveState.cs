@@ -1,0 +1,26 @@
+﻿using System.Collections.ObjectModel;
+using System.Drawing;
+
+using Riel.Common.Api;
+
+using MemoryPack;
+
+namespace Riel.Models.Imported.State
+{
+    [MemoryPackable]
+    public sealed partial class ViewerSaveState : SaveStateBase
+    {
+        public int PlayerTrainIndex { get; set; }
+        public int PlayerLocomotiveIndex { get; set; }
+        public int SelectedTrainIndex { get; set; }
+        public int SelectedCameraIndex { get; set; }
+        public Point CabOffset { get; set; }
+        public bool NightTexturesLoaded { get; set; }
+        public bool DayTexturesLoaded { get; set; }
+        public Collection<CameraSaveState> CameraStates { get; private set; } = new Collection<CameraSaveState>();
+        public CameraSaveState CurrentCamera { get; set; }
+        public CabRendererSaveState CabState2D { get; set; }
+        public CabRendererSaveState CabState3D { get; set; }
+        public WeatherSaveState WeatherState { get; set; }
+    }
+}

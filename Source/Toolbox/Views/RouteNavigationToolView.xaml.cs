@@ -1,8 +1,8 @@
 using System.Windows.Controls;
 
-using FreeTrainSimulator.Toolbox.ViewModels;
+using Riel.Toolbox.ViewModels;
 
-namespace FreeTrainSimulator.Toolbox.Views
+namespace Riel.Toolbox.Views
 {
     /// <summary>
     /// Designable view for the Route Navigation dockable tool window. Its DataContext is supplied by the shell

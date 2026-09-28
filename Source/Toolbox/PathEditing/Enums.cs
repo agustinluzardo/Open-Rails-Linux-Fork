@@ -1,4 +1,4 @@
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     internal enum PathEditorPlacementMode
     {

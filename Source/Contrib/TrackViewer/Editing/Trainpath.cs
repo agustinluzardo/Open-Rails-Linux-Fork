@@ -23,15 +23,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Models.Track;
+using Riel.Runtime.Track;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Files;
 using Orts.Formats.Msts.Models;
 
-using TrackItemBase = FreeTrainSimulator.Models.Track.TrackItemBase;
+using TrackItemBase = Riel.Models.Track.TrackItemBase;
 
 namespace ORTS.TrackViewer.Editing
 {

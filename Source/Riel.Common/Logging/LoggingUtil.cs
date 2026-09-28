@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
-using FreeTrainSimulator.Common.Info;
+using Riel.Common.Info;
 
-namespace FreeTrainSimulator.Common.Logging
+namespace Riel.Common.Logging
 {
     public static partial class LoggingUtil
     {

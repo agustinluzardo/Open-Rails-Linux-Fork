@@ -20,9 +20,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
+using Riel.Common;
+using Riel.Common.Position;
+using Riel.Models.Track;
 
 using Microsoft.Xna.Framework;
 

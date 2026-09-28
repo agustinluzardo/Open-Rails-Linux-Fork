@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 
 using Microsoft.Xna.Framework.Input;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
     public static class ScanCodeKeyUtils
     {

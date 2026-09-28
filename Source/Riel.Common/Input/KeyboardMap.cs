@@ -9,7 +9,7 @@ using GetText;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
     /// <summary>
     /// Extension class to dump keyboard mappings to screen or file

@@ -20,13 +20,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Models.Settings;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Models.Settings;
 
 [assembly: CLSCompliant(false)]
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     internal static class Program
     {

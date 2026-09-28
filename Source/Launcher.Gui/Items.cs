@@ -19,8 +19,8 @@ using System;
 using System.Globalization;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Models.Content;
+using Riel.Common;
+using Riel.Models.Content;
 
 namespace Riel.Launcher.Gui
 {
@@ -185,9 +185,9 @@ namespace Riel.Launcher.Gui
 
         public static string Difficulty(Difficulty difficulty) => difficulty switch
         {
-            FreeTrainSimulator.Common.Difficulty.Easy => Translation.T("Easy"),
-            FreeTrainSimulator.Common.Difficulty.Medium => Translation.T("Medium"),
-            FreeTrainSimulator.Common.Difficulty.Hard => Translation.T("Hard"),
+            Riel.Common.Difficulty.Easy => Translation.T("Easy"),
+            Riel.Common.Difficulty.Medium => Translation.T("Medium"),
+            Riel.Common.Difficulty.Hard => Translation.T("Hard"),
             _ => difficulty.ToString(),
         };
 

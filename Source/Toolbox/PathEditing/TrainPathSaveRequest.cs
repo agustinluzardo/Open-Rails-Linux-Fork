@@ -1,8 +1,8 @@
 using System;
 
-using FreeTrainSimulator.Models.Content;
+using Riel.Models.Content;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     /// <summary>Immutable metadata and identity captured from the active editor for persistence.</summary>
     internal sealed class TrainPathSaveState

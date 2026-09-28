@@ -8,31 +8,31 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Common.Logging;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.DrawableComponents;
-using FreeTrainSimulator.Graphics.MapView;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Xna;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Toolbox.Hosting;
-using FreeTrainSimulator.Toolbox.PopupWindows;
-using FreeTrainSimulator.Toolbox.Settings;
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.DebugInfo;
+using Riel.Common.Info;
+using Riel.Common.Input;
+using Riel.Common.Logging;
+using Riel.Common.Position;
+using Riel.Graphics;
+using Riel.Graphics.DrawableComponents;
+using Riel.Graphics.MapView;
+using Riel.Graphics.Window;
+using Riel.Graphics.Xna;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
+using Riel.Toolbox.Hosting;
+using Riel.Toolbox.PopupWindows;
+using Riel.Toolbox.Settings;
+using Riel.Toolbox.ToolWindows;
 
 using GetText;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace FreeTrainSimulator.Toolbox
+namespace Riel.Toolbox
 {
     public partial class GameWindow : Game, IInputCapture, ISettingsApplier
     {
@@ -563,7 +563,7 @@ namespace FreeTrainSimulator.Toolbox
             if (windowForm == null || windowForm.IsDisposed)
                 return;
 
-            bool pointerOverMap = FreeTrainSimulator.Common.Native.NativeMethods.IsForegroundWindowOwnedByCurrentProcess()
+            bool pointerOverMap = Riel.Common.Native.NativeMethods.IsForegroundWindowOwnedByCurrentProcess()
                 && windowForm.RectangleToScreen(windowForm.ClientRectangle).Contains(Cursor.Position);
 
             // Mouse follows the pointer unconditionally; when the pointer leaves the map the shell's own

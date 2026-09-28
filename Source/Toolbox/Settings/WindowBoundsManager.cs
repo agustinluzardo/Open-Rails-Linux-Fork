@@ -2,9 +2,9 @@ using System;
 using System.Windows;
 using System.Windows.Interop;
 
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 
-namespace FreeTrainSimulator.Toolbox.Settings
+namespace Riel.Toolbox.Settings
 {
     /// <summary>
     /// Persists and restores the WPF shell window's placement (position, size, and maximized state) across

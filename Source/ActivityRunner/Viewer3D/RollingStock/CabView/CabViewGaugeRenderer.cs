@@ -19,7 +19,7 @@
 
 using System;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

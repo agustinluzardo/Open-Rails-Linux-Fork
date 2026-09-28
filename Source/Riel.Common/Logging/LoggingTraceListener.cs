@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace FreeTrainSimulator.Common.Logging
+namespace Riel.Common.Logging
 {
     public sealed class LoggingTraceListener : TraceListener
     {

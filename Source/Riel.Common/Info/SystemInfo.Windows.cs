@@ -4,11 +4,11 @@ using System.Globalization;
 using System.Management;
 using System.Text;
 
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 
 using Microsoft.Xna.Framework.Graphics;
 
-namespace FreeTrainSimulator.Common.Info
+namespace Riel.Common.Info
 {
     /// <summary>
     /// Windows hardware inventory, read through WMI.

@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
-namespace FreeTrainSimulator.Common.DebugInfo
+namespace Riel.Common.DebugInfo
 {
     /// <summary>
     /// Specialized dictionary which does not throw but returns null if a key was not found 

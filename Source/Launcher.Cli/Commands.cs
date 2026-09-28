@@ -25,11 +25,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Models.Content;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 namespace Riel.Launcher
 {

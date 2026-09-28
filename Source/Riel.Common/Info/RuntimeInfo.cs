@@ -6,13 +6,13 @@ using System.IO.Hashing;
 using System.Reflection;
 using System.Text;
 
-using FreeTrainSimulator.Common.Logging;
+using Riel.Common.Logging;
 
-namespace FreeTrainSimulator.Common.Info
+namespace Riel.Common.Info
 {
     public static class RuntimeInfo
     {
-        public const string LauncherExecutable = "FreeTrainSimulator.exe";
+        public const string LauncherExecutable = "Riel.exe";
 
         public const string ActivityRunnerExecutable = "ActivityRunner.exe";
 
@@ -22,12 +22,12 @@ namespace FreeTrainSimulator.Common.Info
         public const string WhatsNewLinkTemplate = "https://github.com/agustinluzardo/Riel-Linux/blob/main/WHATSNEW.md";
 
         /// <summary>
-        /// returns the Application as part of the product family, like "Free Train Simulator"
+        /// returns the Application as part of the product family, like "Riel"
         /// </summary>
         public static string ApplicationName { get; } = FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location).FileDescription;
 
         /// <summary>
-        /// returns the Product Name (Family), like "Free Train Simulator Toolbox" return "Toolbox" for "Free Train Simulator" product name
+        /// returns the Product Name (Family), like "Riel Toolbox" return "Toolbox" for "Riel" product name
         /// </summary>
         public static string ProductApplication { get; } = ApplicationName.Replace(ProductName, string.Empty, StringComparison.OrdinalIgnoreCase).Trim();
 

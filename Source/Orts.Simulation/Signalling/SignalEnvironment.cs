@@ -26,15 +26,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Signalling;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Api;
+using Riel.Common.Position;
+using Riel.Models.Imported.State;
+using Riel.Models.Signalling;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using Microsoft.Xna.Framework;
 
@@ -775,7 +775,7 @@ namespace Orts.Simulation.Signalling
                 for (int i = 0; i < trackItemSelector.TrackItems.Length; i++)
                 {
                     int tdbRef = trackItemSelector.TrackItems[i];
-                    FreeTrainSimulator.Models.Track.TrackItemBase trackItem = trackDatabase.TrackItems[tdbRef];
+                    Riel.Models.Track.TrackItemBase trackItem = trackDatabase.TrackItems[tdbRef];
                     if (trackItem is null or EmptyTrackItem)
                         continue;
 
@@ -1473,7 +1473,7 @@ namespace Orts.Simulation.Signalling
 
             // Build crossover pairing map from new immutable track database
             Dictionary<int, int> crossoverPairing = new Dictionary<int, int>();
-            foreach (FreeTrainSimulator.Models.Track.TrackItemBase item in trackDatabase.TrackItems)
+            foreach (Riel.Models.Track.TrackItemBase item in trackDatabase.TrackItems)
             {
                 if (item is CrossoverTrackItem crossOverItem)
                     crossoverPairing[crossOverItem.TrackItemIndex] = crossOverItem.LinkedCrossoverItem;
@@ -1578,7 +1578,7 @@ namespace Orts.Simulation.Signalling
                 for (int i = 0; i < trackItemSelector.TrackItems.Length; i++)
                 {
                     int tdbRef = trackItemSelector.TrackItems[i];
-                    FreeTrainSimulator.Models.Track.TrackItemBase trackItem = trackDatabase.TrackItems[tdbRef];
+                    Riel.Models.Track.TrackItemBase trackItem = trackDatabase.TrackItems[tdbRef];
                     if (trackItem is not null and not EmptyTrackItem)
                     {
                         lastDistance = InsertNode(circuit, trackItem, traveller.Value, circuit.OriginalIndex, lastDistance, crossoverPairing, crossoverList);
@@ -1590,7 +1590,7 @@ namespace Orts.Simulation.Signalling
         /// <summary>
         /// InsertNode
         /// </summary>
-        private float[] InsertNode(TrackCircuitSection circuit, FreeTrainSimulator.Models.Track.TrackItemBase trackItem, in TrackTraveller traveller, int nodeIndex, float[] lastDistance, Dictionary<int, int> crossoverPairing, Dictionary<int, CrossOverInfo> crossoverList)
+        private float[] InsertNode(TrackCircuitSection circuit, Riel.Models.Track.TrackItemBase trackItem, in TrackTraveller traveller, int nodeIndex, float[] lastDistance, Dictionary<int, int> crossoverPairing, Dictionary<int, CrossOverInfo> crossoverList)
         {
 
             float[] newLastDistance = new float[2] { lastDistance[0], lastDistance[1] };
@@ -3044,7 +3044,7 @@ namespace Orts.Simulation.Signalling
 
                 int index = platformIndex.Key;
 
-                FreeTrainSimulator.Models.Track.TrackItemBase trackItem = trackDatabase.TrackItems[index];
+                Riel.Models.Track.TrackItemBase trackItem = trackDatabase.TrackItems[index];
 
                 // Extract unified platform data from PlatformTrackItem or SidingTrackItem
                 float sectionDistance;
@@ -3378,7 +3378,7 @@ namespace Orts.Simulation.Signalling
         private void ResolveSplitPlatform(PlatformDetails platformDetails, int secondSectionIndex, float secondSectionDistance, in WorldLocation secondPlatformLocation, int secondNodeIndex)
         {
             // get all positions related to tile of first platform item
-            FreeTrainSimulator.Models.Track.TrackItemBase firstPlatformItem = trackDatabase.TrackItems[platformDetails.PlatformReference[SignalLocation.NearEnd]];
+            Riel.Models.Track.TrackItemBase firstPlatformItem = trackDatabase.TrackItems[platformDetails.PlatformReference[SignalLocation.NearEnd]];
             float firstSectionDistance = firstPlatformItem.SectionDistance;
 
             int firstSectionIndex = platformDetails.TCSectionIndex[0];
@@ -3672,7 +3672,7 @@ namespace Orts.Simulation.Signalling
                     // loop through all sections in node
                     foreach (VectorSectionNode section in vectorNode.VectorSections)
                     {
-                        if (!RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(section.NodeIndex, out FreeTrainSimulator.Models.Track.TrackSection trackSection))
+                        if (!RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(section.NodeIndex, out Riel.Models.Track.TrackSection trackSection))
                             continue;  // missing track section
 
                         // check tunnel shape
@@ -3680,9 +3680,9 @@ namespace Orts.Simulation.Signalling
                         bool tunnelShape = false;
                         int shapePaths = 0;
 
-                        if (RuntimeDataResolver .Instance.TrackSections.TrackShapes.TryGetValue(section.ShapeIndex, out FreeTrainSimulator.Models.Track.TrackShape shape))
+                        if (RuntimeDataResolver .Instance.TrackSections.TrackShapes.TryGetValue(section.ShapeIndex, out Riel.Models.Track.TrackShape shape))
                         {
-                            tunnelShape = shape.ShapeType == FreeTrainSimulator.Models.Track.ShapeType.Tunnel;
+                            tunnelShape = shape.ShapeType == Riel.Models.Track.ShapeType.Tunnel;
                             if (RuntimeDataResolver.Instance.TrackSections.TrackShapePaths.TryGetValue(section.ShapeIndex, out var sectionIndex))
                                 shapePaths = sectionIndex.Length;
                         }
@@ -3813,7 +3813,7 @@ namespace Orts.Simulation.Signalling
                 // loop through all sections in node
                 foreach (VectorSectionNode section in vectorNode.VectorSections)
                 {
-                    if (!RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(section.NodeIndex, out FreeTrainSimulator.Models.Track.TrackSection trackSection))
+                    if (!RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(section.NodeIndex, out Riel.Models.Track.TrackSection trackSection))
                         continue;  // missing track section
 
                     // check trough shape
@@ -3821,7 +3821,7 @@ namespace Orts.Simulation.Signalling
                     bool troughShape = false;
                     int shapePaths = 0;
 
-                    if (RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(section.ShapeIndex, out FreeTrainSimulator.Models.Track.TrackShape shape))
+                    if (RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(section.ShapeIndex, out Riel.Models.Track.TrackShape shape))
                     {
                         if (shape.FileName != null)
                         {

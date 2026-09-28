@@ -1,0 +1,57 @@
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Riel.Models.Base;
+using Riel.Models.Content;
+using Riel.Models.Handler;
+
+namespace Riel.Models.Imported.ImportHandler.TrainSimulator
+{
+    internal sealed class ContentModelImportHandler : ContentHandlerBase<ContentModel>
+    {
+        private const string root = "root";
+        private const string keyName = "content";
+
+        public static Task<ContentModel> ExpandContentModel(ContentModel contentModel, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(contentModel, nameof(contentModel));
+
+            Task<ContentModel> modelTask = Convert(contentModel, cancellationToken);
+            modelTaskCache[keyName] = modelTask;
+            collectionUpdateRequired[root] = true;
+
+            return modelTask;
+        }
+
+        private static async Task<ContentModel> Convert(ContentModel contentModel, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(contentModel, nameof(contentModel));
+
+            contentModel = contentModel with
+            {
+                ContentFolders = await FolderModelImportHandler.ExpandFolderModels(contentModel, cancellationToken).ConfigureAwait(false)
+            };
+            await Create(contentModel, (ModelBase)null, cancellationToken).ConfigureAwait(false);
+            return contentModel;
+        }
+
+        /// <summary>
+        /// Persists the semantic importer revision only after the full content conversion has
+        /// completed successfully. If a scan is cancelled or fails halfway through, the old
+        /// revision remains and the next launch retries instead of trusting a partial cache.
+        /// </summary>
+        public static async Task<ContentModel> StampImportRevision(ContentModel contentModel, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(contentModel, nameof(contentModel));
+
+            contentModel = contentModel with
+            {
+                Tags = (contentModel.Tags ?? System.Collections.Immutable.ImmutableDictionary<string, string>.Empty)
+                    .SetItem(ContentModel.ImportRevisionTag, ContentModel.ImportRevision),
+            };
+            await Create(contentModel, (ModelBase)null, cancellationToken).ConfigureAwait(false);
+            return contentModel;
+        }
+    }
+}

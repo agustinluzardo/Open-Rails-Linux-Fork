@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 
 namespace Orts.Formats.Msts
 {

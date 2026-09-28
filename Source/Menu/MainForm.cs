@@ -30,20 +30,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Logging;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Online.Client;
-using FreeTrainSimulator.Updater;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Common.Logging;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
+using Riel.Online.Client;
+using Riel.Updater;
 
 using GetText;
 using GetText.WindowsForms;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     public partial class MainForm : Form
     {
@@ -51,7 +51,7 @@ namespace FreeTrainSimulator.Menu
         private static partial Regex RegexUserName();
 
         private static readonly string[] coreExecutables = new[] {
-                    "FreeTrainSimulator.exe",
+                    "Riel.exe",
                     "Menu.exe",
                     "ActivityRunner.exe",
                     "Updater.exe",
@@ -66,7 +66,7 @@ namespace FreeTrainSimulator.Menu
         private CancellationTokenSource ctsRouteLoading;
         private static readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
 
-        private readonly ResourceManager resources = new ResourceManager("FreeTrainSimulator.Menu.Properties.Resources", typeof(MainForm).Assembly);
+        private readonly ResourceManager resources = new ResourceManager("Riel.Menu.Properties.Resources", typeof(MainForm).Assembly);
         private UpdateManager updateManager;
         private readonly Image elevationIcon;
         private readonly string whatsNewLink;

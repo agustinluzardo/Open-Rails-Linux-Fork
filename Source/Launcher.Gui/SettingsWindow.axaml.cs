@@ -11,13 +11,13 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Display;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Display;
+using Riel.Common.Input;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
-using CommonKeyModifiers = FreeTrainSimulator.Common.Input.KeyModifiers;
+using CommonKeyModifiers = Riel.Common.Input.KeyModifiers;
 using AvaloniaKeyModifiers = Avalonia.Input.KeyModifiers;
 using XnaKeys = Microsoft.Xna.Framework.Input.Keys;
 

@@ -30,14 +30,15 @@ Riel Linux also makes independent changes to its simulator, launcher and content
 Open Rails can help diagnose differences in how MSTS content runs. We verify those differences
 against route data and test cases, then maintain Riel Linux's own fixes here.
 
-### Compatibility names in the code
+### Public API names
 
-The common library project is `Source/Riel.Common/Riel.Common.csproj`, and its title identifies
-Riel. Its published assembly and public namespaces remain `FreeTrainSimulator.Common` so
-third-party rolling-stock DLLs can keep resolving the types they were built against. Route C#
-scripts also compile against that assembly at runtime. These identifiers are compatibility
-contracts within Riel, not a requirement to install Free Train Simulator. New public types can
-use Riel names; moving existing public types requires a migration for external DLLs.
+The libraries and public namespaces use `Riel.*`, including `Riel.Common`, `Riel.Models` and
+`Riel.Runtime`. Route C# scripts compile against those assemblies at runtime. DLL add-ons
+compiled against older `FreeTrainSimulator.*` assemblies cannot resolve the renamed types:
+rebuild them against the corresponding `Riel.*` assemblies and update their imports. Route
+scripts provided as source need the same import changes. This also changes the assembly identity
+stored by tools which save fully qualified .NET type names; keep a backup of older saves until
+they have been checked with this release.
 
 ## What had to be replaced
 
@@ -257,7 +258,7 @@ What does conflict, and where to look when it does:
 
 - `ActivityRunner/Processes/RenderProcess.cs` and `Viewer3D/Dispatcher/DispatcherWindow.cs`, whose
   window management was rewritten.
-- `FreeTrainSimulator.Graphics/Window/WindowManager.cs`, for its DPI handling.
+- `Riel.Graphics/Window/WindowManager.cs`, for its DPI handling.
 - The content projects, where `File.Exists` became `ContentIO.FileExists`. A merge that brings in
   new content reading code should route it through `ContentIO` too.
 
@@ -338,7 +339,7 @@ A crash in native code gives none of that: a driver faults, the kernel ends the 
 code is 139 and nothing was logged. Two records cover it.
 
 The simulator appends each step of starting up to `Startup.log` - `StartupTrail`, in
-`FreeTrainSimulator.Common.Info` - closing the file after every line so the step survives a crash
+`Riel.Common.Info` - closing the file after every line so the step survives a crash
 right after it, with what it found where that matters: the card, the SDL video driver, the screen
 mode and sample count, the audio device. Three threads report once the device exists (the game
 thread showing the window, sound, loading), and `SimulatorOutcome.Stage` blames whichever had not

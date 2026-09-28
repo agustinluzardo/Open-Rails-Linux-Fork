@@ -30,7 +30,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-using FreeTrainSimulator.Common.Input;
+using Riel.Common.Input;
 
 using Microsoft.Xna.Framework.Input;
 

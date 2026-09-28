@@ -1,6 +1,6 @@
-using FreeTrainSimulator.Models.Content;
+using Riel.Models.Content;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     partial class OptionsForm
     {

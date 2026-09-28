@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Description>Riel Online Player Library</Description>
+		<AssemblyTitle>Riel Online Player Library</AssemblyTitle>
+		<OutputPath>..\..\Program</OutputPath>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="MagicOnion.Abstractions" Version="7.10.2" />
+		<PackageReference Include="MagicOnion.Client" Version="7.10.2" />
+		<PackageReference Include="MagicOnion.Serialization.MemoryPack" Version="7.10.1-preview" />
+		<PackageReference Include="MemoryPack" Version="1.21.4" />
+		<PackageReference Include="MessagePack" Version="3.1.8" />
+	</ItemGroup>
+</Project>

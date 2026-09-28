@@ -1,7 +1,7 @@
 ﻿using System;
 
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Window.Controls.Layout;
+using Riel.Graphics.Window;
+using Riel.Graphics.Window.Controls.Layout;
 
 using GetText;
 

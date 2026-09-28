@@ -1,4 +1,4 @@
-﻿namespace FreeTrainSimulator.Common.Input
+﻿namespace Riel.Common.Input
 {
     public interface IInputCapture
     {

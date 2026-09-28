@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Graphics.MapView;
-using FreeTrainSimulator.Toolbox.Hosting;
-using FreeTrainSimulator.Toolbox.PopupWindows;
+using Riel.Graphics.MapView;
+using Riel.Toolbox.Hosting;
+using Riel.Toolbox.PopupWindows;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// One selectable route-navigation entry in a name list (station, platform, or siding). Carries only the

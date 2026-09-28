@@ -1,6 +1,6 @@
-﻿using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Xna;
+﻿using Riel.Common.Position;
+using Riel.Common.Native;
+using Riel.Common.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

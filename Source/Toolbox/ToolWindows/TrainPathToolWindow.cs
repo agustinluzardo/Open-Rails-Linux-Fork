@@ -5,16 +5,16 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Runtime.Track;
-using FreeTrainSimulator.Toolbox.Hosting;
-using FreeTrainSimulator.Toolbox.PathEditing;
-using FreeTrainSimulator.Toolbox.PopupWindows;
+using Riel.Common;
+using Riel.Models.Content;
+using Riel.Runtime.Track;
+using Riel.Toolbox.Hosting;
+using Riel.Toolbox.PathEditing;
+using Riel.Toolbox.PopupWindows;
 
 using DrawingColor = System.Drawing.Color;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Hosted-mode bridge exposing the train-path editor as a dockable WPF tool window. Mirrors the legacy

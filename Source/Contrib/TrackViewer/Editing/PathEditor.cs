@@ -21,11 +21,11 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common.Position;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Orts.Formats.Msts;
 

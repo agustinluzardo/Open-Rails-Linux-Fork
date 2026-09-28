@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <Description>Free Train Simulator Updater</Description>
+    <Description>Riel Updater</Description>
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyTitle>Free Train Simulator Updater</AssemblyTitle>
+    <AssemblyTitle>Riel Updater</AssemblyTitle>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <OutputPath>..\..\Program</OutputPath>
-    <RootNamespace>FreeTrainSimulator.Updater</RootNamespace>
-    <ApplicationIcon>..\FTS.ico</ApplicationIcon>
+    <RootNamespace>Riel.Updater</RootNamespace>
+    <ApplicationIcon>..\Riel.ico</ApplicationIcon>
     <Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 		<ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
 	</PropertyGroup>
@@ -16,6 +16,6 @@
     <PackageReference Include="GetText.NET.WindowsForms" Version="11.0.10-preview.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FreeTrainSimulator.Updater\FreeTrainSimulator.Updater.csproj" />
+    <ProjectReference Include="..\Riel.Updater\Riel.Updater.csproj" />
   </ItemGroup>
 </Project>

@@ -1,9 +1,9 @@
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Models.Content;
+using Riel.Runtime.Track;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     /// <summary>
     /// Result of validating and materializing a path for commit or persistence.

@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Drawing;
 
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Toolbox.ToolWindows;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Bindable view model for the hosted debug dockable tool window. Uses a pull model driven by the shared

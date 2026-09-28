@@ -21,8 +21,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Logging;
+using Riel.Common.Info;
+using Riel.Common.Logging;
 
 [assembly: CLSCompliant(false)]
 

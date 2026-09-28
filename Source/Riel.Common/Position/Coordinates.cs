@@ -24,11 +24,11 @@
 
 using System;
 
-using FreeTrainSimulator.Common.Xna;
+using Riel.Common.Xna;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Position
+namespace Riel.Common.Position
 {
     /// <summary>
     /// Represents the position and orientation of an object within a tile in XNA coordinates.

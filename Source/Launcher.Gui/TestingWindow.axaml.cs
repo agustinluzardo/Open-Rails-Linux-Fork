@@ -13,11 +13,11 @@ using System.Threading.Tasks;
 
 using Avalonia.Controls;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Models.Content;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 using Riel.Launcher;
 

@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace FreeTrainSimulator.Common
+namespace Riel.Common
 {
     [Serializable]
     public sealed class FatalException : Exception

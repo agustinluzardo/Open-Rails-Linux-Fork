@@ -112,6 +112,11 @@ Riel Linux runs MSTS routes and activities natively on Linux. Real route content
 tested, and compatibility varies by activity. If an activity fails, the logs in
 `~/.local/state/riel/Logs` help identify the cause.
 
+The public .NET assemblies and namespaces are `Riel.*`. Older rolling-stock DLLs built against
+`FreeTrainSimulator.*` must be rebuilt against Riel, and C# route scripts using those namespaces
+must update their imports. Back up older saves before updating if they were made with a build
+that used the previous assembly names.
+
 Known gaps:
 
 - The WPF Toolbox and TrackViewer are Windows only and are not part of this build.

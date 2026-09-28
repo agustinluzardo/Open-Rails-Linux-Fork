@@ -23,12 +23,12 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Diagnostics;
-using FreeTrainSimulator.Common.Display;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.Xna;
+using Riel.Common;
+using Riel.Common.Diagnostics;
+using Riel.Common.Display;
+using Riel.Common.Info;
+using Riel.Graphics;
+using Riel.Graphics.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -326,12 +326,12 @@ namespace Orts.ActivityRunner.Processes
 #endif
 
             RenderPrimitive.SetGraphicsDevice(game.GraphicsDevice);
-            FreeTrainSimulator.Common.Info.SystemInfo.SetGraphicAdapterInformation(game.GraphicsDevice.Adapter.Description);
+            Riel.Common.Info.SystemInfo.SetGraphicAdapterInformation(game.GraphicsDevice.Adapter.Description);
 
             viewport = game.GraphicsDevice.Viewport;
 
             // The thread matters too: the context belongs to it, and it should be the main one.
-            bool mainThread = FreeTrainSimulator.Common.Native.NativeMethods.GetCurrentWin32ThreadId() == (uint)Environment.ProcessId;
+            bool mainThread = Riel.Common.Native.NativeMethods.GetCurrentWin32ThreadId() == (uint)Environment.ProcessId;
             StartupTrail.Mark(StartupStage.GraphicsDeviceReady,
                 $"{game.GraphicsDevice.Adapter.Description}; {DisplayDevices.VideoDriver}; {currentScreenMode} {viewport.Width}x{viewport.Height}, " +
                 $"{game.GraphicsDevice.PresentationParameters.MultiSampleCount}x antialiasing; {(mainThread ? "main thread" : "not the main thread")}");
@@ -411,7 +411,7 @@ namespace Orts.ActivityRunner.Processes
 
         private void SaveSettings()
         {
-            /// Settings which should be persisted in the model, need to be configured also in <see cref="FreeTrainSimulator.Models.Shim.ProfileSettingsExtensions.UpdateRuntimeUserSettingsModel"/>
+            /// Settings which should be persisted in the model, need to be configured also in <see cref="Riel.Models.Shim.ProfileSettingsExtensions.UpdateRuntimeUserSettingsModel"/>
             if (!game.UserSettings.UseDesktopResolution)
                 game.UserSettings.WindowSettings[WindowSetting.Size] = (windowSize.Width, windowSize.Height);
             game.UserSettings.WindowSettings[WindowSetting.Location] = (

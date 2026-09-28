@@ -26,23 +26,23 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Xna;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Api;
+using Riel.Common.Calc;
+using Riel.Common.DebugInfo;
+using Riel.Common.Info;
+using Riel.Common.Input;
+using Riel.Common.Position;
+using Riel.Common.Xna;
+using Riel.Graphics.Window;
+using Riel.Graphics.Xna;
+using Riel.Models.Imported.State;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using GetText;
 
@@ -375,7 +375,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private void SaveSettings()
         {
-            /// Settings which should be persisted in the model, need to be configured also in <see cref="FreeTrainSimulator.Models.Shim.ProfileSettingsExtensions.UpdateRuntimeUserSettingsModel"/>
+            /// Settings which should be persisted in the model, need to be configured also in <see cref="Riel.Models.Shim.ProfileSettingsExtensions.UpdateRuntimeUserSettingsModel"/>
             foreach (ViewerWindowType windowType in EnumExtension.GetValues<ViewerWindowType>())
             {
                 if (windowManager.WindowInitialized(windowType))

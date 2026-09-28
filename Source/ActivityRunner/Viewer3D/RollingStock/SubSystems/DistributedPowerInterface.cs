@@ -24,11 +24,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.DrawableComponents;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Xna;
+using Riel.Graphics;
+using Riel.Graphics.DrawableComponents;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

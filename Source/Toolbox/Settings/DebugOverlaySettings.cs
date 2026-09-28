@@ -1,6 +1,6 @@
 using MemoryPack;
 
-namespace FreeTrainSimulator.Toolbox.Settings
+namespace Riel.Toolbox.Settings
 {
     [MemoryPackable]
     public sealed partial record DebugOverlaySettings

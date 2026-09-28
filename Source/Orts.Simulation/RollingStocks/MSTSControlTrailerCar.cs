@@ -33,8 +33,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common;
+using Riel.Models.Imported.State;
 
 using Orts.Formats.Msts.Parsers;
 using Orts.Simulation.Physics;

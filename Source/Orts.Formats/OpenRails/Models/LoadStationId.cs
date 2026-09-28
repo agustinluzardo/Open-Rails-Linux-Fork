@@ -18,7 +18,7 @@
 using System;
 using System.Collections.Generic;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 using Orts.Formats.OpenRails.Parsers;
 

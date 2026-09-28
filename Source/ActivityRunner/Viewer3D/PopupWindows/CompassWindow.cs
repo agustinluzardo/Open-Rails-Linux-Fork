@@ -1,11 +1,11 @@
 ﻿
 using System;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Window.Controls;
-using FreeTrainSimulator.Graphics.Window.Controls.Layout;
+using Riel.Common.Position;
+using Riel.Graphics;
+using Riel.Graphics.Window;
+using Riel.Graphics.Window.Controls;
+using Riel.Graphics.Window.Controls.Layout;
 
 using GetText;
 

@@ -2,11 +2,11 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-using FreeTrainSimulator.Common.Calc;
+using Riel.Common.Calc;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Diagnostics
+namespace Riel.Common.Diagnostics
 {
     public sealed class MetricCollector
     {

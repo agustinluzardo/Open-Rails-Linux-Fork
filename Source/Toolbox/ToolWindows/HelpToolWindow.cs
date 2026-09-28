@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Toolbox.PopupWindows;
-using FreeTrainSimulator.Toolbox.Settings;
+using Riel.Common;
+using Riel.Toolbox.PopupWindows;
+using Riel.Toolbox.Settings;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Hosted-mode bridge exposing read-only help command/key bindings for a dockable WPF help tool window.

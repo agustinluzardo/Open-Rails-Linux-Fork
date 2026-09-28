@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Graphics.Xna;
+using Riel.Common.Info;
+using Riel.Common.Xna;
+using Riel.Graphics.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

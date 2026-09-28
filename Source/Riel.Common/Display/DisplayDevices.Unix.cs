@@ -22,7 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
-namespace FreeTrainSimulator.Common.Display
+namespace Riel.Common.Display
 {
     /// <summary>
     /// Display enumeration through SDL, the window system MonoGame's OpenGL backend uses.

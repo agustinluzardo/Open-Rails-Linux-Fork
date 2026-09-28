@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 
-namespace FreeTrainSimulator.Toolbox.Views
+namespace Riel.Toolbox.Views
 {
     /// <summary>
     /// Attached properties for the dockable tool-window views. Lets each view declare its own default floating

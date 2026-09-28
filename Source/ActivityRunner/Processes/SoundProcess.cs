@@ -24,9 +24,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Diagnostics;
-using FreeTrainSimulator.Common.Info;
+using Riel.Common;
+using Riel.Common.Diagnostics;
+using Riel.Common.Info;
 
 using Microsoft.Xna.Framework;
 

@@ -26,7 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 namespace Orts.ContentManager
 {

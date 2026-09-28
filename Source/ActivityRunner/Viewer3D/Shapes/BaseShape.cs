@@ -1,7 +1,7 @@
 ﻿using System;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
+using Riel.Common;
+using Riel.Common.Position;
 
 namespace Orts.ActivityRunner.Viewer3D.Shapes
 {

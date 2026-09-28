@@ -6,12 +6,12 @@ using System.Windows.Forms;
 using System.Windows.Forms.Integration;
 using System.Windows.Threading;
 
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Toolbox.PathEditing;
-using FreeTrainSimulator.Toolbox.Settings;
+using Riel.Common.Native;
+using Riel.Models.Content;
+using Riel.Toolbox.PathEditing;
+using Riel.Toolbox.Settings;
 
-namespace FreeTrainSimulator.Toolbox.Hosting
+namespace Riel.Toolbox.Hosting
 {
     public sealed class ToolboxGameHostControl : WindowsFormsHost
     {

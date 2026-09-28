@@ -18,8 +18,8 @@
 
 using System;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
+using Riel.Common;
+using Riel.Common.Calc;
 
 using Microsoft.Xna.Framework;
 

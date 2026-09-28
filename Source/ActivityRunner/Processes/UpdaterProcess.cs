@@ -17,8 +17,8 @@
 
 // This file is the responsibility of the 3D & Environment Team. 
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Diagnostics;
+using Riel.Common;
+using Riel.Common.Diagnostics;
 
 using Microsoft.Xna.Framework;
 

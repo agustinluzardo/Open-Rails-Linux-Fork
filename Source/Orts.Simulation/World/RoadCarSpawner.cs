@@ -4,12 +4,12 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.Position;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using Microsoft.Xna.Framework;
 
@@ -54,7 +54,7 @@ namespace Orts.Simulation.World
 
             int start = CarSpawnerObj.TrackItemIds.RoadDbItems.Count > 0 ? CarSpawnerObj.TrackItemIds.RoadDbItems[0] : -1;
             int end = CarSpawnerObj.TrackItemIds.RoadDbItems.Count > 1 ? CarSpawnerObj.TrackItemIds.RoadDbItems[1] : -1;
-            ImmutableArray<FreeTrainSimulator.Models.Track.TrackItemBase> trItems = RuntimeDataResolver.Instance.TrackWorld.RoadDatabase.TrackItems;
+            ImmutableArray<Riel.Models.Track.TrackItemBase> trItems = RuntimeDataResolver.Instance.TrackWorld.RoadDatabase.TrackItems;
             ref readonly WorldLocation startLocation = ref trItems[start].Location;
             ref readonly WorldLocation endLocation = ref trItems[end].Location;
 

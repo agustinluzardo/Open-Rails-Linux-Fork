@@ -1,9 +1,9 @@
 using System;
 using System.Collections.ObjectModel;
 
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Toolbox.ToolWindows;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Bindable view model for the hosted location dockable tool window.

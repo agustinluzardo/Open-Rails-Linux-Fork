@@ -15,12 +15,12 @@
 		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 	</PropertyGroup>
 	<ItemGroup>
-		<InternalsVisibleTo Include="Tests.FreeTrainSimulator" />
+		<InternalsVisibleTo Include="Tests.Riel" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Riel.Common\Riel.Common.csproj" />
-		<ProjectReference Include="..\FreeTrainSimulator.Models\FreeTrainSimulator.Models.csproj" />
-		<ProjectReference Include="..\FreeTrainSimulator.Models.Imported\FreeTrainSimulator.Models.Imported.csproj" />
+		<ProjectReference Include="..\Riel.Models\Riel.Models.csproj" />
+		<ProjectReference Include="..\Riel.Models.Imported\Riel.Models.Imported.csproj" />
 		<ProjectReference Include="..\Orts.Formats\Orts.Formats.csproj" />
 	</ItemGroup>
 </Project>

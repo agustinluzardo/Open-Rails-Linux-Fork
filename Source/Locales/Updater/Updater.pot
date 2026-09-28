@@ -17,6 +17,6 @@ msgid "Error: {0} {1}"
 msgstr ""
 
 #: ..\..\..\Updater\UpdaterProgress.Designer.cs:58
-msgid "Free Train Simulator Updater"
+msgid "Riel Updater"
 msgstr ""
 

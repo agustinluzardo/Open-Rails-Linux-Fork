@@ -1,6 +1,6 @@
 ﻿using System;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 using Orts.Formats.Msts.Models;
 using Orts.Formats.Msts.Parsers;

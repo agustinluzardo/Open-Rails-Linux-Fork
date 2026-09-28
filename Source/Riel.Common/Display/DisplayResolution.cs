@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace FreeTrainSimulator.Common.Display
+namespace Riel.Common.Display
 {
     /// <summary>Chooses physical pixels for the selected monitor and screen mode.</summary>
     public static class DisplayResolution

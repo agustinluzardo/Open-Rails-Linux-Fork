@@ -4,7 +4,7 @@ using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
     public class KeyboardInputGameComponent : GameComponent
     {

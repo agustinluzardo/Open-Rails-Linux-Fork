@@ -27,7 +27,7 @@ using System.Threading;
 
 using EmbedIO.Net;
 
-using FreeTrainSimulator.Common.Info;
+using Riel.Common.Info;
 
 using Orts.ActivityRunner.Viewer3D.WebServices;
 

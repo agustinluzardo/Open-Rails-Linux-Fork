@@ -29,9 +29,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Models.Signalling;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Models.Signalling;
 
 using Orts.Formats.Msts.Signalling;
 

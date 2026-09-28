@@ -18,10 +18,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Microsoft.Xna.Framework;
 

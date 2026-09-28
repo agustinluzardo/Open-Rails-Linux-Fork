@@ -2,12 +2,12 @@ using System;
 using System.Collections.Immutable;
 using System.Drawing;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics.MapView;
-using FreeTrainSimulator.Toolbox.PopupWindows;
-using FreeTrainSimulator.Toolbox.Settings;
+using Riel.Common.Position;
+using Riel.Graphics.MapView;
+using Riel.Toolbox.PopupWindows;
+using Riel.Toolbox.Settings;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Hosted-mode bridge exposing read-only map location data for a dockable WPF location window.

@@ -23,10 +23,10 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common.Info;
+using Riel.Common.Native;
+using Riel.Models.Content;
+using Riel.Models.Shim;
 
 namespace Riel.Launcher
 {

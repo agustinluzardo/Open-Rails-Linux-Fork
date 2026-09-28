@@ -25,14 +25,14 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Logging;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common.Calc;
+using Riel.Common.Info;
+using Riel.Common.Logging;
+using Riel.Common.Position;
+using Riel.Models.Content;
+using Riel.Models.Imported.State;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 using Orts.Simulation;
 using Orts.Simulation.Commanding;

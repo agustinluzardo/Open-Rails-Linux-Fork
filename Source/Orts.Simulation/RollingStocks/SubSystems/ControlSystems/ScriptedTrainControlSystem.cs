@@ -26,12 +26,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Signalling;
+using Riel.Common;
+using Riel.Common.Api;
+using Riel.Common.Calc;
+using Riel.Common.Native;
+using Riel.Models.Imported.State;
+using Riel.Models.Signalling;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Parsers;

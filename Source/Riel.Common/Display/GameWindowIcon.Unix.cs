@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 using SkiaSharp;
 
-namespace FreeTrainSimulator.Common.Display
+namespace Riel.Common.Display
 {
     /// <summary>Sets the SDL window icon from the same PNG used by the Riel launcher.</summary>
     public static class GameWindowIcon

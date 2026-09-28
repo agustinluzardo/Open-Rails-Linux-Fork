@@ -20,11 +20,11 @@
 using System;
 using System.Collections.Generic;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common;
+using Riel.Common.Position;
+using Riel.Common.Xna;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -201,8 +201,8 @@ namespace Orts.ActivityRunner.Viewer3D
                         {
                             try
                             {
-                                FreeTrainSimulator.Models.Track.TrackShape trackShape = RuntimeDataResolver.Instance.TrackSections.TrackShapes[section.ShapeIndex];
-                                if (trackShape != null && trackShape.ShapeType == FreeTrainSimulator.Models.Track.ShapeType.Tunnel)
+                                Riel.Models.Track.TrackShape trackShape = RuntimeDataResolver.Instance.TrackSections.TrackShapes[section.ShapeIndex];
+                                if (trackShape != null && trackShape.ShapeType == Riel.Models.Track.ShapeType.Tunnel)
                                 {
                                     xnaTreePosition.Y = tiles.LoadAndGetElevation(position.Tile, xnaTreePosition.X, -xnaTreePosition.Z, false);
                                     heightComputed = true;
@@ -281,7 +281,7 @@ namespace Orts.ActivityRunner.Viewer3D
             return SectionMap.TryGetValue(targetKey, out List<VectorSectionNode> value) ? value : null;
         }
 
-        private FreeTrainSimulator.Models.Track.TrackSection trackSection;
+        private Riel.Models.Track.TrackSection trackSection;
 
         private bool InitTrackSection(VectorSectionNode section, Vector3 xnaTreePosition, in Tile tile, float treeWidth)
         {

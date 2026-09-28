@@ -20,8 +20,8 @@
 
 using System;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
+using Riel.Common;
+using Riel.Common.Calc;
 
 using Orts.Scripting.Api;
 using Orts.Scripting.Api.Etcs;

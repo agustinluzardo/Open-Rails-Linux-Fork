@@ -1,6 +1,6 @@
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Toolbox.ToolWindows;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>Bindable row for the route candidate list. Observable so it can be updated in place.</summary>
     internal sealed class TrainPathRouteCandidateItemViewModel : ObservableObject

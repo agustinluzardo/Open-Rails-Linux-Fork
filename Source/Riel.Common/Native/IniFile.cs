@@ -21,7 +21,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace FreeTrainSimulator.Common.Native
+namespace Riel.Common.Native
 {
     /// <summary>
     /// Managed reader/writer for Windows style initialization files.

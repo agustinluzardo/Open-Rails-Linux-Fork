@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Globalization;
 
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Info;
+using Riel.Common.DebugInfo;
+using Riel.Common.Info;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Diagnostics
+namespace Riel.Common.Diagnostics
 {
     /// <remarks>
     /// Updated on the system thread, which has no graphics context: nothing here may touch the

@@ -4,7 +4,7 @@ using System.IO;
 
 [assembly: CLSCompliant(false)]
 
-namespace FreeTrainSimulator.Launcher
+namespace Riel.Launcher
 {
     internal static class Program
     {

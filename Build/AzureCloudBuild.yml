@@ -18,7 +18,7 @@ pool:
   vmImage: 'windows-2025-vs2026' #'windows-latest'
 
 variables:
-  solution: 'Source/FreeTrainSimulator.slnx'
+  solution: 'Source/Riel.Windows.slnx'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release' #changes to Debug below if this is a prerelease version 
 
@@ -114,7 +114,7 @@ steps:
   displayName: Packaging to Nuget Package
   inputs:
     command: 'pack'
-    packagesToPack: 'source/FreeTrainSimulator-Package.nuspec'
+    packagesToPack: 'Source/Riel-Package.nuspec'
     versioningScheme: 'byEnvVar'
     versionEnvVar: 'NBGV_NUGETPACKAGEVERSION'
 

@@ -1,6 +1,6 @@
-﻿using FreeTrainSimulator.Models.Settings;
+﻿using Riel.Models.Settings;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     partial class ResumeForm {
         /// <summary>

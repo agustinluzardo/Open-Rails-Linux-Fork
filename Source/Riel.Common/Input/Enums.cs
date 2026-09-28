@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
 #pragma warning disable CA1008 // Enums should have zero value
     public enum KeyEventType

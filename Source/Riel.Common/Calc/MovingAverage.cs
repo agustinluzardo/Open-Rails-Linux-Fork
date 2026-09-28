@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FreeTrainSimulator.Common.Calc
+namespace Riel.Common.Calc
 {
     public class MovingAverage
     {

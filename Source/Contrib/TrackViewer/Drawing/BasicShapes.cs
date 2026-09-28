@@ -20,8 +20,8 @@ using System.IO;
 using System.Linq;
 using System.Windows.Media.Imaging;
 
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.Xna;
+using Riel.Graphics;
+using Riel.Graphics.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

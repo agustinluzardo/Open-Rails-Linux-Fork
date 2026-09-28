@@ -6,7 +6,7 @@ using System.Text;
 
 using MemoryPack;
 
-namespace FreeTrainSimulator.Common
+namespace Riel.Common
 {
     /// <summary>An array indexed by an Enum</summary>
     /// <typeparam name="T">Type stored in array</typeparam>

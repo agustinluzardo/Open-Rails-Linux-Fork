@@ -33,11 +33,11 @@ using EmbedIO;
 using EmbedIO.Routing;
 using EmbedIO.WebApi;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Signalling;
+using Riel.Common;
+using Riel.Common.DebugInfo;
+using Riel.Common.Input;
+using Riel.Common.Position;
+using Riel.Models.Signalling;
 
 using Microsoft.Xna.Framework;
 
@@ -45,7 +45,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
 using Orts.ActivityRunner.Viewer3D.RollingStock;
-using FreeTrainSimulator.Runtime;
+using Riel.Runtime;
 using Orts.Simulation;
 using Orts.Simulation.Commanding;
 using Orts.Simulation.Physics;

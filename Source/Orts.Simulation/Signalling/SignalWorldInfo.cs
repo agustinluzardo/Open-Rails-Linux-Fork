@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-using FreeTrainSimulator.Models.Signalling;
+using Riel.Models.Signalling;
 
 using Orts.Formats.Msts.Models;
 
@@ -64,7 +64,7 @@ namespace Orts.Simulation.Signalling
 
             // search defined shapes in SIGCFG to find signal definition
 
-            if (signalConfig.SignalShapes.TryGetValue(fileName, out FreeTrainSimulator.Models.Signalling.SignalShape thisCFGShape))
+            if (signalConfig.SignalShapes.TryGetValue(fileName, out Riel.Models.Signalling.SignalShape thisCFGShape))
             {
                 HeadsSet = new BitArray(thisCFGShape.SubObjects.Length);
 

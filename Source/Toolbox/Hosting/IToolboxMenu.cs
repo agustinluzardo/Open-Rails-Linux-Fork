@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Models.Content;
+using Riel.Models.Content;
 
-namespace FreeTrainSimulator.Toolbox.Hosting
+namespace Riel.Toolbox.Hosting
 {
     /// <summary>
     /// Abstraction over the toolbox main menu surface that <see cref="GameWindow"/> drives.

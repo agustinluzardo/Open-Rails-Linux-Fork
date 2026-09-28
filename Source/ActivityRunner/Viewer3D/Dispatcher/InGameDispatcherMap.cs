@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.MapView;
-using FreeTrainSimulator.Graphics.MapView.Widgets;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Input;
+using Riel.Common.Position;
+using Riel.Graphics;
+using Riel.Graphics.MapView;
+using Riel.Graphics.MapView.Widgets;
+using Riel.Graphics.Window;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 using Microsoft.Xna.Framework;
 

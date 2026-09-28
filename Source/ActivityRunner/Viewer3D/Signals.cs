@@ -23,10 +23,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Models.Signalling;
+using Riel.Common;
+using Riel.Common.Position;
+using Riel.Common.Xna;
+using Riel.Models.Signalling;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -48,7 +48,7 @@ namespace Orts.ActivityRunner.Viewer3D
             : base(path, positionSource, flags)
         {
             string signalShape = Path.GetFileName(path);
-            if (!viewer.Simulator.SignalEnvironment.SignalConfig.SignalShapes.TryGetValue(signalShape, out FreeTrainSimulator.Models.Signalling.SignalShape signalShapeData))
+            if (!viewer.Simulator.SignalEnvironment.SignalConfig.SignalShapes.TryGetValue(signalShape, out Riel.Models.Signalling.SignalShape signalShapeData))
             {
                 Trace.TraceWarning("{0} signal {1} has invalid shape {2}.", WorldPosition.ToString(), mstsSignal.UiD, signalShape);
                 return;

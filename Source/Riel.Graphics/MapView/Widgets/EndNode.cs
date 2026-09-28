@@ -1,0 +1,67 @@
+﻿using System.Collections.Generic;
+using System.Globalization;
+
+using Riel.Common.DebugInfo;
+using Riel.Common.Position;
+using Riel.Runtime.Track;
+
+using Microsoft.Xna.Framework;
+
+namespace Riel.Graphics.MapView.Widgets
+{
+    internal record EndNode : EndNodeBase, IDrawable<PointPrimitive>, INameValueInformationProvider
+    {
+        private protected static InformationDictionary debugInformation = new InformationDictionary() { ["Node Type"] = "End Node" };
+
+        private const int width = 3;
+        protected const float Length = 0.5f;
+
+        public EndNode(Models.Track.EndNode trackEndNode) :
+            base(trackEndNode)
+        {
+            Size = width;
+        }
+
+        public virtual InformationDictionary DetailInfo
+        {
+            get
+            {
+                debugInformation["Segment Type"] = "Rail Track";
+                debugInformation["Node Index"] = TrackNodeIndex.ToString(CultureInfo.InvariantCulture);
+                return debugInformation;
+            }
+        }
+
+        public Dictionary<string, FormatOption> FormattingOptions => null;
+
+
+        public virtual void Draw(IMapRenderer renderer, ColorVariation colorVariation = ColorVariation.None, double scaleFactor = 1)
+        {
+            Color drawColor = WidgetDrawingOptions<EndNode>.Colors[colorVariation];
+            renderer.DrawLine(renderer.WorldToScreenSize(Size * scaleFactor), drawColor, renderer.WorldToScreenCoordinates(in Location), renderer.WorldToScreenSize(Length * scaleFactor), Direction);
+        }
+    }
+
+    internal record RoadEndSegment : EndNode
+    {
+        public override InformationDictionary DetailInfo
+        {
+            get
+            {
+                InformationDictionary result = base.DetailInfo;
+                result["Segment Type"] = "Road";
+                return result;
+            }
+        }
+
+        public RoadEndSegment(Models.Track.EndNode trackEndNode) : base(trackEndNode)
+        {
+        }
+
+        public override void Draw(IMapRenderer renderer, ColorVariation colorVariation = ColorVariation.None, double scaleFactor = 1)
+        {
+            Color drawColor = WidgetDrawingOptions<RoadEndSegment>.Colors[colorVariation];
+            renderer.DrawLine(renderer.WorldToScreenSize(Size * scaleFactor), drawColor, renderer.WorldToScreenCoordinates(in Location), renderer.WorldToScreenSize(Length), Direction);
+        }
+    }
+}

@@ -22,7 +22,7 @@
 //        both unicode and binary compressed data files.
 
 using System;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -32,7 +32,7 @@ using System.Text;
 
 using Microsoft.Xna.Framework;
 
-using FreeTrainSimulator.Common.Calc;
+using Riel.Common.Calc;
 
 #region Original STFreader
 #if !NEW_READER

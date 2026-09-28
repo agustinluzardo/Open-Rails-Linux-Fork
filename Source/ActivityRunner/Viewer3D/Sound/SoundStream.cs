@@ -45,7 +45,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 using Orts.Formats.Msts.Models;
 using Orts.Simulation.RollingStocks;

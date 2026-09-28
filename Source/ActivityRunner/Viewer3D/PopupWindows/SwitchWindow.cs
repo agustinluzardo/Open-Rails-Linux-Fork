@@ -1,14 +1,14 @@
 using System;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Window.Controls;
-using FreeTrainSimulator.Graphics.Window.Controls.Layout;
-using FreeTrainSimulator.Graphics.Xna;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Graphics.Window;
+using Riel.Graphics.Window.Controls;
+using Riel.Graphics.Window.Controls.Layout;
+using Riel.Graphics.Xna;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using GetText;
 

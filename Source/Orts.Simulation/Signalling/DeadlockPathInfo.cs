@@ -23,8 +23,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common.Api;
+using Riel.Models.Imported.State;
 
 using Orts.Simulation.Track;
 

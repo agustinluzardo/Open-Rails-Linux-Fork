@@ -21,8 +21,8 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
 
 using ORTS.TrackViewer.Drawing;
 

@@ -1,9 +1,9 @@
 using System.Windows.Controls;
 
-using FreeTrainSimulator.Toolbox.ToolWindows;
-using FreeTrainSimulator.Toolbox.ViewModels;
+using Riel.Toolbox.ToolWindows;
+using Riel.Toolbox.ViewModels;
 
-namespace FreeTrainSimulator.Toolbox.Views
+namespace Riel.Toolbox.Views
 {
     /// <summary>
     /// Designable view for the Settings dockable tool window (General, Colors, and Item Visibility tabs). Its

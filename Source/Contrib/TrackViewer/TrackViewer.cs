@@ -25,12 +25,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common.Calc;
+using Riel.Common.Info;
+using Riel.Common.Position;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
+using Riel.Models.Shim;
 
 using GetText;
 

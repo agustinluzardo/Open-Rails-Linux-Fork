@@ -1,8 +1,8 @@
 using System;
 
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Toolbox.ToolWindows;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Bindable view model for the hosted log dockable tool window. Exposes the log content as a single

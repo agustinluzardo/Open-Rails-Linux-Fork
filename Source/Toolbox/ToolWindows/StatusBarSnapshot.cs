@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// A single field shown in the main-window status bar. <see cref="Key"/> is a stable identifier used for

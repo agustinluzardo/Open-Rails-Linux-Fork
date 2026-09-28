@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
+using Riel.Common;
+using Riel.Common.Position;
 
 using Orts.Simulation.Physics;
 using Orts.Simulation.RollingStocks;

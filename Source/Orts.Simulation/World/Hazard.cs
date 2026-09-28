@@ -22,10 +22,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common.Calc;
+using Riel.Common.Position;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Orts.Formats.Msts.Files;
 

@@ -19,9 +19,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Models.Imported.State;
 
 using Orts.Formats.Msts.Parsers;
 using Orts.Scripting.Api;

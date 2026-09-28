@@ -22,10 +22,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Graphics.Xna;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common;
+using Riel.Common.Api;
+using Riel.Graphics.Xna;
+using Riel.Models.Imported.State;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

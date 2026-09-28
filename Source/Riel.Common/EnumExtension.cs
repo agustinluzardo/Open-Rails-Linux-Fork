@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 using GetText;
 
-namespace FreeTrainSimulator.Common
+namespace Riel.Common
 {
     public static class EnumExtension
     {

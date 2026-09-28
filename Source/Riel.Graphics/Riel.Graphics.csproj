@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Description>Riel Graphics Library</Description>
+		<AssemblyTitle>Riel Graphics Library</AssemblyTitle>
+		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+		<OutputPath>..\..\Program</OutputPath>
+		<AssemblyName>Riel.Graphics</AssemblyName>
+		<RootNamespace>Riel.Graphics</RootNamespace>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+	</PropertyGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Resources/*.png" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Riel.Models.Imported\Riel.Models.Imported.csproj" />
+		<ProjectReference Include="..\Riel.Runtime\Riel.Runtime.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="Content\blank.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Content\NoTitleBarWindow.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Content\SimpleCar.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Content\WindowScrollbar.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(RielPlatform)' == 'windows'">
+		<Exec Command="if not exist $(TargetDir)Content (md $(TargetDir)Content)&#xD;&#xA;FOR %25%25i IN ($(ProjectDir)Resources\Shaders\*.fx) DO (&#xD;&#xA;	echo Shader $(ProjectDir)Resources\Shaders\%25%25~nxi&#xD;&#xA;	if not exist $(TargetDir)Content\%25%25~ni.mgfx (&#xD;&#xA;		echo Compiling $(TargetDir)Content\%25%25~ni.mgfx&#xD;&#xA;		dotnet tool run mgfxc $(ProjectDir)Resources\Shaders\%25%25~nxi $(TargetDir)Content\%25%25~ni.mgfx /Profile:DirectX_11))" />
+	</Target>
+</Project>

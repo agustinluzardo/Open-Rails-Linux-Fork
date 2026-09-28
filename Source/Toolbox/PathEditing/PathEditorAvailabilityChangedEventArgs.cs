@@ -1,6 +1,6 @@
 using System;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     internal sealed class PathEditorAvailabilityChangedEventArgs : EventArgs
     {

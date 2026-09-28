@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Models.Content;
+using Riel.Models.Content;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     /// <summary>
     /// Identifies one save attempt and carries its immutable source snapshot and persistence completion task.

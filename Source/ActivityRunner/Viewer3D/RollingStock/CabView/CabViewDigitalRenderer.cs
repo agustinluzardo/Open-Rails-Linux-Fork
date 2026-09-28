@@ -20,10 +20,10 @@
 using System;
 using System.Globalization;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.DrawableComponents;
-using FreeTrainSimulator.Graphics.Xna;
+using Riel.Common;
+using Riel.Graphics;
+using Riel.Graphics.DrawableComponents;
+using Riel.Graphics.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

@@ -81,7 +81,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Riel.Common\Riel.Common.csproj" />
 		<ProjectReference Include="..\Orts.Simulation\Orts.Simulation.csproj" />
-		<ProjectReference Include="..\FreeTrainSimulator.Graphics\FreeTrainSimulator.Graphics.csproj" />
+		<ProjectReference Include="..\Riel.Graphics\Riel.Graphics.csproj" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(RielPlatform)' == 'windows'">
 		<Content Include="$(PkgOpenAL-Soft)\bin\Win64\soft_oal.dll">

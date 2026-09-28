@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace FreeTrainSimulator.Toolbox
+namespace Riel.Toolbox
 {
     public partial class App : Application
     {

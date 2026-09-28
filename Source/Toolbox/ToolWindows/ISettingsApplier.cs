@@ -1,6 +1,6 @@
-using FreeTrainSimulator.Graphics;
+using Riel.Graphics;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Applies the settings tool window's appearance preferences that have live game-side side effects (as

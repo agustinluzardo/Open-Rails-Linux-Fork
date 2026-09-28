@@ -1,8 +1,8 @@
 using System.Windows;
 
-using FreeTrainSimulator.Common.Info;
+using Riel.Common.Info;
 
-namespace FreeTrainSimulator.Toolbox.Dialogs
+namespace Riel.Toolbox.Dialogs
 {
     /// <summary>
     /// WPF modal dialog showing the application name and version, replacing the legacy MonoGame

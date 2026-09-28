@@ -17,7 +17,7 @@
 
 using System;
 
-namespace FreeTrainSimulator.Common.Calc
+namespace Riel.Common.Calc
 {
     public static class AlmostEqualExtension
     {

@@ -24,7 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 
 namespace Orts.ActivityRunner.Viewer3D
 {

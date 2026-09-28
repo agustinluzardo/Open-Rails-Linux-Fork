@@ -30,8 +30,8 @@
 using System;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
+using Riel.Common;
+using Riel.Common.Calc;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Models;

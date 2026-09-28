@@ -17,8 +17,8 @@
 
 using System.Collections.Generic;
 
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
 
 namespace Orts.ContentManager
 {

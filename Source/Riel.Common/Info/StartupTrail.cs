@@ -21,7 +21,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
-namespace FreeTrainSimulator.Common.Info
+namespace Riel.Common.Info
 {
     /// <summary>
     /// The steps of starting the simulator, in the order they are reached.

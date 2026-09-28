@@ -1,6 +1,6 @@
 ﻿using System;
 
-using FreeTrainSimulator.Common.Calc;
+using Riel.Common.Calc;
 
 namespace Orts.Formats.OpenRails.Models
 {

@@ -1,0 +1,71 @@
+using System;
+
+using Riel.Common.Input;
+using Riel.Graphics.MapView.Shapes;
+using Riel.Graphics.Xna;
+
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Riel.Graphics.MapView
+{
+    internal sealed class XnaMapAdapterBundle : IMapHostAdapterBundle
+    {
+        public SpriteBatch SpriteBatch { get; }
+
+        public IMapRenderingLifetime RenderingLifetime { get; }
+
+        public IMapRenderingResources RenderingResources { get; }
+
+        public MapTextTextureCache OwnedTextCache { get; }
+
+        public IMapTextCache TextCache { get; }
+
+        public IMapTextRenderer TextRenderer { get; }
+
+        public IMapRenderBackend RenderBackend { get; }
+
+        public IMapHostEnvironment HostEnvironment { get; }
+
+        public BasicShapes BasicShapes { get; }
+
+        public IMapOverlayShapeAdapter OverlayShapeAdapter { get; }
+
+        public IMapViewController Controller { get; }
+
+        public IMapViewStateAdapter ViewStateAdapter { get; }
+
+        public IMapRenderAdapter RenderAdapter { get; }
+
+        public IMapInteractionAdapter InteractionAdapter { get; }
+
+        public IMapHostResources HostResources { get; }
+
+        public XnaMapAdapterBundle(Game game, ContentBase content, MouseInputGameComponent mouseInputGameComponent)
+        {
+            ArgumentNullException.ThrowIfNull(game);
+            ArgumentNullException.ThrowIfNull(content);
+            ArgumentNullException.ThrowIfNull(mouseInputGameComponent);
+
+            SpriteBatch = new SpriteBatch(game.GraphicsDevice);
+            RenderingLifetime = new XnaMapRenderingLifetime(game);
+            RenderingResources = new XnaMapRenderingResources(RenderingLifetime, SpriteBatch);
+            OwnedTextCache = new MapTextTextureCache(RenderingLifetime.GetTextTextureRenderer());
+            TextCache = OwnedTextCache;
+            TextRenderer = new XnaMapTextRenderer(TextCache, SpriteBatch);
+            RenderBackend = new XnaMapRenderBackend(SpriteBatch, RenderingResources.BasicShapes, TextRenderer);
+            HostEnvironment = new XnaMapHostEnvironment(game, mouseInputGameComponent);
+            BasicShapes = RenderingResources.BasicShapes;
+            OverlayShapeAdapter = new XnaMapOverlayShapeAdapter(BasicShapes);
+            Controller = new MapViewController(new MapViewportBounds(content.Bounds.Left, content.Bounds.Top, content.Bounds.Right, content.Bounds.Bottom));
+            Controller.SyncViewport(new MapViewportBounds(content.Bounds.Left, content.Bounds.Top, content.Bounds.Right, content.Bounds.Bottom), HostEnvironment.ClientSize);
+
+            FontManagerInstance fontManager = FontManager.Scaled("Arial", System.Drawing.FontStyle.Regular);
+            System.Drawing.Font constantSizeFont = fontManager[25];
+            ViewStateAdapter = new MapViewStateAdapter(Controller, constantSizeFont);
+            RenderAdapter = new MapRenderAdapter(Controller, RenderBackend);
+            InteractionAdapter = new MapInteractionAdapter(fontManager, Controller, HostEnvironment, (IMapViewFontState)ViewStateAdapter);
+            HostResources = new XnaMapHostResources(SpriteBatch, OwnedTextCache);
+        }
+    }
+}

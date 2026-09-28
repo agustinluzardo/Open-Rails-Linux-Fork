@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
+using Riel.Common;
+using Riel.Common.Position;
 
 using Orts.Formats.Msts.Parsers;
 

@@ -29,10 +29,10 @@ using System.Windows.Controls;
 
 using System.Windows.Forms.Integration;
 
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
+using Riel.Common.Info;
+using Riel.Common.Position;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
 
 using ORTS.TrackViewer.Drawing; // for colors
 

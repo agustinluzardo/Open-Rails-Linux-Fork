@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace FreeTrainSimulator.Toolbox
+namespace Riel.Toolbox
 {
     public enum UserCommand
     {

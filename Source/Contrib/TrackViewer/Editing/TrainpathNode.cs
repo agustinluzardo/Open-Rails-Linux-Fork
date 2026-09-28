@@ -39,15 +39,15 @@
 
 using System;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Position;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using Orts.Formats.Msts.Models;
 
-using TrackSection = FreeTrainSimulator.Models.Track.TrackSection;
+using TrackSection = Riel.Models.Track.TrackSection;
 
 namespace ORTS.TrackViewer.Editing
 {

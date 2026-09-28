@@ -1,5 +1,5 @@
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Models.Signalling;
+using Riel.Common;
+using Riel.Models.Signalling;
 
 namespace Orts.Simulation.Signalling
 {

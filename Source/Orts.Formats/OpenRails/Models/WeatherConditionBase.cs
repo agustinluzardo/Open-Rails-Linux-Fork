@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Xna;
+using Riel.Common.Calc;
+using Riel.Common.Xna;
 
 using Orts.Formats.OpenRails.Parsers;
 

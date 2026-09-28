@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Runtime;
+using Riel.Common;
+using Riel.Runtime;
 
 using GetText;
 

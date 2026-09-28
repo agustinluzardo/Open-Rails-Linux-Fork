@@ -24,7 +24,7 @@
  */
 
 using System;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -32,10 +32,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common.Position;
+using Riel.Common.Xna;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -70,7 +70,7 @@ namespace Orts.ActivityRunner.Viewer3D
             Vector3 sectionOrigin = worldMatrixInput.XNAMatrix.Translation; // Save root position
             WorldPosition worldMatrix = worldMatrixInput.SetTranslation(Vector3.Zero); // worldMatrix now rotation-only
 
-            if (!RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(trackObj.SectionIndex, out FreeTrainSimulator.Models.Track.TrackShape shape))
+            if (!RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(trackObj.SectionIndex, out Riel.Models.Track.TrackShape shape))
                 return 0;
             if (!RuntimeDataResolver.Instance.TrackSections.TrackShapePaths.TryGetValue(trackObj.SectionIndex, out ImmutableArray<TrackShapePath> sections))
                 return 0;
@@ -96,7 +96,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 {
                     float length, radius;
                     int sid = id.TrackSections[i];
-                    FreeTrainSimulator.Models.Track.TrackSection section = RuntimeDataResolver.Instance.TrackSections.TrackSections[sid];
+                    Riel.Models.Track.TrackSection section = RuntimeDataResolver.Instance.TrackSections.TrackSections[sid];
                     WorldPosition root = nextRoot;
                     nextRoot = nextRoot.SetTranslation(Vector3.Zero);
 
@@ -179,7 +179,7 @@ namespace Orts.ActivityRunner.Viewer3D
             {
                 float length, radius;
                 int sid = path[0].TrackSections[i];
-                FreeTrainSimulator.Models.Track.TrackSection section = RuntimeDataResolver.Instance.TrackSections.TrackSections[sid];
+                Riel.Models.Track.TrackSection section = RuntimeDataResolver.Instance.TrackSections.TrackSections[sid];
                 WorldPosition root = nextRoot;
                 nextRoot = nextRoot.SetTranslation(Vector3.Zero);
 
@@ -394,7 +394,7 @@ namespace Orts.ActivityRunner.Viewer3D
             LODItem.LoadMaterial(viewer, lodItem);
 
             bool drawTriphaseWire = viewer.Simulator.RouteModel.RouteConditions.TriphaseEnabled;
-            bool drawDoubleWire = viewer.Simulator.RouteModel.RouteConditions.DoubleWireEnabled || viewer.UserSettings.OverheadWireType >= FreeTrainSimulator.Common.OverheadWireType.DoubleWire;
+            bool drawDoubleWire = viewer.Simulator.RouteModel.RouteConditions.DoubleWireEnabled || viewer.UserSettings.OverheadWireType >= Riel.Common.OverheadWireType.DoubleWire;
             float topHeight = viewer.Simulator.RouteModel.RouteConditions.OverheadWireHeight;
             float topWireOffset = (viewer.Simulator.RouteModel.RouteConditions.DoubleWireHeight > 0 ?
                 viewer.Simulator.RouteModel.RouteConditions.DoubleWireHeight : 1.0f);

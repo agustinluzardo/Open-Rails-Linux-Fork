@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace FreeTrainSimulator.Common.Display
+namespace Riel.Common.Display
 {
     public static partial class GraphicsCapabilities
     {

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 using RailDriver;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
 #pragma warning disable CA1708 // Identifiers should differ by more than case
     public enum RailDriverDisplaySign

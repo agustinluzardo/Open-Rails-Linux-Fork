@@ -546,7 +546,7 @@ msgid "FPS"
 msgstr "[FÞ§ !!!]"
 
 #: ..\..\..\Menu\MainForm.Designer.cs:127
-msgid "Free Train Simulator"
+msgid "Riel"
 msgstr "[Fřèè Třáïñ §ï₥úℓáƭôř !!!]"
 
 #: ..\..\..\Menu\Options.Designer.cs:1537

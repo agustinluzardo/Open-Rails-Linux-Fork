@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Xna;
+using Riel.Common;
+using Riel.Common.Position;
+using Riel.Common.Xna;
 
 using Microsoft.Xna.Framework;
 

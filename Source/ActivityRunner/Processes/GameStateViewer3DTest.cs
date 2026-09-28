@@ -5,10 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Diagnostics;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Logging;
+using Riel.Common;
+using Riel.Common.Diagnostics;
+using Riel.Common.Info;
+using Riel.Common.Logging;
 
 using Orts.Simulation;
 

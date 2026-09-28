@@ -16,7 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;

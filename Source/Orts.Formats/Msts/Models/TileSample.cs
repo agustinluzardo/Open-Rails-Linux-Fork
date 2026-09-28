@@ -18,12 +18,12 @@
 // This file is the responsibility of the 3D & Environment Team. 
 
 using System;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
 
-using FreeTrainSimulator.Common.Position;
+using Riel.Common.Position;
 
 using Orts.Formats.Msts.Files;
 

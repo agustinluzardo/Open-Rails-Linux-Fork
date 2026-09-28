@@ -31,13 +31,13 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Api;
+using Riel.Common.Calc;
+using Riel.Models.Imported.State;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using Microsoft.Xna.Framework;
 
@@ -652,7 +652,7 @@ namespace Orts.Simulation.Timetables
             {
                 VectorSectionNode thisVector = vectors[iVector];
 
-                if (RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(thisVector.NodeIndex, out FreeTrainSimulator.Models.Track.TrackSection trackSection))
+                if (RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(thisVector.NodeIndex, out Riel.Models.Track.TrackSection trackSection))
                 {
                     returnLength += trackSection.Length;
                 }

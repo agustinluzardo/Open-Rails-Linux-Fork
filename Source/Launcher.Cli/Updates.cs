@@ -9,7 +9,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common.Info;
+using Riel.Common.Info;
 
 namespace Riel.Launcher
 {

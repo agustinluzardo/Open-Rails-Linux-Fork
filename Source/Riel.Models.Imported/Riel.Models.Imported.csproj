@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Description>Riel Imported Models Library</Description>
+		<AssemblyTitle>Riel Imported Models Library</AssemblyTitle>
+		<OutputPath>..\..\Program</OutputPath>
+		<AssemblyName>Riel.Models.Imported</AssemblyName>
+		<RootNamespace>Riel.Models.Imported</RootNamespace>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Riel.Common\Riel.Common.csproj" />
+		<ProjectReference Include="..\Riel.Models\Riel.Models.csproj" />
+		<ProjectReference Include="..\Riel.Runtime\Riel.Runtime.csproj" />
+		<ProjectReference Include="..\Orts.Formats\Orts.Formats.csproj" />
+	</ItemGroup>
+</Project>

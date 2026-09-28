@@ -22,7 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-using FreeTrainSimulator.Common.Info;
+using Riel.Common.Info;
 
 namespace Riel.Launcher
 {

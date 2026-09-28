@@ -24,11 +24,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common;
+using Riel.Common.Api;
+using Riel.Models.Imported.State;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Models;
@@ -159,7 +159,7 @@ namespace Orts.Simulation.Track
             {
                 foreach (TrackVectorSection section in tvn.TrackVectorSections)
                 {
-                    if (RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(section.SectionIndex, out FreeTrainSimulator.Models.Track.TrackSection trackSection))
+                    if (RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(section.SectionIndex, out Riel.Models.Track.TrackSection trackSection))
                     {
                         Length += trackSection.Length;
                     }
@@ -240,7 +240,7 @@ namespace Orts.Simulation.Track
             {
                 foreach (VectorSectionNode section in vectorNode.VectorSections)
                 {
-                    if (RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(section.NodeIndex, out FreeTrainSimulator.Models.Track.TrackSection trackSection))
+                    if (RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(section.NodeIndex, out Riel.Models.Track.TrackSection trackSection))
                     {
                         Length += trackSection.Length;
                     }
@@ -2126,7 +2126,7 @@ namespace Orts.Simulation.Track
             JnSection.Pins[TrackDirection.Reverse, SignalLocation.FarEnd] = new TrackPin(trailSectionIndex1, TrackDirection.Reverse);
 
             JnSection.Overlap = 0;
-            if (RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(crossOver.TrackShape, out FreeTrainSimulator.Models.Track.TrackShape overlapShape))
+            if (RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(crossOver.TrackShape, out Riel.Models.Track.TrackShape overlapShape))
             {
                 JnSection.Overlap = overlapShape.ClearanceDistance;
             }

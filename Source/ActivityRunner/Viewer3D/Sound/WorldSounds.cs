@@ -44,10 +44,10 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common.Position;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Files;

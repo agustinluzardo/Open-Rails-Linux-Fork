@@ -4,12 +4,12 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.Xna;
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Common;
+using Riel.Graphics;
+using Riel.Graphics.Xna;
+using Riel.Toolbox.ToolWindows;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Bindable view model for the hosted settings dockable tool window. Unlike the read-only snapshot tool

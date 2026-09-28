@@ -1,4 +1,4 @@
-﻿namespace FreeTrainSimulator.Common
+﻿namespace Riel.Common
 {
 #pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
     public class ControllerCommandArgs

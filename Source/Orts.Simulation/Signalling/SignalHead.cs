@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Models.Signalling;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Models.Signalling;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Models;
@@ -29,7 +29,7 @@ namespace Orts.Simulation.Signalling
         /// <summary>Extensible signal function type identifier.</summary>
         public SignalFunctionType SignalFunction { get; private set; } = SignalFunctionType.Unknown;
 
-        public FreeTrainSimulator.Models.Signalling.SignalType SignalType { get; private set; }
+        public Riel.Models.Signalling.SignalType SignalType { get; private set; }
 
         /// <summary>Extensible normal subtype identifier.</summary>
         public SignalNormalSubType NormalSubType { get; set; }
@@ -65,7 +65,7 @@ namespace Orts.Simulation.Signalling
             TrackItemIndex = trackItem;
             TDBIndex = tbdRef;
 
-            if (signalItem?.SignalDirection is FreeTrainSimulator.Models.Track.SignalDirection signalDirection && signalDirection.NodeIndex != 0)
+            if (signalItem?.SignalDirection is Riel.Models.Track.SignalDirection signalDirection && signalDirection.NodeIndex != 0)
             {
                 TrackJunctionNode = signalDirection.NodeIndex;
                 JunctionPath = signalDirection.JunctionPath;
@@ -86,15 +86,15 @@ namespace Orts.Simulation.Signalling
             TDBIndex = tbdRef;
             DrawState = 1;
             SignalIndicationState = SignalAspectState.Clear2;
-            SignalType = new FreeTrainSimulator.Models.Signalling.SignalType
+            SignalType = new Riel.Models.Signalling.SignalType
             {
                 Name = "UNDEFINED",
                 FunctionType = SignalFunctionType.Speed,
-                DrawStates = new Dictionary<string, FreeTrainSimulator.Models.Signalling.SignalDrawState>(StringComparer.OrdinalIgnoreCase)
+                DrawStates = new Dictionary<string, Riel.Models.Signalling.SignalDrawState>(StringComparer.OrdinalIgnoreCase)
                 {
-                    { "CLEAR", new FreeTrainSimulator.Models.Signalling.SignalDrawState { Name = "CLEAR", Index = 1 } }
+                    { "CLEAR", new Riel.Models.Signalling.SignalDrawState { Name = "CLEAR", Index = 1 } }
                 }.ToImmutableDictionary(StringComparer.OrdinalIgnoreCase),
-                SignalAspects = [new FreeTrainSimulator.Models.Signalling.SignalAspect { Aspect = SignalAspectState.Clear2, DrawStateName = "CLEAR", SpeedLimit = -1 }],
+                SignalAspects = [new Riel.Models.Signalling.SignalAspect { Aspect = SignalAspectState.Clear2, DrawStateName = "CLEAR", SpeedLimit = -1 }],
             };
             SignalFunction = SignalFunctionType.Speed;
 
@@ -119,15 +119,15 @@ namespace Orts.Simulation.Signalling
             TDBIndex = tbdRef;
             DrawState = 1;
             SignalIndicationState = SignalAspectState.Clear2;
-            SignalType = new FreeTrainSimulator.Models.Signalling.SignalType
+            SignalType = new Riel.Models.Signalling.SignalType
             {
                 Name = "UNDEFINED",
                 FunctionType = SignalFunctionType.Speed,
-                DrawStates = new Dictionary<string, FreeTrainSimulator.Models.Signalling.SignalDrawState>(StringComparer.OrdinalIgnoreCase)
+                DrawStates = new Dictionary<string, Riel.Models.Signalling.SignalDrawState>(StringComparer.OrdinalIgnoreCase)
                 {
-                    { "CLEAR", new FreeTrainSimulator.Models.Signalling.SignalDrawState { Name = "CLEAR", Index = 1 } }
+                    { "CLEAR", new Riel.Models.Signalling.SignalDrawState { Name = "CLEAR", Index = 1 } }
                 }.ToImmutableDictionary(StringComparer.OrdinalIgnoreCase),
-                SignalAspects = [new FreeTrainSimulator.Models.Signalling.SignalAspect { Aspect = SignalAspectState.Clear2, DrawStateName = "CLEAR", SpeedLimit = -1 }],
+                SignalAspects = [new Riel.Models.Signalling.SignalAspect { Aspect = SignalAspectState.Clear2, DrawStateName = "CLEAR", SpeedLimit = -1 }],
             };
             SignalFunction = SignalFunctionType.Speed;
 
@@ -160,7 +160,7 @@ namespace Orts.Simulation.Signalling
         /// <summary>
         /// Set the signal type object using the new TrackDatabase types.
         /// </summary>
-        internal void SetSignalType(ImmutableArray<FreeTrainSimulator.Models.Track.TrackItemBase> trackItems, SignalConfigurationModel signalConfig)
+        internal void SetSignalType(ImmutableArray<Riel.Models.Track.TrackItemBase> trackItems, SignalConfigurationModel signalConfig)
         {
             if (trackItems[TDBIndex] is SignalTrackItem signalItem)
             {
@@ -176,7 +176,7 @@ namespace Orts.Simulation.Signalling
             {
 
                 // set signal type
-                if (signalConfig.SignalTypes.TryGetValue(signalTypeName, out FreeTrainSimulator.Models.Signalling.SignalType value))
+                if (signalConfig.SignalTypes.TryGetValue(signalTypeName, out Riel.Models.Signalling.SignalType value))
                 {
                     // set signal type
                     SignalType = value;
@@ -191,7 +191,7 @@ namespace Orts.Simulation.Signalling
                     csSignalScript?.AttachToHead(this);
 
                     // set signal speeds
-                    foreach (FreeTrainSimulator.Models.Signalling.SignalAspect aspect in SignalType.SignalAspects)
+                    foreach (Riel.Models.Signalling.SignalAspect aspect in SignalType.SignalAspects)
                     {
                         SpeedInfoSet[aspect.Aspect] = new SpeedInfo(
                             aspect.SpeedLimit, aspect.SpeedLimit,

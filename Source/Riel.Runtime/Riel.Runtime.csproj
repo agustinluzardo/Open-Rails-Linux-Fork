@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+		<Description>Riel Runtime Models and Behaviors Library</Description>
+		<AssemblyTitle>Riel Runtime Models and Behaviors Library</AssemblyTitle>
+		<OutputPath>..\..\Program</OutputPath>
+		<AssemblyName>Riel.Runtime</AssemblyName>
+		<RootNamespace>Riel.Runtime</RootNamespace>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MemoryPack" Version="1.21.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Riel.Common\Riel.Common.csproj" />
+    <ProjectReference Include="..\Riel.Models\Riel.Models.csproj" />
+  </ItemGroup>
+
+</Project>

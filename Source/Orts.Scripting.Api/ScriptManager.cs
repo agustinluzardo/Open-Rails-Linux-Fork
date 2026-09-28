@@ -22,8 +22,8 @@ namespace Orts.Scripting.Api
         private static readonly MetadataReference[] CompilerParameters = new MetadataReference[]
         {
             MetadataReference.CreateFromFile(typeof(Trace).GetTypeInfo().Assembly.Location),
-            MetadataReference.CreateFromFile("FreeTrainSimulator.Common.dll"),
-            MetadataReference.CreateFromFile("FreeTrainSimulator.Models.dll"),
+            MetadataReference.CreateFromFile("Riel.Common.dll"),
+            MetadataReference.CreateFromFile("Riel.Models.dll"),
             MetadataReference.CreateFromFile("Orts.Formats.dll"),
             MetadataReference.CreateFromFile("Orts.Scripting.Api.dll"),
             MetadataReference.CreateFromFile("Orts.Simulation.dll"),

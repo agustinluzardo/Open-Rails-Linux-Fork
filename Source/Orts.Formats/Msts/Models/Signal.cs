@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Models.Signalling;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.Xna;
+using Riel.Models.Signalling;
 
 using Microsoft.Xna.Framework;
 

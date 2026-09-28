@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Free Train Simulator Proprietary Formats Library</Description>
-    <AssemblyTitle>Free Train Simulator Proprietary Formats Library</AssemblyTitle>
+    <Description>Riel Proprietary Formats Library</Description>
+    <AssemblyTitle>Riel Proprietary Formats Library</AssemblyTitle>
     <OutputPath>..\..\Program</OutputPath>
     <Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 	</PropertyGroup>
@@ -11,6 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Riel.Common\Riel.Common.csproj" />
-    <ProjectReference Include="..\FreeTrainSimulator.Models\FreeTrainSimulator.Models.csproj" />
+    <ProjectReference Include="..\Riel.Models\Riel.Models.csproj" />
   </ItemGroup>
 </Project>

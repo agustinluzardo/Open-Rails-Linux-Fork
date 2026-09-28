@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Xna
+namespace Riel.Common.Xna
 {
     public static class InterpolateHelper
     {

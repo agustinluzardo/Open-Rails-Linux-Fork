@@ -22,13 +22,13 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Signalling;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common;
+using Riel.Common.Api;
+using Riel.Common.Calc;
+using Riel.Models.Imported.State;
+using Riel.Models.Signalling;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Microsoft.Xna.Framework;
 

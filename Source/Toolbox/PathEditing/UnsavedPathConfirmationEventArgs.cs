@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     internal sealed class UnsavedPathConfirmationEventArgs : EventArgs
     {

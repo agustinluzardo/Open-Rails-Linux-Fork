@@ -1,10 +1,10 @@
 using System.Windows;
 
-using FreeTrainSimulator.Common.Info;
+using Riel.Common.Info;
 
 using GetText;
 
-namespace FreeTrainSimulator.Toolbox.Dialogs
+namespace Riel.Toolbox.Dialogs
 {
     /// <summary>
     /// WPF modal exit-confirmation dialog, replacing the legacy MonoGame <c>QuitWindow</c> popup in hosted

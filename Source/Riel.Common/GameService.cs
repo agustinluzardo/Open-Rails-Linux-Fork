@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common
+namespace Riel.Common
 {
     /// <summary>
     /// Provides a dual-mode service accessor: game-scoped via <see cref="Game.Services"/> when a <see cref="Game"/>

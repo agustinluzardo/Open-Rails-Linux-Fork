@@ -1,6 +1,6 @@
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Runtime.Track;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// One resolver diagnostic of the currently edited train path, flattened into immutable UI-safe data.

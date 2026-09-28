@@ -21,11 +21,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Common.Native;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 using Orts.ActivityRunner.Processes;
 using Orts.ActivityRunner.Viewer3D;

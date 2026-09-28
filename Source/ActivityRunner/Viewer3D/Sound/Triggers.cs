@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
+using Riel.Common;
+using Riel.Common.Calc;
 
 using Orts.Formats.Msts.Models;
 using Orts.Simulation;

@@ -1,7 +1,7 @@
-using FreeTrainSimulator.Runtime.Track;
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Runtime.Track;
+using Riel.Toolbox.ToolWindows;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>Bindable row for one resolver diagnostic.</summary>
     internal sealed class TrainPathDiagnosticItemViewModel : ObservableObject

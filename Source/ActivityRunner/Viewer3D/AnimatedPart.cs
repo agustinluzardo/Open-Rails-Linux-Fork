@@ -21,8 +21,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Orts.ActivityRunner.Viewer3D.Shapes;
 using Orts.Formats.Msts.Models;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Common;
+using Riel.Common.Xna;
+using Riel.Common;
 using System.Collections.Immutable;
 
 namespace Orts.ActivityRunner.Viewer3D

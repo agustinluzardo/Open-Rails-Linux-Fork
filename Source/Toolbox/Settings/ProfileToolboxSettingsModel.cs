@@ -1,14 +1,14 @@
-﻿using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Models.Base;
-using FreeTrainSimulator.Models.Settings;
+﻿using Riel.Common;
+using Riel.Common.Position;
+using Riel.Graphics;
+using Riel.Models.Base;
+using Riel.Models.Settings;
 
 using MemoryPack;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Toolbox.Settings
+namespace Riel.Toolbox.Settings
 {
     [MemoryPackable(GenerateType.VersionTolerant, SerializeLayout.Sequential)]
     [ModelResolver(".toolboxsettings")]

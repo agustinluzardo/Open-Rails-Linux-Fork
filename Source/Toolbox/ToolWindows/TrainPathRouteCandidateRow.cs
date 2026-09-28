@@ -1,4 +1,4 @@
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// One equal-cost route candidate of an ambiguous span of the currently edited train path.

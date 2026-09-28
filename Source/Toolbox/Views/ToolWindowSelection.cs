@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace FreeTrainSimulator.Toolbox.Views
+namespace Riel.Toolbox.Views
 {
     /// <summary>
     /// Shared helper for the selection-binding pattern used by the dockable Toolbox tool windows.

@@ -28,9 +28,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common;
+using Riel.Common.Api;
+using Riel.Models.Imported.State;
 
 using Orts.Simulation.Track;
 

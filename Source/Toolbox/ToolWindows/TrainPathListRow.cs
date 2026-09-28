@@ -1,6 +1,6 @@
-using FreeTrainSimulator.Models.Content;
+using Riel.Models.Content;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// One available train path in the hosted train-path tool window's path list.

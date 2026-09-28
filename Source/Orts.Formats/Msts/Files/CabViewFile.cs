@@ -16,7 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using Microsoft.Xna.Framework;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 
 using Orts.Formats.Msts.Models;
 using Orts.Formats.Msts.Parsers;

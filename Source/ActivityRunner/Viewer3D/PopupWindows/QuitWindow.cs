@@ -1,9 +1,9 @@
-﻿using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Window.Controls;
-using FreeTrainSimulator.Graphics.Window.Controls.Layout;
+﻿using Riel.Common.Info;
+using Riel.Common.Input;
+using Riel.Graphics;
+using Riel.Graphics.Window;
+using Riel.Graphics.Window.Controls;
+using Riel.Graphics.Window.Controls.Layout;
 
 using GetText;
 

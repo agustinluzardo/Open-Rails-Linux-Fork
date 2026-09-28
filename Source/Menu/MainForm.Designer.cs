@@ -1,6 +1,6 @@
 // #define INCLUDE_TIMETABLE_INPUT
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     partial class MainForm
     {
@@ -124,7 +124,7 @@ namespace FreeTrainSimulator.Menu
             labelLogo.Name = "labelLogo";
             labelLogo.Size = new System.Drawing.Size(299, 79);
             labelLogo.TabIndex = 11;
-            labelLogo.Text = "Free Train Simulator";
+            labelLogo.Text = "Riel";
             labelLogo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             labelLogo.UseMnemonic = false;
             // 

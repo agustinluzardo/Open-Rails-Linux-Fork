@@ -4,9 +4,9 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 
-using FreeTrainSimulator.Graphics.Xna;
+using Riel.Graphics.Xna;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Converts an optional <see cref="System.Drawing.Color"/> from the game-side snapshot into a WPF

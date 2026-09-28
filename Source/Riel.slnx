@@ -23,17 +23,17 @@
     <File Path="global.json" />
   </Folder>
   <Folder Name="/Test/">
-    <Project Path="Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj" />
+    <Project Path="Test/Tests.Riel/Tests.Riel.csproj" />
     <Project Path="Test/Tests.Orts/Tests.Orts.csproj" />
   </Folder>
   <Project Path="ActivityRunner/ActivityRunner.csproj" />
   <Project Path="Riel.Common/Riel.Common.csproj" />
-  <Project Path="FreeTrainSimulator.Graphics/FreeTrainSimulator.Graphics.csproj" />
-  <Project Path="FreeTrainSimulator.Models.Imported/FreeTrainSimulator.Models.Imported.csproj" />
-  <Project Path="FreeTrainSimulator.Models/FreeTrainSimulator.Models.csproj" />
-  <Project Path="FreeTrainSimulator.Online/FreeTrainSimulator.Online.csproj" />
-  <Project Path="FreeTrainSimulator.Updater/FreeTrainSimulator.Updater.csproj" />
-  <Project Path="FreetrainSimulator.Runtime/FreetrainSimulator.Runtime.csproj" />
+  <Project Path="Riel.Graphics/Riel.Graphics.csproj" />
+  <Project Path="Riel.Models.Imported/Riel.Models.Imported.csproj" />
+  <Project Path="Riel.Models/Riel.Models.csproj" />
+  <Project Path="Riel.Online/Riel.Online.csproj" />
+  <Project Path="Riel.Updater/Riel.Updater.csproj" />
+  <Project Path="Riel.Runtime/Riel.Runtime.csproj" />
   <Project Path="Launcher.Cli/Launcher.Cli.csproj" />
   <Project Path="Launcher.Core/Launcher.Core.csproj" />
   <Project Path="Launcher.Gui/Launcher.Gui.csproj" />

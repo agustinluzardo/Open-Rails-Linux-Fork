@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
     public class MouseInputGameComponent : GameComponent
     {

@@ -1,4 +1,4 @@
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Root view model for the WPF shell. Holds the hosted menu and dockable tool-window view models plus

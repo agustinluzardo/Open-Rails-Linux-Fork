@@ -19,7 +19,7 @@
 // #define DEBUG_JSON_READER
 
 using System;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;

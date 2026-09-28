@@ -21,11 +21,11 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 
 using Microsoft.Xna.Framework.Graphics;
 
-namespace FreeTrainSimulator.Common.Info
+namespace Riel.Common.Info
 {
     /// <summary>
     /// Linux hardware inventory, read from /proc, /sys and DMI.

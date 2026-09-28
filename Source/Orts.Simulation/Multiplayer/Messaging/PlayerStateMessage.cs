@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using System.IO;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Position;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Position;
 
 using MemoryPack;
 

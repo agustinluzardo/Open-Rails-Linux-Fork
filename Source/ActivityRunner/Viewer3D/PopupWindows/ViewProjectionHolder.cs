@@ -1,5 +1,5 @@
-﻿using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics.Window.Controls;
+﻿using Riel.Common.Position;
+using Riel.Graphics.Window.Controls;
 
 using Microsoft.Xna.Framework;
 

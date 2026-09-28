@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Position
+namespace Riel.Common.Position
 {
     public readonly struct Tile : IEquatable<Tile>, IComparable<Tile>
     {

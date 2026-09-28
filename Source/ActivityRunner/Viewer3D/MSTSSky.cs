@@ -20,11 +20,11 @@
 using System;
 using System.Collections.Generic;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Xna;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.Input;
+using Riel.Common.Position;
+using Riel.Common.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

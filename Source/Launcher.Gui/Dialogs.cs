@@ -24,7 +24,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 
-using FreeTrainSimulator.Models.Imported.ImportHandler;
+using Riel.Models.Imported.ImportHandler;
 
 using static Riel.Launcher.Gui.Translation;
 

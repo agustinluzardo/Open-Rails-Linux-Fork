@@ -30,14 +30,14 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Api;
+using Riel.Common.Position;
+using Riel.Models.Content;
+using Riel.Models.Imported.State;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 namespace Orts.Simulation.AIs
 {
@@ -66,7 +66,7 @@ namespace Orts.Simulation.AIs
                 return;
             }
 
-            foreach (FreeTrainSimulator.Models.Content.PathNode pathNode in pathModel.PathNodes)
+            foreach (Riel.Models.Content.PathNode pathNode in pathModel.PathNodes)
                 Nodes.Add(new AIPathNode(pathNode, timetableMode));
             FirstNode = Nodes[0];
             //LastVisitedNode = FirstNode;            
@@ -76,7 +76,7 @@ namespace Orts.Simulation.AIs
             {
                 AIPathNode node = Nodes[i];
                 node.Index = i;
-                FreeTrainSimulator.Models.Content.PathNode tpn = pathModel.PathNodes[i];
+                Riel.Models.Content.PathNode tpn = pathModel.PathNodes[i];
 
                 // find TVNindex to next main node.
                 if (tpn.NextMainNode > -1)
@@ -234,7 +234,7 @@ namespace Orts.Simulation.AIs
     public class AIPathNode : ISaveStateApi<AiPathNodeSaveState>
     {
         public int Index { get; set; }
-        public FreeTrainSimulator.Common.TrainPathNodeType Type { get; set; } = FreeTrainSimulator.Common.TrainPathNodeType.Other;
+        public Riel.Common.TrainPathNodeType Type { get; set; } = Riel.Common.TrainPathNodeType.Other;
         public int WaitTimeS { get; private set; }               // number of seconds to wait after stopping at this node
         public int WaitUntil { get; private set; }               // clock time to wait until if not zero
         public AIPathNode NextMainNode { get; set; }     // next path node on main path
@@ -251,7 +251,7 @@ namespace Orts.Simulation.AIs
         /// Creates a single AIPathNode and initializes everything that do not depend on other nodes.
         /// The AIPath constructor will initialize the rest.
         /// </summary>
-        public AIPathNode(FreeTrainSimulator.Models.Content.PathNode pathNode, bool timetableMode)
+        public AIPathNode(Riel.Models.Content.PathNode pathNode, bool timetableMode)
         {
             ArgumentNullException.ThrowIfNull(pathNode);
 

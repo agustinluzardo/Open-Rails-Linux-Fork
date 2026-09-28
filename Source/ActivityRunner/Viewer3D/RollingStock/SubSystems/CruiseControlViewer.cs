@@ -17,7 +17,7 @@
 
 using System;
 
-using FreeTrainSimulator.Common.Input;
+using Riel.Common.Input;
 
 using Orts.Simulation.RollingStocks;
 using Orts.Simulation.RollingStocks.SubSystems;

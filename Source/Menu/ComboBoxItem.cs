@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     internal sealed class ComboBoxItem<T>
     {

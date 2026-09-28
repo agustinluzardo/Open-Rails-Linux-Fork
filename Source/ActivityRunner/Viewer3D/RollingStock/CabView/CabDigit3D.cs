@@ -21,9 +21,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Xna;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

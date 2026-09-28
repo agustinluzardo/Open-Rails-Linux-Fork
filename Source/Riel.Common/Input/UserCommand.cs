@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
     /// <summary>
     /// Specifies game commands.

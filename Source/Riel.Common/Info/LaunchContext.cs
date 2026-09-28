@@ -17,7 +17,7 @@
 
 using System;
 
-namespace FreeTrainSimulator.Common.Info
+namespace Riel.Common.Info
 {
     /// <summary>
     /// What started the simulator, where that changes how it should behave.

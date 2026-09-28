@@ -1,7 +1,7 @@
 ﻿using System.IO;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common;
+using Riel.Common.Native;
 
 using Microsoft.Xna.Framework;
 

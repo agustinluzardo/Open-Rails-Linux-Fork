@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <Description>Free Train Simulator Toolbox</Description>
-    <AssemblyTitle>Free Train Simulator Toolbox</AssemblyTitle>
+    <Description>Riel Toolbox</Description>
+    <AssemblyTitle>Riel Toolbox</AssemblyTitle>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <OutputPath>..\..\Program</OutputPath>
-    <ApplicationIcon>..\FTS.ico</ApplicationIcon>
-    <RootNamespace>FreeTrainSimulator.Toolbox</RootNamespace>
+    <ApplicationIcon>..\Riel.ico</ApplicationIcon>
+    <RootNamespace>Riel.Toolbox</RootNamespace>
     <Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
   </PropertyGroup>
   <ItemGroup>
@@ -19,7 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Riel.Common\Riel.Common.csproj" />
-    <ProjectReference Include="..\FreeTrainSimulator.Models\FreeTrainSimulator.Models.csproj" />
-    <ProjectReference Include="..\FreeTrainSimulator.Graphics\FreeTrainSimulator.Graphics.csproj" />
+    <ProjectReference Include="..\Riel.Models\Riel.Models.csproj" />
+    <ProjectReference Include="..\Riel.Graphics\Riel.Graphics.csproj" />
   </ItemGroup>
 </Project>

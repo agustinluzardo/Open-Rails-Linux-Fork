@@ -1,4 +1,4 @@
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     internal enum HelpSearchColumn
     {

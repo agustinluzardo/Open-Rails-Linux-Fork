@@ -23,12 +23,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Models.Base;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.ImportHandler;
-using FreeTrainSimulator.Models.Imported.Shim;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common.Native;
+using Riel.Models.Base;
+using Riel.Models.Content;
+using Riel.Models.Imported.ImportHandler;
+using Riel.Models.Imported.Shim;
+using Riel.Models.Shim;
 
 namespace Riel.Launcher
 {

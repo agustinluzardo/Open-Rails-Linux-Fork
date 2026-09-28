@@ -1,6 +1,6 @@
 ﻿
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     partial class KeyInputControl
     {

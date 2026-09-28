@@ -22,7 +22,7 @@
 
 using System;
 
-using FreeTrainSimulator.Common.Input;
+using Riel.Common.Input;
 
 namespace ORTS.TrackViewer.UserInterface
 {

@@ -6,7 +6,7 @@ Build from the repository root with .NET 10:
 cd Source
 dotnet build Riel.slnx -c Release
 dotnet test Test/Tests.Orts/Tests.Orts.csproj -c Release
-dotnet test Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj -c Release
+dotnet test Test/Tests.Riel/Tests.Riel.csproj -c Release
 ```
 
 For a content-free smoke test, create the small fixture and give the launcher an isolated

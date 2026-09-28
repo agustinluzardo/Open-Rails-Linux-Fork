@@ -21,7 +21,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Threading;
 
-namespace FreeTrainSimulator.Common.Display
+namespace Riel.Common.Display
 {
     /// <summary>
     /// One display attached to the machine.

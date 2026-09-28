@@ -4,7 +4,7 @@ using System.Windows.Forms;
 using GetText;
 using GetText.WindowsForms;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     public partial class ModelConverterProgress : Form, IProgress<int>
     {

@@ -34,12 +34,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Diagnostics;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Common.Logging;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.Diagnostics;
+using Riel.Common.Info;
+using Riel.Common.Input;
+using Riel.Common.Logging;
 
 using Orts.ActivityRunner.Processes;
 using Orts.Simulation.RollingStocks;
@@ -75,7 +75,7 @@ namespace Orts.ActivityRunner.Viewer3D
         public InfoDisplay(Viewer viewer)
         {
             this.viewer = viewer ?? throw new ArgumentNullException(nameof(viewer));
-            dataLog = new DataLogger(Path.Combine(viewer.UserSettings.LogFilePath, "FreeTrainSimulatorDump.csv"), viewer.UserSettings.DataLogSeparator);
+            dataLog = new DataLogger(Path.Combine(viewer.UserSettings.LogFilePath, "RielDump.csv"), viewer.UserSettings.DataLogSeparator);
 
             if (viewer.UserSettings.DataLogger)
                 DataLoggerStart();

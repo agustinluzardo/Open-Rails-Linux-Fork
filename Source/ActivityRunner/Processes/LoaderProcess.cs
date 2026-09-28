@@ -19,8 +19,8 @@
 
 using System.Threading;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Diagnostics;
+using Riel.Common;
+using Riel.Common.Diagnostics;
 
 using Microsoft.Xna.Framework;
 

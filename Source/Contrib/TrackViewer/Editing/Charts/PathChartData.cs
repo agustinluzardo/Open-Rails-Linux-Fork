@@ -19,13 +19,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Position;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
-using TrackItemBase = FreeTrainSimulator.Models.Track.TrackItemBase;
+using TrackItemBase = Riel.Models.Track.TrackItemBase;
 
 using Newtonsoft.Json;
 

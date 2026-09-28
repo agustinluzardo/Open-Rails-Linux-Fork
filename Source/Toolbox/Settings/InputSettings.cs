@@ -1,10 +1,10 @@
 ﻿
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Input;
+using Riel.Common;
+using Riel.Common.Input;
 
 using Microsoft.Xna.Framework.Input;
 
-namespace FreeTrainSimulator.Toolbox.Settings
+namespace Riel.Toolbox.Settings
 {
     public static class InputSettings
     {

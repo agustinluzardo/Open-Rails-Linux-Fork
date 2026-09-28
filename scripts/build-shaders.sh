@@ -51,7 +51,7 @@ done
 
 shader_sources=(
     "$source_root/ActivityRunner/Content/Shaders"
-    "$source_root/FreeTrainSimulator.Graphics/Resources/Shaders"
+    "$source_root/Riel.Graphics/Resources/Shaders"
 )
 
 say() { printf '%s\n' "$*"; }

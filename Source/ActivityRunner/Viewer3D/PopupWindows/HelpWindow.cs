@@ -4,17 +4,17 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Window.Controls;
-using FreeTrainSimulator.Graphics.Window.Controls.Layout;
-using FreeTrainSimulator.Models.Settings;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Common.Input;
+using Riel.Graphics;
+using Riel.Graphics.Window;
+using Riel.Graphics.Window.Controls;
+using Riel.Graphics.Window.Controls.Layout;
+using Riel.Models.Settings;
 
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using GetText;
 

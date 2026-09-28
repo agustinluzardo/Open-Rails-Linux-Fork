@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Online;
+using Riel.Online;
 
 using MagicOnion.Serialization;
 using MagicOnion.Serialization.MemoryPack;
@@ -53,7 +53,7 @@ namespace Multiplayer.Hub
                 Console.WriteLine($"\t{url}");
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
             Console.WriteLine("For further information, bug reports or discussions, please visit");
-            Console.WriteLine("\thttps://github.com/perpetualKid/FreeTrainSimulator");
+            Console.WriteLine("\thttps://github.com/agustinluzardo/Riel-Linux");
             Console.WriteLine("Use Ctrl+C to stop the service");
 #pragma warning restore CA1303 // Do not pass literals as localized parameters
             Console.WriteLine();

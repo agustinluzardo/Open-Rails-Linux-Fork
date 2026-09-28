@@ -1,6 +1,6 @@
 using MemoryPack;
 
-namespace FreeTrainSimulator.Toolbox.Settings
+namespace Riel.Toolbox.Settings
 {
     /// <summary>
     /// Platform-neutral, durable placement of the toolbox shell window: the restored (normal) rectangle plus

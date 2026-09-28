@@ -1,13 +1,13 @@
-﻿using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Window.Controls;
-using FreeTrainSimulator.Graphics.Window.Controls.Layout;
+﻿using Riel.Graphics;
+using Riel.Graphics.Window;
+using Riel.Graphics.Window.Controls;
+using Riel.Graphics.Window.Controls.Layout;
 
 using GetText;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Toolbox.PopupWindows
+namespace Riel.Toolbox.PopupWindows
 {
     public class StatusTextWindow : WindowBase
     {

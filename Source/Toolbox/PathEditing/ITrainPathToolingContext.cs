@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Models.Content;
+using Riel.Runtime.Track;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     internal interface ITrainPathToolingContext
     {

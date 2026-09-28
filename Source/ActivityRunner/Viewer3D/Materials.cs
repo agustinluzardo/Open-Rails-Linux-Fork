@@ -18,15 +18,15 @@
 // This file is the responsibility of the 3D & Environment Team. 
 
 using System;
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common;
+using Riel.Common.Native;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Graphics.Xna;
+using Riel.Common.Xna;
+using Riel.Graphics.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

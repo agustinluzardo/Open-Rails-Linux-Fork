@@ -6,7 +6,7 @@ using System.Reflection;
 
 using NuGet.Versioning;
 
-namespace FreeTrainSimulator.Common.Info
+namespace Riel.Common.Info
 {
 
     /// <summary>
@@ -14,7 +14,7 @@ namespace FreeTrainSimulator.Common.Info
     /// </summary>
     public static class VersionInfo
     {
-        public const string PackageId = "FreeTrainSimulator";
+        public const string PackageId = "Riel";
 
         public static readonly NuGetVersion CurrentVersion = GetVersion();
 

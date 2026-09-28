@@ -23,11 +23,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Api;
+using Riel.Common.Position;
+using Riel.Models.Imported.State;
 
 using Microsoft.Xna.Framework;
 

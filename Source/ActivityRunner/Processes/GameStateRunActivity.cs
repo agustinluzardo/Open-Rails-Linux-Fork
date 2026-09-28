@@ -25,16 +25,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Display;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Logging;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Display;
+using Riel.Common.Info;
+using Riel.Common.Logging;
+using Riel.Common.Native;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
+using Riel.Models.Imported.State;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 using MemoryPack;
 

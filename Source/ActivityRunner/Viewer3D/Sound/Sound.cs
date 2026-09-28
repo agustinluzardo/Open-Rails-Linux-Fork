@@ -41,8 +41,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
+using Riel.Common;
+using Riel.Common.Calc;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Files;

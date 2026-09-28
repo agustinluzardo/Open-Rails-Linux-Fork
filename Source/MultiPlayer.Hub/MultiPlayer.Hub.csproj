@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<Description>Free Train Simulator Multiplayer Hub</Description>
-		<AssemblyTitle>Free Train Simulator Multiplayer Hub</AssemblyTitle>
+		<Description>Riel Multiplayer Hub</Description>
+		<AssemblyTitle>Riel Multiplayer Hub</AssemblyTitle>
 		<OutputPath>..\..\Program</OutputPath>
-		<ApplicationIcon>..\FTS.ico</ApplicationIcon>
+		<ApplicationIcon>..\Riel.ico</ApplicationIcon>
 		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 	</PropertyGroup>
 	<ItemGroup>
@@ -13,6 +13,6 @@
 		<PackageReference Include="System.IO.Hashing" Version="10.0.11" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\FreeTrainSimulator.Online\FreeTrainSimulator.Online.csproj" />
+	  <ProjectReference Include="..\Riel.Online\Riel.Online.csproj" />
 	</ItemGroup>
 </Project>

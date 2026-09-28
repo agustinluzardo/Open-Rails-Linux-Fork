@@ -2,12 +2,12 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <UseWindowsForms>true</UseWindowsForms>
-    <Description>Free Train Simulator Menu</Description>
+    <Description>Riel Menu</Description>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-    <AssemblyTitle>Free Train Simulator Menu</AssemblyTitle>
+    <AssemblyTitle>Riel Menu</AssemblyTitle>
     <OutputPath>..\..\Program</OutputPath>
-    <ApplicationIcon>..\FTS.ico</ApplicationIcon>
-    <RootNamespace>FreeTrainSimulator.Menu</RootNamespace>
+    <ApplicationIcon>..\Riel.ico</ApplicationIcon>
+    <RootNamespace>Riel.Menu</RootNamespace>
     <Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 		<ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
 	</PropertyGroup>
@@ -17,8 +17,8 @@
     <PackageReference Include="GetText.NET.WindowsForms" Version="11.0.10-preview.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FreeTrainSimulator.Models.Imported\FreeTrainSimulator.Models.Imported.csproj" />
-    <ProjectReference Include="..\FreeTrainSimulator.Online\FreeTrainSimulator.Online.csproj" />
-    <ProjectReference Include="..\FreeTrainSimulator.Updater\FreeTrainSimulator.Updater.csproj" />
+    <ProjectReference Include="..\Riel.Models.Imported\Riel.Models.Imported.csproj" />
+    <ProjectReference Include="..\Riel.Online\Riel.Online.csproj" />
+    <ProjectReference Include="..\Riel.Updater\Riel.Updater.csproj" />
   </ItemGroup>
 </Project>

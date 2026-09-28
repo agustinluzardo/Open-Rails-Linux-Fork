@@ -19,7 +19,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 namespace Orts.Simulation
 {

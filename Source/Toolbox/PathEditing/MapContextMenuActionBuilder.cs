@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Models.Content;
+using Riel.Runtime.Track;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     /// <summary>
     /// Builds the ordered map context menu for the element under the pointer. Pure logic so the menu

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Threading;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Shared refresh pump for the hosted pull-model tool-window view models. Owns the single

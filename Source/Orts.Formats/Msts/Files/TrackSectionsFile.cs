@@ -16,7 +16,7 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.Diagnostics;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 using System.IO;
 
 using Orts.Formats.Msts.Models;

@@ -1,4 +1,4 @@
-﻿namespace FreeTrainSimulator.Updater
+﻿namespace Riel.Updater
 {
     partial class UpdaterProgress
     {
@@ -55,7 +55,7 @@
             this.MinimizeBox = false;
             this.Name = "UpdaterProgress";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Free Train Simulator Updater";
+            this.Text = "Riel Updater";
             this.UseWaitCursor = true;
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.UpdaterProgress_FormClosed);
             this.Load += new System.EventHandler(this.UpdaterProgress_Load);

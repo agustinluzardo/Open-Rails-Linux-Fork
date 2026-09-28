@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 
-using FreeTrainSimulator.Common.Diagnostics;
+using Riel.Common.Diagnostics;
 
 using Microsoft.Xna.Framework;
 

@@ -20,9 +20,9 @@ using System.Collections.Immutable;
 using System.Windows.Controls;
 using System.Windows.Forms.Integration;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Common.Position;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 using Orts.Formats.Msts.Models;
 
@@ -192,7 +192,7 @@ namespace ORTS.TrackViewer.UserInterface
                 int shapeIndex = tvs.ShapeIndex;
                 string shapeName;
 
-                if (RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(shapeIndex, out FreeTrainSimulator.Models.Track.TrackShape shape))
+                if (RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(shapeIndex, out Riel.Models.Track.TrackShape shape))
                     {
                     shapeName = shape.FileName;
                 }
@@ -283,7 +283,7 @@ namespace ORTS.TrackViewer.UserInterface
                 statusAdditional.Text += string.Format(System.Globalization.CultureInfo.CurrentCulture,
                     " {7}: {3}, {4} [{1} {2}] [{5} {6}] <{0}>",
                     curNode.NodeType, curNode.NextMainNode, curNode.NextSidingNode,
-                    curNode.Location.Location.X, curNode.Location.Location.Z, (curNode.NodeType & FreeTrainSimulator.Common.PathNodeType.Junction) == FreeTrainSimulator.Common.PathNodeType.Junction, (curNode.NodeType & FreeTrainSimulator.Common.PathNodeType.Invalid) == FreeTrainSimulator.Common.PathNodeType.Invalid, trackViewer.DrawPATfile.FileName);
+                    curNode.Location.Location.X, curNode.Location.Location.Z, (curNode.NodeType & Riel.Common.PathNodeType.Junction) == Riel.Common.PathNodeType.Junction, (curNode.NodeType & Riel.Common.PathNodeType.Invalid) == Riel.Common.PathNodeType.Invalid, trackViewer.DrawPATfile.FileName);
             }
         }
 
@@ -340,7 +340,7 @@ namespace ORTS.TrackViewer.UserInterface
             if (!string.Equals(description, "platform", StringComparison.OrdinalIgnoreCase))
                 return;
 
-            if (RuntimeDataResolver.Instance.TrackWorld.TrackDatabase.TrackItems[index] is not FreeTrainSimulator.Models.Track.PlatformTrackItem platform)
+            if (RuntimeDataResolver.Instance.TrackWorld.TrackDatabase.TrackItems[index] is not Riel.Models.Track.PlatformTrackItem platform)
                 return;
             statusAdditional.Text += string.Format(System.Globalization.CultureInfo.CurrentCulture,
                 "{0} ({1})", platform.StationName, platform.PlatformName);

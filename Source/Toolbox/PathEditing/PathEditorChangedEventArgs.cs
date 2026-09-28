@@ -1,8 +1,8 @@
 ﻿using System;
 
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Runtime.Track;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     public class PathEditorChangedEventArgs : EventArgs
     {

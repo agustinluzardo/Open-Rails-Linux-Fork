@@ -3,9 +3,8 @@
 	  Riel Linux - platform fix-ups.
 
 	  Imported after every project body, so it can rewrite the item groups the
-	  upstream project files declare. Keeping the platform switches here instead
-	  of editing each .csproj keeps the delta against upstream FreeTrainSimulator
-	  small and makes merges from upstream cheap.
+	  project files declare. Keeping the platform switches here avoids duplicating
+	  the build configuration in each project.
 	-->
 
 	<!-- Graphics backend: replace the Direct3D 11 package with the OpenGL one. -->

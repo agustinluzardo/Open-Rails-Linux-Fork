@@ -20,7 +20,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FreeTrainSimulator.Common.Logging
+namespace Riel.Common.Logging
 {
     public sealed class DataLogger : IDisposable
     {

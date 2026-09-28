@@ -2,7 +2,7 @@
 
 using MemoryPack;
 
-namespace FreeTrainSimulator.Common.Calc
+namespace Riel.Common.Calc
 {
     /// <summary>
     /// Interpolated table lookup

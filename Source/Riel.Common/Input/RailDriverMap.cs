@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using GetText;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
     public static class RailDriverMap
     {

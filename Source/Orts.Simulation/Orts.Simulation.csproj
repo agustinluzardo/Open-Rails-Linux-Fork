@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Description>Free Train Simulator Simulation Library</Description>
-		<AssemblyTitle>Free Train Simulator Simulation Library</AssemblyTitle>
+		<Description>Riel Simulation Library</Description>
+		<AssemblyTitle>Riel Simulation Library</AssemblyTitle>
 		<OutputPath>..\..\Program</OutputPath>
 		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 	</PropertyGroup>
@@ -16,9 +16,9 @@
 		<PackageReference Include="MagicOnion.Serialization.MemoryPack" Version="7.10.1-preview" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\FreeTrainSimulator.Models.Imported\FreeTrainSimulator.Models.Imported.csproj" />
-		<ProjectReference Include="..\FreeTrainSimulator.Online\FreeTrainSimulator.Online.csproj" />
-		<ProjectReference Include="..\FreetrainSimulator.Runtime\FreetrainSimulator.Runtime.csproj" />
+		<ProjectReference Include="..\Riel.Models.Imported\Riel.Models.Imported.csproj" />
+		<ProjectReference Include="..\Riel.Online\Riel.Online.csproj" />
+		<ProjectReference Include="..\Riel.Runtime\Riel.Runtime.csproj" />
 		<ProjectReference Include="..\Orts.Scripting.Api\Orts.Scripting.Api.csproj" />
 		<PackageReference Include="GetText.NET" Version="11.0.10-preview.1" />
 	</ItemGroup>

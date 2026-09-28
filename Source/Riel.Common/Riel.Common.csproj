@@ -2,9 +2,9 @@
 	<PropertyGroup>
 		<Description>Riel Common Library</Description>
 		<AssemblyTitle>Riel Common Library</AssemblyTitle>
-		<!-- Existing rolling-stock DLLs and C# route scripts reference this public API. -->
-		<AssemblyName>FreeTrainSimulator.Common</AssemblyName>
-		<RootNamespace>FreeTrainSimulator.Common</RootNamespace>
+		<!-- Public API for Riel add-ons and route scripts. Existing binaries must be rebuilt. -->
+		<AssemblyName>Riel.Common</AssemblyName>
+		<RootNamespace>Riel.Common</RootNamespace>
 		<OutputPath>..\..\Program</OutputPath>
 		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 	</PropertyGroup>

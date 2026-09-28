@@ -19,7 +19,7 @@ using System;
 using System.ComponentModel;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 
 namespace Orts.ContentManager
 {

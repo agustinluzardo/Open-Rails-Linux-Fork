@@ -1,6 +1,6 @@
 ﻿
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Input;
+using Riel.Common;
+using Riel.Common.Input;
 
 using Microsoft.Xna.Framework.Input;
 

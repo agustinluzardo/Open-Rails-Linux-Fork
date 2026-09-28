@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace FreeTrainSimulator.Common.Calc
+namespace Riel.Common.Calc
 {
     /// <summary>
     /// Thread-safe equivalent of System.Random, using just static methods.

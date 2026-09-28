@@ -4,7 +4,7 @@ using System.Linq;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
     public class RailDriverInputHandler<T> where T : Enum
     {

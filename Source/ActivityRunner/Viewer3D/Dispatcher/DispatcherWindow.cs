@@ -7,20 +7,20 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Graphics.DrawableComponents;
-using FreeTrainSimulator.Graphics.MapView;
-using FreeTrainSimulator.Graphics.MapView.Widgets;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Common.Display;
-using FreeTrainSimulator.Graphics.Xna;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.DebugInfo;
+using Riel.Common.Info;
+using Riel.Common.Input;
+using Riel.Graphics;
+using Riel.Graphics.DrawableComponents;
+using Riel.Graphics.MapView;
+using Riel.Graphics.MapView.Widgets;
+using Riel.Graphics.Window;
+using Riel.Common.Display;
+using Riel.Graphics.Xna;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 using GetText;
 

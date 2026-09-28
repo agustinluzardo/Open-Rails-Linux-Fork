@@ -21,7 +21,7 @@ using System;
 using Orts.ActivityRunner.Viewer3D.PopupWindows;
 using Orts.ActivityRunner.Viewer3D.RollingStock;
 using Orts.Simulation.Commanding;
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 namespace Orts.ActivityRunner.Viewer3D
 {

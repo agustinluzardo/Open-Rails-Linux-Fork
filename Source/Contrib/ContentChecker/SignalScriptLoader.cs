@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Models.Signalling;
+using Riel.Models.Signalling;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Files;

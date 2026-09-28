@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Runtime.Track;
 
 using MemoryPack;
 

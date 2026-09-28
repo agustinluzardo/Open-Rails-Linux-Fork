@@ -1,7 +1,7 @@
 ﻿using System.IO.Pipelines;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Online;
+using Riel.Online;
 
 using MemoryPack;
 

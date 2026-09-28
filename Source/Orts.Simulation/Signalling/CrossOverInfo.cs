@@ -17,7 +17,7 @@
 
 // This module covers all classes and code for signal, speed post, track occupation and track reservation control
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 namespace Orts.Simulation.Signalling
 {

@@ -4,11 +4,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Threading;
 
-using FreeTrainSimulator.Models.Base;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Toolbox.Hosting;
+using Riel.Models.Base;
+using Riel.Models.Content;
+using Riel.Toolbox.Hosting;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Bindable view model for the native WPF main menu. Wraps the hosted <see cref="HostedToolboxMenu"/>

@@ -42,7 +42,7 @@ jobs:
         run: |
           set -euo pipefail
           dotnet test Test/Tests.Orts/Tests.Orts.csproj -c Release
-          dotnet test Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj -c Release
+          dotnet test Test/Tests.Riel/Tests.Riel.csproj -c Release
           for project in \
             ActivityRunner/ActivityRunner.csproj \
             Launcher.Cli/Launcher.Cli.csproj \

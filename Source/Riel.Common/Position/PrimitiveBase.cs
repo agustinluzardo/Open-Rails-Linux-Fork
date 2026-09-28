@@ -1,4 +1,4 @@
-﻿namespace FreeTrainSimulator.Common.Position
+﻿namespace Riel.Common.Position
 {
     /// <summary>
     /// An item which has a location on a (2D) map.

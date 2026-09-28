@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FreeTrainSimulator.Common.DebugInfo
+namespace Riel.Common.DebugInfo
 {
 
     public interface INameValueInformationProvider

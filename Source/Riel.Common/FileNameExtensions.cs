@@ -1,4 +1,4 @@
-﻿namespace FreeTrainSimulator.Common
+﻿namespace Riel.Common
 {
     public static class FileNameExtensions
     {

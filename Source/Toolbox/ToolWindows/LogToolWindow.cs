@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 using System.Drawing;
 using System.IO;
 
-using FreeTrainSimulator.Toolbox.PopupWindows;
+using Riel.Toolbox.PopupWindows;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Hosted-mode bridge exposing read-only log file content for a dockable WPF log window.

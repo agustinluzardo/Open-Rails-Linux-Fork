@@ -520,7 +520,7 @@ msgid "FPS"
 msgstr ""
 
 #: ..\..\..\Menu\MainForm.Designer.cs:127
-msgid "Free Train Simulator"
+msgid "Riel"
 msgstr ""
 
 #: ..\..\..\Menu\Options.Designer.cs:1537

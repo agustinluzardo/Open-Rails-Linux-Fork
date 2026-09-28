@@ -10,16 +10,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Models.Content;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
 using GetText;
 using GetText.WindowsForms;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     public partial class TestingForm : Form
     {

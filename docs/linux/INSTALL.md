@@ -114,7 +114,7 @@ Optionally run the tests, which need no display and take a few seconds:
 ```sh
 cd ../../Source
 dotnet test Test/Tests.Orts/Tests.Orts.csproj
-dotnet test Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj
+dotnet test Test/Tests.Riel/Tests.Riel.csproj
 ```
 
 ### Shaders

@@ -1,0 +1,47 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="CodeAnalysis" />
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="UpdateContentVersion" />
+  </Configurations>
+  <Folder Name="/Contrib/">
+    <Project Path="Contrib/ContentChecker/ContentChecker.csproj" />
+    <Project Path="Contrib/ContentManager/ContentManager.csproj" />
+    <Project Path="Contrib/SimulatorTester/SimulatorTester.csproj" />
+    <Project Path="Contrib/TrackViewer/TrackViewer.Legacy.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="../CONTRIBUTING.md" />
+    <File Path="../README.md" />
+    <File Path="../SUPPORT.md" />
+    <File Path="../WHATSNEW.md" />
+    <File Path=".config/dotnet-tools.json" />
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="version.json" />
+  </Folder>
+  <Folder Name="/Test/">
+    <Project Path="Test/Tests.Riel/Tests.Riel.csproj" />
+    <Project Path="Test/Tests.Orts/Tests.Orts.csproj" />
+  </Folder>
+  <Project Path="ActivityRunner/ActivityRunner.csproj" />
+  <Project Path="Riel.Common/Riel.Common.csproj" />
+  <Project Path="Riel.Graphics/Riel.Graphics.csproj" />
+  <Project Path="Riel.Models.Imported/Riel.Models.Imported.csproj" />
+  <Project Path="Riel.Models/Riel.Models.csproj" />
+  <Project Path="Riel.Online/Riel.Online.csproj" />
+  <Project Path="Riel.Runtime/Riel.Runtime.csproj">
+    <BuildType Solution="UpdateContentVersion|*" Project="Release" />
+  </Project>
+  <Project Path="Riel.Updater/Riel.Updater.csproj" />
+  <Project Path="Launcher/Launcher.csproj" />
+  <Project Path="Menu/Menu.csproj" />
+  <Project Path="MultiPlayer.Hub/MultiPlayer.Hub.csproj" />
+  <Project Path="Orts.Formats/Orts.Formats.csproj" />
+  <Project Path="Orts.Scripting.Api/Orts.Scripting.Api.csproj" />
+  <Project Path="Orts.Simulation/Orts.Simulation.csproj" />
+  <Project Path="Toolbox/Toolbox.csproj" />
+  <Project Path="Updater/Updater.csproj" />
+</Solution>

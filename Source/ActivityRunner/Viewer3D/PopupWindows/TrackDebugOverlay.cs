@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Window.Controls;
-using FreeTrainSimulator.Graphics.Window.Controls.Layout;
-using FreeTrainSimulator.Graphics.Xna;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Input;
+using Riel.Common.Position;
+using Riel.Graphics.Window;
+using Riel.Graphics.Window.Controls;
+using Riel.Graphics.Window.Controls.Layout;
+using Riel.Graphics.Xna;
+using Riel.Models.Settings;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using GetText;
 
@@ -108,10 +108,10 @@ namespace Orts.ActivityRunner.Viewer3D.PopupWindows
                             processedNodeIndices.Add(geometry.Node.NodeIndex) &&
                             trackDatabase.TrackItemSelectors.TryGetValue(geometry.Node.NodeIndex, out TrackItemIndex trackItemIndex))
                         {
-                            IEnumerable<IGrouping<float, FreeTrainSimulator.Models.Track.TrackItemBase>> grouping = trackItemIndex.TrackItems
+                            IEnumerable<IGrouping<float, Riel.Models.Track.TrackItemBase>> grouping = trackItemIndex.TrackItems
                                 .Select(i => trackDatabase.TrackItems[i])
                                 .GroupBy(item => item.SectionDistance);
-                            foreach (IGrouping<float, FreeTrainSimulator.Models.Track.TrackItemBase> item in grouping)
+                            foreach (IGrouping<float, Riel.Models.Track.TrackItemBase> item in grouping)
                             {
                                 labelList.Add(labelCache.Get(HashCode.Combine(geometry.Node.NodeIndex, item.Key),
                                     () =>
@@ -157,7 +157,7 @@ namespace Orts.ActivityRunner.Viewer3D.PopupWindows
         /// <summary>
         /// Returns a display label for a track item: platform/siding name when available, otherwise the type name without "TrackItem" suffix.
         /// </summary>
-        private static string TrackItemLabel(FreeTrainSimulator.Models.Track.TrackItemBase trackItem) => trackItem switch
+        private static string TrackItemLabel(Riel.Models.Track.TrackItemBase trackItem) => trackItem switch
         {
             PlatformTrackItem platform => $"Platform {platform.PlatformName}",
             SidingTrackItem siding => $"Siding {siding.SidingName}",

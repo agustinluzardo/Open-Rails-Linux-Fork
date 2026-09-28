@@ -1,4 +1,4 @@
-﻿using FreeTrainSimulator.Common.DebugInfo;
+﻿using Riel.Common.DebugInfo;
 
 using Orts.Simulation;
 using Orts.Simulation.RollingStocks;

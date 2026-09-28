@@ -23,7 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
-using FreeTrainSimulator.Common.Native;
+using Riel.Common.Native;
 
 using Orts.Formats.OpenRails.Parsers;
 

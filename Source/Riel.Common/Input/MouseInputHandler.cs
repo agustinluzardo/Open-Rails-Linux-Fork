@@ -2,7 +2,7 @@
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Input
+namespace Riel.Common.Input
 {
     public class MouseInputHandler<T> where T : Enum
     {

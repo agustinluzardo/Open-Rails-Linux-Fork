@@ -3,7 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace FreeTrainSimulator.Common.Position
+namespace Riel.Common.Position
 {
     public static class TileHelper
     {

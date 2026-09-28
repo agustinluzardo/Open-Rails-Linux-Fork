@@ -1,6 +1,6 @@
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// One node row of the currently edited train path (index, node type, validity).

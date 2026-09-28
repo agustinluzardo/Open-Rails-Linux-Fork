@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace FreeTrainSimulator.Common
+namespace Riel.Common
 {
     public static class EnumerableExtension
     {

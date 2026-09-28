@@ -17,7 +17,7 @@
 
 // This file is the responsibility of the 3D & Environment Team. 
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 using Orts.ActivityRunner.Viewer3D.RollingStock.CabView;
 using Orts.ActivityRunner.Viewer3D.Shapes;

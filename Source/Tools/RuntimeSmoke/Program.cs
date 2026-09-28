@@ -4,11 +4,11 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Graphics.Window;
+using Riel.Common;
+using Riel.Common.Input;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
+using Riel.Graphics.Window;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

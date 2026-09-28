@@ -1,4 +1,4 @@
-﻿namespace FreeTrainSimulator.Common.Position
+﻿namespace Riel.Common.Position
 {
     public interface IWorldPosition
     {

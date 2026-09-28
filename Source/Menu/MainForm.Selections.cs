@@ -4,14 +4,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Logging;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Common.Logging;
+using Riel.Models.Content;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     public partial class MainForm
     {

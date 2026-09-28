@@ -19,9 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Diagnostics;
-using FreeTrainSimulator.Common.Input;
+using Riel.Common;
+using Riel.Common.Diagnostics;
+using Riel.Common.Input;
 
 using Orts.Formats.Msts;
 using Orts.Simulation;

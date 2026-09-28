@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Models.Content;
+using Riel.Common;
+using Riel.Graphics;
+using Riel.Models.Content;
 
-namespace FreeTrainSimulator.Toolbox.Hosting
+namespace Riel.Toolbox.Hosting
 {
     /// <summary>
     /// Hosted-mode bridge between <see cref="GameWindow"/> and a native WPF main menu.

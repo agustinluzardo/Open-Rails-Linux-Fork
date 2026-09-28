@@ -24,11 +24,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Position;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Models;
@@ -342,12 +342,12 @@ namespace Orts.Simulation.World
         public LevelCrossing CrossingGroup { get; internal set; }
         public int TrackIndex => vectorNode?.NodeIndex ?? -1;
         public int TrackItemId => trackItem?.TrackItemIndex ?? -1;
-        private readonly FreeTrainSimulator.Models.Track.TrackItemBase trackItem;
+        private readonly Riel.Models.Track.TrackItemBase trackItem;
 
         public static LevelCrossingItem None { get; } = new LevelCrossingItem();
 
 
-        public LevelCrossingItem(VectorNode node, FreeTrainSimulator.Models.Track.TrackItemBase trItem)
+        public LevelCrossingItem(VectorNode node, Riel.Models.Track.TrackItemBase trItem)
         {
             vectorNode = node;
             trackItem = trItem;
@@ -418,7 +418,7 @@ namespace Orts.Simulation.World
         }
 
         /// <summary>
-        /// Snaps this item's <see cref="Location"/> onto the corresponding <see cref="FreeTrainSimulator.Models.Track.VectorNode"/>
+        /// Snaps this item's <see cref="Location"/> onto the corresponding <see cref="Riel.Models.Track.VectorNode"/>
         /// in the new track model, storing a pre-computed <see cref="TrackTraveller"/> for use in
         /// <see cref="DistanceTo(in TrackTraveller, float)"/>.
         /// Called once during <see cref="LevelCrossings"/> construction, after <see cref="TrackTraveller"/> is initialized.

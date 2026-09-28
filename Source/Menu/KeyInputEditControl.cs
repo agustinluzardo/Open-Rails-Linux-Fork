@@ -20,13 +20,13 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common.Input;
+using Riel.Common.Input;
 
-using static FreeTrainSimulator.Common.Native.NativeMethods;
+using static Riel.Common.Native.NativeMethods;
 
 using Xna = Microsoft.Xna.Framework.Input;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     /// <summary>
     /// A form used to edit keyboard input settings, in combination with <see cref="KeyInputControl"/>.

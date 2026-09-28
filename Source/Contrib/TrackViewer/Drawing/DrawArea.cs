@@ -28,7 +28,7 @@
 // whereas world locations are in x, z (from left to right but from bottom to top).
 using System;
 
-using FreeTrainSimulator.Common.Position;
+using Riel.Common.Position;
 
 using Microsoft.Xna.Framework;
 

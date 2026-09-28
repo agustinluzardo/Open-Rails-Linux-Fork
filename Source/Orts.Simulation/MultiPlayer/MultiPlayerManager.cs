@@ -35,10 +35,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Position;
+using Riel.Common.Native;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.Position;
 
 using GetText;
 

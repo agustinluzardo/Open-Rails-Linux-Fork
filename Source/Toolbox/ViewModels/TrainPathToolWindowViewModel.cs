@@ -4,10 +4,10 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-using FreeTrainSimulator.Toolbox.PathEditing;
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Toolbox.PathEditing;
+using Riel.Toolbox.ToolWindows;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>
     /// Bindable view model for the hosted train-path dockable tool window. Pulls an immutable

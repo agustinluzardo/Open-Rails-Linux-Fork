@@ -17,8 +17,8 @@
 
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
+using Riel.Models.Track;
+using Riel.Runtime;
 
 namespace ORTS.TrackViewer.Editing
 {

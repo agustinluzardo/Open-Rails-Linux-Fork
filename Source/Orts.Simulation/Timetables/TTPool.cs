@@ -29,10 +29,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Api;
+using Riel.Models.Imported.State;
+using Riel.Runtime.Track;
 
 using Orts.Formats.Msts;
 using Orts.Formats.OpenRails.Parsers;

@@ -17,10 +17,10 @@
 
 // This file is the responsibility of the 3D & Environment Team. 
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Xna;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Position;
+using Riel.Common.Xna;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

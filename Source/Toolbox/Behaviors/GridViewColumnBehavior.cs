@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace FreeTrainSimulator.Toolbox.Behaviors
+namespace Riel.Toolbox.Behaviors
 {
     /// <summary>
     /// Attached behavior that sizes one <see cref="GridViewColumn"/> in a <see cref="ListView"/> to the

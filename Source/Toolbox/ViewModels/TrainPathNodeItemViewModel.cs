@@ -1,7 +1,7 @@
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Toolbox.ToolWindows;
+using Riel.Common;
+using Riel.Toolbox.ToolWindows;
 
-namespace FreeTrainSimulator.Toolbox.ViewModels
+namespace Riel.Toolbox.ViewModels
 {
     /// <summary>Bindable row for the path-node list. Observable so it can be updated in place.</summary>
     internal sealed class TrainPathNodeItemViewModel : ObservableObject

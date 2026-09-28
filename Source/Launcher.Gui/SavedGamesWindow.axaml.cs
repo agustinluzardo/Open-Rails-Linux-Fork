@@ -15,8 +15,8 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Models.Imported.State;
+using Riel.Common.Info;
+using Riel.Models.Imported.State;
 
 using Riel.Launcher;
 
@@ -126,7 +126,7 @@ namespace Riel.Launcher.Gui
                     if (string.IsNullOrWhiteSpace(train))
                         train = T("Unknown train");
                     string path = state.Path ?? state.ProfileSelections?.PathId ?? state.ProfileSelections?.ActivityId;
-                    string timetable = state.ProfileSelections?.ActivityType == FreeTrainSimulator.Common.ActivityType.TimeTable
+                    string timetable = state.ProfileSelections?.ActivityType == Riel.Common.ActivityType.TimeTable
                         ? state.ProfileSelections?.TimetableName ?? state.ProfileSelections?.TimetableSet
                         : null;
                     string when = TimeSpan.FromSeconds(state.GameTime).ToString(@"hh\:mm\:ss", CultureInfo.CurrentCulture);
@@ -136,9 +136,9 @@ namespace Riel.Launcher.Gui
                         (string.IsNullOrWhiteSpace(path) ? string.Empty : $"{T("Path")}: {path}\n") +
                         $"{T("Game time")}: {when}\n{T("Save version")}: {state.GameVersion}";
                     item.CanResume = state.Valid != false;
-                    item.ResumeAction = state.ProfileSelections?.ActivityType == FreeTrainSimulator.Common.ActivityType.TimeTable ||
-                        state.ProfileSelections?.GamePlayAction == FreeTrainSimulator.Common.GamePlayAction.SinglePlayerTimetableGame ||
-                        state.ProfileSelections?.GamePlayAction == FreeTrainSimulator.Common.GamePlayAction.SinglePlayerResumeTimetableGame
+                    item.ResumeAction = state.ProfileSelections?.ActivityType == Riel.Common.ActivityType.TimeTable ||
+                        state.ProfileSelections?.GamePlayAction == Riel.Common.GamePlayAction.SinglePlayerTimetableGame ||
+                        state.ProfileSelections?.GamePlayAction == Riel.Common.GamePlayAction.SinglePlayerResumeTimetableGame
                         ? "-SinglePlayerResumeTimetableGame"
                         : "-SingleplayerResume";
                     if (state.Valid == false)

@@ -3,10 +3,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-using FreeTrainSimulator.Toolbox.PathEditing;
-using FreeTrainSimulator.Toolbox.ViewModels;
+using Riel.Toolbox.PathEditing;
+using Riel.Toolbox.ViewModels;
 
-namespace FreeTrainSimulator.Toolbox.Views
+namespace Riel.Toolbox.Views
 {
     /// <summary>
     /// Designable view for the Path Editor dockable tool window (Path Nodes, Path Data, and Paths tabs).

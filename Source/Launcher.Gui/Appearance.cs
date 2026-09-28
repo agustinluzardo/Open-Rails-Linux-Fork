@@ -21,7 +21,7 @@ using System.IO;
 using Avalonia;
 using Avalonia.Styling;
 
-using FreeTrainSimulator.Common.Info;
+using Riel.Common.Info;
 
 namespace Riel.Launcher.Gui
 {

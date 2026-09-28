@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 [assembly: CLSCompliant(false)]
 
-namespace FreeTrainSimulator.Updater
+namespace Riel.Updater
 {
     internal static class Program
     {

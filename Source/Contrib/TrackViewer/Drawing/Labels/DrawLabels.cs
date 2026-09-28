@@ -19,7 +19,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-using FreeTrainSimulator.Common.Position;
+using Riel.Common.Position;
 
 using Newtonsoft.Json;
 

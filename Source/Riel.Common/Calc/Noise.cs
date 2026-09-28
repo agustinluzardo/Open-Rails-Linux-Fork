@@ -1,4 +1,4 @@
-﻿namespace FreeTrainSimulator.Common.Calc
+﻿namespace Riel.Common.Calc
 {
     // SimplexNoise for C#
     // Author: Heikki Törmälä

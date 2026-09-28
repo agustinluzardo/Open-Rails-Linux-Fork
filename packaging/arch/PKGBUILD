@@ -90,7 +90,7 @@ check() {
     export NUGET_PACKAGES="$srcdir/nuget"
 
     dotnet test Test/Tests.Orts/Tests.Orts.csproj --configuration Release
-    dotnet test Test/Tests.FreeTrainSimulator/Tests.FreeTrainSimulator.csproj --configuration Release
+    dotnet test Test/Tests.Riel/Tests.Riel.csproj --configuration Release
 }
 
 package() {

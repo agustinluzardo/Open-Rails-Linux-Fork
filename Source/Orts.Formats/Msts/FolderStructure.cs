@@ -8,8 +8,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
+using Riel.Common;
+using Riel.Common.Native;
 
 #if !RIEL_UNIX
 using Microsoft.Win32;

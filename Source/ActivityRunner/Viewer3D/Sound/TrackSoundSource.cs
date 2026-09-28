@@ -44,9 +44,9 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Runtime;
+using Riel.Common;
+using Riel.Common.Position;
+using Riel.Runtime;
 
 using Orts.ActivityRunner.Viewer3D.RollingStock;
 using Orts.Formats.Msts;

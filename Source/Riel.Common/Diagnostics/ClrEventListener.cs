@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 
-using FreeTrainSimulator.Common.DebugInfo;
+using Riel.Common.DebugInfo;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common.Diagnostics
+namespace Riel.Common.Diagnostics
 {
     public sealed class ClrEventListener : EventListener, INameValueInformationProvider
     {

@@ -6,16 +6,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics.MapView;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Input;
+using Riel.Common.Position;
+using Riel.Graphics.MapView;
+using Riel.Models.Content;
+using Riel.Models.Shim;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
 
     internal sealed class PathEditor : PathEditorBase

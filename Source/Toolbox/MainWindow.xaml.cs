@@ -12,19 +12,19 @@ using System.Windows;
 using AvalonDock.Layout;
 using AvalonDock.Serializer.Json;
 
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Toolbox.Dialogs;
-using FreeTrainSimulator.Toolbox.Hosting;
-using FreeTrainSimulator.Toolbox.PathEditing;
-using FreeTrainSimulator.Toolbox.Settings;
-using FreeTrainSimulator.Toolbox.ViewModels;
+using Riel.Common.Info;
+using Riel.Models.Content;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
+using Riel.Toolbox.Dialogs;
+using Riel.Toolbox.Hosting;
+using Riel.Toolbox.PathEditing;
+using Riel.Toolbox.Settings;
+using Riel.Toolbox.ViewModels;
 
 using GetText;
 
-namespace FreeTrainSimulator.Toolbox
+namespace Riel.Toolbox
 {
     public partial class MainWindow : Window, IDisposable
     {

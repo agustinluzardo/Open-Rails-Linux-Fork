@@ -7,12 +7,12 @@
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 // 
-using FreeTrainSimulator.Common.DebugInfo;
+using Riel.Common.DebugInfo;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace FreeTrainSimulator.Common.Diagnostics
+namespace Riel.Common.Diagnostics
 {
     public sealed class GraphicMetrics : DetailInfoBase
     {

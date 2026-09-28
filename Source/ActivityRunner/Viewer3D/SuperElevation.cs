@@ -22,13 +22,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common.Xna;
-using FreeTrainSimulator.Models.Track;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Calc;
+using Riel.Common.Position;
+using Riel.Common.Xna;
+using Riel.Models.Track;
+using Riel.Runtime;
+using Riel.Runtime.Track;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -53,7 +53,7 @@ namespace Orts.ActivityRunner.Viewer3D
         /// <param name="shapeFilePath">Path to the shape file.</param>
         public static bool DecomposeStaticSuperElevation(Viewer viewer, List<DynamicTrackViewer> trackList, TrackObject trackObj, in WorldPosition worldMatrixInput, in Tile tile, string shapeFilePath)
         {
-            if (!RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(trackObj.SectionIndex, out FreeTrainSimulator.Models.Track.TrackShape shape)
+            if (!RuntimeDataResolver.Instance.TrackSections.TrackShapes.TryGetValue(trackObj.SectionIndex, out Riel.Models.Track.TrackShape shape)
             || shape.ShapeType == ShapeType.Road)
                 return false;
 
@@ -71,7 +71,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 {
                     count++;
                     int sid = id.TrackSections[i];
-                    if (!RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(sid, out FreeTrainSimulator.Models.Track.TrackSection section))
+                    if (!RuntimeDataResolver.Instance.TrackSections.TrackSections.TryGetValue(sid, out Riel.Models.Track.TrackSection section))
                         continue;//cannot find the track section, will not draw using super elevation
                     if (Math.Abs(section.Gauge - viewer.UserSettings.TrackGauge / 1000f) > 0.2)
                         continue;//the main route has a gauge different than mine
@@ -175,7 +175,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private static float sv, ev, mv, dir;
         //a function to find the elevation of a section ,by searching the TDB database
-        public static SectionGeometry FindSectionValue(FreeTrainSimulator.Models.Track.TrackSection section, in Tile tile)
+        public static SectionGeometry FindSectionValue(Riel.Models.Track.TrackSection section, in Tile tile)
         {
             if (!section.Curved)
                 return null;
@@ -276,7 +276,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 count++;
                 float length, radius;
                 int sid = path[0].TrackSections[i];
-                FreeTrainSimulator.Models.Track.TrackSection section = RuntimeDataResolver.Instance.TrackSections.TrackSections[sid];
+                Riel.Models.Track.TrackSection section = RuntimeDataResolver.Instance.TrackSections.TrackSections[sid];
                 WorldPosition root = nextRoot;
                 nextRoot = nextRoot.SetTranslation(Vector3.Zero);
 

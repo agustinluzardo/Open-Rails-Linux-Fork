@@ -18,7 +18,7 @@
 using System;
 using System.Diagnostics;
 
-namespace FreeTrainSimulator.Common.Display
+namespace Riel.Common.Display
 {
     /// <summary>What the dialog offers the user.</summary>
     public enum MessageDialogButtons

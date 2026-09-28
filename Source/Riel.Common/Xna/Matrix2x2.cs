@@ -1,4 +1,4 @@
-﻿namespace FreeTrainSimulator.Common.Xna
+﻿namespace Riel.Common.Xna
 {
 #pragma warning disable CA1815 // Override equals and operator equals on value types
     public readonly struct Matrix2x2

@@ -6,13 +6,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Graphics;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Toolbox.Settings;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Graphics;
+using Riel.Models.Settings;
+using Riel.Toolbox.Settings;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Hosted-mode bridge between <see cref="GameWindow"/> and a dockable WPF settings tool window.

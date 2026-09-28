@@ -17,11 +17,11 @@
 
 using System;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
+using Riel.Common;
+using Riel.Common.Position;
+using Riel.Models.Track;
 
-using TrackTraveller = FreeTrainSimulator.Runtime.Track.TrackTraveller;
+using TrackTraveller = Riel.Runtime.Track.TrackTraveller;
 
 namespace ORTS.TrackViewer.Drawing
 {

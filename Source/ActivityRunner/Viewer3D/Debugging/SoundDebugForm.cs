@@ -21,7 +21,7 @@ using System;
 using System.Globalization;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common.Position;
+using Riel.Common.Position;
 
 using Microsoft.Xna.Framework;
 

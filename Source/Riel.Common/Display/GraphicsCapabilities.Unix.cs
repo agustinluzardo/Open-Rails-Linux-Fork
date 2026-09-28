@@ -17,7 +17,7 @@
 
 using System;
 
-namespace FreeTrainSimulator.Common.Display
+namespace Riel.Common.Display
 {
     public static partial class GraphicsCapabilities
     {

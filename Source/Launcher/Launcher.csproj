@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<Description>Free Train Simulator Launcher</Description>
-		<AssemblyTitle>Free Train Simulator Launcher</AssemblyTitle>
+		<Description>Riel Launcher</Description>
+		<AssemblyTitle>Riel Launcher</AssemblyTitle>
 		<OutputPath>..\..\Program</OutputPath>
-		<RootNamespace>FreeTrainSimulator.Launcher</RootNamespace>
-		<AssemblyName>FreeTrainSimulator</AssemblyName>
-		<ApplicationIcon>..\FTS.ico</ApplicationIcon>
+		<RootNamespace>Riel.Launcher</RootNamespace>
+		<AssemblyName>Riel</AssemblyName>
+		<ApplicationIcon>..\Riel.ico</ApplicationIcon>
 		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
 	</PropertyGroup>
 	<PropertyGroup>

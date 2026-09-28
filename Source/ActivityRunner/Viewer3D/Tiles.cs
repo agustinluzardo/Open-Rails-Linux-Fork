@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-using FreeTrainSimulator.Common.Position;
+using Riel.Common.Position;
 
 using Microsoft.Xna.Framework;
 

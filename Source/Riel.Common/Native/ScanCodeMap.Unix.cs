@@ -18,7 +18,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace FreeTrainSimulator.Common.Native
+namespace Riel.Common.Native
 {
     /// <summary>
     /// PC/AT set 1 scan codes to virtual key codes and display names.

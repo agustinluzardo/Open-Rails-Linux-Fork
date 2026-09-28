@@ -1,5 +1,5 @@
-﻿using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.DebugInfo;
+﻿using Riel.Common;
+using Riel.Common.DebugInfo;
 
 using Microsoft.Xna.Framework;
 

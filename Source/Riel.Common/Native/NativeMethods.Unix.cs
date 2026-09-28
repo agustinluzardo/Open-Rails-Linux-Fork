@@ -21,7 +21,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace FreeTrainSimulator.Common.Native
+namespace Riel.Common.Native
 {
     /// <summary>
     /// Unix implementations of the Win32 entry points the engine calls.

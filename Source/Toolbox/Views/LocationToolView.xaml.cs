@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace FreeTrainSimulator.Toolbox.Views
+namespace Riel.Toolbox.Views
 {
     /// <summary>
     /// Designable view for the Location dockable tool window. Its DataContext is supplied by the shell as a

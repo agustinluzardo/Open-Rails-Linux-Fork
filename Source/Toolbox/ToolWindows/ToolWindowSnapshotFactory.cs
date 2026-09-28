@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Drawing;
 
-using FreeTrainSimulator.Common.DebugInfo;
+using Riel.Common.DebugInfo;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Builds immutable <see cref="ToolWindowSnapshot"/> instances from MonoGame-side

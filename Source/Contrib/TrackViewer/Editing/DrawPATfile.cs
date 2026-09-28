@@ -16,9 +16,9 @@
 // along with Open Rails.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
+using Riel.Common.Position;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
 
 using Orts.Formats.Msts.Files;
 

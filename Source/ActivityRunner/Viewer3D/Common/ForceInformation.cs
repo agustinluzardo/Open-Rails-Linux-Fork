@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Linq;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.DebugInfo;
+using Riel.Common;
+using Riel.Common.DebugInfo;
 
 using GetText;
 

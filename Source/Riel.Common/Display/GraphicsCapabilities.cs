@@ -17,7 +17,7 @@
 
 using System.Collections.Generic;
 
-namespace FreeTrainSimulator.Common.Display
+namespace Riel.Common.Display
 {
     /// <summary>
     /// What the window system will actually grant, as opposed to what the adapter reports.

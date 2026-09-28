@@ -1,8 +1,8 @@
-﻿using FreeTrainSimulator.Common.Input;
+﻿using Riel.Common.Input;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Common
+namespace Riel.Common
 {
     public interface IRuntimeReferenceResolver
     {

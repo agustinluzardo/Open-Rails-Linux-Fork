@@ -27,19 +27,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.Shim;
-using FreeTrainSimulator.Models.Settings;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Updater;
+using Riel.Common;
+using Riel.Common.Info;
+using Riel.Common.Input;
+using Riel.Models.Content;
+using Riel.Models.Imported.Shim;
+using Riel.Models.Settings;
+using Riel.Models.Shim;
+using Riel.Updater;
 
 using GetText;
 using GetText.WindowsForms;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     public partial class OptionsForm : Form
     {

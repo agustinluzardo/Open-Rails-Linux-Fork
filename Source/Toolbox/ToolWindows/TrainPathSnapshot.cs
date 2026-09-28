@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Toolbox.PathEditing;
+using Riel.Toolbox.PathEditing;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Immutable snapshot of the hosted train-path tool window state, captured on the game thread and read

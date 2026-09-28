@@ -28,15 +28,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Native;
-using FreeTrainSimulator.Common.Api;
-using FreeTrainSimulator.Common.Calc;
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Imported.State;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Common.Native;
+using Riel.Common.Api;
+using Riel.Common.Calc;
+using Riel.Common.Info;
+using Riel.Models.Content;
+using Riel.Models.Imported.State;
+using Riel.Models.Shim;
+using Riel.Runtime.Track;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Files;

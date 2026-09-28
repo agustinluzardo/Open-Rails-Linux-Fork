@@ -1,17 +1,17 @@
-﻿using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Graphics.Window;
-using FreeTrainSimulator.Graphics.Window.Controls;
-using FreeTrainSimulator.Graphics.Window.Controls.Layout;
-using FreeTrainSimulator.Graphics.Xna;
-using FreeTrainSimulator.Toolbox.Settings;
+﻿using Riel.Common;
+using Riel.Common.DebugInfo;
+using Riel.Common.Input;
+using Riel.Graphics.Window;
+using Riel.Graphics.Window.Controls;
+using Riel.Graphics.Window.Controls.Layout;
+using Riel.Graphics.Xna;
+using Riel.Toolbox.Settings;
 
 using GetText;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Toolbox.PopupWindows
+namespace Riel.Toolbox.PopupWindows
 {
     public class DebugScreen : OverlayBase
     {

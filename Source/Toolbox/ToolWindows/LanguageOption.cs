@@ -1,4 +1,4 @@
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// A selectable UI language for the settings tool window. <see cref="Code"/> is the culture code persisted

@@ -19,7 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 using Orts.Simulation.Physics;
 using Orts.Simulation.RollingStocks;

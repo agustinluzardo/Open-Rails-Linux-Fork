@@ -3,8 +3,8 @@ using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Online;
+using Riel.Common;
+using Riel.Online;
 
 using Grpc.Core;
 using Grpc.Net.Client;

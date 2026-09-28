@@ -21,14 +21,14 @@ using System.IO;
 using System.IO.Compression;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common.Info;
-using FreeTrainSimulator.Models.Imported.Shim;
-using FreeTrainSimulator.Models.Settings;
+using Riel.Common.Info;
+using Riel.Models.Imported.Shim;
+using Riel.Models.Settings;
 
 using GetText;
 using GetText.WindowsForms;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     public partial class ImportExportSaveForm : Form
     {

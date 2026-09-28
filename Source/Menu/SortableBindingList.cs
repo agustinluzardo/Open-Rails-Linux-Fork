@@ -20,7 +20,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace FreeTrainSimulator.Menu
+namespace Riel.Menu
 {
     public class SortableBindingList<T> : BindingList<T>
     {

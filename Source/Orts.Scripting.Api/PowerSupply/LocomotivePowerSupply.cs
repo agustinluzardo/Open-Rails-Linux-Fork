@@ -18,7 +18,7 @@
 
 using System;
 
-using FreeTrainSimulator.Common;
+using Riel.Common;
 
 namespace Orts.Scripting.Api.PowerSupply
 {

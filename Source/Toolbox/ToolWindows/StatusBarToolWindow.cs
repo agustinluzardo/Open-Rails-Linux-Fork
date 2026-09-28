@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
 
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Graphics.MapView;
+using Riel.Common.DebugInfo;
+using Riel.Common.Position;
+using Riel.Graphics.MapView;
 
-namespace FreeTrainSimulator.Toolbox.ToolWindows
+namespace Riel.Toolbox.ToolWindows
 {
     /// <summary>
     /// Hosted-mode bridge that builds the main-window status bar content on the game thread. Mirrors the

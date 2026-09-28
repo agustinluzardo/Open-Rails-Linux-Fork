@@ -21,8 +21,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Models.Track;
+using Riel.Common.Position;
+using Riel.Models.Track;
 
 using Orts.Formats.Msts.Models;
 

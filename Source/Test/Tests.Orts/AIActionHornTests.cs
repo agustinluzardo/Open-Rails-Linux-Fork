@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-using FreeTrainSimulator.Common.Position;
+using Riel.Common.Position;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

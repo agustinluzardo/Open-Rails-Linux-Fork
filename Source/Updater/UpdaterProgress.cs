@@ -8,13 +8,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Info;
+using Riel.Common;
+using Riel.Common.Info;
 
 using GetText;
 using GetText.WindowsForms;
 
-namespace FreeTrainSimulator.Updater
+namespace Riel.Updater
 {
     public partial class UpdaterProgress : Form
     {

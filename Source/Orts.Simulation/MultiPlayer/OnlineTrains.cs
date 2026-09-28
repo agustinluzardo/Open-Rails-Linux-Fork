@@ -24,10 +24,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Models.Content;
+using Riel.Models.Shim;
+using Riel.Runtime.Track;
 
 using Orts.Formats.Msts;
 using Orts.Formats.Msts.Models;

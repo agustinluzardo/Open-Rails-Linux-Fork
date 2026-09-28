@@ -1,7 +1,7 @@
 using System;
 
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common.Position;
+using Riel.Runtime.Track;
 
 namespace Orts.Simulation.Track
 {

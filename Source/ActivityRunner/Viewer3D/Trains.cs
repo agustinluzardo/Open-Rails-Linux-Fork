@@ -27,8 +27,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using FreeTrainSimulator.Common.Position;
-using FreeTrainSimulator.Common;
+using Riel.Common.Position;
+using Riel.Common;
 using Orts.ActivityRunner.Viewer3D.RollingStock.CabView;
 
 namespace Orts.ActivityRunner.Viewer3D

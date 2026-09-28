@@ -21,9 +21,9 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.Diagnostics;
-using FreeTrainSimulator.Common.Position;
+using Riel.Common;
+using Riel.Common.Diagnostics;
+using Riel.Common.Position;
 
 using Microsoft.Xna.Framework;
 

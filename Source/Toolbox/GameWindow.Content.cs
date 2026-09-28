@@ -4,21 +4,21 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Common.DebugInfo;
-using FreeTrainSimulator.Common.Input;
-using FreeTrainSimulator.Graphics.DrawableComponents;
-using FreeTrainSimulator.Graphics.MapView;
-using FreeTrainSimulator.Graphics.Xna;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Models.Shim;
-using FreeTrainSimulator.Runtime;
-using FreeTrainSimulator.Toolbox.PathEditing;
-using FreeTrainSimulator.Toolbox.PopupWindows;
+using Riel.Common;
+using Riel.Common.DebugInfo;
+using Riel.Common.Input;
+using Riel.Graphics.DrawableComponents;
+using Riel.Graphics.MapView;
+using Riel.Graphics.Xna;
+using Riel.Models.Content;
+using Riel.Models.Shim;
+using Riel.Runtime;
+using Riel.Toolbox.PathEditing;
+using Riel.Toolbox.PopupWindows;
 
 using Microsoft.Xna.Framework;
 
-namespace FreeTrainSimulator.Toolbox
+namespace Riel.Toolbox
 {
     public class ContentAreaChangedEventArgs : EventArgs
     {

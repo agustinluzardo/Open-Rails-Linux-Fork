@@ -1,8 +1,8 @@
-using FreeTrainSimulator.Common;
-using FreeTrainSimulator.Models.Content;
-using FreeTrainSimulator.Runtime.Track;
+using Riel.Common;
+using Riel.Models.Content;
+using Riel.Runtime.Track;
 
-namespace FreeTrainSimulator.Toolbox.PathEditing
+namespace Riel.Toolbox.PathEditing
 {
     /// <summary>
     /// Standard result for path editor commands, carrying success/failure feedback and the model produced by the command when available.

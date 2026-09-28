@@ -1,4 +1,4 @@
-﻿namespace FreeTrainSimulator.Toolbox.PopupWindows
+﻿namespace Riel.Toolbox.PopupWindows
 {
     public enum DebugScreenInformation
     {

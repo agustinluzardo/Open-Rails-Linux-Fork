@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FreeTrainSimulator.Common.Api
+namespace Riel.Common.Api
 {
     public interface ISaveStateApi<T> where T : SaveStateBase
     {

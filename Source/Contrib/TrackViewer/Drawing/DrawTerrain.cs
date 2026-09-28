@@ -54,7 +54,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using FreeTrainSimulator.Common.Position;
+using Riel.Common.Position;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

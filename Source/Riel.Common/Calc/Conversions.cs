@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FreeTrainSimulator.Common.Calc
+namespace Riel.Common.Calc
 {
 #pragma warning disable CA1034 // Nested types should not be visible
     /// <summary>

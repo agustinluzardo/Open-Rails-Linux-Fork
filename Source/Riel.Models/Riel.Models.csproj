@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Description>Riel Entity Models Library</Description>
+		<AssemblyTitle>Riel Entity Models Library</AssemblyTitle>
+		<OutputPath>..\..\Program</OutputPath>
+		<AssemblyName>Riel.Models</AssemblyName>
+		<RootNamespace>Riel.Models</RootNamespace>
+		<Configurations>Debug;Release;CodeAnalysis;UpdateContentVersion</Configurations>
+	</PropertyGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Riel.Common\Riel.Common.csproj" />
+	</ItemGroup>
+</Project>
