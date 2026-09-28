@@ -30,6 +30,15 @@ Riel Linux also makes independent changes to its simulator, launcher and content
 Open Rails can help diagnose differences in how MSTS content runs. We verify those differences
 against route data and test cases, then maintain Riel Linux's own fixes here.
 
+### Compatibility names in the code
+
+The common library project is `Source/Riel.Common/Riel.Common.csproj`, and its title identifies
+Riel. Its published assembly and public namespaces remain `FreeTrainSimulator.Common` so
+third-party rolling-stock DLLs can keep resolving the types they were built against. Route C#
+scripts also compile against that assembly at runtime. These identifiers are compatibility
+contracts within Riel, not a requirement to install Free Train Simulator. New public types can
+use Riel names; moving existing public types requires a migration for external DLLs.
+
 ## What had to be replaced
 
 The engine is C# on MonoGame, so most of it is portable. Six things were not.
