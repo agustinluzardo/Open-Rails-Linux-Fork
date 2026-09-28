@@ -332,10 +332,9 @@ namespace Orts.Formats.Msts
         //}
 
         /// <summary>
-        /// Static variables to reduce occurrence of duplicate warning messages.
+        /// Avoid repeating warnings for sound files that are checked on every update.
         /// </summary>
-        private static string badBranch = "";
-        private static string badPath = "";
+        private static readonly ConcurrentDictionary<string, byte> warnedMissingFiles = new(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, StringDictionary> filesFound = new Dictionary<string, StringDictionary>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
@@ -376,12 +375,8 @@ namespace Orts.Formats.Msts
             }
 
             string firstPath = paths.First();
-            if (fileRelative != badBranch || firstPath != badPath)
-            {
+            if (warnedMissingFiles.TryAdd(Path.Combine(firstPath, fileRelative), 0))
                 Trace.TraceWarning("File {0} missing from {1}", fileRelative, firstPath);
-                badBranch = fileRelative;
-                badPath = firstPath;
-            }
             return null;
         }
 

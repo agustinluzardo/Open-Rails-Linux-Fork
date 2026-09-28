@@ -176,7 +176,7 @@ namespace Orts.ActivityRunner.Processes
 
             // The Save command is the only command that doesn't take any action. It just serves as a marker.
             _ = new SaveCommand(simulator.Log, fileStem);
-            simulator.Log.SaveLog(Path.Combine(RuntimeInfo.UserDataFolder, fileStem + ".replay"));
+            simulator.Log.SaveLog(Path.Combine(RuntimeInfo.UserDataFolder, fileStem + ".replay"), typeof(CameraRotateUpDownCommand).Assembly);
 
             // Copy the logfile to the save folder
             string logName = Path.Combine(RuntimeInfo.UserDataFolder, fileStem + FileNameExtensions.TextReport);

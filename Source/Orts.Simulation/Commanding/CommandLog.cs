@@ -174,7 +174,7 @@ namespace Orts.Simulation.Commanding
         /// Saves the command log using a small versioned replay format.
         /// BinaryFormatter was removed from modern .NET and must not be used for new replay files.
         /// </summary>
-        public void SaveLog(string filePath)
+        public void SaveLog(string filePath, Assembly additionalCommandAssembly = null)
         {
             string temporaryFile = filePath + ".tmp";
             try
@@ -192,7 +192,8 @@ namespace Orts.Simulation.Commanding
                     foreach (ICommand command in CommandList)
                     {
                         Type commandType = command.GetType();
-                        if (commandType.Assembly != typeof(Command).Assembly || !typeof(ICommand).IsAssignableFrom(commandType))
+                        if ((commandType.Assembly != typeof(Command).Assembly && commandType.Assembly != additionalCommandAssembly) ||
+                            !typeof(Command).IsAssignableFrom(commandType))
                             throw new InvalidDataException($"Unsupported replay command type {commandType.FullName}");
 
                         writer.Write(commandType.FullName ?? throw new InvalidDataException("Replay command has no type name"));
@@ -230,7 +231,7 @@ namespace Orts.Simulation.Commanding
         /// Loads a replay written by <see cref="SaveLog"/>.
         /// Legacy BinaryFormatter replay files are ignored safely; the associated save-state can still be resumed.
         /// </summary>
-        public void LoadLog(string filePath)
+        public void LoadLog(string filePath, Assembly additionalCommandAssembly = null)
         {
             CommandList = new Collection<ICommand>();
 
@@ -258,10 +259,11 @@ namespace Orts.Simulation.Commanding
                     if (fieldCount < 0 || fieldCount > 256)
                         throw new InvalidDataException($"invalid field count {fieldCount} for {typeName}");
 
-                    Type commandType = commandAssembly.GetType(typeName, throwOnError: false, ignoreCase: false);
+                    Type commandType = commandAssembly.GetType(typeName, throwOnError: false, ignoreCase: false)
+                        ?? additionalCommandAssembly?.GetType(typeName, throwOnError: false, ignoreCase: false);
                     bool supportedType = commandType != null &&
                         !commandType.IsAbstract &&
-                        typeof(ICommand).IsAssignableFrom(commandType);
+                        typeof(Command).IsAssignableFrom(commandType);
 
                     Dictionary<string, FieldInfo> fields = supportedType
                         ? SerializableFields(commandType).ToDictionary(FieldKey, StringComparer.Ordinal)

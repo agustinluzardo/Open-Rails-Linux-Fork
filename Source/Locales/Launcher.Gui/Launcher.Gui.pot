@@ -682,6 +682,9 @@ msgstr ""
 msgid "Physics and operations"
 msgstr ""
 
+msgid "Open AI train doors at stations"
+msgstr ""
+
 msgid "Recording"
 msgstr ""
 

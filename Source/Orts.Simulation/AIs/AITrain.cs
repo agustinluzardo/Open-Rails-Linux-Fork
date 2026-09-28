@@ -1475,6 +1475,11 @@ namespace Orts.Simulation.AIs
                         doorOpenDelay = 0;
                         doorCloseAdvance = stopTime - 3;
                     }
+                    if (DiagnosticTrace.AiStops && DiagnosticTrace.AiTrain(Number))
+                        Trace.TraceInformation("[AiDoors] time={0} train={1} event=arrival enabled={2} freight={3} platform={4} sides={5} openDelay={6:F1} closeAdvance={7:F1}",
+                            presentTime, Number, simulator.UserSettings.ComputerTrainDoors, IsFreight,
+                            thisStation.PlatformItem?.Name ?? "<none>", thisStation.PlatformItem?.PlatformSide.ToString() ?? "None",
+                            doorOpenDelay, doorCloseAdvance);
                 }
                 else
                 {
@@ -1496,6 +1501,10 @@ namespace Orts.Simulation.AIs
                                     //open right doors
                                     SetDoors(frontIsFront ? DoorSide.Left : DoorSide.Right, true);
                                 }
+                                if (DiagnosticTrace.AiStops && DiagnosticTrace.AiTrain(Number))
+                                    Trace.TraceInformation("[AiDoors] time={0} train={1} event=open sides={2} left={3} right={4}",
+                                        presentTime, Number, thisStation.PlatformItem.PlatformSide,
+                                        DoorState(DoorSide.Left), DoorState(DoorSide.Right));
                             }
                         }
                         if (doorCloseAdvance > 0)
@@ -1513,6 +1522,10 @@ namespace Orts.Simulation.AIs
                                     //open right doors
                                     SetDoors(frontIsFront ? DoorSide.Left : DoorSide.Right, false);
                                 }
+                                if (DiagnosticTrace.AiStops && DiagnosticTrace.AiTrain(Number))
+                                    Trace.TraceInformation("[AiDoors] time={0} train={1} event=close sides={2} left={3} right={4}",
+                                        presentTime, Number, thisStation.PlatformItem.PlatformSide,
+                                        DoorState(DoorSide.Left), DoorState(DoorSide.Right));
                             }
                         }
                     }

@@ -12,6 +12,44 @@ namespace Tests.Orts
     [TestClass]
     public class CommandLogTests
     {
+        // Viewer commands live outside the simulation assembly, but must survive a save/reload.
+        public sealed class ExternalReplayCommand : Command
+        {
+            public int Marker;
+
+            public ExternalReplayCommand(CommandLog log) : base(log) { }
+
+            public override void Redo() { }
+        }
+
+        [TestMethod]
+        public void ReplayRoundTripsCommandsFromAnExplicitlyAllowedAssembly()
+        {
+            string replayPath = Path.Combine(Path.GetTempPath(), $"riel-external-replay-{Guid.NewGuid():N}.replay");
+            try
+            {
+                var source = new CommandLog(null);
+                var cameraLikeCommand = (ExternalReplayCommand)RuntimeHelpers.GetUninitializedObject(typeof(ExternalReplayCommand));
+                cameraLikeCommand.Time = 42;
+                cameraLikeCommand.Marker = 123;
+                source.CommandList.Add(cameraLikeCommand);
+
+                source.SaveLog(replayPath, typeof(ExternalReplayCommand).Assembly);
+
+                var loaded = new CommandLog(null);
+                loaded.LoadLog(replayPath, typeof(ExternalReplayCommand).Assembly);
+                Assert.AreEqual(1, loaded.CommandList.Count);
+                Assert.IsInstanceOfType(loaded.CommandList[0], typeof(ExternalReplayCommand));
+                Assert.AreEqual(42, loaded.CommandList[0].Time);
+                Assert.AreEqual(123, ((ExternalReplayCommand)loaded.CommandList[0]).Marker);
+            }
+            finally
+            {
+                File.Delete(replayPath);
+                File.Delete(replayPath + ".tmp");
+            }
+        }
+
         [TestMethod]
         public void ReplayRoundTripsCommandStateWithoutBinaryFormatter()
         {

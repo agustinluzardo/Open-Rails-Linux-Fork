@@ -305,7 +305,7 @@ namespace Orts.ActivityRunner.Processes
             await Viewer.Restore(saveState.ViewerSaveState).ConfigureAwait(false);
 
             // Reload the command log
-            simulator.Log.LoadLog(Path.ChangeExtension(profileSelections.GameSaveFile, "replay"));
+            simulator.Log.LoadLog(Path.ChangeExtension(profileSelections.GameSaveFile, "replay"), typeof(CameraRotateUpDownCommand).Assembly);
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
             Game.ReplaceState(new GameStateViewer3D(Viewer));
@@ -329,7 +329,7 @@ namespace Orts.ActivityRunner.Processes
 
             // Load command log to replay
             string replayFile = Path.ChangeExtension(profileSelections.GameSaveFile, "replay");
-            simulator.Log.LoadLog(replayFile);
+            simulator.Log.LoadLog(replayFile, typeof(CameraRotateUpDownCommand).Assembly);
             foreach (ICommand command in simulator.Log.CommandList)
             {
                 simulator.ReplayCommandList.Add(command);
@@ -350,7 +350,7 @@ namespace Orts.ActivityRunner.Processes
             // Find previous save file and then move commands to be replayed into replay list.
             CommandLog log = new CommandLog(null);
             string logFile = profileSelections.GameSaveFile.Replace(".save", ".replay", StringComparison.OrdinalIgnoreCase);
-            log.LoadLog(logFile);
+            log.LoadLog(logFile, typeof(CameraRotateUpDownCommand).Assembly);
             List<ICommand> replayCommandList = new List<ICommand>();
 
             // Scan backwards to find previous saveFile (ignore any that user has deleted).

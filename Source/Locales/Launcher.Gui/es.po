@@ -685,6 +685,9 @@ msgstr "Renderizado"
 msgid "Physics and operations"
 msgstr "Física y operaciones"
 
+msgid "Open AI train doors at stations"
+msgstr "Abrir las puertas de los trenes IA en las estaciones"
+
 msgid "Recording"
 msgstr "Grabación"
 

@@ -173,7 +173,9 @@ namespace Riel.Launcher.Gui
             {
                 PropertyInfo property = typeof(ProfileUserSettingsModel).GetProperty(name)
                     ?? throw new InvalidOperationException($"Unknown setting {name}");
-                string label = Translation.T(System.Text.RegularExpressions.Regex.Replace(name, "(?<=[a-z0-9])(?=[A-Z])", " "));
+                string label = name == "ComputerTrainDoors"
+                    ? Translation.T("Open AI train doors at stations")
+                    : Translation.T(System.Text.RegularExpressions.Regex.Replace(name, "(?<=[a-z0-9])(?=[A-Z])", " "));
                 Control control;
                 if (property.PropertyType == typeof(bool))
                 {
