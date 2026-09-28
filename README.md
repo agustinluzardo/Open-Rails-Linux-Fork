@@ -77,7 +77,8 @@ riel play "Marias Pass" "Coal Train"
 simulator and names what is missing. [**INSTALL.md**](docs/linux/INSTALL.md) covers installation
 and what to do when something does not work.
 
-To trace AI trains that remain stopped or move unusually slowly, launch Riel from a terminal:
+To trace AI trains that remain stopped or move unusually slowly, use Settings → Advanced →
+Train and signal traces, or launch Riel from a terminal:
 
 ```sh
 RIEL_TRACE_AI_STOPS=1 RIEL_TRACE_AI_PROGRESS=1 riel

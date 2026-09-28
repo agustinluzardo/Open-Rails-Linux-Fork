@@ -255,6 +255,13 @@ namespace FreeTrainSimulator.Models.Settings
         // Append-only: controls the launcher's lifetime without changing saved simulator options.
         public bool CloseLauncherWhilePlaying { get; set; }
 
+        // Append-only: diagnostic switches must not shift members in older profile files.
+        public bool TraceAiStops { get; set; }
+        public bool TraceAiProgress { get; set; }
+        public string TraceAiTrainNumbers { get; set; }
+        public bool TraceSignalDiagnostics { get; set; }
+        public bool TraceRoadCrossings { get; set; }
+
         [MemoryPackOnDeserialized]
         private void ApplyCompatibilityDefaults()
         {

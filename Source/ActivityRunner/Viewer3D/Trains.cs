@@ -18,9 +18,11 @@
 // This file is the responsibility of the 3D & Environment Team. 
 
 using Orts.Simulation;
+using Orts.Simulation.AIs;
 using Orts.Simulation.RollingStocks;
 using Orts.ActivityRunner.Viewer3D.RollingStock;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -41,6 +43,10 @@ namespace Orts.ActivityRunner.Viewer3D
         public Dictionary<TrainCar, TrainCarViewer> Cars = new Dictionary<TrainCar, TrainCarViewer>();
         private List<TrainCar> VisibleCars = new List<TrainCar>();
         private TrainCar PlayerCar;
+        private readonly ConcurrentDictionary<int, byte> selectedTrainTraces = new();
+        private readonly ConcurrentDictionary<int, byte> sceneHeightTrainTraces = new();
+        private readonly ConcurrentDictionary<int, byte> loadedTrainTraces = new();
+        private readonly ConcurrentDictionary<int, byte> preparedTrainTraces = new();
 
         public TrainDrawer(Viewer viewer)
         {
@@ -71,7 +77,12 @@ namespace Orts.ActivityRunner.Viewer3D
                         if (cars.TryGetValue(car, out TrainCarViewer trainCarViewer))
 							newCars.Add(car, trainCarViewer);
 						else
-							newCars.Add(car, LoadCar(car));
+						{
+							TrainCarViewer loaded = LoadCar(car);
+							newCars.Add(car, loaded);
+							if (loaded != null)
+								TraceVisual(car, "model-loaded", loadedTrainTraces);
+						}
 					}
 					catch (Exception error) 
                     {
@@ -130,7 +141,14 @@ namespace Orts.ActivityRunner.Viewer3D
             foreach (var train in Viewer.Simulator.Trains)
                 foreach (var car in train.Cars)
                     if (WorldLocation.ApproximateDistance(Viewer.Camera.CameraWorldLocation, car.WorldPosition.WorldLocation) < removeDistance && car != Viewer.PlayerLocomotive)
+                    {
                         visibleCars.Add(car);
+                        TraceVisual(car, "selected", selectedTrainTraces);
+                        // AI models can be selected while still hidden 1000 m below the track.
+                        // Record when the car first reaches roughly the camera's height as well.
+                        if (Math.Abs(car.WorldPosition.WorldLocation.Location.Y - Viewer.Camera.CameraWorldLocation.Location.Y) < 150)
+                            TraceVisual(car, "scene-height", sceneHeightTrainTraces);
+                    }
             VisibleCars = visibleCars;
             PlayerCar = Viewer.Simulator.PlayerLocomotive;
         }
@@ -139,11 +157,27 @@ namespace Orts.ActivityRunner.Viewer3D
         {
             var cars = Cars;
             foreach (var car in cars.Values)
+            {
                 car.PrepareFrame(frame, elapsedTime);
+                TraceVisual(car.Car, "frame-prepared", preparedTrainTraces);
+            }
             // Do the lights separately for proper alpha sorting
             foreach (var car in cars.Values)
                 if (car.LightDrawer != null)
                     car.LightDrawer.PrepareFrame(frame, elapsedTime);
+        }
+
+        // Correlate simulation placement with the renderer's first selection, model load and
+        // frame for one AI service. Wall time distinguishes a slow renderer from a late spawn.
+        private void TraceVisual(TrainCar car, string stage, ConcurrentDictionary<int, byte> recorded)
+        {
+            if (car?.Train is not AITrain train || !DiagnosticTrace.AiTrain(train.Number) ||
+                !recorded.TryAdd(train.Number, 0))
+                return;
+
+            Trace.TraceInformation("[AiVisual] wallUtc={0:O} simTime={1:F1} train={2} stage={3} car={4} heightM={5:F1}",
+                DateTime.UtcNow, Viewer.Simulator.ClockTime, train.Number, stage, car.CarID,
+                car.WorldPosition.WorldLocation.Location.Y - Viewer.Camera.CameraWorldLocation.Location.Y);
         }
 
         private TrainCarViewer LoadCar(TrainCar car)

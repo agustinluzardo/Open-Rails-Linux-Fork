@@ -63,8 +63,6 @@ namespace Orts.Simulation.AIs
         public float LastSpeedMpS;                       // previous speed
         public int Alpha10 = 10;                         // 10*alpha
 
-        private static readonly bool TraceStoppedAi = System.Environment.GetEnvironmentVariable("RIEL_TRACE_AI_STOPS") == "1";
-        private static readonly bool TraceAiProgress = System.Environment.GetEnvironmentVariable("RIEL_TRACE_AI_PROGRESS") == "1";
         private double stoppedSince = double.NaN;
         private double lastStoppedTrace = double.NegativeInfinity;
         private double lastProgressTrace = double.NegativeInfinity;
@@ -607,7 +605,7 @@ namespace Orts.Simulation.AIs
         /// </summary>
         private void TraceStoppedState(double clockTime, double elapsedClockSeconds)
         {
-            if (!TraceStoppedAi)
+            if (!DiagnosticTrace.AiStops)
                 return;
 
             if (Math.Abs(SpeedMpS) >= 0.02f)
@@ -659,7 +657,7 @@ namespace Orts.Simulation.AIs
         /// </summary>
         private void TraceProgressState(double clockTime)
         {
-            if (!TraceAiProgress || Math.Abs(SpeedMpS) < 0.02f)
+            if (!DiagnosticTrace.AiProgress || Math.Abs(SpeedMpS) < 0.02f)
                 return;
             if (clockTime < lastProgressTrace)
                 lastProgressTrace = double.NegativeInfinity;

@@ -2671,7 +2671,7 @@ namespace Orts.Simulation.Signalling
                 }
             }
 
-            if (blockstate > InternalBlockstate.Reservable && blockingSection != null)
+            if (DiagnosticTrace.Signals && blockstate > InternalBlockstate.Reservable && blockingSection != null)
             {
                 string occupants = string.Join(",",
                     blockingSection.CircuitState.TrainsOccupying().Select(item =>

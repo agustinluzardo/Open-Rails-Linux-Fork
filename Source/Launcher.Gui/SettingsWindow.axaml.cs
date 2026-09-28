@@ -151,6 +151,14 @@ namespace Riel.Launcher.Gui
             AddGroup(AdvancedPanel, "Diagnostics and replay");
             AddOptions(AdvancedPanel, "LogLevel", "ErrorDialogEnabled", "ShapeWarnings", "ConfigurationMessages",
                 "Profiling", "ProfilingFrameCount", "ProfilingTime", "ProfilingFps", "ReplayPause", "ReplayPauseDuration");
+            AddGroup(AdvancedPanel, "Train and signal traces");
+            AdvancedPanel.Children.Add(new TextBlock
+            {
+                Text = Translation.T("Traces go to the simulator log on the next run. Leave these off for a smaller log. Enter train numbers separated by commas, or * for every train."),
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap, Opacity = 0.7
+            });
+            AddOptions(AdvancedPanel, "TraceAiStops", "TraceAiProgress", "TraceAiTrainNumbers",
+                "TraceSignalDiagnostics", "TraceRoadCrossings");
         }
 
         private static void AddGroup(StackPanel panel, string title) => panel.Children.Add(new TextBlock

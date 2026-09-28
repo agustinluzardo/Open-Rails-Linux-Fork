@@ -694,6 +694,27 @@ msgstr ""
 msgid "Diagnostics and replay"
 msgstr ""
 
+msgid "Train and signal traces"
+msgstr ""
+
+msgid "Traces go to the simulator log on the next run. Leave these off for a smaller log. Enter train numbers separated by commas, or * for every train."
+msgstr ""
+
+msgid "Trace Ai Stops"
+msgstr ""
+
+msgid "Trace Ai Progress"
+msgstr ""
+
+msgid "Trace Ai Train Numbers"
+msgstr ""
+
+msgid "Trace Signal Diagnostics"
+msgstr ""
+
+msgid "Trace Road Crossings"
+msgstr ""
+
 msgid "Sound Volume Percent"
 msgstr ""
 

@@ -19,7 +19,7 @@ namespace Orts.Simulation.World
 {
     public class RoadCarSpawner
     {
-        internal static readonly bool TraceCrossings = System.Environment.GetEnvironmentVariable("RIEL_TRACE_ROAD_CROSSINGS") == "1";
+        internal static bool TraceCrossings => DiagnosticTrace.RoadCrossings;
         private double lastSpawnedTime;
         private double nextSpawnTime;
         private int crossingRevision = -1;

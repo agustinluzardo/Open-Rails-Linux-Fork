@@ -119,12 +119,6 @@ namespace Orts.Simulation.Physics
         public List<TrainCar> Cars { get; } = new List<TrainCar>();           // listed front to back
 #pragma warning restore CA1002 // Do not expose generic lists
         public int Number { get; internal set; }
-        // Emit only on section/route transitions to keep the activity log usable.
-        private static readonly HashSet<int> TraceAiTrainNumbers =
-            (System.Environment.GetEnvironmentVariable("RIEL_TRACE_AI_TRAINS") ?? string.Empty)
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(value => int.TryParse(value, out int number) ? number : -1)
-            .ToHashSet();
         public string Name { get; internal set; }
         public string TcsParametersFileName { get; internal set; }
         public static int TotalNumber { get; private set; } = 1; // start at 1 (0 is reserved for player train)
@@ -2585,7 +2579,7 @@ namespace Orts.Simulation.Physics
                         float temp1MaxSpeedMpS = IsFreight ? firstObject.SpeedInfo.FreightSpeed : firstObject.SpeedInfo.PassengerSpeed;
                         if (firstObject.SignalDetails.SignalType == SignalCategory.Signal)
                         {
-                            if (this is AITrain tracedTrain && TraceAiTrainNumbers.Contains(Number))
+                            if (this is AITrain tracedTrain && DiagnosticTrace.AiTrain(Number))
                             {
                                 Trace.TraceInformation(
                                     "[AiSignalSpeed] time={0:F1} train={1} signal={2} aspect={3} speed={4:F2} actualSpeed={5:F2} oldAbsolute={6:F2} oldAllowed={7:F2} heads=[{8}]",
@@ -3392,7 +3386,7 @@ namespace Orts.Simulation.Physics
 
             // Derive legacy front traveller from total train length (single walk, not per-car)
             FrontTrackTraveller = trackTraveller;
-            if (this is AITrain && TraceAiTrainNumbers.Contains(Number) && previousFront.OnTrack &&
+            if (this is AITrain && DiagnosticTrace.AiTrain(Number) && previousFront.OnTrack &&
                 previousFront.TrackNodeIndex != FrontTrackTraveller.TrackNodeIndex)
             {
                 TraceAiTravellerNodeChange(previousFront, FrontTrackTraveller);
@@ -4117,7 +4111,7 @@ namespace Orts.Simulation.Physics
             routeIndex = ValidRoutes[Direction.Forward].GetRouteIndex(PresentPosition[Direction.Backward].TrackCircuitSectionIndex, 0);
             PresentPosition[Direction.Backward].RouteListIndex = routeIndex;
 
-            if (TraceAiTrainNumbers.Contains(Number) && this is AITrain &&
+            if (this is AITrain && DiagnosticTrace.AiTrain(Number) &&
                 (PreviousPosition[Direction.Forward].TrackCircuitSectionIndex != PresentPosition[Direction.Forward].TrackCircuitSectionIndex ||
                  PreviousPosition[Direction.Forward].RouteListIndex != PresentPosition[Direction.Forward].RouteListIndex))
             {
@@ -7427,17 +7421,18 @@ namespace Orts.Simulation.Physics
 
             ControlMode = TrainControlMode.AutoSignal;
             signal.RequestClearSignal(ValidRoutes[Direction.Forward], RoutedForward, 0, false, null);
-            Trace.TraceInformation(
-                "[SignalRequest] Train {0} signal {1}: enabled={2} routeSections={3} block={4} hold={5} aspect={6} tc={7} nextTc={8}.",
-                Number,
-                signal.Index,
-                signal.EnabledTrain == RoutedForward,
-                signal.SignalRoute?.Count ?? 0,
-                signal.BlockState(),
-                signal.HoldState,
-                signal.SignalLR(SignalFunctionType.Normal),
-                signal.TrackCircuitIndex,
-                signal.TrackCircuitNextIndex);
+            if (DiagnosticTrace.Signals)
+                Trace.TraceInformation(
+                    "[SignalRequest] Train {0} signal {1}: enabled={2} routeSections={3} block={4} hold={5} aspect={6} tc={7} nextTc={8}.",
+                    Number,
+                    signal.Index,
+                    signal.EnabledTrain == RoutedForward,
+                    signal.SignalRoute?.Count ?? 0,
+                    signal.BlockState(),
+                    signal.HoldState,
+                    signal.SignalLR(SignalFunctionType.Normal),
+                    signal.TrackCircuitIndex,
+                    signal.TrackCircuitNextIndex);
 
             // enable any none-NORMAL signals between front of train and first NORMAL signal
             int firstSectionIndex = PresentPosition[Direction.Forward].RouteListIndex;

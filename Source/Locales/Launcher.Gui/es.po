@@ -697,6 +697,27 @@ msgstr "Red"
 msgid "Diagnostics and replay"
 msgstr "Diagnóstico y repetición"
 
+msgid "Train and signal traces"
+msgstr "Trazas de trenes y señales"
+
+msgid "Traces go to the simulator log on the next run. Leave these off for a smaller log. Enter train numbers separated by commas, or * for every train."
+msgstr "Las trazas se guardan en el registro del simulador en la próxima partida. Dejalas desactivadas para tener un registro más pequeño. Escribí los números de tren separados por comas, o * para todos."
+
+msgid "Trace Ai Stops"
+msgstr "Registrar paradas y colocación de trenes IA"
+
+msgid "Trace Ai Progress"
+msgstr "Registrar avance de trenes IA"
+
+msgid "Trace Ai Train Numbers"
+msgstr "Números de trenes IA para seguir"
+
+msgid "Trace Signal Diagnostics"
+msgstr "Registrar bloqueos y rutas de señales"
+
+msgid "Trace Road Crossings"
+msgstr "Registrar pasos a nivel"
+
 msgid "Sound Volume Percent"
 msgstr "Volumen del sonido (%)"
 

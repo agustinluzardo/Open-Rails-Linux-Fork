@@ -420,7 +420,8 @@ namespace Orts.Simulation.Signalling
                 updateStart = 0;
                 if (!signalDiagnosticLogged)
                 {
-                    TraceSignalDiagnostic();
+                    if (DiagnosticTrace.Signals)
+                        TraceSignalDiagnostic();
                     signalDiagnosticLogged = true;
                 }
             }
@@ -515,6 +516,8 @@ namespace Orts.Simulation.Signalling
 
         private void TraceNodeRouteOnce(Train.TrainRouted train, TrackCircuitPartialPathRoute routePart)
         {
+            if (!DiagnosticTrace.Signals)
+                return;
             string key = $"route:{train.Train.Number}:{train.Direction}";
             if (!signalNodeDiagnosticKeys.Add(key))
                 return;
@@ -545,7 +548,7 @@ namespace Orts.Simulation.Signalling
         private void TraceNodeDecision(Train.TrainRouted train, string reason, int routeIndex, TrackCircuitSection section,
             TrackDirection direction, float clearedDistanceM, int lastReserved)
         {
-            if (section == null)
+            if (!DiagnosticTrace.Signals || section == null)
                 return;
 
             int endSignal = section.EndSignals[direction]?.Index ?? -1;
