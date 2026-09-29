@@ -33,6 +33,7 @@ namespace Riel.Common.Diagnostics
             // graphics device does not exist until the game runs. The keys are declared here so
             // the overlay keeps its order.
             this["Adapter"] = null;
+            this["Graphics API"] = null;
             this["Resolution"] = null;
             this["CPU"] = null;
             this["CPU temperature"] = null;
@@ -47,6 +48,9 @@ namespace Riel.Common.Diagnostics
             if (UpdateNeeded)
             {
                 this["Adapter"] = $"{Info.SystemInfo.GraphicAdapterName ?? "n/a"} ({Info.SystemInfo.GraphicAdapterMemoryInformation})";
+                bool zink = string.Equals(Environment.GetEnvironmentVariable("MESA_LOADER_DRIVER_OVERRIDE"), "zink", StringComparison.OrdinalIgnoreCase)
+                    || Environment.GetEnvironmentVariable("RIEL_VULKAN") == "1";
+                this["Graphics API"] = zink ? "Vulkan (Zink / OpenGL translation)" : "OpenGL";
                 this["System Time"] = DateTime.Now.ToString(CultureInfo.CurrentCulture);
                 this["Game Time"] = $"{FormatStrings.FormatTime(gameTime.TotalGameTime.TotalSeconds)}";// Simulator.Instance != null ? $"{FormatStrings.FormatTime(Simulator.Instance.ClockTime)}" : null;
                 this["Frame rate"] = $"{metricCollector.Metrics[SlidingMetric.FrameRate].SmoothedValue:0}";
