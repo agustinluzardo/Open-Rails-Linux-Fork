@@ -133,7 +133,10 @@ namespace Riel.Launcher.Gui
             ToolsButton.Click += (_, _) => ToolsButton.ContextMenu.Open(ToolsButton);
             GetContentButton.Click += (_, _) => SystemInfo.OpenBrowser("https://www.openrails.org/download/content/");
             ManualButton.Click += (_, _) => SystemInfo.OpenBrowser("https://www.openrails.org/learn/documents/");
-            RouteEditorButton.Click += (_, _) => Guarded(OpenRouteEditor);
+            RouteEditorButton.Click += (_, _) => Guarded(() => OpenEditorTool(RielEditorTool.RouteEditor));
+            ConsistEditorButton.Click += (_, _) => Guarded(() => OpenEditorTool(RielEditorTool.ConsistEditor));
+            ShapeViewerButton.Click += (_, _) => Guarded(() => OpenEditorTool(RielEditorTool.ShapeViewer));
+            AceConverterButton.Click += (_, _) => Guarded(() => OpenEditorTool(RielEditorTool.AceConverter));
             TestButton.Click += (_, _) => Guarded(ShowTesting);
             AddFirstFolderButton.Click += (_, _) => Guarded(() => ManageContent(browseFirst: true));
             UseDetectedButton.Click += (_, _) => Guarded(AddDetected);
@@ -641,9 +644,18 @@ namespace Riel.Launcher.Gui
             (ProfileSelectionsModel selections, _, string missing) = Selected();
             PlayButton.IsEnabled = !running && selections != null;
             ResumeButton.IsEnabled = !running && hasSave;
-            RouteEditorButton.IsEnabled = !running && RouteList.SelectedItem is RouteItem;
+
+            bool hasRoute = RouteList.SelectedItem is RouteItem;
+            RouteEditorButton.IsEnabled = !running && hasRoute;
+            ConsistEditorButton.IsEnabled = !running && hasRoute;
+            ShapeViewerButton.IsEnabled = !running && hasRoute;
+            AceConverterButton.IsEnabled = !running;
+
             ToolTip.SetTip(PlayButton, missing);
-            ToolTip.SetTip(RouteEditorButton, RouteList.SelectedItem is RouteItem ? null : T("Choose a route first."));
+            string chooseRoute = hasRoute ? null : T("Choose a route first.");
+            ToolTip.SetTip(RouteEditorButton, chooseRoute);
+            ToolTip.SetTip(ConsistEditorButton, chooseRoute);
+            ToolTip.SetTip(ShapeViewerButton, chooseRoute);
             UpdateSelectionDetails();
         }
 
@@ -732,13 +744,16 @@ namespace Riel.Launcher.Gui
 
         // ------------------------------------------------------------------------------ tools
 
-        private Task OpenRouteEditor()
+        private Task OpenEditorTool(RielEditorTool tool)
         {
-            if (RouteList.SelectedItem is not RouteItem route)
+            RouteItem route = RouteList.SelectedItem as RouteItem;
+            if (tool.RequiresContent() && route == null)
                 throw new LauncherException(T("Choose a route first."));
 
-            _ = RouteEditorLauncher.Start(route);
-            StatusText.Text = F("Opened {0} in Riel Route Editor.", route.Name);
+            _ = RouteEditorLauncher.Start(tool, route);
+            StatusText.Text = route == null
+                ? F("Opened {0}.", tool.DisplayName())
+                : F("Opened {0} for {1}.", tool.DisplayName(), route.Name);
             return Task.CompletedTask;
         }
 

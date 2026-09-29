@@ -27,7 +27,12 @@
               <ContextMenu>
                 <MenuItem x:Name="GetContentButton" Header="{l:T 'Get content'}" />
                 <MenuItem x:Name="ManualButton" Header="{l:T 'Manual'}" />
+                <Separator />
                 <MenuItem x:Name="RouteEditorButton" Header="{l:T 'Riel Route Editor'}" />
+                <MenuItem x:Name="ConsistEditorButton" Header="{l:T 'Riel Consist Editor'}" />
+                <MenuItem x:Name="ShapeViewerButton" Header="{l:T 'Riel Shape Viewer'}" />
+                <MenuItem x:Name="AceConverterButton" Header="{l:T 'Riel ACE Converter'}" />
+                <Separator />
                 <MenuItem x:Name="TestButton" Header="{l:T 'Test activities'}" />
                 <MenuItem x:Name="DoctorButton" Header="{l:T 'Check this computer'}" />
                 <MenuItem x:Name="UpdateButton" Header="{l:T 'Check for updates'}" />

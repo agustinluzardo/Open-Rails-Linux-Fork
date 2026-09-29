@@ -16,29 +16,38 @@ using Riel.Launcher;
 
 namespace Riel.Launcher.Gui
 {
-    /// <summary>
-    /// Starts the native route editor with the same content root and route selected in Riel.
-    /// The packaged editor is based on TSRE5vc and accepts --game-root and --route directly.
-    /// </summary>
+    internal enum RielEditorTool
+    {
+        RouteEditor,
+        ConsistEditor,
+        ShapeViewer,
+        AceConverter,
+    }
+
+    internal static class RielEditorToolExtensions
+    {
+        public static bool RequiresContent(this RielEditorTool tool) => tool != RielEditorTool.AceConverter;
+
+        public static string DisplayName(this RielEditorTool tool) => tool switch
+        {
+            RielEditorTool.RouteEditor => "Riel Route Editor",
+            RielEditorTool.ConsistEditor => "Riel Consist Editor",
+            RielEditorTool.ShapeViewer => "Riel Shape Viewer",
+            RielEditorTool.AceConverter => "Riel ACE Converter",
+            _ => "Riel Editor",
+        };
+    }
+
     internal static class RouteEditorLauncher
     {
         private const string OverrideEnvironmentVariable = "RIEL_ROUTE_EDITOR";
         private const string ExecutableName = "riel-route-editor";
 
-        public static Process Start(RouteItem route)
+        public static Process Start(RielEditorTool tool, RouteItem route)
         {
-            ArgumentNullException.ThrowIfNull(route);
-
             string executable = FindExecutable()
                 ?? throw new LauncherException(
-                    "Riel Route Editor is not installed in this build. Update Riel or set RIEL_ROUTE_EDITOR to a native editor executable.");
-
-            string contentRoot = Path.GetFullPath(route.Folder.ContentPath);
-            if (!Directory.Exists(contentRoot))
-                throw new LauncherException($"the content folder no longer exists: {contentRoot}");
-
-            if (string.IsNullOrWhiteSpace(route.Route.Id))
-                throw new LauncherException("the selected route has no route id");
+                    "Riel editor tools are not installed in this build. Update Riel or set RIEL_ROUTE_EDITOR to a native editor executable.");
 
             ProcessStartInfo start = new ProcessStartInfo
             {
@@ -46,16 +55,49 @@ namespace Riel.Launcher.Gui
                 UseShellExecute = false,
                 WorkingDirectory = Path.GetDirectoryName(executable) ?? AppContext.BaseDirectory,
             };
-            start.ArgumentList.Add("--game-root");
-            start.ArgumentList.Add(contentRoot);
-            start.ArgumentList.Add("--route");
-            start.ArgumentList.Add(route.Route.Id);
-            // Keep editor preferences in the user's application-data profile instead of
-            // writing settings into /opt/riel or the extracted portable directory.
+
+            if (tool.RequiresContent())
+            {
+                if (route == null)
+                    throw new LauncherException("choose a route before opening this editor");
+
+                string contentRoot = Path.GetFullPath(route.Folder.ContentPath);
+                if (!Directory.Exists(contentRoot))
+                    throw new LauncherException("the content folder no longer exists: " + contentRoot);
+
+                start.ArgumentList.Add("--game-root");
+                start.ArgumentList.Add(contentRoot);
+
+                if (tool == RielEditorTool.RouteEditor)
+                {
+                    if (string.IsNullOrWhiteSpace(route.Route.Id))
+                        throw new LauncherException("the selected route has no route id");
+                    start.ArgumentList.Add("--route");
+                    start.ArgumentList.Add(route.Route.Id);
+                }
+            }
+
+            switch (tool)
+            {
+                case RielEditorTool.RouteEditor:
+                    break;
+                case RielEditorTool.ConsistEditor:
+                    start.ArgumentList.Add("--conedit");
+                    break;
+                case RielEditorTool.ShapeViewer:
+                    start.ArgumentList.Add("--shapeview");
+                    break;
+                case RielEditorTool.AceConverter:
+                    start.ArgumentList.Add("--aceconv");
+                    break;
+                default:
+                    throw new LauncherException("unsupported Riel editor tool");
+            }
+
             start.ArgumentList.Add("--appdata-profile");
 
             return Process.Start(start)
-                ?? throw new LauncherException("Riel Route Editor could not be started");
+                ?? throw new LauncherException(tool.DisplayName() + " could not be started");
         }
 
         private static string FindExecutable()
@@ -85,7 +127,6 @@ namespace Riel.Launcher.Gui
                 }
                 catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
                 {
-                    // Ignore malformed PATH entries and continue looking.
                 }
             }
 
