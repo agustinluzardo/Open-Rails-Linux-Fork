@@ -714,58 +714,6 @@ inline QString resolveExistingCaseInsensitive(const QString &path) {
     return normalized;
 }''',
     )
-    # Successful wrong-case/overlay paths are hot during route rendering. Cache
-    # only successful resolutions and revalidate the target, so content created
-    # later in the same editor session is still discoverable.
-    replace_once(
-        content_path,
-        '#include <QString>',
-        '#include <QString>\n#include <QHash>\n#include <QMutex>\n#include <QMutexLocker>',
-    )
-    replace_once(
-        content_path,
-        '''inline QString resolveExistingCaseInsensitive(const QString &path) {
-    if (synthetic(path)) return path;
-    const QString normalized = normalize(path);
-    if (QFileInfo(normalized).exists()) return normalized;
-#ifdef Q_OS_LINUX
-    const QString absolute = QFileInfo(normalized).absoluteFilePath();''',
-        '''inline QString resolveExistingCaseInsensitive(const QString &path) {
-    if (synthetic(path)) return path;
-    const QString normalized = normalize(path);
-    if (QFileInfo(normalized).exists()) return normalized;
-#ifdef Q_OS_LINUX
-    static QHash<QString, QString> successfulCache;
-    static QMutex successfulCacheMutex;
-    {
-        QMutexLocker locker(&successfulCacheMutex);
-        auto cached = successfulCache.find(normalized);
-        if(cached != successfulCache.end()) {
-            if(QFileInfo(cached.value()).exists())
-                return cached.value();
-            successfulCache.erase(cached);
-        }
-    }
-    const QString absolute = QFileInfo(normalized).absoluteFilePath();''',
-    )
-    replace_once(
-        content_path,
-        '''    if(!resolved.isEmpty()) {
-        if(resolved != normalized)
-            qDebug() << "Riel content case/overlay fallback:" << normalized << "->" << resolved;
-        return resolved;
-    }''',
-        '''    if(!resolved.isEmpty()) {
-        {
-            QMutexLocker locker(&successfulCacheMutex);
-            successfulCache.insert(normalized, resolved);
-        }
-        if(resolved != normalized)
-            qDebug() << "Riel content case/overlay fallback:" << normalized << "->" << resolved;
-        return resolved;
-    }''',
-    )
-
     replace_once(
         content_path,
         'inline bool readable(const QString &path) {\n'
@@ -801,83 +749,6 @@ inline QString resolveExistingCaseInsensitive(const QString &path) {
         '    pathid = ContentPath::resolveExistingCaseInsensitive(pathid);\n'
         '    texPath = ContentPath::resolveExistingCaseInsensitive(texPath);',
     )
-
-    # Shape references repeat heavily while tiles stream. Keep the old full scan as
-    # a correctness fallback, but memoize the validated (path, texture-context,
-    # season) identity so normal duplicate adds become O(1).
-    shape_header = source / "src" / "tsre" / "shape" / "ShapeLib.h"
-    replace_once(
-        shape_header,
-        '#include <QString>',
-        '#include <QString>\n#include <QHash>',
-    )
-    replace_once(
-        shape_header,
-        '    std::unordered_map<int, QString> pathKeys;\n'
-        '    QString mstsBackend;',
-        '    std::unordered_map<int, QString> pathKeys;\n'
-        '    QHash<QString, int> lookupIndex;\n'
-        '    QString mstsBackend;',
-    )
-    replace_once(
-        shape_lib,
-        '    pathKeys.clear();\n'
-        '}',
-        '    pathKeys.clear();\n'
-        '    lookupIndex.clear();\n'
-        '}',
-    )
-    replace_once(
-        shape_lib,
-        r'''    const QString context = ContentPath::key(texPath) + "\n" + Game::season;
-    const QString pathKey = ContentPath::key(pathid);
-    for (const auto &entry : shape) {
-        if(entry.second && !entry.second->hasLoadFailed() && pathKeys[entry.first] == pathKey
-                && contexts[entry.first] == context)
-            return entry.first;
-    }
-    qDebug() << "Nowy " << jestshape << " shape: " << pathid;''',
-        r'''    const QString context = ContentPath::key(texPath) + "\n" + Game::season;
-    const QString pathKey = ContentPath::key(pathid);
-    const QString lookupKey = pathKey + "\n" + context;
-    auto cachedShape = lookupIndex.constFind(lookupKey);
-    if(cachedShape != lookupIndex.constEnd()) {
-        const auto found = shape.find(cachedShape.value());
-        if(found != shape.end() && found->second
-                && pathKeys[found->first] == pathKey && contexts[found->first] == context) {
-            if(!found->second->hasLoadFailed())
-                return found->first;
-            // A physically missing shape is deterministic. Reuse the failed
-            // placeholder until the file actually appears, then retry normally.
-            if(!ContentPath::readable(pathid))
-                return found->first;
-        }
-        lookupIndex.remove(lookupKey);
-    }
-    for (const auto &entry : shape) {
-        if(entry.second && !entry.second->hasLoadFailed() && pathKeys[entry.first] == pathKey
-                && contexts[entry.first] == context) {
-            lookupIndex.insert(lookupKey, entry.first);
-            return entry.first;
-        }
-    }
-    qDebug() << "Nowy " << jestshape << " shape: " << pathid;''',
-    )
-    replace_once(
-        shape_lib,
-        '''    shape[jestshape] = asset;
-    contexts[jestshape] = context;
-    pathKeys[jestshape] = pathKey;
-
-    return jestshape++;''',
-        '''    shape[jestshape] = asset;
-    contexts[jestshape] = context;
-    pathKeys[jestshape] = pathKey;
-    lookupIndex.insert(lookupKey, jestshape);
-
-    return jestshape++;''',
-    )
-
 
     tsection_cpp = source / "src" / "tsre" / "tdb" / "TSectionDAT.cpp"
     replace_once(
@@ -942,174 +813,25 @@ inline QString resolveExistingCaseInsensitive(const QString &path) {
         '                "shape loader uses the resolved case-only sibling tree");\n'
         '        test.check(shapes.addShape(root+"/GLOBAL/SHAPES/tree.s",a+"/TEXTURES")==sa,"shape cache matches filename case variants");',
     )
-    replace_once(
-        content_path_tests,
-        '    test.check(shapes.addShape(shapePath,b+"/TEXTURES")!=sa,"shared shape keeps route texture context");',
-        '    test.check(shapes.addShape(shapePath,b+"/TEXTURES")!=sa,"shared shape keeps route texture context");\n'
-        '    QElapsedTimer shapeLookupTimer; shapeLookupTimer.start();\n'
-        '    bool repeatedShapeLookup=true;\n'
-        '    for(int i=0;i<10000;++i) repeatedShapeLookup &= shapes.addShape(shapePath,a+"/TEXTURES")==sa;\n'
-        '    qInfo()<<"[tests:content-path] 10000 indexed ShapeLib lookups ms:"<<shapeLookupTimer.elapsed();\n'
-        '    test.check(repeatedShapeLookup,"indexed shape lookups preserve identity");',
-    )
-    replace_once(
-        content_path_tests,
-        '    test.check(TexLib::addTex(a+"/TEXTURES",QStringLiteral("MixedLeaf.png"))==imageId,"texture overloads share identity");',
-        '    test.check(TexLib::addTex(a+"/TEXTURES",QStringLiteral("MixedLeaf.png"))==imageId,"texture overloads share identity");\n'
-        '    QElapsedTimer textureLookupTimer; textureLookupTimer.start();\n'
-        '    bool repeatedTextureLookup=true;\n'
-        '    for(int i=0;i<10000;++i) repeatedTextureLookup &= TexLib::getTex(imagePath)==imageId;\n'
-        '    qInfo()<<"[tests:content-path] 10000 indexed TexLib lookups ms:"<<textureLookupTimer.elapsed();\n'
-        '    test.check(repeatedTextureLookup,"indexed texture lookups preserve identity");',
-    )
-
-
 
 
     texlib = source / "src" / "tsre" / "texture" / "TexLib.cpp"
-    # TexLib's upstream identity lookup is linear. Large routes issue thousands of
-    # duplicate texture references, so memoize validated keys. On a stale alias or
-    # mutated generated texture we fall back to the original scan and repair the index.
-    replace_once(
-        texlib,
-        '''int findTexture(const QString &key) {
-    for(const auto &entry : TexLib::mtex) {
-        const auto *texture = entry.second;
-        if(texture && !texture->missing && !texture->error && textureIdentityMatches(key, *texture))
-            return entry.first;
-    }
-    return -1;
-}''',
-        '''QHash<QString, int> textureLookupIndex;
-
-void removeTextureFromIndex(int id) {
-    for(auto it = textureLookupIndex.begin(); it != textureLookupIndex.end(); ) {
-        if(it.value() == id)
-            it = textureLookupIndex.erase(it);
-        else
-            ++it;
-    }
-}
-
-void indexTexture(int id, const Texture *texture) {
-    if(!texture || texture->missing || texture->error) return;
-    for(const QString &key : texture->hashid)
-        if(textureIdentityMatches(key, *texture))
-            textureLookupIndex.insert(key, id);
-}
-
-void clearTextureLookupIndex() {
-    textureLookupIndex.clear();
-}
-
-int findTexture(const QString &key) {
-    auto cached = textureLookupIndex.constFind(key);
-    if(cached != textureLookupIndex.constEnd()) {
-        const auto found = TexLib::mtex.find(cached.value());
-        if(found != TexLib::mtex.end() && found->second
-                && !found->second->missing && !found->second->error
-                && textureIdentityMatches(key, *found->second))
-            return found->first;
-        textureLookupIndex.remove(key);
-    }
-
-    for(const auto &entry : TexLib::mtex) {
-        const auto *texture = entry.second;
-        if(texture && !texture->missing && !texture->error && textureIdentityMatches(key, *texture)) {
-            textureLookupIndex.insert(key, entry.first);
-            return entry.first;
-        }
-    }
-    return -1;
-}''',
-    )
-    replace_once(
-        texlib,
-        'void TexLib::reset() {\n'
-        '    jesttextur = 0;\n'
-        '    mtex.clear();',
-        'void TexLib::reset() {\n'
-        '    clearTextureLookupIndex();\n'
-        '    jesttextur = 0;\n'
-        '    mtex.clear();',
-    )
-    replace_once(
-        texlib,
-        '''            if (t->glLoaded) {
-                t->delVBO();
-                mtex.erase(texx);
-            }''',
-        '''            if (t->glLoaded) {
-                t->delVBO();
-                removeTextureFromIndex(texx);
-                mtex.erase(texx);
-            }''',
-    )
-    replace_once(
-        texlib,
-        '''                existing->ref++;
-                return (int)it->first;
-            }
-        }
-    }
-
-    texture->ref++;
-    mtex[jesttextur] = texture;
-    return jesttextur++;''',
-        '''                indexTexture((int)it->first, existing);
-                existing->ref++;
-                return (int)it->first;
-            }
-        }
-    }
-
-    texture->ref++;
-    mtex[jesttextur] = texture;
-    indexTexture(jesttextur, texture);
-    return jesttextur++;''',
-    )
-    replace_once(
-        texlib,
-        '''        texId = jesttextur++;
-        mtex[texId] = newFile;
-    } else {''',
-        '''        texId = jesttextur++;
-        mtex[texId] = newFile;
-        indexTexture(texId, newFile);
-    } else {''',
-    )
-
     replace_once(
         texlib,
         'int TexLib::addTex(QString pathid, bool reload) {\n'
         '    pathid = ContentPath::normalize(pathid);',
         'int TexLib::addTex(QString pathid, bool reload) {\n'
-        '    pathid = ContentPath::resolveExistingCaseInsensitive(pathid);',
+        '    pathid = ContentPath::resolveExistingCaseInsensitive(pathid);\n'
+        '    if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0) {\n'
+        '        static quint64 requestCount = 0;\n'
+        '        ++requestCount;\n'
+        '        qInfo().noquote() << "RIEL_RENDER_REQUEST" << requestCount\n'
+        '            << "path=" << pathid << "exists=" << QFileInfo(pathid).isFile() << "reload=" << reload;\n'
+        '        if ((requestCount % 250) == 0)\n'
+        '            dumpStats(QString("render diagnostic #%1").arg(requestCount));\n'
+        '    }',
     )
 
-
-    replace_once(
-        texlib,
-        '''    Texture* newFile = texId < 0 ? nullptr : mtex[texId];
-    if(newFile) {''',
-        '''    if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0) {
-        static quint64 requestCount = 0;
-        static quint64 cacheHitCount = 0;
-        ++requestCount;
-        if(texId >= 0 && !reload) ++cacheHitCount;
-        if(texId < 0 || reload || (requestCount % 1000) == 0) {
-            qInfo().noquote() << "RIEL_RENDER_REQUEST" << requestCount
-                << "cacheHits=" << cacheHitCount
-                << "miss=" << (texId < 0)
-                << "path=" << pathid << "exists=" << QFileInfo(pathid).isFile()
-                << "reload=" << reload;
-        }
-        if ((requestCount % 1000) == 0)
-            dumpStats(QString("render diagnostic #%1").arg(requestCount));
-    }
-    Texture* newFile = texId < 0 ? nullptr : mtex[texId];
-    if(newFile) {''',
-    )
 
     # Riel native-editor texture loader. Upstream starts an unbounded QThread per
     # ACE/DDS request and lets those workers mutate Texture instances concurrently with
@@ -1285,7 +1007,6 @@ void TexLib::reset() {''',
     replace_once(
         texlib,
         'void TexLib::reset() {\n'
-        '    clearTextureLookupIndex();\n'
         '    jesttextur = 0;\n'
         '    mtex.clear();',
         'void TexLib::reset() {\n'
@@ -1294,7 +1015,6 @@ void TexLib::reset() {''',
         '        std::lock_guard<std::mutex> guard(rielTextureLoadStateMutex);\n'
         '        rielTextureLoadGeneration.clear();\n'
         '    }\n'
-        '    clearTextureLookupIndex();\n'
         '    jesttextur = 0;\n'
         '    mtex.clear();',
     )
