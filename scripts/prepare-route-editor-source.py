@@ -733,22 +733,186 @@ AceConverterWindow::AceConverterWindow(const QColor &mainLabelColor, QWidget *pa
     )
 
 
-    # Large MSTS routes can start hundreds of ACE/DDS QThreads at once. Those workers
-    # publish into Texture instances which the Qt/OpenGL widgets consume, and the
-    # upstream ACE/DDS/Image branches also leak their QThread wrapper objects.
-    # Riel favors deterministic/stable editor loading: serialize disk texture decode
-    # by default, while RIEL_EDITOR_ASYNC_TEXTURES=1 remains an opt-in for testing.
-    ace_worker = source / "src" / "tsre" / "texture" / "AceLib.cpp"
-    dds_worker = source / "src" / "tsre" / "texture" / "DdsLib.cpp"
+    # Riel native-editor texture loader. Upstream starts an unbounded QThread per
+    # ACE/DDS request and lets those workers mutate Texture instances concurrently with
+    # Qt/OpenGL rendering. Riel instead uses a small bounded pool: workers decode into
+    # private Texture objects, then publish atomically on Qt's application thread.
+    # Reloads stay synchronous so editor commands keep their existing semantics.
     replace_once(
-        ace_worker,
-        'bool AceLib::IsThread = true;',
-        'bool AceLib::IsThread = qEnvironmentVariableIntValue("RIEL_EDITOR_ASYNC_TEXTURES") != 0;',
+        texlib,
+        '#include <cstring>',
+        '#include <cstring>\n'
+        '#include <memory>\n'
+        '#include <mutex>\n'
+        '#include <QCoreApplication>\n'
+        '#include <QMetaObject>\n'
+        '#include <QRunnable>\n'
+        '#include <QThread>\n'
+        '#include <QThreadPool>',
     )
     replace_once(
-        dds_worker,
-        'bool DdsLib::IsThread = true;',
-        'bool DdsLib::IsThread = qEnvironmentVariableIntValue("RIEL_EDITOR_ASYNC_TEXTURES") != 0;',
+        texlib,
+        '\n}\n\nvoid TexLib::reset() {',
+        r'''
+enum class RielTextureLoadKind { Ace, Dds, Image };
+
+std::mutex rielTextureLoadStateMutex;
+QHash<Texture *, quint64> rielTextureLoadGeneration;
+
+void destroyDetachedTexture(Texture *texture) {
+    if (!texture) return;
+    delete[] texture->imageData;
+    texture->imageData = nullptr;
+    delete[] texture->tex;
+    texture->tex = nullptr;
+    delete texture;
+}
+
+using DetachedTexture = std::shared_ptr<Texture>;
+
+QThreadPool &rielTextureLoadPool() {
+    static QThreadPool pool;
+    static std::once_flag configured;
+    std::call_once(configured, [] {
+        bool valid = false;
+        int requested = qEnvironmentVariableIntValue("RIEL_EDITOR_TEXTURE_WORKERS", &valid);
+        const int ideal = qMax(1, QThread::idealThreadCount());
+        const int workers = valid && requested > 0
+            ? qBound(1, requested, 16)
+            : qBound(1, ideal - 1, 4);
+        pool.setMaxThreadCount(workers);
+        pool.setExpiryTimeout(10000);
+        if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0)
+            qInfo().noquote() << QString("RIEL_TEXTURE_POOL workers=%1").arg(workers);
+    });
+    return pool;
+}
+
+quint64 nextTextureLoadGeneration(Texture *target) {
+    std::lock_guard<std::mutex> guard(rielTextureLoadStateMutex);
+    return ++rielTextureLoadGeneration[target];
+}
+
+bool currentTextureLoadGeneration(Texture *target, quint64 generation) {
+    std::lock_guard<std::mutex> guard(rielTextureLoadStateMutex);
+    return rielTextureLoadGeneration.value(target, 0) == generation;
+}
+
+bool textureStillCached(Texture *target) {
+    for (const auto &entry : TexLib::mtex)
+        if (entry.second == target)
+            return true;
+    return false;
+}
+
+bool decodeDetachedTexture(RielTextureLoadKind kind, Texture &texture, int quality) {
+    if (kind == RielTextureLoadKind::Ace) {
+        AceLoadOptions options;
+        options.quality = quality;
+        QString error;
+        if (!AceLib::load(texture.pathid, texture, options, error)) {
+            texture.error = true;
+            texture.missing = !QFileInfo::exists(texture.pathid);
+            texture.errorMessage = error;
+            texture.loaded = false;
+            qWarning().noquote() << "ACE:" << texture.pathid << error;
+            if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0)
+                qWarning().noquote() << "RIEL_RENDER_ACE failed path=" << texture.pathid
+                                     << "missing=" << texture.missing << "error=" << error;
+            return false;
+        }
+        if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0)
+            qInfo().noquote() << "RIEL_RENDER_ACE loaded path=" << texture.pathid
+                              << "size=" << QString("%1x%2").arg(texture.width).arg(texture.height)
+                              << "bpp=" << texture.bytesPerPixel
+                              << "compressedBytes=" << texture.compressedData.size();
+        return true;
+    }
+
+    if (kind == RielTextureLoadKind::Dds) {
+        DdsLib loader;
+        loader.texture = &texture;
+        loader.run();
+    } else {
+        ImageLib loader;
+        loader.texture = &texture;
+        loader.run();
+    }
+    if (!texture.loaded && !texture.missing && !texture.error) {
+        texture.error = true;
+        texture.errorMessage = kind == RielTextureLoadKind::Dds
+            ? "DDS load failed" : "Image load failed";
+    }
+    return texture.loaded;
+}
+
+void publishDetachedTexture(Texture *target, quint64 generation,
+                            const DetachedTexture &incoming) {
+    if (!target || !incoming || !currentTextureLoadGeneration(target, generation)
+            || !textureStillCached(target)) {
+        if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0)
+            qInfo().noquote() << "RIEL_TEXTURE_PUBLISH stale generation=" << generation;
+        return;
+    }
+
+    if (incoming->loaded) {
+        target->takeContentFrom(*incoming);
+    } else {
+        target->loaded = false;
+        target->missing = incoming->missing;
+        target->error = incoming->error;
+        target->errorMessage = incoming->errorMessage;
+    }
+}
+
+void loadTextureSafely(Texture *target, const QString &path, RielTextureLoadKind kind,
+                       bool reload) {
+    if (!target) return;
+    const quint64 generation = nextTextureLoadGeneration(target);
+    const int quality = Game::textureQuality;
+    const DetachedTexture incoming(new Texture(path), &destroyDetachedTexture);
+
+    bool asynchronous = !reload && Game::textureLoaderThreaded;
+    if (qEnvironmentVariableIsSet("RIEL_EDITOR_ASYNC_TEXTURES"))
+        asynchronous = !reload
+            && qEnvironmentVariableIntValue("RIEL_EDITOR_ASYNC_TEXTURES") != 0;
+
+    if (!asynchronous) {
+        decodeDetachedTexture(kind, *incoming, quality);
+        publishDetachedTexture(target, generation, incoming);
+        return;
+    }
+
+    rielTextureLoadPool().start(QRunnable::create(
+        [target, generation, incoming, kind, quality] {
+            decodeDetachedTexture(kind, *incoming, quality);
+            QCoreApplication *app = QCoreApplication::instance();
+            if (!app) return;
+            QMetaObject::invokeMethod(
+                app,
+                [target, generation, incoming] {
+                    publishDetachedTexture(target, generation, incoming);
+                },
+                Qt::QueuedConnection);
+        }));
+}
+}
+
+void TexLib::reset() {''',
+    )
+    replace_once(
+        texlib,
+        'void TexLib::reset() {\n'
+        '    jesttextur = 0;\n'
+        '    mtex.clear();',
+        'void TexLib::reset() {\n'
+        '    rielTextureLoadPool().clear();\n'
+        '    {\n'
+        '        std::lock_guard<std::mutex> guard(rielTextureLoadStateMutex);\n'
+        '        rielTextureLoadGeneration.clear();\n'
+        '    }\n'
+        '    jesttextur = 0;\n'
+        '    mtex.clear();',
     )
     replace_once(
         texlib,
@@ -780,40 +944,15 @@ AceConverterWindow::AceConverterWindow(const QColor &mainLabelColor, QWidget *pa
         t->run();
 ''',
         '''    if(tType == "ace"){
-        AceLib* t = new AceLib();
-        t->texture = newFile;
-        if(AceLib::IsThread && !reload) {
-            QObject::connect(t, &QThread::finished, t, &QObject::deleteLater);
-            t->start();
-        } else {
-            t->run();
-            delete t;
-        }
+        loadTextureSafely(newFile, pathid, RielTextureLoadKind::Ace, reload);
     } else if(tType == "dds"){
-        DdsLib* t = new DdsLib();
-        t->texture = newFile;
-        if(DdsLib::IsThread && !reload) {
-            QObject::connect(t, &QThread::finished, t, &QObject::deleteLater);
-            t->start();
-        } else {
-            t->run();
-            delete t;
-        }
+        loadTextureSafely(newFile, pathid, RielTextureLoadKind::Dds, reload);
     } else if(tType == "png"||tType == "bmp"||tType == "jpg"/*||tType == "dds"*/||tType == "tga"){
-        ImageLib* t = new ImageLib();
-        t->texture = newFile;
-        if(ImageLib::IsThread && !reload) {
-            QObject::connect(t, &QThread::finished, t, &QObject::deleteLater);
-            t->start();
-        } else {
-            t->run();
-            delete t;
-        }
+        loadTextureSafely(newFile, pathid, RielTextureLoadKind::Image, reload);
     } else if(tType == ":painttex"){
-        PaintTexLib* t = new PaintTexLib();
-        t->texture = newFile;
-        t->run();
-        delete t;
+        PaintTexLib t;
+        t.texture = newFile;
+        t.run();
 ''',
     )
 
