@@ -122,7 +122,13 @@ jobs:
           QT_QPA_PLATFORM=offscreen "$editor_out/riel-route-editor" --test --test-suite settings
           grep -F "workingDir \"$editor_out\"" "$XDG_STATE_HOME/riel/Logs/Riel Route Editor Log.txt"
           xvfb-run -a "$editor_out/riel-route-editor" --graphics-check
+          timeout 15s xvfb-run -a "$editor_out/riel-route-editor" --route-action-check
           python3 Source/Tools/TestRoute/make_test_route.py "${RUNNER_TEMP}/riel-editor-content"
+          for extra in "" "--set core.startup.useTilePosition=true --set core.startup.tileX=-6 --set core.startup.tileZ=12"; do
+            timeout 40s xvfb-run -a "$editor_out/riel-route-editor" \
+              --game-root "${RUNNER_TEMP}/riel-editor-content/Train Simulator" \
+              --route RIELTEST --route-session-check $extra
+          done
           timeout 45s xvfb-run -a "$editor_out/riel-route-editor" --ace-preview-check
           timeout 45s xvfb-run -a env RIEL_EDITOR_RENDER_DIAGNOSTICS=1 "$editor_out/riel-route-editor" \
             --game-root "${RUNNER_TEMP}/riel-editor-content/Train Simulator" \

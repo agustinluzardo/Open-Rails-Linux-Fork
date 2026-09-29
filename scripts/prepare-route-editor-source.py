@@ -168,6 +168,10 @@ def main() -> int:
     replace_once(
         main,
         '    const QCommandLineOption TestOption("test", "Run TSRE test runner and exit.");',
+        '    const QCommandLineOption RouteActionCheckOption("route-action-check", "Check route database warning buttons.");\n'
+        '    parser.addOption(RouteActionCheckOption);\n'
+        '    const QCommandLineOption RouteSessionCheckOption("route-session-check", "Open and render a route briefly, then exit.");\n'
+        '    parser.addOption(RouteSessionCheckOption);\n'
         '    const QCommandLineOption AcePreviewCheckOption("ace-preview-check", "Check fitted ACE preview and Ctrl+wheel zoom.");\n'
         '    parser.addOption(AcePreviewCheckOption);\n'
         '    const QCommandLineOption ConsistSelectionCheckOption("consist-selection-check", "Check selecting and clearing a rolling-stock entry.");\n'
@@ -191,6 +195,10 @@ def main() -> int:
         '        consoleArgs["GRAPHICS_CHECK"] = "TRUE";',
         '    if (parser.isSet(GraphicsCheckOption))\n'
         '        consoleArgs["GRAPHICS_CHECK"] = "TRUE";\n'
+        '    if (parser.isSet(RouteActionCheckOption))\n'
+        '        consoleArgs["ROUTE_ACTION_CHECK"] = "TRUE";\n'
+        '    if (parser.isSet(RouteSessionCheckOption))\n'
+        '        consoleArgs["ROUTE_SESSION_CHECK"] = "TRUE";\n'
         '    if (parser.isSet(AcePreviewCheckOption))\n'
         '        consoleArgs["ACE_PREVIEW_CHECK"] = "TRUE";\n'
         '    if (parser.isSet(ConsistSelectionCheckOption))\n'
@@ -206,6 +214,70 @@ def main() -> int:
                  '#include <conEditor/CELoadWindow.h>\n'
                  '#include <conEditor/ConEditorWindow.h>\n'
                  '#include <conEditor/EngListWidget.h>')
+    replace_once(main, '#include <tsre/Game.h>',
+                 '#include <tsre/Game.h>\n#include <tsre/gui/ActionChooseDialog.h>\n'
+                 '#include <tsre/world/Route.h>\n#include <routeEditor/RouteEditorGLWidget.h>')
+    replace_once(
+        main,
+        '    LoadRouteEditor();\n\n    //MapWindow aaa;',
+        '''    LoadRouteEditor();
+    if (consoleArgs["ROUTE_SESSION_CHECK"] == "TRUE") {
+        QTimer::singleShot(3000, &app, [&app] {
+            RouteEditorWindow *window = nullptr;
+            for (QWidget *widget : QApplication::topLevelWidgets()) {
+                window = qobject_cast<RouteEditorWindow *>(widget);
+                if (window) break;
+            }
+            auto *view = window ? window->findChild<RouteEditorGLWidget *>() : nullptr;
+            if (!window || !window->isVisible() || !view || !view->isValid()
+                    || !view->currentRoute() || !view->currentRoute()->loaded) {
+                qCritical() << "RIEL_ROUTE_SESSION_FAILED: route did not render";
+                app.exit(1);
+                return;
+            }
+            view->grabFramebuffer(); // Force a real GL paint, not just a shown window.
+            printf("RIEL_ROUTE_SESSION_OK\\n");
+            app.quit();
+        });
+    }
+
+    //MapWindow aaa;''',
+    )
+    replace_once(
+        main,
+        '    // Test runner (headless) - runs and exits without starting the GUI.',
+        '''    if (consoleArgs["ROUTE_ACTION_CHECK"] == "TRUE") {
+        const QStringList actionIds = {"FIX", "VIEW", "IGNORE", "EXIT"};
+        for (const QString &expected : actionIds) {
+            ActionChooseDialog dialog(4);
+            for (const QString &id : actionIds)
+                dialog.pushAction(id, id);
+            QTimer::singleShot(0, &dialog, [&dialog, expected] {
+                for (QPushButton *button : dialog.findChildren<QPushButton *>()) {
+                    if (button->text() == expected) {
+                        button->click();
+                        return;
+                    }
+                }
+                dialog.reject();
+            });
+            QTimer::singleShot(2000, &dialog, &QDialog::reject);
+            if (dialog.exec() != QDialog::Accepted || dialog.actionChoosen != expected) {
+                qCritical() << "RIEL_ROUTE_ACTION_FAILED:" << expected << dialog.actionChoosen;
+                return 1;
+            }
+        }
+        ActionChooseDialog cancelled(1);
+        cancelled.pushAction("FIX", "FIX");
+        QTimer::singleShot(0, &cancelled, &QDialog::reject);
+        if (cancelled.exec() != QDialog::Rejected || !cancelled.actionChoosen.isEmpty())
+            return 1;
+        printf("RIEL_ROUTE_ACTION_OK\\n");
+        return 0;
+    }
+
+    // Test runner (headless) - runs and exits without starting the GUI.''',
+    )
     replace_once(
         main,
         '    // Test runner (headless) - runs and exits without starting the GUI.',
@@ -449,6 +521,54 @@ AceConverterWindow::AceConverterWindow(const QColor &mainLabelColor, QWidget *pa
                  '    //currentEng = englib->eng[id];\n'
                  '    qDebug() << currentEng->engName;',
                  '    // setCurrentEng validates IDs before using the selected engine.')
+
+    # Qt 6 emits mappedInt(int), while the legacy mapped(int) connection
+    # silently fails at runtime and leaves every button in this modal inert.
+    # Connect the buttons directly and treat closing the warning as cancel.
+    action_dialog = source / "src" / "tsre" / "gui" / "ActionChooseDialog.cpp"
+    action_header = source / "src" / "tsre" / "gui" / "ActionChooseDialog.h"
+    replace_once(action_dialog,
+                 '        mapper.setMapping(bok[i], i);\n'
+                 '        connect(bok[i], SIGNAL(clicked()), &mapper, SLOT(map()));',
+                 '        connect(bok[i], &QPushButton::clicked, this, [this, i] { action(i); });')
+    replace_once(action_dialog,
+                 '    connect(&mapper, SIGNAL(mapped(int)), this, SLOT(action(int)));\n',
+                 '')
+    replace_once(action_dialog,
+                 'void ActionChooseDialog::action(int i){\n'
+                 '    actionChoosen = actions[i];\n'
+                 '    this->close();',
+                 'void ActionChooseDialog::action(int i){\n'
+                 '    if (i < 0 || i >= count) return;\n'
+                 '    actionChoosen = actions.value(i);\n'
+                 '    accept();')
+    replace_once(action_header, '    QSignalMapper mapper;\n', '')
+    route = source / "src" / "tsre" / "world" / "Route.cpp"
+    replace_once(route,
+                 '    if(dialog.actionChoosen == "EXIT"){',
+                 '    if(dialog.actionChoosen == "EXIT" || dialog.actionChoosen.isEmpty()){')
+    route_gl = source / "src" / "routeEditor" / "RouteEditorGLWidget.cpp"
+    replace_once(route_gl,
+                 '    float spos[3];\n'
+                 '    if (Game::start == 2) {\n'
+                 '        camera->setPozT(Game::startTileX, -Game::startTileY);\n'
+                 '    } else {\n'
+                 '        camera->setPozT(route->getStartTileX(), -route->getStartTileZ());\n'
+                 '        spos[0] = route->getStartpX();\n'
+                 '        spos[2] = -route->getStartpZ();\n'
+                 '    }\n'
+                 '    if (Game::terrainLib->load(route->getStartTileX(), -route->getStartTileZ())) {\n'
+                 '        spos[1] = 20 + Game::terrainLib->getHeight(route->getStartTileX(), -route->getStartTileZ(), route->getStartpX(), -route->getStartpZ());',
+                 '    const bool explicitTile = Game::start == 2;\n'
+                 '    const int tileX = explicitTile ? Game::startTileX : route->getStartTileX();\n'
+                 '    const int tileZ = explicitTile ? Game::startTileY : route->getStartTileZ();\n'
+                 '    // An explicit starting tile begins at its local origin. Initialize\n'
+                 '    // both coordinates before passing them into the camera.\n'
+                 '    float spos[3] = {explicitTile ? 0.0f : route->getStartpX(), 0.0f,\n'
+                 '                     explicitTile ? 0.0f : -route->getStartpZ()};\n'
+                 '    camera->setPozT(tileX, -tileZ);\n'
+                 '    if (Game::terrainLib->load(tileX, -tileZ)) {\n'
+                 '        spos[1] = 20 + Game::terrainLib->getHeight(tileX, -tileZ, spos[0], spos[2]);')
 
     # Use the GLSL 3.30 shader set whenever the negotiated context is modern.
     # Previously Linux always loaded the 1.40 shaders; on Qt 6/NVIDIA that can
