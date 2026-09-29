@@ -116,10 +116,10 @@ def main() -> int:
         '    currentShader = shaders["StandardFog"];',
     )
 
-    # MSTS content was authored for a case-insensitive filesystem.  Riel runs
-    # natively on Linux, so resolve the spelling of every texture path component
-    # before opening it.  The upstream cache keys are already case-insensitive,
-    # but the actual QFile/AceLib open still used the authored spelling.
+    # MSTS content was authored for a case-insensitive filesystem. Riel runs
+    # natively on Linux, so resolve a differently-cased path only when every
+    # component has exactly one case-insensitive match. Exact spelling always
+    # wins; ambiguous siblings such as foo.ace/Foo.ace are never guessed.
     content_path = source / "src" / "tsre" / "fileFunctions" / "ContentPath.h"
     replace_once(
         content_path,
@@ -139,14 +139,27 @@ def main() -> int:
         '    QString current = absolute.startsWith(\'/\') ? QString("/") : QString();\n'
         '    for (const QString &part : parts) {\n'
         '        QDir dir(current.isEmpty() ? QDir::currentPath() : current);\n'
-        '        QString selected;\n'
+        '        QString exact;\n'
+        '        QStringList foldedMatches;\n'
         '        const QStringList entries = dir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);\n'
         '        for (const QString &entry : entries) {\n'
-        '            if (entry == part) { selected = entry; break; }\n'
-        '            if (selected.isEmpty() && entry.compare(part, Qt::CaseInsensitive) == 0)\n'
-        '                selected = entry;\n'
+        '            if (entry == part) { exact = entry; break; }\n'
+        '            if (entry.compare(part, Qt::CaseInsensitive) == 0)\n'
+        '                foldedMatches.push_back(entry);\n'
         '        }\n'
-        '        if (selected.isEmpty()) return normalized;\n'
+        '        QString selected;\n'
+        '        if (!exact.isEmpty()) {\n'
+        '            selected = exact;\n'
+        '        } else if (foldedMatches.size() == 1) {\n'
+        '            selected = foldedMatches.front();\n'
+        '        } else if (foldedMatches.size() > 1) {\n'
+        '            qWarning() << "Riel ambiguous case-insensitive content path:"\n'
+        '                       << normalized << "component" << part\n'
+        '                       << "matches" << foldedMatches;\n'
+        '            return normalized;\n'
+        '        } else {\n'
+        '            return normalized;\n'
+        '        }\n'
         '        current = QDir(current.isEmpty() ? QDir::currentPath() : current).filePath(selected);\n'
         '    }\n'
         '    if (QFileInfo(current).exists()) {\n'
