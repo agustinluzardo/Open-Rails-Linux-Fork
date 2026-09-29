@@ -56,6 +56,17 @@ jobs:
           # A build tool can leave non-environment text in GitHub's command file;
           # GitHub rejects the entire successful step when it parses that text.
           : > "$GITHUB_ENV"
+      - name: Install Qt for Riel Route Editor
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.10.1"
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          modules: qtwebsockets
+          cache: true
+          setup-python: false
+
       - name: Build native Riel Route Editor
         env:
           TSRE5VC_COMMIT: 15a5d148a15ad305e14a9e602961210ad18ada74
@@ -63,7 +74,6 @@ jobs:
           set -euo pipefail
           sudo apt-get install -y --no-install-recommends \
             git cmake ninja-build g++ \
-            qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools qt6-websockets-dev \
             libopenal-dev libgl1-mesa-dev
 
           editor_src="${RUNNER_TEMP}/tsre5vc"
