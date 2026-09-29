@@ -118,7 +118,12 @@ namespace Riel.Launcher
                 ZipFile.ExtractToDirectory(archive, stage);
                 if (!File.Exists(Path.Combine(stage, "riel-linux-x64", "app", "riel")))
                     throw new LauncherException("Update archive does not contain the Riel launcher.");
-                foreach (string executable in new[] { "riel", "riel-gui", "ActivityRunner", "MultiPlayer.Hub" })
+                foreach (string executable in new[]
+                {
+                    "riel", "riel-gui", "ActivityRunner", "MultiPlayer.Hub",
+                    Path.Combine("route-editor", "riel-route-editor"),
+                    Path.Combine("route-editor", "bin", "riel-route-editor-bin"),
+                })
                 {
                     string file = Path.Combine(stage, "riel-linux-x64", "app", executable);
                     if (File.Exists(file))
