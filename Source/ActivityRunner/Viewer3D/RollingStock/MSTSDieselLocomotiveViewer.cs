@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using Riel.Common;
@@ -33,7 +34,10 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
 {
     public class MSTSDieselLocomotiveViewer : MSTSLocomotiveViewer
     {
+        private static readonly bool TraceParticles = string.Equals(Environment.GetEnvironmentVariable("RIEL_TRACE_PARTICLES"), "1", StringComparison.OrdinalIgnoreCase);
+
         private MSTSDieselLocomotive dieselLocomotive;
+        private double nextParticleTraceTime;
 
         private List<ParticleEmitterViewer> Exhaust = new List<ParticleEmitterViewer>();
 
@@ -55,6 +59,9 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             }
             foreach (var drawer in Exhaust)
                 drawer.Initialize(dieselTexture);
+
+            if (TraceParticles)
+                Trace.TraceInformation("[ParticleDiag] diesel viewer car='{0}' effectKeys=[{1}] exhaustDrawers={2} texture='{3}'", car.CarID, string.Join(",", ParticleDrawers.Keys), Exhaust.Count, dieselTexture);
 
             if (dieselLocomotive.Train != null && (dieselLocomotive.Train.TrainType == TrainType.Ai ||
                 ((dieselLocomotive.Train.TrainType == TrainType.Player || dieselLocomotive.Train.TrainType == TrainType.AiPlayerDriven || dieselLocomotive.Train.TrainType == TrainType.AiPlayerHosting) &&
@@ -218,6 +225,28 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
                 var colorG = car.ExhaustColorG.SmoothedValue / 255f;
                 var colorB = car.ExhaustColorB.SmoothedValue / 255f;
                 drawer.SetOutput((float)exhaustParticles, (float)car.ExhaustMagnitude.SmoothedValue, new Color((byte)car.ExhaustColorR.SmoothedValue, (byte)car.ExhaustColorG.SmoothedValue, (byte)car.ExhaustColorB.SmoothedValue));
+            }
+
+            if (TraceParticles && Viewer.Simulator.GameTime >= nextParticleTraceTime)
+            {
+                nextParticleTraceTime = Viewer.Simulator.GameTime + 1;
+                var engine = car.DieselEngines[0];
+                Trace.TraceInformation(
+                    "[ParticleDiag] diesel car='{0}' trainType={1} engineState={2} drawers={3} rawParticles={4:F3} smoothParticles={5:F3} rawMagnitude={6:F3} smoothMagnitude={7:F3} rawColor={8},{9},{10} smoothColor={11:F1},{12:F1},{13:F1}",
+                    car.CarID,
+                    car.Train?.TrainType,
+                    engine.State,
+                    Exhaust.Count,
+                    engine.ExhaustParticles,
+                    car.ExhaustParticles.SmoothedValue,
+                    engine.ExhaustMagnitude,
+                    car.ExhaustMagnitude.SmoothedValue,
+                    engine.ExhaustColor.R,
+                    engine.ExhaustColor.G,
+                    engine.ExhaustColor.B,
+                    car.ExhaustColorR.SmoothedValue,
+                    car.ExhaustColorG.SmoothedValue,
+                    car.ExhaustColorB.SmoothedValue);
             }
 
             base.PrepareFrame(frame, elapsedTime);
