@@ -16,6 +16,7 @@ if [[ -z "$qtpaths_bin" ]]; then
   exit 1
 fi
 
+qt_prefix="$("$qtpaths_bin" --query QT_INSTALL_PREFIX)"
 qt_lib="$("$qtpaths_bin" --query QT_INSTALL_LIBS)"
 qt_plugins="$("$qtpaths_bin" --query QT_INSTALL_PLUGINS)"
 
@@ -32,8 +33,21 @@ done
 copy_runtime_dep() {
   dep="$1"
   base="$(basename "$dep")"
+
+  # Anything resolved from the Qt installation is part of the runtime closure.
+  # This includes Qt's own libraries and versioned third-party runtime pieces
+  # such as ICU which may not exist at the same SONAME on the host distro.
+  case "$dep" in
+    "$qt_lib"/*)
+      cp -Lf "$dep" "$out/lib/$base"
+      return
+      ;;
+  esac
+
+  # OpenAL comes from the runner/system rather than the Qt prefix but is a
+  # direct TSRE5vc dependency and must travel with the portable build.
   case "$base" in
-    libQt6*.so*|libopenal.so*)
+    libopenal.so*)
       cp -Lf "$dep" "$out/lib/$base"
       ;;
   esac
@@ -45,20 +59,47 @@ scan_one() {
     if [[ -n "$dep" && -e "$dep" ]]; then
       copy_runtime_dep "$dep"
     fi
-  done < <(LD_LIBRARY_PATH="$qt_lib:$LD_LIBRARY_PATH" ldd "$file" 2>/dev/null | awk '/=> \/.* \(0x/ {print $3} /^\/.* \(0x/ {print $1}')
+  done < <(LD_LIBRARY_PATH="$out/lib:$qt_lib:${LD_LIBRARY_PATH:-}" ldd "$file" 2>/dev/null | awk '/=> \/.* \(0x/ {print $3} /^\/.* \(0x/ {print $1}')
 }
 
 scan_one "$binary"
 while IFS= read -r plugin; do
   scan_one "$plugin"
 done < <(find "$out/plugins" -type f -name '*.so' -print)
-while IFS= read -r lib; do
-  scan_one "$lib"
-done < <(find "$out/lib" -type f -name '*.so*' -print)
+
+# Resolve the transitive closure. A Qt library can pull in another library from
+# the Qt distribution (for example libQt6Core -> ICU), whose own dependencies
+# must then be inspected as well.
+previous_count=-1
+while :; do
+  current_count="$(find "$out/lib" -type f -name '*.so*' | wc -l)"
+  if [[ "$current_count" -eq "$previous_count" ]]; then
+    break
+  fi
+  previous_count="$current_count"
+  while IFS= read -r lib; do
+    scan_one "$lib"
+  done < <(find "$out/lib" -type f -name '*.so*' -print)
+done
 
 install -m 755 "$repo_root/packaging/linux/riel-route-editor" "$out/riel-route-editor"
 
-if LD_LIBRARY_PATH="$out/lib" ldd "$out/bin/riel-route-editor-bin" | grep -q 'not found'; then
-  LD_LIBRARY_PATH="$out/lib" ldd "$out/bin/riel-route-editor-bin" >&2
-  exit 1
+verify_runtime() {
+  file="$1"
+  if LD_LIBRARY_PATH="$out/lib:${LD_LIBRARY_PATH:-}" ldd "$file" | grep -q 'not found'; then
+    echo "Unresolved runtime dependency in $file" >&2
+    LD_LIBRARY_PATH="$out/lib:${LD_LIBRARY_PATH:-}" ldd "$file" >&2
+    return 1
+  fi
+}
+
+verify_runtime "$out/bin/riel-route-editor-bin"
+while IFS= read -r plugin; do
+  verify_runtime "$plugin"
+done < <(find "$out/plugins" -type f -name '*.so' -print)
+
+# Preserve the licenses shipped with the Qt distribution when available.
+if [[ -d "$qt_prefix/LICENSES" ]]; then
+  mkdir -p "$out/licenses"
+  cp -a "$qt_prefix/LICENSES" "$out/licenses/qt"
 fi
