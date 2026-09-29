@@ -124,7 +124,7 @@ jobs:
           xvfb-run -a "$editor_out/riel-route-editor" --graphics-check
           python3 Source/Tools/TestRoute/make_test_route.py "${RUNNER_TEMP}/riel-editor-content"
           timeout 45s xvfb-run -a "$editor_out/riel-route-editor" --ace-preview-check
-          timeout 45s xvfb-run -a "$editor_out/riel-route-editor" \
+          timeout 45s xvfb-run -a env RIEL_EDITOR_RENDER_DIAGNOSTICS=1 "$editor_out/riel-route-editor" \
             --game-root "${RUNNER_TEMP}/riel-editor-content/Train Simulator" \
             --consist-selection-check
       - name: Package and verify without an installed .NET runtime

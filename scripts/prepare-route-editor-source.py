@@ -250,23 +250,30 @@ def main() -> int:
     if (consoleArgs["CONSIST_SELECTION_CHECK"] == "TRUE") {
         if (Game::root.isEmpty()) return 1;
         Game::InitAssets();
-        ConEditorWindow window;
-        window.show();
-        EngListWidget *engList = window.findChild<EngListWidget *>();
+        fprintf(stderr, "RIEL_CONSIST_STEP create window\\n");
+        // Match production's top-level window lifetime so this smoke check
+        // isolates loading and selection from window teardown.
+        auto *window = new ConEditorWindow();
+        fprintf(stderr, "RIEL_CONSIST_STEP show window\\n");
+        window->show();
+        EngListWidget *engList = window->findChild<EngListWidget *>();
         QListWidget *items = engList ? engList->findChild<QListWidget *>() : nullptr;
         if (!items || items->count() == 0) {
             qCritical() << "RIEL_CONSIST_SELECTION_FAILED: no rolling stock";
             return 1;
         }
+        fprintf(stderr, "RIEL_CONSIST_STEP first selection\\n");
         items->setCurrentRow(0);
         app.processEvents();
+        fprintf(stderr, "RIEL_CONSIST_STEP filter and reselect\\n");
         engList->fillEngList(); // clearing a selected list used to dereference null
         app.processEvents();
         if (items->count() == 0) return 1;
         QMetaObject::invokeMethod(engList, "itemsSelected"); // no current item
         items->setCurrentRow(0);
         app.processEvents();
-        window.engListSelected(-1); // a stale ID should not create a null entry
+        fprintf(stderr, "RIEL_CONSIST_STEP stale ID\\n");
+        window->engListSelected(-1); // a stale ID should not create a null entry
         printf("RIEL_CONSIST_SELECTION_OK\\n");
         return 0;
     }
