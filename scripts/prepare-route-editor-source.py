@@ -116,6 +116,82 @@ def main() -> int:
         '    currentShader = shaders["StandardFog"];',
     )
 
+    # MSTS content was authored for a case-insensitive filesystem.  Riel runs
+    # natively on Linux, so resolve the spelling of every texture path component
+    # before opening it.  The upstream cache keys are already case-insensitive,
+    # but the actual QFile/AceLib open still used the authored spelling.
+    content_path = source / "src" / "tsre" / "fileFunctions" / "ContentPath.h"
+    replace_once(
+        content_path,
+        'inline QString join(const QString &base,const QString &name) {\n'
+        '    return normalize(base+"/"+name);\n'
+        '}',
+        'inline QString join(const QString &base,const QString &name) {\n'
+        '    return normalize(base+"/"+name);\n'
+        '}\n'
+        'inline QString resolveExistingCaseInsensitive(const QString &path) {\n'
+        '    if (synthetic(path)) return path;\n'
+        '    const QString normalized = normalize(path);\n'
+        '    if (QFileInfo(normalized).exists()) return normalized;\n'
+        '#ifdef Q_OS_LINUX\n'
+        '    const QString absolute = QFileInfo(normalized).absoluteFilePath();\n'
+        '    const QStringList parts = QDir::cleanPath(absolute).split(\'/\', Qt::SkipEmptyParts);\n'
+        '    QString current = absolute.startsWith(\'/\') ? QString("/") : QString();\n'
+        '    for (const QString &part : parts) {\n'
+        '        QDir dir(current.isEmpty() ? QDir::currentPath() : current);\n'
+        '        QString selected;\n'
+        '        const QStringList entries = dir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);\n'
+        '        for (const QString &entry : entries) {\n'
+        '            if (entry == part) { selected = entry; break; }\n'
+        '            if (selected.isEmpty() && entry.compare(part, Qt::CaseInsensitive) == 0)\n'
+        '                selected = entry;\n'
+        '        }\n'
+        '        if (selected.isEmpty()) return normalized;\n'
+        '        current = QDir(current.isEmpty() ? QDir::currentPath() : current).filePath(selected);\n'
+        '    }\n'
+        '    if (QFileInfo(current).exists()) {\n'
+        '        if (current != normalized)\n'
+        '            qDebug() << "Riel content case fallback:" << normalized << "->" << current;\n'
+        '        return current;\n'
+        '    }\n'
+        '#endif\n'
+        '    return normalized;\n'
+        '}',
+    )
+    replace_once(
+        content_path,
+        'inline bool readable(const QString &path) {\n'
+        '    const QFileInfo file(normalize(path));return file.isFile() && file.isReadable();\n'
+        '}',
+        'inline bool readable(const QString &path) {\n'
+        '    const QFileInfo file(resolveExistingCaseInsensitive(path));return file.isFile() && file.isReadable();\n'
+        '}',
+    )
+    replace_once(
+        content_path,
+        'inline QString textureSource(const QString &path) {\n'
+        '    const QString source=normalize(path);\n'
+        '    if(source.endsWith(".ace",Qt::CaseInsensitive) && !QFileInfo(source).isFile())\n'
+        '        return withExtension(source,"dds");\n'
+        '    return source;\n'
+        '}',
+        'inline QString textureSource(const QString &path) {\n'
+        '    const QString source=resolveExistingCaseInsensitive(path);\n'
+        '    if(source.endsWith(".ace",Qt::CaseInsensitive) && !QFileInfo(source).isFile())\n'
+        '        return resolveExistingCaseInsensitive(withExtension(source,"dds"));\n'
+        '    return source;\n'
+        '}',
+    )
+
+    texlib = source / "src" / "tsre" / "texture" / "TexLib.cpp"
+    replace_once(
+        texlib,
+        'int TexLib::addTex(QString pathid, bool reload) {\n'
+        '    pathid = ContentPath::normalize(pathid);',
+        'int TexLib::addTex(QString pathid, bool reload) {\n'
+        '    pathid = ContentPath::resolveExistingCaseInsensitive(pathid);',
+    )
+
     about = source / "src" / "routeEditor" / "AboutWindow.cpp"
     replace_once(
         about,
