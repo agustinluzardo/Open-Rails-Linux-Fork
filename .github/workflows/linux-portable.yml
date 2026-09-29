@@ -56,6 +56,47 @@ jobs:
           # A build tool can leave non-environment text in GitHub's command file;
           # GitHub rejects the entire successful step when it parses that text.
           : > "$GITHUB_ENV"
+      - name: Build native Riel Route Editor
+        env:
+          TSRE5VC_COMMIT: 15a5d148a15ad305e14a9e602961210ad18ada74
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y --no-install-recommends \
+            git cmake ninja-build g++ \
+            qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools qt6-websockets-dev \
+            libopenal-dev libgl1-mesa-dev
+
+          editor_src="${RUNNER_TEMP}/tsre5vc"
+          editor_build="${RUNNER_TEMP}/tsre5vc-build"
+          editor_out="${RUNNER_TEMP}/riel-route-editor"
+
+          git clone --filter=blob:none https://github.com/GokuMK/TSRE5vc.git "$editor_src"
+          git -C "$editor_src" checkout --detach "$TSRE5VC_COMMIT"
+          python3 scripts/prepare-route-editor-source.py "$editor_src"
+
+          cmake -S "$editor_src" -B "$editor_build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DTSRE5_VERSION="riel-${GITHUB_SHA:0:12}" \
+            -DTSRE_BUILD_ACE_TESTS=OFF \
+            -DTSRE_BUILD_TOKEN_TESTS=OFF \
+            -DTSRE_BUILD_SHAPE_TESTS=OFF \
+            -DTSRE_BUILD_CONTENT_CASE_TESTS=OFF \
+            -DTSRE_BUILD_GEO_TESTS=OFF
+          cmake --build "$editor_build" --parallel
+
+          mkdir -p "$editor_out"
+          install -m 755 "$editor_build/TSRE5vc" "$editor_out/riel-route-editor"
+          cp -a "$editor_src/appdata" "$editor_out/appdata"
+          cp docs/route-editor.md "$editor_out/README.md"
+          cat > "$editor_out/SOURCE.txt" <<EOF
+          Riel Route Editor is built from TSRE5vc.
+          Upstream: https://github.com/GokuMK/TSRE5vc
+          Commit: $TSRE5VC_COMMIT
+          Riel integration patch: scripts/prepare-route-editor-source.py
+          License: GNU GPL 3.0 or later (see upstream source headers and Riel LICENSE)
+          EOF
+
+          QT_QPA_PLATFORM=offscreen "$editor_out/riel-route-editor" --version
       - name: Package and verify without an installed .NET runtime
         env:
           DOTNET_ROOT: /nonexistent-dotnet-runtime
@@ -69,6 +110,8 @@ jobs:
           bundle="${RUNNER_TEMP}/riel-linux-x64"
           mkdir -p "$bundle/app"
           cp -a "${RUNNER_TEMP}/riel-publish/." "$bundle/app/"
+          mkdir -p "$bundle/app/route-editor"
+          cp -a "${RUNNER_TEMP}/riel-route-editor/." "$bundle/app/route-editor/"
           install -m 755 packaging/linux/riel-portable "$bundle/riel"
           find "$bundle/app" -type f \( -name '*.pdb' -o -name '*.dbg' \) -delete
           if [ -d "$bundle/app/runtimes" ]; then
@@ -82,6 +125,8 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/riel-path"
           ln -s "$bundle/riel" "${RUNNER_TEMP}/riel-path/riel"
           PATH="${RUNNER_TEMP}/riel-path:$PATH" riel version
+          test -x "$bundle/app/route-editor/riel-route-editor"
+          QT_QPA_PLATFORM=offscreen "$bundle/app/route-editor/riel-route-editor" --version
           tar -czf "${RUNNER_TEMP}/riel-linux-x64.tar.gz" -C "${RUNNER_TEMP}" riel-linux-x64
           (cd "${RUNNER_TEMP}" && zip -qr riel-linux-x64.zip riel-linux-x64)
           (cd "${RUNNER_TEMP}" && sha256sum riel-linux-x64.zip > riel-linux-x64.zip.sha256)

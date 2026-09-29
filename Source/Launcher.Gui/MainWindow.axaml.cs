@@ -133,6 +133,7 @@ namespace Riel.Launcher.Gui
             ToolsButton.Click += (_, _) => ToolsButton.ContextMenu.Open(ToolsButton);
             GetContentButton.Click += (_, _) => SystemInfo.OpenBrowser("https://www.openrails.org/download/content/");
             ManualButton.Click += (_, _) => SystemInfo.OpenBrowser("https://www.openrails.org/learn/documents/");
+            RouteEditorButton.Click += (_, _) => Guarded(OpenRouteEditor);
             TestButton.Click += (_, _) => Guarded(ShowTesting);
             AddFirstFolderButton.Click += (_, _) => Guarded(() => ManageContent(browseFirst: true));
             UseDetectedButton.Click += (_, _) => Guarded(AddDetected);
@@ -640,7 +641,9 @@ namespace Riel.Launcher.Gui
             (ProfileSelectionsModel selections, _, string missing) = Selected();
             PlayButton.IsEnabled = !running && selections != null;
             ResumeButton.IsEnabled = !running && hasSave;
+            RouteEditorButton.IsEnabled = !running && RouteList.SelectedItem is RouteItem;
             ToolTip.SetTip(PlayButton, missing);
+            ToolTip.SetTip(RouteEditorButton, RouteList.SelectedItem is RouteItem ? null : T("Choose a route first."));
             UpdateSelectionDetails();
         }
 
@@ -725,6 +728,18 @@ namespace Riel.Launcher.Gui
             string cars = string.Join(" · ", train.Consist.TrainCars.Select((car, index) =>
                 $"{index + 1}. {(!string.IsNullOrWhiteSpace(car?.Name) ? car.Name : car?.Reference)}"));
             return cars.Length == 0 ? heading : $"{heading}\n{train.Detail}: {cars}";
+        }
+
+        // ------------------------------------------------------------------------------ tools
+
+        private Task OpenRouteEditor()
+        {
+            if (RouteList.SelectedItem is not RouteItem route)
+                throw new LauncherException(T("Choose a route first."));
+
+            _ = RouteEditorLauncher.Start(route);
+            StatusText.Text = F("Opened {0} in Riel Route Editor.", route.Name);
+            return Task.CompletedTask;
         }
 
         // ------------------------------------------------------------------------------ playing

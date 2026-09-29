@@ -2,6 +2,7 @@
 
 ## Features
 
+- Added the first native **Riel Route Editor** integration for Linux. The launcher can open the currently selected route directly from **Tools → Riel Route Editor**, passing the detected MSTS/OR content root and route id to the editor. The Linux package now builds and includes a pinned, GPL-compatible TSRE5vc-based editor as a native ELF executable.
 - Updated Monogame version 3.8.5
 - Toolbox has been reworked into a modern, dockable IDE-style desktop application, with movable, floating, auto-hiding, and tabbed tool windows arranged around the central map view:
   - Tool windows for Routes, Settings, Route Navigation, Train Path details, Location, Logging, Help, and Debug information

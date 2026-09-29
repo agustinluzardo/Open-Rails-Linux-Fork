@@ -27,6 +27,7 @@
               <ContextMenu>
                 <MenuItem x:Name="GetContentButton" Header="{l:T 'Get content'}" />
                 <MenuItem x:Name="ManualButton" Header="{l:T 'Manual'}" />
+                <MenuItem x:Name="RouteEditorButton" Header="{l:T 'Riel Route Editor'}" />
                 <MenuItem x:Name="TestButton" Header="{l:T 'Test activities'}" />
                 <MenuItem x:Name="DoctorButton" Header="{l:T 'Check this computer'}" />
                 <MenuItem x:Name="UpdateButton" Header="{l:T 'Check for updates'}" />
