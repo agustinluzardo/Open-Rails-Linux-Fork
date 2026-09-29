@@ -69,9 +69,8 @@ namespace Riel.Common.Info
         public static NuGetVersion GetBestAvailableVersion(IEnumerable<NuGetVersion> availableVersions, UpdateMode updateMode)
         {
             return availableVersions.Where(v => updateMode != UpdateMode.Release || !v.IsPrerelease).
+                Where(v => VersionComparer.VersionRelease.Compare(v, packageVersion) > 0).
                 OrderByDescending(v => v, VersionComparer.VersionReleaseMetadata).
-                Take(1).
-                Where(v => VersionComparer.VersionRelease.Compare(v, packageVersion) != 0).
                 FirstOrDefault();
         }
 
