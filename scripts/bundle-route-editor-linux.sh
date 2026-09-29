@@ -24,7 +24,7 @@ rm -rf "$out"
 mkdir -p "$out/bin" "$out/lib" "$out/plugins"
 install -m 755 "$binary" "$out/bin/riel-route-editor-bin"
 
-for category in platforms imageformats platformthemes xcbglintegrations wayland-decoration-client wayland-graphics-integration-client; do
+for category in platforms imageformats platformthemes xcbglintegrations wayland-shell-integration wayland-decoration-client wayland-graphics-integration-client; do
   if [[ -d "$qt_plugins/$category" ]]; then
     cp -a "$qt_plugins/$category" "$out/plugins/"
   fi

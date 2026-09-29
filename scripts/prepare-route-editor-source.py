@@ -340,6 +340,45 @@ def main() -> int:
         '    }',
     )
 
+
+    main_cpp = source / "src" / "main.cpp"
+    replace_once(
+        main_cpp,
+        '    logFile.setFileName("log.txt");\n'
+        '    if(logFile.open(QIODevice::WriteOnly)){\n'
+        '        logFileOut.setDevice(&logFile);\n'
+        '    } else {\n'
+        '        qDebug() << "Cannot open log file for writing!";\n'
+        '    }\n',
+        '    QString stateRoot = qEnvironmentVariable("XDG_STATE_HOME");\n'
+        '    if (stateRoot.isEmpty())\n'
+        '        stateRoot = QDir::homePath() + "/.local/state";\n'
+        '    const QString logDirectory = QDir(stateRoot).filePath("riel/Logs");\n'
+        '    QDir().mkpath(logDirectory);\n'
+        '    logFile.setFileName(QDir(logDirectory).filePath("Riel Route Editor Log.txt"));\n'
+        '    if(logFile.open(QIODevice::WriteOnly | QIODevice::Truncate)){\n'
+        '        logFileOut.setDevice(&logFile);\n'
+        '    } else {\n'
+        '        fprintf(stderr, "Cannot open Route Editor log for writing: %s\\n", qPrintable(logFile.fileName()));\n'
+        '    }\n',
+    )
+    replace_once(
+        main_cpp,
+        '    if(Game::consoleOutput)\n'
+        '        std::cout << output.toStdString() << "\\n";\n'
+        '    logFileOut << output << "\\n";\n'
+        '    logFileOut.flush();\n'
+        '    logFile.flush(); ',
+        '    const bool renderDiagnostics = qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0;\n'
+        '    if(Game::consoleOutput || renderDiagnostics || !logFile.isOpen())\n'
+        '        std::cerr << output.toStdString() << "\\n";\n'
+        '    if (logFile.isOpen()) {\n'
+        '        logFileOut << output << "\\n";\n'
+        '        logFileOut.flush();\n'
+        '        logFile.flush();\n'
+        '    } ',
+    )
+
     about = source / "src" / "routeEditor" / "AboutWindow.cpp"
     replace_once(
         about,
