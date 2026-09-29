@@ -2,7 +2,7 @@
 
 ## Features
 
-- Added the native **Riel editor suite** for Linux: Route Editor, Consist Editor, Shape Viewer and ACE Converter. Route-aware tools inherit the selected MSTS/OR content root, the editor uses Riel branding and stores its settings under the Riel user-data path.
+- Added the native **Riel editor suite** for Linux: Route Editor, Consist Editor, Shape Viewer and ACE Converter. Route-aware tools inherit the selected MSTS/OR content root, the editor uses Riel branding and stores its settings under the Riel user-data path. Qt/OpenAL runtime pieces are bundled with the portable package, and matching editor source is attached to releases.
 - Updated Monogame version 3.8.5
 - Toolbox has been reworked into a modern, dockable IDE-style desktop application, with movable, floating, auto-hiding, and tabbed tool windows arranged around the central map view:
   - Tool windows for Routes, Settings, Route Navigation, Train Path details, Location, Logging, Help, and Debug information

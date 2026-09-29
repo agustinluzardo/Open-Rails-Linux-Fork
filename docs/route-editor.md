@@ -38,3 +38,7 @@ CI checks out a pinned TSRE5vc commit, applies
 6.10.1, then packages the resulting native ELF editor suite beside Riel.
 
 Upstream project: https://github.com/GokuMK/TSRE5vc
+
+## Portable runtime and source
+
+The Linux package bundles the editor\'s Qt/OpenAL runtime beside the native ELF binary. The portable `riel` wrapper also exposes `riel route-editor`, `riel consist-editor`, `riel shape-viewer`, and `riel ace-converter`. Every published Linux build attaches `riel-route-editor-source.tar.gz` with the exact patched TSRE5vc source used to build it.

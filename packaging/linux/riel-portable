@@ -67,4 +67,23 @@ if [ "${1:-}" = "gui" ]; then
     exec "$app_dir/riel-gui" "$@"
 fi
 
+case "${1:-}" in
+    route-editor)
+        shift
+        exec "$app_dir/route-editor/riel-route-editor" "$@"
+        ;;
+    consist-editor)
+        shift
+        exec "$app_dir/route-editor/riel-route-editor" --conedit --appdata-profile "$@"
+        ;;
+    shape-viewer)
+        shift
+        exec "$app_dir/route-editor/riel-route-editor" --shapeview --appdata-profile "$@"
+        ;;
+    ace-converter)
+        shift
+        exec "$app_dir/route-editor/riel-route-editor" --aceconv --appdata-profile "$@"
+        ;;
+esac
+
 exec "$app_dir/riel" "$@"

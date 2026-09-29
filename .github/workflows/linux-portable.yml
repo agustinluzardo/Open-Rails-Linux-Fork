@@ -63,7 +63,7 @@ jobs:
           host: linux
           target: desktop
           arch: linux_gcc_64
-          modules: qtwebsockets
+          modules: qtwebsockets qtwayland
           cache: true
           setup-python: false
 
@@ -84,9 +84,10 @@ jobs:
           git -C "$editor_src" checkout --detach "$TSRE5VC_COMMIT"
           python3 scripts/prepare-route-editor-source.py "$editor_src"
 
+          riel_version="$(python3 -c 'import json; print(json.load(open("Source/version.json"))["version"])')"
           cmake -S "$editor_src" -B "$editor_build" -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DTSRE5_VERSION="riel-${GITHUB_SHA:0:12}" \
+            -DTSRE5_VERSION="$riel_version+${GITHUB_SHA:0:12}" \
             -DTSRE_BUILD_ACE_TESTS=OFF \
             -DTSRE_BUILD_TOKEN_TESTS=OFF \
             -DTSRE_BUILD_SHAPE_TESTS=OFF \
@@ -94,19 +95,24 @@ jobs:
             -DTSRE_BUILD_GEO_TESTS=OFF
           cmake --build "$editor_build" --parallel
 
-          mkdir -p "$editor_out"
-          install -m 755 "$editor_build/TSRE5vc" "$editor_out/riel-route-editor"
+          scripts/bundle-route-editor-linux.sh "$editor_build/TSRE5vc" "$editor_out"
           cp -a "$editor_src/appdata" "$editor_out/appdata"
+          cp Source/Launcher.Gui/Assets/riel.png "$editor_out/riel-route-editor.png"
+          cp LICENSE "$editor_out/LICENSE-GPL-3.0.txt"
           cp docs/route-editor.md "$editor_out/README.md"
           cat > "$editor_out/SOURCE.txt" <<EOF
           Riel Route Editor is built from TSRE5vc.
           Upstream: https://github.com/GokuMK/TSRE5vc
           Commit: $TSRE5VC_COMMIT
           Riel integration patch: scripts/prepare-route-editor-source.py
-          License: GNU GPL 3.0 or later (see upstream source headers and Riel LICENSE)
+          License: GNU GPL 3.0 or later (see upstream source headers and LICENSE-GPL-3.0.txt)
+          Settings: ~/.local/share/Riel/RouteEditor/settings.json on a default Linux desktop
           EOF
 
+          tar --exclude=.git -czf "${RUNNER_TEMP}/riel-route-editor-source.tar.gz" -C "${RUNNER_TEMP}" tsre5vc
+
           QT_QPA_PLATFORM=offscreen "$editor_out/riel-route-editor" --version
+          QT_QPA_PLATFORM=offscreen "$editor_out/riel-route-editor" --test-list
       - name: Package and verify without an installed .NET runtime
         env:
           DOTNET_ROOT: /nonexistent-dotnet-runtime
@@ -136,7 +142,10 @@ jobs:
           ln -s "$bundle/riel" "${RUNNER_TEMP}/riel-path/riel"
           PATH="${RUNNER_TEMP}/riel-path:$PATH" riel version
           test -x "$bundle/app/route-editor/riel-route-editor"
+          test -f "$bundle/app/route-editor/LICENSE-GPL-3.0.txt"
           QT_QPA_PLATFORM=offscreen "$bundle/app/route-editor/riel-route-editor" --version
+          QT_QPA_PLATFORM=offscreen "$bundle/app/route-editor/riel-route-editor" --test-list
+          "$bundle/riel" route-editor --version
           tar -czf "${RUNNER_TEMP}/riel-linux-x64.tar.gz" -C "${RUNNER_TEMP}" riel-linux-x64
           (cd "${RUNNER_TEMP}" && zip -qr riel-linux-x64.zip riel-linux-x64)
           (cd "${RUNNER_TEMP}" && sha256sum riel-linux-x64.zip > riel-linux-x64.zip.sha256)
@@ -144,7 +153,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: riel-linux-x64
-          path: ${{ runner.temp }}/riel-linux-x64.tar.gz
+          path: |
+            ${{ runner.temp }}/riel-linux-x64.tar.gz
+            ${{ runner.temp }}/riel-route-editor-source.tar.gz
           if-no-files-found: error
       - name: Publish tested main build
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -154,7 +165,7 @@ jobs:
           set -euo pipefail
           tag="main-${GITHUB_SHA:0:12}"
           title="Riel main ${GITHUB_SHA:0:12}"
-          notes="Portable Linux build of ${GITHUB_SHA}. Includes .NET runtime."
+          notes="Portable Linux build of ${GITHUB_SHA}. Includes the .NET runtime and native Riel editor suite. Matching editor source is attached."
 
           if gh release view "$tag" >/dev/null 2>&1; then
             # A force-push/rollback can legitimately rebuild a commit whose
@@ -162,12 +173,14 @@ jobs:
             gh release upload "$tag" \
               "${RUNNER_TEMP}/riel-linux-x64.zip" \
               "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
+              "${RUNNER_TEMP}/riel-route-editor-source.tar.gz" \
               --clobber
             gh release edit "$tag" --prerelease --latest=false --title "$title" --notes "$notes"
           else
             gh release create "$tag" \
               "${RUNNER_TEMP}/riel-linux-x64.zip" \
               "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
+              "${RUNNER_TEMP}/riel-route-editor-source.tar.gz" \
               --prerelease --latest=false --title "$title" --notes "$notes"
           fi
       - name: Publish stable release for tested version
@@ -230,4 +243,5 @@ jobs:
           gh release create "$tag" \
             "${RUNNER_TEMP}/riel-linux-x64.zip" \
             "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
+            "${RUNNER_TEMP}/riel-route-editor-source.tar.gz" \
             --target "$GITHUB_SHA" --latest --title "$title" --notes "$notes"
