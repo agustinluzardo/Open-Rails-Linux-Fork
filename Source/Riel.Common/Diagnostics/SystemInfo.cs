@@ -48,9 +48,7 @@ namespace Riel.Common.Diagnostics
             if (UpdateNeeded)
             {
                 this["Adapter"] = $"{Info.SystemInfo.GraphicAdapterName ?? "n/a"} ({Info.SystemInfo.GraphicAdapterMemoryInformation})";
-                bool zink = string.Equals(Environment.GetEnvironmentVariable("MESA_LOADER_DRIVER_OVERRIDE"), "zink", StringComparison.OrdinalIgnoreCase)
-                    || Environment.GetEnvironmentVariable("RIEL_VULKAN") == "1";
-                this["Graphics API"] = zink ? "Vulkan (Zink / OpenGL translation)" : "OpenGL";
+                this["Graphics API"] = DescribeGraphicsApi(Info.SystemInfo.GraphicAdapterName);
                 this["System Time"] = DateTime.Now.ToString(CultureInfo.CurrentCulture);
                 this["Game Time"] = $"{FormatStrings.FormatTime(gameTime.TotalGameTime.TotalSeconds)}";// Simulator.Instance != null ? $"{FormatStrings.FormatTime(Simulator.Instance.ClockTime)}" : null;
                 this["Frame rate"] = $"{metricCollector.Metrics[SlidingMetric.FrameRate].SmoothedValue:0}";
@@ -61,6 +59,22 @@ namespace Riel.Common.Diagnostics
                 this["Memory"] = $"{Environment.WorkingSet >> 20} MB";
                 base.Update(gameTime);
             }
+        }
+
+        internal static string DescribeGraphicsApi(string renderer)
+        {
+            // GraphicsAdapter.Description comes from the active graphics device. An environment
+            // variable only requests Zink; it does not prove which driver created the context.
+            if (string.IsNullOrWhiteSpace(renderer))
+                return "n/a";
+
+#if RIEL_DESKTOPGL
+            return renderer.Contains("zink", StringComparison.OrdinalIgnoreCase)
+                ? "OpenGL over Vulkan (Zink)"
+                : "OpenGL";
+#else
+            return "Direct3D 11";
+#endif
         }
 
     }

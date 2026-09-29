@@ -200,6 +200,13 @@ limits it hits are CPU-side content loading and single-threaded update work, not
 of Vulkan. `RIEL_VULKAN=1 riel start` sets `MESA_LOADER_DRIVER_OVERRIDE=zink`, and on modern
 AMD and Intel hardware the result is competitive.
 
+The F3 overlay reports `OpenGL over Vulkan (Zink)` only when the active OpenGL renderer
+identifies itself as Zink. The environment variable requests a driver but does not prove it was
+selected. Its Linux CPU reading uses the package sensor on Intel and `Tdie` on AMD, with an
+explicit `Tctl` or core label when it has to fall back. The GPU reading uses the AMD `edge`
+sensor or the GPU matched by name through `nvidia-smi`; ambiguous or unavailable sensors show
+`n/a`.
+
 The backend is a build-time switch - `-p:RielGraphicsBackend=DesktopGL` - so adding one later means
 a new value and a shader profile, not a rewrite.
 

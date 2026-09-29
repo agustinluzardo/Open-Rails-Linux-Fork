@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 
 namespace Riel.Common.Info
 {
@@ -24,7 +25,12 @@ namespace Riel.Common.Info
         /// creates the device, and the log header and the diagnostics overlay - written by the
         /// loader and the system thread - read it from here.
         /// </remarks>
-        public static string GraphicAdapterName { get; private set; }
+        private static string graphicAdapterName;
+        public static string GraphicAdapterName
+        {
+            get => Volatile.Read(ref graphicAdapterName);
+            private set => Volatile.Write(ref graphicAdapterName, value);
+        }
 
         public static void WriteSystemDetails()
         {
