@@ -99,6 +99,13 @@ namespace Riel.Launcher.Gui
                     restart.ArgumentList.Add("--run-report");
                     restart.ArgumentList.Add(reportPath);
                 }
+                else
+                {
+                    // Let the new GUI distinguish a supervisor-driven return from a
+                    // fresh user launch. Returning from the simulator should reuse the
+                    // content cache instead of immediately rescanning every folder again.
+                    restart.ArgumentList.Add("--reopen-after-run");
+                }
                 using Process launcher = Process.Start(restart)
                     ?? throw new LauncherException("Could not reopen the launcher.");
                 return 0;

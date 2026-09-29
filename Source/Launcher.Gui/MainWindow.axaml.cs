@@ -147,7 +147,11 @@ namespace Riel.Launcher.Gui
 
             Opened += (_, _) => Guarded(async () =>
             {
-                await Reload(restoreSelections: true, forceRescan: true);
+                // A launcher explicitly opened by the user gets a full rescan so newly
+                // installed routes/trains are immediately visible. The automatic launcher
+                // reopened after a simulation uses the persisted content cache instead;
+                // forcing another full scan there only makes returning to the menu slow.
+                await Reload(restoreSelections: true, forceRescan: !Program.IsAutomaticReopen);
                 if (Program.StartupReportPath != null)
                     await ShowCompletedRun(LaunchSession.ReadReport(Program.StartupReportPath));
                 await CheckForUpdates(manual: false);
