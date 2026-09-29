@@ -83,6 +83,7 @@ jobs:
           git clone --filter=blob:none https://github.com/GokuMK/TSRE5vc.git "$editor_src"
           git -C "$editor_src" checkout --detach "$TSRE5VC_COMMIT"
           python3 scripts/prepare-route-editor-source.py "$editor_src"
+          cp LICENSE "$editor_src/LICENSE.md"
 
           riel_version="$(python3 -c 'import json; print(json.load(open("Source/version.json"))["version"])')"
           cmake -S "$editor_src" -B "$editor_build" -G Ninja \

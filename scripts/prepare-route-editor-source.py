@@ -54,6 +54,22 @@ def main() -> int:
         "    TranslationManager translationManager;",
     )
 
+    about = source / "src" / "routeEditor" / "AboutWindow.cpp"
+    replace_once(
+        about,
+        '    QLabel* myLabel2 = new QLabel(\n',
+        '    QLabel* rielLabel = new QLabel("<b>Riel Route Editor</b> — native Linux integration based on TSRE5vc. "'
+        '"<a href=\\\"https://github.com/agustinluzardo/Riel-Linux\\\">Riel project</a>");\n'
+        '    rielLabel->setOpenExternalLinks(true);\n'
+        '    rielLabel->setContentsMargins(5,0,0,0);\n'
+        '    QLabel* myLabel2 = new QLabel(\n',
+    )
+    replace_once(
+        about,
+        '    mainLayout->addWidget(myLabel);\n    mainLayout->addWidget(myLabel2);',
+        '    mainLayout->addWidget(myLabel);\n    mainLayout->addWidget(rielLabel);\n    mainLayout->addWidget(myLabel2);',
+    )
+
     splash = 'myImage->load(QString("appdata/")+Game::AppDataVersion+"/load.png");'
     for relative in (
         "src/routeEditor/LoadWindow.cpp",
