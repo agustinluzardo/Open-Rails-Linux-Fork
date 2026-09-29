@@ -121,8 +121,10 @@ package() {
     install -dm755 "$pkgdir$_install_dir"
     cp -r "$srcdir/publish/." "$pkgdir$_install_dir/"
 
-    install -dm755 "$pkgdir$_install_dir/route-editor"
+    install -dm755 "$pkgdir$_install_dir/route-editor/bin"
     install -m755 "$srcdir/route-editor-build/TSRE5vc" \
+        "$pkgdir$_install_dir/route-editor/bin/riel-route-editor-bin"
+    install -m755 packaging/linux/riel-route-editor \
         "$pkgdir$_install_dir/route-editor/riel-route-editor"
     cp -r "$srcdir/tsre5vc/appdata" "$pkgdir$_install_dir/route-editor/"
     install -m644 Source/Launcher.Gui/Assets/riel.png \
