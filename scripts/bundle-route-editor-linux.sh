@@ -33,13 +33,21 @@ done
 copy_runtime_dep() {
   dep="$1"
   base="$(basename "$dep")"
+  target="$out/lib/$base"
+
+  # During transitive scans ldd may resolve a dependency from the bundle we are
+  # currently building. Copying that file onto itself makes GNU cp exit 1, so
+  # treat an already-bundled dependency as satisfied.
+  if [[ "$(readlink -m "$dep")" == "$(readlink -m "$target")" ]]; then
+    return
+  fi
 
   # Anything resolved from the Qt installation is part of the runtime closure.
   # This includes Qt's own libraries and versioned third-party runtime pieces
   # such as ICU which may not exist at the same SONAME on the host distro.
   case "$dep" in
     "$qt_lib"/*)
-      cp -Lf "$dep" "$out/lib/$base"
+      cp -Lf "$dep" "$target"
       return
       ;;
   esac
@@ -51,7 +59,7 @@ copy_runtime_dep() {
   # to the host distribution.
   case "$base" in
     libopenal.so*|libxcb-cursor.so*|libxcb-icccm.so*|libxcb-image.so*|libxcb-keysyms.so*|libxcb-render-util.so*|libxcb-util.so*|libxcb-xinerama.so*|libxcb-xkb.so*|libxkbcommon-x11.so*|libxkbcommon.so*|libX11-xcb.so*)
-      cp -Lf "$dep" "$out/lib/$base"
+      cp -Lf "$dep" "$target"
       ;;
   esac
 }
