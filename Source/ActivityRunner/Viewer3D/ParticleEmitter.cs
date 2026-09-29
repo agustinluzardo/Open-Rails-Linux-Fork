@@ -22,7 +22,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 using Riel.Common;
 using Riel.Common.Calc;
@@ -46,10 +46,15 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public const float MaxParticlesPerSecond = 50f;
         public const float MaxParticleDuration = 50f;
+        private static readonly bool TraceParticles = string.Equals(Environment.GetEnvironmentVariable("RIEL_TRACE_PARTICLES"), "1", StringComparison.OrdinalIgnoreCase);
+        private static int nextTraceId;
+
         private readonly Viewer Viewer;
         private readonly float EmissionHoleM2 = 1;
         private readonly ParticleEmitterPrimitive Emitter;
+        private readonly int traceId;
         private ParticleEmitterMaterial Material;
+        private double nextTraceTime;
 
 #if DEBUG_EMITTER_INPUT
         const int InputCycleLimit = 600;
@@ -63,6 +68,7 @@ namespace Orts.ActivityRunner.Viewer3D
             Viewer = viewer;
             EmissionHoleM2 = (MathHelper.Pi * ((data.NozzleWidth / 2f) * (data.NozzleWidth / 2f)));
             Emitter = new ParticleEmitterPrimitive(viewer, data, positionSource);
+            traceId = ++nextTraceId;
 #if DEBUG_EMITTER_INPUT
             EmitterID = ++EmitterIDIndex;
             InputCycle = Viewer.Random.Next(InputCycleLimit);
@@ -72,6 +78,8 @@ namespace Orts.ActivityRunner.Viewer3D
         public void Initialize(string textureName)
         {
             Material = (ParticleEmitterMaterial)Viewer.MaterialManager.Load("ParticleEmitter", textureName);
+            if (TraceParticles)
+                Trace.TraceInformation("[ParticleDiag] emitter={0} initialized texture='{1}' nozzle={2:F4}m area={3:F6}m2 stride={4}", traceId, textureName, Emitter.EmitterData.NozzleWidth, EmissionHoleM2, ParticleEmitterPrimitive.ParticleVertexStride);
         }
 
         public void SetOutput(float volumeM3pS)
@@ -137,8 +145,15 @@ namespace Orts.ActivityRunner.Viewer3D
             XNAWorldLocation.M21 = Viewer.Camera.Tile.X;
             XNAWorldLocation.M22 = Viewer.Camera.Tile.Z;
 
-            if (Emitter.HasParticlesToRender())
+            bool hasParticles = Emitter.HasParticlesToRender();
+            if (hasParticles)
                 frame.AddPrimitive(Material, Emitter, RenderPrimitiveGroup.Particles, ref XNAWorldLocation);
+
+            if (TraceParticles && gameTime >= nextTraceTime)
+            {
+                nextTraceTime = gameTime + 1;
+                Trace.TraceInformation("[ParticleDiag] emitter={0} pps={1:F3} duration={2:F3}s active={3} material={4} emitSize={5:F4}", traceId, Emitter.ParticlesPerSecond, Emitter.ParticleDuration, hasParticles, Material != null, Emitter.EmitSize);
+            }
 
 #if DEBUG_EMITTER_INPUT
             InputCycle++;
@@ -182,9 +197,10 @@ namespace Orts.ActivityRunner.Viewer3D
                 new VertexElement(16 + 16 + 16 + 16, VertexElementFormat.Color, VertexElementUsage.Position, 4)
             };
 
-            // Four Vector4 values followed by a packed Color. The buffer stride
-            // must match the actual struct layout on both DirectX and OpenGL.
-            public static readonly int VertexStride = Marshal.SizeOf<ParticleVertex>();
+            // Keep the same 80-byte vertex stride used by current Open Rails.
+            // MonoGame uploads the packed vertex into this declared stride and the
+            // particle shader consumes attributes at offsets 0, 16, 32, 48 and 64.
+            public const int VertexStride = sizeof(float) * 12 + sizeof(float) * 4 + sizeof(float) * 4;
         }
 
         internal ParticleEmitterData EmitterData;
@@ -210,6 +226,9 @@ namespace Orts.ActivityRunner.Viewer3D
         private int FirstRetiredParticle;
         private float TimeParticlesLastEmitted;
         private int DrawCounter;
+        private bool traceDrawObserved;
+
+        internal static int ParticleVertexStride => ParticleVertex.VertexStride;
         private Viewer viewer;
         private static float windDisplacementX;
         private static float windDisplacementZ;
@@ -415,6 +434,12 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public override void Draw()
         {
+            if (TraceParticles && HasParticlesToRender() && !traceDrawObserved)
+            {
+                traceDrawObserved = true;
+                Trace.TraceInformation("[ParticleDiag] draw reached active={0} new={1} free={2} retired={3} stride={4}", FirstActiveParticle, FirstNewParticle, FirstFreeParticle, FirstRetiredParticle, ParticleVertex.VertexStride);
+            }
+
             if (FirstNewParticle != FirstFreeParticle)
                 AddNewParticlesToVertexBuffer();
 
