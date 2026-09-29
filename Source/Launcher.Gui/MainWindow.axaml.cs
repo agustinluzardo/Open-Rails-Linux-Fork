@@ -147,7 +147,7 @@ namespace Riel.Launcher.Gui
 
             Opened += (_, _) => Guarded(async () =>
             {
-                await Reload(restoreSelections: true);
+                await Reload(restoreSelections: true, forceRescan: true);
                 if (Program.StartupReportPath != null)
                     await ShowCompletedRun(LaunchSession.ReadReport(Program.StartupReportPath));
                 await CheckForUpdates(manual: false);
@@ -255,13 +255,15 @@ namespace Riel.Launcher.Gui
 
         // ----------------------------------------------------------------------------- content
 
-        private async Task Reload(bool restoreSelections)
+        private async Task Reload(bool restoreSelections, bool forceRescan = false)
         {
             RouteItem previous = RouteList.SelectedItem as RouteItem;
 
-            using (Busy(T("Reading content…")))
+            using (Busy(forceRescan ? T("Scanning every folder…") : T("Reading content…")))
             {
-                content = await ContentStore.Load(ScanProgress(), closing.Token);
+                content = forceRescan
+                    ? await ContentStore.Refresh(ScanProgress(), closing.Token)
+                    : await ContentStore.Load(ScanProgress(), closing.Token);
 
                 List<RouteItem> found = new List<RouteItem>();
                 foreach (FolderModel folder in content.ContentFolders)
