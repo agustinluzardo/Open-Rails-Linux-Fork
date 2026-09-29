@@ -955,6 +955,28 @@ void TexLib::reset() {''',
         t.run();
 ''',
     )
+    # Map tiles are already resident QImages; copying them on a background QThread
+    # only exposes the shared MapWindow image table and Texture to races for no useful I/O gain.
+    replace_once(
+        texlib,
+        '''    } else if(tType == ":maptex"){
+        MapLib* t = new MapLib();
+        t->texture = newFile;
+        t->start();
+        if(reload) {
+            t->wait();
+            delete t;
+        } else {
+            QObject::connect(t,&QThread::finished,t,&QObject::deleteLater);
+        }
+    }''',
+        '''    } else if(tType == ":maptex"){
+        MapLib t;
+        t.texture = newFile;
+        t.run();
+    }''',
+    )
+
 
 
     ace_lib = source / "src" / "tsre" / "texture" / "AceLib.cpp"

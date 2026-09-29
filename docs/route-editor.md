@@ -48,6 +48,20 @@ New route templates and user geographic catalogues are stored in
 `/opt` or `/usr/lib` can stay read-only. The first new route may need to fetch
 the upstream template archive.
 
+## Texture loading stability
+
+Riel does not use TSRE5vc's original one-`QThread`-per-texture loading path. ACE,
+DDS and ordinary image files are decoded by a bounded worker pool into private
+`Texture` objects, then published on Qt's application thread. This keeps the
+Route Editor, Consist Editor and Shape Viewer responsive without allowing a
+background decoder to modify memory while OpenGL is using it. Explicit texture
+reloads and map-tile image copies remain synchronous.
+
+The pool uses at most four workers by default (and leaves one CPU thread free
+when possible). `RIEL_EDITOR_TEXTURE_WORKERS=N` can override the limit for
+diagnostics, and `RIEL_EDITOR_ASYNC_TEXTURES=0` forces fully synchronous
+loading as a troubleshooting fallback.
+
 ## Native Linux build
 
 CI checks out a pinned TSRE5vc commit, applies
