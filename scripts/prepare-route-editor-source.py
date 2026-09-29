@@ -843,9 +843,15 @@ inline QString resolveExistingCaseInsensitive(const QString &path) {
     auto cachedShape = lookupIndex.constFind(lookupKey);
     if(cachedShape != lookupIndex.constEnd()) {
         const auto found = shape.find(cachedShape.value());
-        if(found != shape.end() && found->second && !found->second->hasLoadFailed()
-                && pathKeys[found->first] == pathKey && contexts[found->first] == context)
-            return found->first;
+        if(found != shape.end() && found->second
+                && pathKeys[found->first] == pathKey && contexts[found->first] == context) {
+            if(!found->second->hasLoadFailed())
+                return found->first;
+            // A physically missing shape is deterministic. Reuse the failed
+            // placeholder until the file actually appears, then retry normally.
+            if(!ContentPath::readable(pathid))
+                return found->first;
+        }
         lookupIndex.remove(lookupKey);
     }
     for (const auto &entry : shape) {
