@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="night" x1="0" x2="0" y2="1">
+      <stop stop-color="#1c2d40"/>
+      <stop offset="1" stop-color="#09121e"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="0" x2="1" y2="0">
+      <stop stop-color="#758494"/>
+      <stop offset="0.5" stop-color="#f0f3f4"/>
+      <stop offset="1" stop-color="#929fac"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="59" fill="url(#night)"/>
+  <g stroke="#69503e" stroke-linecap="round" opacity=".91">
+    <path d="M120 111h16" stroke-width="3"/>
+    <path d="M108 134h40" stroke-width="4"/>
+    <path d="M96 158h64" stroke-width="5"/>
+    <path d="M82 183h92" stroke-width="6"/>
+    <path d="M64 210h128" stroke-width="7"/>
+    <path d="M47 237h162" stroke-width="8"/>
+  </g>
+  <path d="M124 89 67 252M132 89l57 163" fill="none" stroke="url(#rail)" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="128" cy="88" r="10" fill="#ffbb38"/>
+  <circle cx="192" cy="190" r="55" fill="#0b1521" opacity=".91"/>
+  <circle cx="192" cy="190" r="48" fill="#f2a72e"/>
+  <path d="m170 214 4-18 37-37 14 14-37 37-18 4Z" fill="#fff8e8" stroke="#203142" stroke-width="3" stroke-linejoin="round"/>
+  <path d="m174 196 14 14m23-51 14 14" fill="none" stroke="#203142" stroke-width="3"/>
+  <path d="m170 214 4-18 14 14Z" fill="#203142"/>
+</svg>

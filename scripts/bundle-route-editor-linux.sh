@@ -30,6 +30,11 @@ for category in platforms imageformats platformthemes xcbglintegrations wayland-
   fi
 done
 
+if [[ ! -f "$out/plugins/platforms/libqxcb.so" || ! -f "$out/plugins/xcbglintegrations/libqxcb-glx-integration.so" ]]; then
+  echo "The portable editor requires Qt's xcb platform and GLX integration plugins" >&2
+  exit 1
+fi
+
 copy_runtime_dep() {
   dep="$1"
   base="$(basename "$dep")"

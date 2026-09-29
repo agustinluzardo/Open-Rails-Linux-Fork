@@ -62,12 +62,6 @@ namespace Riel.Launcher.Gui
             if (settings?.TraceRouteEditorRendering == true)
                 start.Environment["RIEL_EDITOR_RENDER_DIAGNOSTICS"] = "1";
 
-            if (OperatingSystem.IsLinux() && settings?.ExperimentalVulkan == true)
-            {
-                start.Environment["RIEL_VULKAN"] = "1";
-                start.Environment["MESA_LOADER_DRIVER_OVERRIDE"] = "zink";
-            }
-
             if (tool.RequiresContent())
             {
                 if (route == null)

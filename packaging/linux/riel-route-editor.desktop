@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Riel Route Editor
+GenericName=Railway Route Editor
+Comment=Edit Microsoft Train Simulator routes with Riel
+Exec=riel route-editor
+Icon=riel-route-editor
+Terminal=false
+Categories=Game;Graphics;2DGraphics;
+Keywords=Riel;TSRE5;MSTS;OpenRails;railway;route;editor;
+StartupNotify=true
+StartupWMClass=riel-route-editor-bin

@@ -127,7 +127,7 @@ package() {
     install -m755 packaging/linux/riel-route-editor \
         "$pkgdir$_install_dir/route-editor/riel-route-editor"
     cp -r "$srcdir/tsre5vc/appdata" "$pkgdir$_install_dir/route-editor/"
-    install -m644 Source/Launcher.Gui/Assets/riel.png \
+    install -m644 packaging/linux/riel-route-editor.png \
         "$pkgdir$_install_dir/route-editor/riel-route-editor.png"
     install -m644 docs/route-editor.md \
         "$pkgdir$_install_dir/route-editor/README.md"
@@ -141,6 +141,8 @@ package() {
     install -Dm755 packaging/linux/riel "$pkgdir/usr/bin/riel"
 
     install -Dm644 packaging/linux/riel.desktop "$pkgdir/usr/share/applications/riel.desktop"
+    install -Dm644 packaging/linux/riel-route-editor.desktop \
+        "$pkgdir/usr/share/applications/riel-route-editor.desktop"
     install -Dm644 packaging/linux/70-raildriver.rules "$pkgdir/usr/lib/udev/rules.d/70-raildriver.rules"
     install -Dm644 packaging/linux/riel.6 "$pkgdir/usr/share/man/man6/riel.6"
 
@@ -149,6 +151,8 @@ package() {
             install -Dm644 "packaging/linux/icons/${size}.png" \
                 "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/riel.png"
         fi
+        install -Dm644 "packaging/linux/route-editor-icons/${size}.png" \
+            "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/riel-route-editor.png"
     done
 
     install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

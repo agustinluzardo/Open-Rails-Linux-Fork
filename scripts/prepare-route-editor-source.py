@@ -27,10 +27,48 @@ def main() -> int:
     source = args.source.resolve()
 
     game = source / "src" / "tsre" / "Game.cpp"
+    game_header = source / "src" / "tsre" / "Game.h"
     replace_once(game, 'QString Game::AppName = "TSRE5";', 'QString Game::AppName = "Riel";')
     replace_once(game, 'QString Game::AppVersion = "v" TSRE5_VERSION;', 'QString Game::AppVersion = TSRE5_VERSION;')
     replace_once(game, 'QString Game::root = "C:/tsdata/Train Simulator/";', 'QString Game::root = "";')
     replace_once(game, 'QString Game::route = "bbb1";', 'QString Game::route = "";')
+    replace_once(
+        game_header,
+        '    static void InitAssets();',
+        '    static QString AssetsPath(const QString &name);\n'
+        '    static bool DownloadAsset(const QString &name);\n'
+        '    static void InitAssets();',
+    )
+    replace_once(game, '#include <QDir>', '#include <QDir>\n#include <QStandardPaths>')
+    replace_once(
+        game,
+        'void Game::InitAssets() {',
+        'QString Game::AssetsPath(const QString &name) {\n'
+        '    if (!qEnvironmentVariableIsSet("RIEL_EDITOR_BUNDLE_DIR"))\n'
+        '        return QDir::current().filePath("assets/" + name);\n'
+        '    const QString dataRoot = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);\n'
+        '    return QDir(dataRoot).filePath("Riel/RouteEditor/assets/" + name);\n'
+        '}\n\n'
+        'bool Game::DownloadAsset(const QString &name) {\n'
+        '    return downloadResourceDirectory(QFileInfo(AssetsPath(name)).absolutePath(), name);\n'
+        '}\n\n'
+        'void Game::InitAssets() {',
+    )
+    replace_once(
+        game,
+        'void Game::InitAssets() {\n'
+        '    QString path;',
+        'void Game::InitAssets() {\n'
+        '    // The Riel package supplies appdata and editor commands. Avoid writing\n'
+        '    // launchers into a root-owned installation or downloading optional\n'
+        '    // TSRE resources on every start of an installed editor.\n'
+        '    if (qEnvironmentVariableIsSet("RIEL_EDITOR_BUNDLE_DIR")) {\n'
+        '        if (!QDir("appdata/" + AppDataVersion).exists())\n'
+        '            qCritical() << "Riel editor appdata is missing";\n'
+        '        return;\n'
+        '    }\n'
+        '    QString path;',
+    )
 
     settings = source / "src" / "settings" / "SettingsProfile.cpp"
     replace_once(
@@ -39,11 +77,132 @@ def main() -> int:
         'return QDir(base).filePath("Riel/RouteEditor");',
     )
 
+    # Keep user-generated editor assets outside the read-only /opt or Arch
+    # installation. New routes can then fetch their template on demand, and
+    # geographic presets can be extracted next to the user's own catalogues.
+    creator = source / "src" / "tsre" / "world" / "RouteCreator.cpp"
+    replace_once(
+        creator,
+        'return QDir::current().absoluteFilePath(\n'
+        '            QStringLiteral("assets/templateRoute_0.6"));',
+        'return Game::AssetsPath(QStringLiteral("templateRoute_0.6"));',
+    )
+    load_window = source / "src" / "routeEditor" / "LoadWindow.cpp"
+    replace_once(
+        load_window,
+        '    const QString path = "./assets/templateRoute_0.6";',
+        '    const QString path = Game::AssetsPath("templateRoute_0.6");',
+    )
+    replace_once(
+        load_window,
+        'void LoadWindow::downloadTemplateRoute(QString path){',
+        'void LoadWindow::downloadTemplateRoute(QString path){\n'
+        '    if (qEnvironmentVariableIsSet("RIEL_EDITOR_BUNDLE_DIR")) {\n'
+        '        Q_UNUSED(path);\n'
+        '        if (!Game::DownloadAsset("templateRoute_0.6"))\n'
+        '            qWarning() << "Riel route template download failed";\n'
+        '        return;\n'
+        '    }',
+    )
+    geo_presets = source / "src" / "tsre" / "geo" / "GeoPresetData.cpp"
+    replace_once(
+        geo_presets,
+        '    return QStringLiteral("assets/geo/geo_cities_presets.txt");',
+        '    return Game::AssetsPath(QStringLiteral("geo/geo_cities_presets.txt"));',
+    )
+    for relative, filename in (
+        ("src/tsre/geo/ElevationSource.cpp", "elevation-datasets.json"),
+        ("src/tsre/geo/ImagerySource.cpp", "imagery-datasets.json"),
+    ):
+        catalogue = source / relative
+        replace_once(catalogue, '#include <QDir>', '#include <QDir>\n#include <tsre/Game.h>')
+        replace_once(
+            catalogue,
+            f'    return QStringLiteral("assets/geo/{filename}");',
+            f'    return Game::AssetsPath(QStringLiteral("geo/{filename}"));',
+        )
+
     main = source / "src" / "main.cpp"
+    # Upstream always switches to the ELF's directory. Riel keeps the ELF in
+    # bin/ and ships appdata/, the splash/icon and startup-args.txt beside bin/.
+    # Without this, shaders disappear and the editor silently tries to fetch
+    # appdata over the network even though it was included in the package.
+    replace_once(
+        main,
+        '        QDir::setCurrent(executable.absoluteDir().absolutePath());',
+        '        const QDir configuredBundle(qEnvironmentVariable("RIEL_EDITOR_BUNDLE_DIR"));\n'
+        '        QDir executableDir = executable.absoluteDir();\n'
+        '        const QDir bundleDir(executableDir.filePath(".."));\n'
+        '        if (qEnvironmentVariableIsSet("RIEL_EDITOR_BUNDLE_DIR")\n'
+        '                && configuredBundle.exists("appdata/" + Game::AppDataVersion))\n'
+        '            QDir::setCurrent(configuredBundle.absolutePath());\n'
+        '        else if (executableDir.dirName() == "bin"\n'
+        '                && bundleDir.exists("appdata/" + Game::AppDataVersion))\n'
+        '            QDir::setCurrent(bundleDir.absolutePath());\n'
+        '        else\n'
+        '            QDir::setCurrent(executableDir.absolutePath());',
+    )
+    replace_once(
+        main,
+        '    workingDir.replace("/build", "");',
+        '    if (workingDir.endsWith("/build"))\n'
+        '        workingDir.chop(6);',
+    )
     replace_once(
         main,
         'const QCommandLineOption AppDataProfileOption("appdata-profile", "Use the TSRE profile stored in user application data.");',
         'const QCommandLineOption AppDataProfileOption("appdata-profile", "Use the Riel editor profile stored in user application data.");',
+    )
+    replace_once(
+        main,
+        '#include <QApplication>',
+        '#include <QApplication>\n#include <QOpenGLWidget>\n#include <QOpenGLFunctions>',
+    )
+    replace_once(
+        main,
+        '    const QCommandLineOption TestOption("test", "Run TSRE test runner and exit.");',
+        '    const QCommandLineOption GraphicsCheckOption("graphics-check", "Verify the native editor OpenGL widget and exit.");\n'
+        '    parser.addOption(GraphicsCheckOption);\n'
+        '    const QCommandLineOption TestOption("test", "Run TSRE test runner and exit.");',
+    )
+    replace_once(
+        main,
+        '    if (parser.isSet(TestVerboseOption)) {\n'
+        '        consoleArgs["TEST_VERBOSE"] = "TRUE";\n'
+        '    }',
+        '    if (parser.isSet(TestVerboseOption)) {\n'
+        '        consoleArgs["TEST_VERBOSE"] = "TRUE";\n'
+        '    }\n'
+        '    if (parser.isSet(GraphicsCheckOption))\n'
+        '        consoleArgs["GRAPHICS_CHECK"] = "TRUE";',
+    )
+    replace_once(
+        main,
+        '    // Test runner (headless) - runs and exits without starting the GUI.',
+        '    // Exercise the same QOpenGLWidget path as the route, consist and shape editors.\n'
+        '    // This needs a display (Xvfb in CI); --version does not test graphics.\n'
+        '    if (consoleArgs["GRAPHICS_CHECK"] == "TRUE") {\n'
+        '        QOpenGLWidget widget;\n'
+        '        widget.resize(64, 64);\n'
+        '        widget.show();\n'
+        '        app.processEvents();\n'
+        '        QOpenGLContext *context = widget.context();\n'
+        '        if (!widget.isValid() || !context || !context->isValid()) {\n'
+        '            qCritical() << "RIEL_EDITOR_GL_FAILED: QOpenGLWidget has no valid context";\n'
+        '            return 1;\n'
+        '        }\n'
+        '        widget.makeCurrent();\n'
+        '        const GLubyte *rawVersion = context->functions()->glGetString(GL_VERSION);\n'
+        '        const QByteArray version = rawVersion ? QByteArray(reinterpret_cast<const char *>(rawVersion)) : QByteArray();\n'
+        '        widget.doneCurrent();\n'
+        '        if (version.isEmpty()) {\n'
+        '            qCritical() << "RIEL_EDITOR_GL_FAILED: no GL_VERSION";\n'
+        '            return 1;\n'
+        '        }\n'
+        '        printf("RIEL_EDITOR_GL_OK %s\\n", version.constData());\n'
+        '        return 0;\n'
+        '    }\n\n'
+        '    // Test runner (headless) - runs and exits without starting the GUI.',
     )
     replace_once(
         main,

@@ -5,6 +5,17 @@ set -e
 
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 binary="$here/bin/riel-route-editor-bin"
+export RIEL_EDITOR_BUNDLE_DIR="$here"
+
+if [ ! -f "$here/appdata/0.7/shaders330/StandardFog.vs" ]; then
+    echo "Riel Route Editor: missing appdata/0.7/shaders330/StandardFog.vs in $here" >&2
+    echo "Reinstall or update the native editor package." >&2
+    exit 1
+fi
+if [ ! -f "$binary" ]; then
+    echo "Riel Route Editor: missing native binary in $here/bin" >&2
+    exit 1
+fi
 
 if [ ! -x "$binary" ]; then
     cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/riel/route-editor"
@@ -29,6 +40,23 @@ fi
 if [ -d "$here/plugins" ]; then
     export QT_PLUGIN_PATH="$here/plugins"
     export QT_QPA_PLATFORM_PLUGIN_PATH="$here/plugins/platforms"
+fi
+
+# TSRE uses QOpenGLWidget throughout. On NVIDIA/Wayland, Qt's EGL path can
+# reject the requested desktop OpenGL context (EGL_BAD_MATCH, 0x3009). Prefer
+# the XWayland/GLX path when an X display is available. An explicit Qt platform
+# selection still wins, including offscreen for CI and wayland for debugging.
+if [ -z "${QT_QPA_PLATFORM:-}" ] && [ -n "${DISPLAY:-}" ]; then
+    export QT_QPA_PLATFORM=xcb
+fi
+if [ "${QT_QPA_PLATFORM:-}" = xcb ] && [ -z "${QT_XCB_GL_INTEGRATION:-}" ]; then
+    export QT_XCB_GL_INTEGRATION=xcb_glx
+fi
+
+# RIEL_VULKAN controls the simulator's optional Mesa/Zink path. The Qt editor
+# uses desktop OpenGL and should not inherit the simulator's Zink override.
+if [ "${RIEL_VULKAN:-0}" = 1 ] && [ "${MESA_LOADER_DRIVER_OVERRIDE:-}" = zink ]; then
+    unset MESA_LOADER_DRIVER_OVERRIDE
 fi
 
 cd "$here"
