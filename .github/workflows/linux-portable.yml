@@ -126,6 +126,19 @@ jobs:
             echo "Development version $version; no stable release"
             exit 0
           fi
+          # Normalize release notes created by the first stable workflow. Those
+          # releases already bundled Riel.* assemblies; the old wording made it
+          # sound as if the shipped DLLs themselves still needed rebuilding.
+          for legacy_tag in v0.1.0 v0.1.1; do
+            if gh release view "$legacy_tag" >/dev/null 2>&1; then
+              legacy_sha="$(git rev-list -n 1 "$legacy_tag")"
+              legacy_version="${legacy_tag#v}"
+              legacy_title="Riel $legacy_version"
+              legacy_notes="Stable portable Linux build of ${legacy_sha}, with bundled .NET runtime. Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red. Bundled Riel assemblies already use the Riel.* names; only third-party add-on DLLs built against legacy FreeTrainSimulator.* assemblies require rebuilding. Older saves have not been verified."
+              gh release edit "$legacy_tag" --title "$legacy_title" --notes "$legacy_notes"
+            fi
+          done
+
           tag="v$version"
           title="Riel $version"
           if gh release view "$tag" >/dev/null 2>&1; then
