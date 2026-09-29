@@ -872,7 +872,11 @@ void loadTextureSafely(Texture *target, const QString &path, RielTextureLoadKind
     const int quality = Game::textureQuality;
     const DetachedTexture incoming(new Texture(path), &destroyDetachedTexture);
 
-    bool asynchronous = !reload && Game::textureLoaderThreaded;
+    const bool kindThreaded =
+        kind == RielTextureLoadKind::Ace ? AceLib::IsThread :
+        kind == RielTextureLoadKind::Dds ? DdsLib::IsThread :
+                                           ImageLib::IsThread;
+    bool asynchronous = !reload && Game::textureLoaderThreaded && kindThreaded;
     if (qEnvironmentVariableIsSet("RIEL_EDITOR_ASYNC_TEXTURES"))
         asynchronous = !reload
             && qEnvironmentVariableIntValue("RIEL_EDITOR_ASYNC_TEXTURES") != 0;
