@@ -46,7 +46,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public const float MaxParticlesPerSecond = 50f;
         public const float MaxParticleDuration = 50f;
-        private static readonly bool TraceParticles = string.Equals(Environment.GetEnvironmentVariable("RIEL_TRACE_PARTICLES"), "1", StringComparison.OrdinalIgnoreCase);
+        internal static readonly bool TraceParticles = string.Equals(Environment.GetEnvironmentVariable("RIEL_TRACE_PARTICLES"), "1", StringComparison.OrdinalIgnoreCase);
         private static int nextTraceId;
 
         private readonly Viewer Viewer;
@@ -434,7 +434,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public override void Draw()
         {
-            if (TraceParticles && HasParticlesToRender() && !traceDrawObserved)
+            if (ParticleEmitterViewer.TraceParticles && HasParticlesToRender() && !traceDrawObserved)
             {
                 traceDrawObserved = true;
                 Trace.TraceInformation("[ParticleDiag] draw reached active={0} new={1} free={2} retired={3} stride={4}", FirstActiveParticle, FirstNewParticle, FirstFreeParticle, FirstRetiredParticle, ParticleVertex.VertexStride);
