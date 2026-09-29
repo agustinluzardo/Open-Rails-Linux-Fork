@@ -63,6 +63,23 @@ Continue the last save.
 .BI "riel run \-\- " arguments
 Start the simulator with raw arguments, for the options this command does not wrap.
 .TP
+.B riel route-editor
+Open the native Riel Route Editor. From the graphical launcher this opens the route already
+selected there; raw editor options such as
+.B --game-root
+and
+.B --route
+may also be supplied from a terminal.
+.TP
+.B riel consist-editor
+Open the native Riel Consist Editor.
+.TP
+.B riel shape-viewer
+Open the native Riel Shape Viewer.
+.TP
+.B riel ace-converter
+Open the native Riel ACE Converter.
+.TP
 .B riel doctor
 Check that this machine can run the simulator and report what is missing.
 .TP
@@ -88,6 +105,10 @@ Set to 1 to run the OpenGL renderer on Vulkan through Mesa's zink driver.
 .B RIEL_SIMULATOR
 Path to the simulator binary, for running this command against a build directory.
 .TP
+.B RIEL_ROUTE_EDITOR
+Path to a native editor executable. The graphical launcher uses this development override instead
+of the editor bundled with Riel.
+.TP
 .B RIEL_NO_SOUND
 Set to 1 to run without sound: no audio device is opened. For telling a sound driver crash apart
 from a graphics one.
@@ -112,6 +133,11 @@ holds the reports .NET writes when the simulator crashes in native code.
 .TP
 .I ~/.cache/riel
 Scanned content indexes. Safe to delete; they are rebuilt on the next scan.
+.TP
+.I ~/.local/share/Riel/RouteEditor
+Riel Route Editor settings/profile data when the editor is started with its normal
+.B --appdata-profile
+integration.
 .PP
 These follow the XDG base directory specification and move with the corresponding
 .BR XDG_ *_HOME

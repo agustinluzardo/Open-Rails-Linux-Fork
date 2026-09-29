@@ -70,7 +70,7 @@ fi
 case "${1:-}" in
     route-editor)
         shift
-        exec "$app_dir/route-editor/riel-route-editor" "$@"
+        exec "$app_dir/route-editor/riel-route-editor" --appdata-profile "$@"
         ;;
     consist-editor)
         shift
