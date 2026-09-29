@@ -1,0 +1,35 @@
+#!/bin/sh
+# Native Riel editor-suite launcher. It also recovers from older Riel updaters
+# which may extract a newly introduced nested ELF without restoring its +x bit.
+set -e
+
+here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+binary="$here/bin/riel-route-editor-bin"
+
+if [ ! -x "$binary" ]; then
+    cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/riel/route-editor"
+    cached="$cache_root/riel-route-editor-bin"
+    mkdir -p "$cache_root"
+    if [ ! -f "$cached" ] || ! cmp -s "$binary" "$cached"; then
+        tmp="$cached.tmp.$$"
+        cp "$binary" "$tmp"
+        chmod 700 "$tmp"
+        mv "$tmp" "$cached"
+    fi
+    binary="$cached"
+fi
+
+if [ -d "$here/lib" ]; then
+    if [ -n "${LD_LIBRARY_PATH:-}" ]; then
+        export LD_LIBRARY_PATH="$here/lib:$LD_LIBRARY_PATH"
+    else
+        export LD_LIBRARY_PATH="$here/lib"
+    fi
+fi
+if [ -d "$here/plugins" ]; then
+    export QT_PLUGIN_PATH="$here/plugins"
+    export QT_QPA_PLATFORM_PLUGIN_PATH="$here/plugins/platforms"
+fi
+
+cd "$here"
+exec "$binary" "$@"
