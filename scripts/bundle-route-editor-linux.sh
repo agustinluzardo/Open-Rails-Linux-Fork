@@ -9,6 +9,7 @@ fi
 
 binary="$(readlink -f "$1")"
 out="$(readlink -m "$2")"
+repo_root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)"
 qtpaths_bin="$(command -v qtpaths6 || command -v qtpaths || true)"
 if [[ -z "$qtpaths_bin" ]]; then
   echo "qtpaths was not found" >&2
@@ -55,21 +56,7 @@ while IFS= read -r lib; do
   scan_one "$lib"
 done < <(find "$out/lib" -type f -name '*.so*' -print)
 
-cat > "$out/riel-route-editor" <<'EOF'
-#!/bin/sh
-set -e
-here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
-if [ -n "$LD_LIBRARY_PATH" ]; then
-    export LD_LIBRARY_PATH="$here/lib:$LD_LIBRARY_PATH"
-else
-    export LD_LIBRARY_PATH="$here/lib"
-fi
-export QT_PLUGIN_PATH="$here/plugins"
-export QT_QPA_PLATFORM_PLUGIN_PATH="$here/plugins/platforms"
-cd "$here"
-exec "$here/bin/riel-route-editor-bin" "$@"
-EOF
-chmod 755 "$out/riel-route-editor"
+install -m 755 "$repo_root/packaging/linux/riel-route-editor" "$out/riel-route-editor"
 
 if LD_LIBRARY_PATH="$out/lib" ldd "$out/bin/riel-route-editor-bin" | grep -q 'not found'; then
   LD_LIBRARY_PATH="$out/lib" ldd "$out/bin/riel-route-editor-bin" >&2
