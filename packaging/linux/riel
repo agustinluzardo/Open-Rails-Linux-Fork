@@ -22,4 +22,27 @@ if [ "${1:-}" = "gui" ]; then
     exec "$install_dir/riel-gui" "$@"
 fi
 
+case "${1:-}" in
+    route-editor)
+        shift
+        cd "$install_dir/route-editor"
+        exec ./riel-route-editor --appdata-profile "$@"
+        ;;
+    consist-editor)
+        shift
+        cd "$install_dir/route-editor"
+        exec ./riel-route-editor --conedit --appdata-profile "$@"
+        ;;
+    shape-viewer)
+        shift
+        cd "$install_dir/route-editor"
+        exec ./riel-route-editor --shapeview --appdata-profile "$@"
+        ;;
+    ace-converter)
+        shift
+        cd "$install_dir/route-editor"
+        exec ./riel-route-editor --aceconv --appdata-profile "$@"
+        ;;
+esac
+
 exec "$install_dir/riel" "$@"

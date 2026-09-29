@@ -1,7 +1,7 @@
 # Maintainer: Agustin Luzardo <agustinluzardo09@gmail.com>
 
 pkgname=riel
-pkgver=0.1.0
+pkgver=0.1.2
 pkgrel=1
 pkgdesc="Drive Microsoft Train Simulator routes natively on Linux, without Wine"
 arch=('x86_64')
@@ -29,8 +29,12 @@ depends=(
     'libxfixes'
     'libxi'
     'libxrandr'
+    # Native Riel editor suite (TSRE5vc-based).
+    'qt6-base'
+    'qt6-websockets'
+    'qt6-wayland'
 )
-makedepends=('dotnet-sdk-10.0' 'git')
+makedepends=('dotnet-sdk-10.0' 'git' 'cmake' 'ninja' 'python' 'qt6-tools')
 optdepends=(
     'xdg-desktop-portal: the folder picker in the launcher, through the desktop dialog'
     'gtk3: the folder picker in the launcher, where there is no desktop portal'
@@ -38,8 +42,11 @@ optdepends=(
     'ttf-liberation: metric compatible replacements for the fonts MSTS content names'
 )
 
-source=("git+$url.git#branch=main")
-sha256sums=('SKIP')
+source=(
+    "git+$url.git#branch=main"
+    "tsre5vc::git+https://github.com/GokuMK/TSRE5vc.git#commit=15a5d148a15ad305e14a9e602961210ad18ada74"
+)
+sha256sums=('SKIP' 'SKIP')
 
 # The compiled effects are committed in the repository. Producing them needs Microsoft's HLSL
 # compiler, which does not run here, so building them at package time would mean pulling in Wine
@@ -52,6 +59,9 @@ prepare() {
     cd "$srcdir/$_srcdir"
     # Nerdbank.GitVersioning derives the version from the history, which the clone above carries.
     git config --local advice.detachedHead false
+
+    # Apply the same Riel product/settings integration used by portable CI.
+    python scripts/prepare-route-editor-source.py "$srcdir/tsre5vc"
 }
 
 build() {
@@ -80,6 +90,18 @@ build() {
             --self-contained false \
             --output "$srcdir/publish"
     done
+
+    local riel_version
+    riel_version="$(python -c 'import json; print(json.load(open("version.json"))["version"])')"
+    cmake -S "$srcdir/tsre5vc" -B "$srcdir/route-editor-build" -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DTSRE5_VERSION="$riel_version" \
+        -DTSRE_BUILD_ACE_TESTS=OFF \
+        -DTSRE_BUILD_TOKEN_TESTS=OFF \
+        -DTSRE_BUILD_SHAPE_TESTS=OFF \
+        -DTSRE_BUILD_CONTENT_CASE_TESTS=OFF \
+        -DTSRE_BUILD_GEO_TESTS=OFF
+    cmake --build "$srcdir/route-editor-build" --parallel
 }
 
 check() {
@@ -98,6 +120,15 @@ package() {
 
     install -dm755 "$pkgdir$_install_dir"
     cp -r "$srcdir/publish/." "$pkgdir$_install_dir/"
+
+    install -dm755 "$pkgdir$_install_dir/route-editor"
+    install -m755 "$srcdir/route-editor-build/TSRE5vc" \
+        "$pkgdir$_install_dir/route-editor/riel-route-editor"
+    cp -r "$srcdir/tsre5vc/appdata" "$pkgdir$_install_dir/route-editor/"
+    install -m644 Source/Launcher.Gui/Assets/riel.png \
+        "$pkgdir$_install_dir/route-editor/riel-route-editor.png"
+    install -m644 docs/route-editor.md \
+        "$pkgdir$_install_dir/route-editor/README.md"
 
     # The publish output carries a runtimes/ tree for every platform MonoGame and Skia support.
     find "$pkgdir$_install_dir/runtimes" -mindepth 1 -maxdepth 1 \

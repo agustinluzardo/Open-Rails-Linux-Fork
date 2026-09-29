@@ -38,12 +38,14 @@ That is the change the rest of this project was built around.
   is driven through the kernel's hidraw interface.
 - **Files where they belong.** Settings, saves, logs and content indexes follow the XDG base
   directory specification instead of one folder holding all four.
-- **A launcher to pick and play.** Choose a route and an activity, explore with a path and train,
+- **A launcher to pick, play and edit.** Choose a route and an activity, explore with a path and train,
   or select a timetable service. Suggested times include departures from the route's activities;
-  the information panel shows the selected path, locomotive and vehicles. It has content folders,
-  settings, saved games, activity checks, update checks and diagnostics under **Tools**. It
-  follows the system language and supports Spanish; dark mode can be switched off. Terminal
-  commands are available as `riel`.
+  the information panel shows the selected path, locomotive and vehicles. Under **Tools**, Riel
+  includes the native Route Editor, Consist Editor, Shape Viewer and ACE Converter; route-aware
+  tools open the route/content folder already selected in the launcher. It also has content folders,
+  settings, saved games, activity checks, update checks and diagnostics. It follows the system
+  language and supports Spanish; dark mode can be switched off. Terminal commands are available
+  as `riel`.
 - **Failures say why.** When a run fails, the launcher shows the cause in a sentence - the file
   that is missing, the route that could not be read - rather than a click that seems to do
   nothing. A content folder with a broken route still loads everything else, and names what it
@@ -72,6 +74,10 @@ From a terminal the same is:
 riel content add "MSTS" /mnt/datos/games/MSTS   # or wherever the ROUTES/GLOBAL folder lives
 riel routes
 riel play "Marias Pass" "Coal Train"
+riel route-editor
+riel consist-editor
+riel shape-viewer
+riel ace-converter
 ```
 
 **Tools → Check this computer** in the launcher, or `riel doctor`, says whether this machine can run the
