@@ -148,7 +148,7 @@ jobs:
           test -f "$bundle/app/route-editor/LICENSE-GPL-3.0.txt"
           QT_QPA_PLATFORM=offscreen "$bundle/app/route-editor/riel-route-editor" --version
           QT_QPA_PLATFORM=offscreen "$bundle/app/route-editor/riel-route-editor" --test-list
-          "$bundle/riel" route-editor --version
+          QT_QPA_PLATFORM=offscreen "$bundle/riel" route-editor --version
           tar -czf "${RUNNER_TEMP}/riel-linux-x64.tar.gz" -C "${RUNNER_TEMP}" riel-linux-x64
           (cd "${RUNNER_TEMP}" && zip -qr riel-linux-x64.zip riel-linux-x64)
           (cd "${RUNNER_TEMP}" && sha256sum riel-linux-x64.zip > riel-linux-x64.zip.sha256)

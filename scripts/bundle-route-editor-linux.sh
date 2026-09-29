@@ -44,10 +44,13 @@ copy_runtime_dep() {
       ;;
   esac
 
-  # OpenAL comes from the runner/system rather than the Qt prefix but is a
-  # direct TSRE5vc dependency and must travel with the portable build.
+  # OpenAL is a direct TSRE5vc dependency. Qt's xcb platform plugin also
+  # needs a small family of XCB/xkb helper libraries which are not guaranteed
+  # to be installed on an otherwise valid Linux desktop. Bundle those userland
+  # helpers, but deliberately leave libc, libGL/EGL and display-driver stacks
+  # to the host distribution.
   case "$base" in
-    libopenal.so*)
+    libopenal.so*|libxcb-cursor.so*|libxcb-icccm.so*|libxcb-image.so*|libxcb-keysyms.so*|libxcb-render-util.so*|libxcb-util.so*|libxcb-xinerama.so*|libxcb-xkb.so*|libxkbcommon-x11.so*|libxkbcommon.so*|libX11-xcb.so*)
       cp -Lf "$dep" "$out/lib/$base"
       ;;
   esac
@@ -97,6 +100,15 @@ verify_runtime "$out/bin/riel-route-editor-bin"
 while IFS= read -r plugin; do
   verify_runtime "$plugin"
 done < <(find "$out/plugins" -type f -name '*.so' -print)
+
+# Catch accidental omission of Qt's documented xcb cursor dependency in the
+# portable package while still allowing fully offscreen/headless CI tests.
+if [[ -f "$out/plugins/platforms/libqxcb.so" ]]; then
+  if ldd "$out/plugins/platforms/libqxcb.so" | grep -q 'libxcb-cursor.so.*not found'; then
+    echo "Qt xcb platform dependency libxcb-cursor is unresolved" >&2
+    exit 1
+  fi
+fi
 
 # Preserve the licenses shipped with the Qt distribution when available.
 if [[ -d "$qt_prefix/LICENSES" ]]; then
