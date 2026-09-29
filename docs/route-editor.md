@@ -16,11 +16,13 @@ The **Tools** menu exposes:
 For the Route Editor Riel launches:
 
 ```text
-riel-route-editor --game-root <content-root> --route <route-id> --appdata-profile
+riel-route-editor --game-root <content-root> --route <route-directory> --appdata-profile
 ```
 
-Riel already knows the content root and route id from its normal content scan,
+Riel already knows the content root and source route directory from its normal content scan,
 so the editor does not ask the user to locate MSTS content again.
+The directory may have a different name from the `RouteID` inside its `.trk` file;
+the editor needs the directory name.
 
 For development, `RIEL_ROUTE_EDITOR=/path/to/executable` overrides the
 packaged executable.

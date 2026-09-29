@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 
 using Riel.Launcher;
+using Riel.Models.Imported.Shim;
 using Riel.Models.Settings;
 
 namespace Riel.Launcher.Gui
@@ -76,10 +77,17 @@ namespace Riel.Launcher.Gui
 
                 if (tool == RielEditorTool.RouteEditor)
                 {
-                    if (string.IsNullOrWhiteSpace(route.Route.Id))
-                        throw new LauncherException("the selected route has no route id");
+                    // TSRE's --route names a directory under ROUTES, not the RouteID stored
+                    // inside its .trk file. Real installations often use different names.
+                    string sourceFolder = route.Route.SourceFolder();
+                    if (string.IsNullOrWhiteSpace(sourceFolder) || !Directory.Exists(sourceFolder))
+                        throw new LauncherException("the selected route's source folder no longer exists");
+
+                    string routeDirectory = Path.GetFileName(Path.TrimEndingDirectorySeparator(sourceFolder));
+                    if (string.IsNullOrWhiteSpace(routeDirectory))
+                        throw new LauncherException("the selected route has no source directory name");
                     start.ArgumentList.Add("--route");
-                    start.ArgumentList.Add(route.Route.Id);
+                    start.ArgumentList.Add(routeDirectory);
                 }
             }
 
