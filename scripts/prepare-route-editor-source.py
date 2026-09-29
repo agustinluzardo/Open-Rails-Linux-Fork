@@ -167,6 +167,15 @@ def main() -> int:
     )
     replace_once(
         main,
+        '    const QCommandLineOption TestOption("test", "Run TSRE test runner and exit.");',
+        '    const QCommandLineOption AcePreviewCheckOption("ace-preview-check", "Check fitted ACE preview and Ctrl+wheel zoom.");\n'
+        '    parser.addOption(AcePreviewCheckOption);\n'
+        '    const QCommandLineOption ConsistSelectionCheckOption("consist-selection-check", "Check selecting and clearing a rolling-stock entry.");\n'
+        '    parser.addOption(ConsistSelectionCheckOption);\n'
+        '    const QCommandLineOption TestOption("test", "Run TSRE test runner and exit.");',
+    )
+    replace_once(
+        main,
         '    if (parser.isSet(TestVerboseOption)) {\n'
         '        consoleArgs["TEST_VERBOSE"] = "TRUE";\n'
         '    }',
@@ -175,6 +184,94 @@ def main() -> int:
         '    }\n'
         '    if (parser.isSet(GraphicsCheckOption))\n'
         '        consoleArgs["GRAPHICS_CHECK"] = "TRUE";',
+    )
+    replace_once(
+        main,
+        '    if (parser.isSet(GraphicsCheckOption))\n'
+        '        consoleArgs["GRAPHICS_CHECK"] = "TRUE";',
+        '    if (parser.isSet(GraphicsCheckOption))\n'
+        '        consoleArgs["GRAPHICS_CHECK"] = "TRUE";\n'
+        '    if (parser.isSet(AcePreviewCheckOption))\n'
+        '        consoleArgs["ACE_PREVIEW_CHECK"] = "TRUE";\n'
+        '    if (parser.isSet(ConsistSelectionCheckOption))\n'
+        '        consoleArgs["CONSIST_SELECTION_CHECK"] = "TRUE";',
+    )
+    replace_once(
+        main,
+        '#include <QOpenGLFunctions>',
+        '#include <QOpenGLFunctions>\n#include <QGraphicsView>\n#include <QWheelEvent>\n'
+        '#include <QPushButton>\n#include <QListWidget>\n#include <QLineEdit>\n#include <QTemporaryDir>',
+    )
+    replace_once(main, '#include <conEditor/CELoadWindow.h>',
+                 '#include <conEditor/CELoadWindow.h>\n'
+                 '#include <conEditor/ConEditorWindow.h>\n'
+                 '#include <conEditor/EngListWidget.h>')
+    replace_once(
+        main,
+        '    // Test runner (headless) - runs and exits without starting the GUI.',
+        '''    if (consoleArgs["ACE_PREVIEW_CHECK"] == "TRUE") {
+        QTemporaryDir directory;
+        QImage image(2048, 1024, QImage::Format_RGB32);
+        image.fill(Qt::red);
+        if (!directory.isValid() || !image.save(directory.filePath("large.png"))) return 1;
+        AceConverterWindow window;
+        window.show();
+        QGraphicsView *view = window.findChild<QGraphicsView *>("texturePreview");
+        QLineEdit *file = window.findChild<QLineEdit *>("sourceFile");
+        if (!view || !file) return 1;
+        window.loadFile(directory.filePath("large.png"));
+        QElapsedTimer timer;
+        timer.start();
+        while (timer.elapsed() < 10000 &&
+               (window.isBusy() || view->transform().m11() >= 1))
+            app.processEvents(QEventLoop::AllEvents, 20);
+        if (window.isBusy() || file->text().isEmpty() ||
+                view->transform().m11() >= 1 || view->transform().m11() <= 0) {
+            qCritical() << "RIEL_ACE_PREVIEW_FAILED: image did not fit";
+            return 1;
+        }
+        const qreal before = view->transform().m11();
+        const QPointF center = view->viewport()->rect().center();
+        QWheelEvent wheel(center, view->viewport()->mapToGlobal(center.toPoint()),
+                          QPoint(), QPoint(0, 120), Qt::NoButton,
+                          Qt::ControlModifier, Qt::NoScrollPhase, false);
+        app.sendEvent(view->viewport(), &wheel);
+        if (view->transform().m11() <= before) {
+            qCritical() << "RIEL_ACE_PREVIEW_FAILED: Ctrl+wheel did not zoom";
+            return 1;
+        }
+        QPushButton *fit = window.findChild<QPushButton *>("fitPreview");
+        if (!fit) return 1;
+        fit->click();
+        if (view->transform().m11() >= 1) return 1;
+        printf("RIEL_ACE_PREVIEW_OK\\n");
+        return 0;
+    }
+    if (consoleArgs["CONSIST_SELECTION_CHECK"] == "TRUE") {
+        if (Game::root.isEmpty()) return 1;
+        Game::InitAssets();
+        ConEditorWindow window;
+        window.show();
+        EngListWidget *engList = window.findChild<EngListWidget *>();
+        QListWidget *items = engList ? engList->findChild<QListWidget *>() : nullptr;
+        if (!items || items->count() == 0) {
+            qCritical() << "RIEL_CONSIST_SELECTION_FAILED: no rolling stock";
+            return 1;
+        }
+        items->setCurrentRow(0);
+        app.processEvents();
+        engList->fillEngList(); // clearing a selected list used to dereference null
+        app.processEvents();
+        if (items->count() == 0) return 1;
+        QMetaObject::invokeMethod(engList, "itemsSelected"); // no current item
+        items->setCurrentRow(0);
+        app.processEvents();
+        window.engListSelected(-1); // a stale ID should not create a null entry
+        printf("RIEL_CONSIST_SELECTION_OK\\n");
+        return 0;
+    }
+
+    // Test runner (headless) - runs and exits without starting the GUI.''',
     )
     replace_once(
         main,
@@ -230,6 +327,121 @@ def main() -> int:
         "    format.setProfile(QSurfaceFormat::CoreProfile);\n"
         "#endif",
     )
+
+    # ACE previews start fitted and Ctrl+wheel zooms around the pointer. Keep
+    # ordinary wheel scrolling and the 100% button's explicit scale intact.
+    ace_window = source / "src" / "aceConverter" / "AceConverterWindow.cpp"
+    ace_header = source / "src" / "aceConverter" / "AceConverterWindow.h"
+    replace_once(
+        ace_header,
+        'class QGraphicsView;',
+        'class AcePreviewView;',
+    )
+    replace_once(ace_header, '    QGraphicsView *preview = nullptr;',
+                 '    AcePreviewView *preview = nullptr;')
+    replace_once(
+        ace_window,
+        '#include <QGraphicsView>',
+        '#include <QGraphicsView>\n#include <QWheelEvent>\n#include <QTimer>\n#include <cmath>',
+    )
+    replace_once(
+        ace_window,
+        'AceConverterWindow::AceConverterWindow(const QColor &mainLabelColor, QWidget *parent) : QMainWindow(parent) {',
+        '''class AcePreviewView final : public QGraphicsView {
+public:
+    using QGraphicsView::QGraphicsView;
+
+    void fitImage() {
+        if (!scene() || scene()->sceneRect().isEmpty()) return;
+        fitInView(scene()->sceneRect(), Qt::KeepAspectRatio);
+    }
+
+protected:
+    void wheelEvent(QWheelEvent *event) override {
+        if (!(event->modifiers() & Qt::ControlModifier)) {
+            QGraphicsView::wheelEvent(event);
+            return;
+        }
+        const int steps = event->angleDelta().y();
+        if (steps == 0) {
+            event->ignore();
+            return;
+        }
+        const qreal current = transform().m11();
+        const qreal target = qBound(qreal(0.02),
+                                    current * std::pow(1.2, steps / 120.0), qreal(32.0));
+        if (target != current) scale(target / current, target / current);
+        event->accept();
+    }
+};
+
+AceConverterWindow::AceConverterWindow(const QColor &mainLabelColor, QWidget *parent) : QMainWindow(parent) {''',
+    )
+    replace_once(ace_window, '    preview = new QGraphicsView(scene, central);',
+                 '    preview = new AcePreviewView(scene, central);')
+    replace_once(ace_window, '    preview->setDragMode(QGraphicsView::ScrollHandDrag);',
+                 '    preview->setDragMode(QGraphicsView::ScrollHandDrag);\n'
+                 '    preview->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);')
+    replace_once(ace_window,
+                 '    connect(fit, &QPushButton::clicked, this, [this] {\n'
+                 '        if (!scene->sceneRect().isEmpty()) preview->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);\n'
+                 '    });',
+                 '    connect(fit, &QPushButton::clicked, this, [this] { preview->fitImage(); });')
+    replace_once(ace_window, '        preview->resetTransform();\n        mipmaps->setChecked(false);',
+                 '        preview->resetTransform();\n'
+                 '        // Let Qt lay out the viewport before fitting a newly loaded image.\n'
+                 '        QTimer::singleShot(0, preview, [view = preview] { view->fitImage(); });\n'
+                 '        mipmaps->setChecked(false);')
+
+    # A cleared list emits itemSelectionChanged with no current item. A stale
+    # engine/consist ID can likewise disappear when the catalogue is reloaded.
+    eng_list = source / "src" / "conEditor" / "EngListWidget.cpp"
+    con_window = source / "src" / "conEditor" / "ConEditorWindow.cpp"
+    replace_once(eng_list,
+                 '    QListWidgetItem * item = items.currentItem();\n'
+                 '    //qDebug() << item->type() << " " << item->text();\n'
+                 '    emit engListSelected(item->type());',
+                 '    QListWidgetItem * item = items.currentItem();\n'
+                 '    if (item == nullptr) return;\n'
+                 '    emit engListSelected(item->type());')
+    replace_once(con_window,
+                 '    if(currentCon == NULL) return;\n'
+                 '    currentCon->select(uid);\n'
+                 '    setCurrentEng(currentCon->engItems[uid].eng);',
+                 '    if(currentCon == NULL || uid < 0 || uid >= currentCon->engItems.size()) return;\n'
+                 '    currentCon->select(uid);\n'
+                 '    setCurrentEng(currentCon->engItems[uid].eng);')
+    replace_once(con_window,
+                 '    currentEng = englib->eng[id];\n'
+                 '    qDebug() << currentEng->engName;',
+                 '    auto selected = englib->eng.find(id);\n'
+                 '    if (selected == englib->eng.end() || !selected->second || selected->second->loaded != 1) {\n'
+                 '        qWarning() << "Consist editor: selected rolling stock is unavailable:" << id;\n'
+                 '        return;\n'
+                 '    }\n'
+                 '    currentEng = selected->second;\n'
+                 '    qDebug() << currentEng->engName;')
+    replace_once(con_window,
+                 '            engSetsList.addItem(ConLib::con[engSets[i]]->showName, i);',
+                 '            auto found = ConLib::con.find(engSets[i]);\n'
+                 '            if (found != ConLib::con.end() && found->second)\n'
+                 '                engSetsList.addItem(found->second->showName, i);')
+    replace_once(con_window,
+                 '    if(engSetId >= 0 ){\n'
+                 '        pos = -ConLib::con[engSets[engSetId]]->conLength - 1;',
+                 '    if (engSetId >= 0) {\n'
+                 '        if (engSetId >= engSets.size()) engSetId = -1;\n'
+                 '        else {\n'
+                 '            auto found = ConLib::con.find(engSets[engSetId]);\n'
+                 '            if (found == ConLib::con.end() || !found->second) engSetId = -1;\n'
+                 '        }\n'
+                 '    }\n'
+                 '    if(engSetId >= 0 ){\n'
+                 '        pos = -ConLib::con.at(engSets[engSetId])->conLength - 1;')
+    replace_once(con_window,
+                 '    //currentEng = englib->eng[id];\n'
+                 '    qDebug() << currentEng->engName;',
+                 '    // setCurrentEng validates IDs before using the selected engine.')
 
     # Use the GLSL 3.30 shader set whenever the negotiated context is modern.
     # Previously Linux always loaded the 1.40 shaders; on Qt 6/NVIDIA that can

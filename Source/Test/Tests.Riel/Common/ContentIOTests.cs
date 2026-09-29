@@ -167,6 +167,20 @@ namespace Tests.Riel.Common
         }
 
         [TestMethod]
+        public void EditorCanPassAnUppercaseRoutesFolderWithADifferentRouteId()
+        {
+            // FolderStructure reconstructs "Routes" from the content model. The on-disk
+            // directory is "ROUTES", and the .trk basename is not the directory name.
+            string modeledPath = FolderStructure.Content(root).Route("Marias Pass").CurrentFolder;
+            string actualPath = ContentIO.ResolveDirectory(modeledPath);
+
+            Assert.IsNotNull(actualPath);
+            Assert.IsTrue(Directory.Exists(actualPath));
+            Assert.AreEqual("Marias Pass", Path.GetFileName(actualPath));
+            Assert.AreNotEqual("MariasPass", Path.GetFileName(actualPath));
+        }
+
+        [TestMethod]
         public void ReportsAMissingFile()
         {
             Assert.IsNull(ContentIO.ResolveFile(Path.Combine(root, "GLOBAL", "SHAPES", "nosuchshape.s")));

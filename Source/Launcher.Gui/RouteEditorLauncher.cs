@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
+using Riel.Common.Native;
 using Riel.Launcher;
 using Riel.Models.Imported.Shim;
 using Riel.Models.Settings;
@@ -79,8 +80,11 @@ namespace Riel.Launcher.Gui
                 {
                     // TSRE's --route names a directory under ROUTES, not the RouteID stored
                     // inside its .trk file. Real installations often use different names.
-                    string sourceFolder = route.Route.SourceFolder();
-                    if (string.IsNullOrWhiteSpace(sourceFolder) || !Directory.Exists(sourceFolder))
+                    // FolderStructure spells this component "Routes" while MSTS installations
+                    // commonly store it as "ROUTES". Resolve the real casing on Linux before
+                    // handing the directory name to TSRE.
+                    string sourceFolder = ContentIO.ResolveDirectory(route.Route.SourceFolder());
+                    if (sourceFolder == null)
                         throw new LauncherException("the selected route's source folder no longer exists");
 
                     string routeDirectory = Path.GetFileName(Path.TrimEndingDirectorySeparator(sourceFolder));

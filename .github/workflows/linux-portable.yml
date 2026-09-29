@@ -122,6 +122,11 @@ jobs:
           QT_QPA_PLATFORM=offscreen "$editor_out/riel-route-editor" --test --test-suite settings
           grep -F "workingDir \"$editor_out\"" "$XDG_STATE_HOME/riel/Logs/Riel Route Editor Log.txt"
           xvfb-run -a "$editor_out/riel-route-editor" --graphics-check
+          python3 Source/Tools/TestRoute/make_test_route.py "${RUNNER_TEMP}/riel-editor-content"
+          timeout 45s xvfb-run -a "$editor_out/riel-route-editor" --ace-preview-check
+          timeout 45s xvfb-run -a "$editor_out/riel-route-editor" \
+            --game-root "${RUNNER_TEMP}/riel-editor-content/Train Simulator" \
+            --consist-selection-check
       - name: Package and verify without an installed .NET runtime
         env:
           DOTNET_ROOT: /nonexistent-dotnet-runtime
