@@ -264,6 +264,14 @@ namespace Orts.ActivityRunner.Viewer3D
             };
         }
 
+        private void VertexBuffer_ContentLost()
+        {
+            // Match Open Rails and precipitation handling: DesktopGL can invalidate a
+            // dynamic vertex buffer without recreating the particle emitter. Re-upload
+            // the CPU-side particle data before drawing so smoke does not silently vanish.
+            VertexBuffer.SetData(0, Vertices, 0, Vertices.Length, ParticleVertex.VertexStride, SetDataOptions.NoOverwrite);
+        }
+
         private static IndexBuffer InitIndexBuffer(GraphicsDevice graphicsDevice, int numIndicies)
         {
             var indices = new ushort[numIndicies];
@@ -433,6 +441,13 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public override void Draw()
         {
+            if (VertexBuffer.IsContentLost)
+            {
+                if (viewer.UserSettings.TraceParticleDiagnostics)
+                    Trace.TraceInformation("[ParticleDiag] dynamic vertex buffer content lost; re-uploading {0} vertices", Vertices.Length);
+                VertexBuffer_ContentLost();
+            }
+
             if (viewer.UserSettings.TraceParticleDiagnostics && HasParticlesToRender() && !traceDrawObserved)
             {
                 traceDrawObserved = true;
