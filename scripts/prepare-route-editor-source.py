@@ -957,6 +957,14 @@ void TexLib::reset() {''',
     )
     # Map tiles are already resident QImages; copying them on a background QThread
     # only exposes the shared MapWindow image table and Texture to races for no useful I/O gain.
+    # Keep QThread::run protected externally and expose one explicit synchronous wrapper.
+    map_header = source / "src" / "tsre" / "texture" / "MapLib.h"
+    replace_once(
+        map_header,
+        '    Texture* texture;\n\nprivate:',
+        '    Texture* texture;\n'
+        '    void loadNow() { run(); }\n\nprivate:',
+    )
     replace_once(
         texlib,
         '''    } else if(tType == ":maptex"){
@@ -973,7 +981,7 @@ void TexLib::reset() {''',
         '''    } else if(tType == ":maptex"){
         MapLib t;
         t.texture = newFile;
-        t.run();
+        t.loadNow();
     }''',
     )
 
