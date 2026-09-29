@@ -131,67 +131,16 @@ jobs:
             local release_sha="$2"
             case "$release_tag" in
               v0.1.0)
-                cat <<EOF
-Stable portable Linux build of ${release_sha}, with bundled .NET runtime.
-
-### Highlights
-- First stable Riel Linux release.
-- Renamed the public assemblies, namespaces and common library from `FreeTrainSimulator.*` to `Riel.*`.
-- Kept launcher/update checks working through the repository rename.
-- Hardened Linux activity testing so startup failures are logged and batch testing can continue.
-- Improved native AI train visual loading, nearby-train prioritization and related diagnostics.
-- Added the F3 system information overlay and Linux temperature reporting.
-
-### Compatibility / known issues
-- Bundled Riel assemblies already use the `Riel.*` names.
-- Only third-party add-on DLLs built against legacy `FreeTrainSimulator.*` assemblies require rebuilding.
-- Older saves made before the assembly rename have not been fully verified.
-- Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red.
-EOF
+                printf '%b\n' "Stable portable Linux build of ${release_sha}, with bundled .NET runtime.\n\n### Highlights\n- First stable Riel Linux release.\n- Renamed the public assemblies, namespaces and common library from \`FreeTrainSimulator.*\` to \`Riel.*\`.\n- Kept launcher/update checks working through the repository rename.\n- Hardened Linux activity testing so startup failures are logged and batch testing can continue.\n- Improved native AI train visual loading, nearby-train prioritization and related diagnostics.\n- Added the F3 system information overlay and Linux temperature reporting.\n\n### Compatibility / known issues\n- Bundled Riel assemblies already use the \`Riel.*\` names.\n- Only third-party add-on DLLs built against legacy \`FreeTrainSimulator.*\` assemblies require rebuilding.\n- Older saves made before the assembly rename have not been fully verified.\n- Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red."
                 ;;
               v0.1.1)
-                cat <<EOF
-Stable portable Linux build of ${release_sha}, with bundled .NET runtime.
-
-### Changes
-- Adjusted the particle vertex layout/stride handling as an OpenGL compatibility step for smoke rendering.
-- Bumped the stable version to 0.1.1.
-
-### Note
-- This was an intermediate particle-rendering fix. The final DesktopGL billboard fix that makes smoke/steam/spray particles visible landed in Riel 0.1.2.
-
-### Compatibility / known issues
-- Bundled Riel assemblies already use the `Riel.*` names.
-- Only third-party add-on DLLs built against legacy `FreeTrainSimulator.*` assemblies require rebuilding.
-- Older saves have not been fully verified.
-- Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red.
-EOF
+                printf '%b\n' "Stable portable Linux build of ${release_sha}, with bundled .NET runtime.\n\n### Changes\n- Adjusted the particle vertex layout/stride handling as an OpenGL compatibility step for smoke rendering.\n- Bumped the stable version to 0.1.1.\n\n### Note\n- This was an intermediate particle-rendering fix. The final DesktopGL billboard fix that makes smoke/steam/spray particles visible landed in Riel 0.1.2.\n\n### Compatibility / known issues\n- Bundled Riel assemblies already use the \`Riel.*\` names.\n- Only third-party add-on DLLs built against legacy \`FreeTrainSimulator.*\` assemblies require rebuilding.\n- Older saves have not been fully verified.\n- Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red."
                 ;;
               v0.1.2)
-                cat <<EOF
-Stable portable Linux build of ${release_sha}, with bundled .NET runtime.
-
-### Particle rendering fixes
-- Fixed the particle-emitter ring-buffer indexing/off-by-one issue.
-- Restored the Open Rails 80-byte particle vertex stride.
-- Added particle/diesel exhaust diagnostics and exposed them in Settings.
-- Added recovery when DesktopGL invalidates a dynamic particle vertex buffer.
-- Fixed the actual DesktopGL billboard shader bug: static corner arrays could be compiled as zeroed uniforms, collapsing every particle quad to zero area.
-- Smoke, steam and other effects using the generic particle emitter can now render correctly on native Linux/OpenGL.
-
-### Compatibility / known issues
-- Bundled Riel assemblies already use the `Riel.*` names.
-- Only third-party add-on DLLs built against legacy `FreeTrainSimulator.*` assemblies require rebuilding.
-- Older saves have not been fully verified.
-- Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red.
-EOF
+                printf '%b\n' "Stable portable Linux build of ${release_sha}, with bundled .NET runtime.\n\n### Particle rendering fixes\n- Fixed the particle-emitter ring-buffer indexing/off-by-one issue.\n- Restored the Open Rails 80-byte particle vertex stride.\n- Added particle/diesel exhaust diagnostics and exposed them in Settings.\n- Added recovery when DesktopGL invalidates a dynamic particle vertex buffer.\n- Fixed the actual DesktopGL billboard shader bug: static corner arrays could be compiled as zeroed uniforms, collapsing every particle quad to zero area.\n- Smoke, steam and other effects using the generic particle emitter can now render correctly on native Linux/OpenGL.\n\n### Compatibility / known issues\n- Bundled Riel assemblies already use the \`Riel.*\` names.\n- Only third-party add-on DLLs built against legacy \`FreeTrainSimulator.*\` assemblies require rebuilding.\n- Older saves have not been fully verified.\n- Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red."
                 ;;
               *)
-                cat <<EOF
-Stable portable Linux build of ${release_sha}, with bundled .NET runtime.
-
-Bundled Riel assemblies use the `Riel.*` names; only third-party add-on DLLs built against legacy `FreeTrainSimulator.*` assemblies require rebuilding.
-EOF
+                printf '%b\n' "Stable portable Linux build of ${release_sha}, with bundled .NET runtime.\n\nBundled Riel assemblies use the \`Riel.*\` names; only third-party add-on DLLs built against legacy \`FreeTrainSimulator.*\` assemblies require rebuilding."
                 ;;
             esac
           }
