@@ -744,17 +744,20 @@ namespace Riel.Launcher.Gui
 
         // ------------------------------------------------------------------------------ tools
 
-        private Task OpenEditorTool(RielEditorTool tool)
+        private async Task OpenEditorTool(RielEditorTool tool)
         {
             RouteItem route = RouteList.SelectedItem as RouteItem;
             if (tool.RequiresContent() && route == null)
                 throw new LauncherException(T("Choose a route first."));
 
-            _ = RouteEditorLauncher.Start(tool, route);
+            ProfileModel profile = await ((ProfileModel)null).Current(closing.Token);
+            ProfileUserSettingsModel settings = await profile.LoadSettingsModel<ProfileUserSettingsModel>(closing.Token)
+                ?? new ProfileUserSettingsModel();
+
+            _ = RouteEditorLauncher.Start(tool, route, settings);
             StatusText.Text = route == null
                 ? F("Opened {0}.", tool.DisplayName())
                 : F("Opened {0} for {1}.", tool.DisplayName(), route.Name);
-            return Task.CompletedTask;
         }
 
         // ------------------------------------------------------------------------------ playing

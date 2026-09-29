@@ -268,6 +268,10 @@ namespace Riel.Models.Settings
         public bool SuppressMissingPlatformWarnings { get; set; }
         public bool TraceParticleDiagnostics { get; set; }
 
+        // Append-only: launcher/editor diagnostics and experimental graphics switches.
+        public bool TraceRouteEditorRendering { get; set; }
+        public bool ExperimentalVulkan { get; set; }
+
         [MemoryPackOnDeserialized]
         private void ApplyCompatibilityDefaults()
         {

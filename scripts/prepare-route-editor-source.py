@@ -115,6 +115,27 @@ def main() -> int:
         '    // Keep the initial shader deterministic across all editor widgets.\n'
         '    currentShader = shaders["StandardFog"];',
     )
+    replace_once(
+        gluu,
+        'void GLUU::initShader() {\n'
+        '    QOpenGLContext *context = QOpenGLContext::currentContext();\n'
+        '    QOpenGLExtraFunctions *extra = context->extraFunctions();',
+        'void GLUU::initShader() {\n'
+        '    QOpenGLContext *context = QOpenGLContext::currentContext();\n'
+        '    QOpenGLExtraFunctions *extra = context->extraFunctions();\n'
+        '    if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0) {\n'
+        '        const QSurfaceFormat fmt = context->format();\n'
+        '        QOpenGLFunctions *f = context->functions();\n'
+        '        qInfo().noquote() << "RIEL_RENDER_GL"\n'
+        '            << "vendor=" << reinterpret_cast<const char *>(f->glGetString(GL_VENDOR))\n'
+        '            << "renderer=" << reinterpret_cast<const char *>(f->glGetString(GL_RENDERER))\n'
+        '            << "version=" << reinterpret_cast<const char *>(f->glGetString(GL_VERSION))\n'
+        '            << "context=" << QString("%1.%2").arg(fmt.majorVersion()).arg(fmt.minorVersion())\n'
+        '            << "profile=" << int(fmt.profile())\n'
+        '            << "rgba=" << QString("%1/%2/%3/%4").arg(fmt.redBufferSize()).arg(fmt.greenBufferSize()).arg(fmt.blueBufferSize()).arg(fmt.alphaBufferSize())\n'
+        '            << "samples=" << fmt.samples();\n'
+        '    }',
+    )
 
     # MSTS content was authored for a case-insensitive filesystem. Riel runs
     # natively on Linux, so resolve a differently-cased path only when every
@@ -202,7 +223,121 @@ def main() -> int:
         'int TexLib::addTex(QString pathid, bool reload) {\n'
         '    pathid = ContentPath::normalize(pathid);',
         'int TexLib::addTex(QString pathid, bool reload) {\n'
-        '    pathid = ContentPath::resolveExistingCaseInsensitive(pathid);',
+        '    pathid = ContentPath::resolveExistingCaseInsensitive(pathid);\n'
+        '    if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0) {\n'
+        '        static quint64 requestCount = 0;\n'
+        '        ++requestCount;\n'
+        '        qInfo().noquote() << "RIEL_RENDER_REQUEST" << requestCount\n'
+        '            << "path=" << pathid << "exists=" << QFileInfo(pathid).isFile() << "reload=" << reload;\n'
+        '        if ((requestCount % 250) == 0)\n'
+        '            dumpStats(QString("render diagnostic #%1").arg(requestCount));\n'
+        '    }',
+    )
+
+
+    ace_lib = source / "src" / "tsre" / "texture" / "AceLib.cpp"
+    replace_once(
+        ace_lib,
+        '    if (!load(texture->pathid, *texture, options, error)) {\n'
+        '        texture->error = true;\n'
+        '        texture->missing = !QFileInfo::exists(texture->pathid);\n'
+        '        texture->errorMessage = error;\n'
+        '        texture->loaded = false;\n'
+        '        qWarning().noquote() << "ACE:" << texture->pathid << error;\n'
+        '    }\n'
+        '}',
+        '    if (!load(texture->pathid, *texture, options, error)) {\n'
+        '        texture->error = true;\n'
+        '        texture->missing = !QFileInfo::exists(texture->pathid);\n'
+        '        texture->errorMessage = error;\n'
+        '        texture->loaded = false;\n'
+        '        qWarning().noquote() << "ACE:" << texture->pathid << error;\n'
+        '        if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0)\n'
+        '            qWarning().noquote() << "RIEL_RENDER_ACE failed path=" << texture->pathid\n'
+        '                << "missing=" << texture->missing << "error=" << error;\n'
+        '    } else if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0) {\n'
+        '        qInfo().noquote() << "RIEL_RENDER_ACE loaded path=" << texture->pathid\n'
+        '            << "size=" << QString("%1x%2").arg(texture->width).arg(texture->height)\n'
+        '            << "bpp=" << texture->bytesPerPixel\n'
+        '            << "compressedBytes=" << texture->compressedData.size();\n'
+        '    }\n'
+        '}',
+    )
+
+    texture_cpp = source / "src" / "tsre" / "texture" / "Texture.cpp"
+    replace_once(
+        texture_cpp,
+        'bool Texture::GLTextures(bool mipmaps) {\n'
+        '    auto *context = QOpenGLContext::currentContext();\n'
+        '    if (!loaded || !context || width <= 0 || height <= 0 ||\n'
+        '        (bytesPerPixel != 3 && bytesPerPixel != 4))\n'
+        '        return false;',
+        'bool Texture::GLTextures(bool mipmaps) {\n'
+        '    auto *context = QOpenGLContext::currentContext();\n'
+        '    if (!loaded || !context || width <= 0 || height <= 0 ||\n'
+        '        (bytesPerPixel != 3 && bytesPerPixel != 4)) {\n'
+        '        if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0)\n'
+        '            qWarning().noquote() << "RIEL_RENDER_GPU rejected path=" << pathid\n'
+        '                << "loaded=" << loaded << "context=" << (context != nullptr)\n'
+        '                << "size=" << QString("%1x%2").arg(width).arg(height)\n'
+        '                << "bpp=" << bytesPerPixel << "error=" << errorMessage;\n'
+        '        return false;\n'
+        '    }',
+    )
+    replace_once(
+        texture_cpp,
+        '    if (!direct && !decodeToCpu())\n'
+        '        return false;',
+        '    if (!direct && !decodeToCpu()) {\n'
+        '        if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0)\n'
+        '            qWarning().noquote() << "RIEL_RENDER_GPU cpu-decode-failed path=" << pathid\n'
+        '                << "compressedBytes=" << compressedData.size() << "error=" << errorMessage;\n'
+        '        return false;\n'
+        '    }',
+    )
+    replace_once(
+        texture_cpp,
+        '    if (!pixelTransferSucceeded(*this))\n'
+        '        return false; // Keep CPU data for retry/diagnostics.\n'
+        '    delete[] imageData;',
+        '    if (!pixelTransferSucceeded(*this)) {\n'
+        '        if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0)\n'
+        '            qWarning().noquote() << "RIEL_RENDER_GPU upload-failed path=" << pathid\n'
+        '                << "directCompressed=" << direct << "internalFormat=" << Qt::hex << gpuInternalFormat\n'
+        '                << "error=" << errorMessage;\n'
+        '        return false; // Keep CPU data for retry/diagnostics.\n'
+        '    }\n'
+        '    if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0)\n'
+        '        qInfo().noquote() << "RIEL_RENDER_GPU uploaded path=" << pathid\n'
+        '            << "textureId=" << tex[0] << "directCompressed=" << direct\n'
+        '            << "internalFormat=" << Qt::hex << gpuInternalFormat;\n'
+        '    delete[] imageData;',
+    )
+
+    renderer_cpp = source / "src" / "tsre" / "renderer" / "OpenGL3Renderer.cpp"
+    replace_once(
+        renderer_cpp,
+        '    if(item->texturesEnabled){\n'
+        '        gluu->enableTextures();\n'
+        '        gluu->bindTexture(f, item->texAddr);\n'
+        '    } else {\n'
+        '        gluu->disableTextures(item->colorX, item->colorY, item->colorZ, item->colorA);\n'
+        '    }',
+        '    if(item->texturesEnabled){\n'
+        '        gluu->enableTextures();\n'
+        '        gluu->bindTexture(f, item->texAddr);\n'
+        '    } else {\n'
+        '        if (qEnvironmentVariableIntValue("RIEL_EDITOR_RENDER_DIAGNOSTICS") != 0\n'
+        '                && item->colorX > 0.95f && item->colorY < 0.05f && item->colorZ > 0.95f) {\n'
+        '            static quint64 magentaFallbackDraws = 0;\n'
+        '            ++magentaFallbackDraws;\n'
+        '            if (magentaFallbackDraws <= 200 || (magentaFallbackDraws % 1000) == 0)\n'
+        '                qWarning().noquote() << "RIEL_RENDER_FALLBACK magenta draw=" << magentaFallbackDraws\n'
+        '                    << "texAddr=" << item->texAddr << "vertices=" << item->vertCount\n'
+        '                    << "selection=" << item->selectionId;\n'
+        '        }\n'
+        '        gluu->disableTextures(item->colorX, item->colorY, item->colorZ, item->colorA);\n'
+        '    }',
     )
 
     about = source / "src" / "routeEditor" / "AboutWindow.cpp"

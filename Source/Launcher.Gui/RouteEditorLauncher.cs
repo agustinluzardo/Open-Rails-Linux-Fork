@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 
 using Riel.Launcher;
+using Riel.Models.Settings;
 
 namespace Riel.Launcher.Gui
 {
@@ -43,7 +44,7 @@ namespace Riel.Launcher.Gui
         private const string OverrideEnvironmentVariable = "RIEL_ROUTE_EDITOR";
         private const string ExecutableName = "riel-route-editor";
 
-        public static Process Start(RielEditorTool tool, RouteItem route)
+        public static Process Start(RielEditorTool tool, RouteItem route, ProfileUserSettingsModel settings)
         {
             string executable = FindExecutable(out bool shellWrapper)
                 ?? throw new LauncherException(
@@ -57,6 +58,15 @@ namespace Riel.Launcher.Gui
             };
             if (shellWrapper)
                 start.ArgumentList.Add(executable);
+
+            if (settings?.TraceRouteEditorRendering == true)
+                start.Environment["RIEL_EDITOR_RENDER_DIAGNOSTICS"] = "1";
+
+            if (OperatingSystem.IsLinux() && settings?.ExperimentalVulkan == true)
+            {
+                start.Environment["RIEL_VULKAN"] = "1";
+                start.Environment["MESA_LOADER_DRIVER_OVERRIDE"] = "zink";
+            }
 
             if (tool.RequiresContent())
             {

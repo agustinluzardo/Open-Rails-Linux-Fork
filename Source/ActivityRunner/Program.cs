@@ -64,6 +64,7 @@ namespace Orts.ActivityRunner
             ProfileUserSettingsModel userSettings = profile.LoadSettingsModel<ProfileUserSettingsModel>(CancellationToken.None).GetAwaiter().GetResult();
             userSettings.MultiPlayer = !string.IsNullOrEmpty(ParseCommandLineOption(argumentList, "MultiplayerClient"));
             ApplySafeMode(userSettings);
+            ApplyExperimentalGraphics(userSettings);
 
             StartupTrail.Begin();
 
@@ -102,6 +103,17 @@ namespace Orts.ActivityRunner
                 userSettings.DynamicShadows = false;
                 userSettings.ModelInstancing = false;
             }
+        }
+
+        private static void ApplyExperimentalGraphics(ProfileUserSettingsModel userSettings)
+        {
+            if (!OperatingSystem.IsLinux() || !userSettings.ExperimentalVulkan)
+                return;
+
+            // Riel still uses MonoGame DesktopGL. Zink translates that OpenGL stream to Vulkan,
+            // giving an experimental Vulkan path without pretending a native Vulkan renderer exists.
+            Environment.SetEnvironmentVariable("RIEL_VULKAN", "1");
+            Environment.SetEnvironmentVariable("MESA_LOADER_DRIVER_OVERRIDE", "zink");
         }
 
         private static string ParseCommandLineOption(List<string> arguments, string argumentName)

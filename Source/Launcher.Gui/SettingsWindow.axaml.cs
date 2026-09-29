@@ -131,6 +131,13 @@ namespace Riel.Launcher.Gui
                 "OverheadWireType", "Cab2DStretch", "ViewingDistance", "FarMountainsViewingDistance", "FieldOfView",
                 "ExtendedDetailLevelView", "DetailLevelBias", "VisibleDetailLevel", "AmbientBrightness", "ShadowMapBlur",
                 "ShadowMapCount", "ShadowMapResolution", "SignalLightGlow");
+            AddGroup(VideoPanel, "Experimental graphics");
+            VideoPanel.Children.Add(new TextBlock
+            {
+                Text = Translation.T("Runs Riel's OpenGL renderer through Vulkan using Mesa Zink on Linux. Experimental; restart the simulator or editor after changing it."),
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap, Opacity = 0.7
+            });
+            AddOptions(VideoPanel, "ExperimentalVulkan");
 
             AddGroup(SimulationPanel, "Physics and operations");
             AddOptions(SimulationPanel, "AdvancedAdhesion", "AdhesionFilterSize", "AdhesionFactor", "AdhesionFactorChange",
@@ -161,6 +168,13 @@ namespace Riel.Launcher.Gui
                 "TraceSignalDiagnostics", "TraceRoadCrossings", "TraceAiRouteResolution",
                 "TraceSoundDiagnostics", "TraceLightDiagnostics", "TraceLoadMarkers", "TraceParticleDiagnostics");
             AddOptions(AdvancedPanel, "SuppressMissingPlatformWarnings");
+            AddGroup(AdvancedPanel, "Editor diagnostics");
+            AdvancedPanel.Children.Add(new TextBlock
+            {
+                Text = Translation.T("Rendering diagnostics are written to the native editor log and include OpenGL, texture loading, ACE decoding, GPU upload and fallback-material information."),
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap, Opacity = 0.7
+            });
+            AddOptions(AdvancedPanel, "TraceRouteEditorRendering");
         }
 
         private static void AddGroup(StackPanel panel, string title) => panel.Children.Add(new TextBlock
@@ -181,6 +195,10 @@ namespace Riel.Launcher.Gui
                     ? Translation.T("Driver vigilance (Z resets the alarm)")
                     : name == "AlerterExternal"
                     ? Translation.T("Driver vigilance in outside views")
+                    : name == "ExperimentalVulkan"
+                    ? Translation.T("Experimental Vulkan (Zink)")
+                    : name == "TraceRouteEditorRendering"
+                    ? Translation.T("Route editor rendering diagnostics")
                     : Translation.T(System.Text.RegularExpressions.Regex.Replace(name, "(?<=[a-z0-9])(?=[A-Z])", " "));
                 Control control;
                 if (property.PropertyType == typeof(bool))
@@ -188,6 +206,10 @@ namespace Riel.Launcher.Gui
                     control = new CheckBox { Content = label };
                     if (name == "Alerter")
                         ToolTip.SetTip(control, Translation.T("When the locomotive has a vigilance monitor, an unanswered alarm eventually applies the brakes. Press Z to acknowledge it."));
+                    else if (name == "ExperimentalVulkan")
+                        ToolTip.SetTip(control, Translation.T("Linux only. Uses Mesa Zink: the renderer stays OpenGL, but OpenGL commands run over Vulkan. This is experimental and may not work with every driver."));
+                    else if (name == "TraceRouteEditorRendering")
+                        ToolTip.SetTip(control, Translation.T("Logs the editor's OpenGL context, texture requests, ACE decode results, GPU texture uploads and magenta fallback draws."));
                     panel.Children.Add(control);
                 }
                 else
