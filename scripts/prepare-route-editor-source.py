@@ -829,7 +829,7 @@ inline QString resolveExistingCaseInsensitive(const QString &path) {
     )
     replace_once(
         shape_lib,
-        '''    const QString context = ContentPath::key(texPath) + "\n" + Game::season;
+        r'''    const QString context = ContentPath::key(texPath) + "\n" + Game::season;
     const QString pathKey = ContentPath::key(pathid);
     for (const auto &entry : shape) {
         if(entry.second && !entry.second->hasLoadFailed() && pathKeys[entry.first] == pathKey
@@ -837,7 +837,7 @@ inline QString resolveExistingCaseInsensitive(const QString &path) {
             return entry.first;
     }
     qDebug() << "Nowy " << jestshape << " shape: " << pathid;''',
-        '''    const QString context = ContentPath::key(texPath) + "\n" + Game::season;
+        r'''    const QString context = ContentPath::key(texPath) + "\n" + Game::season;
     const QString pathKey = ContentPath::key(pathid);
     const QString lookupKey = pathKey + "\n" + context;
     auto cachedShape = lookupIndex.constFind(lookupKey);
