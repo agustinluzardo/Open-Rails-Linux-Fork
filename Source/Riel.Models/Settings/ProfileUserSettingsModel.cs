@@ -265,6 +265,7 @@ namespace Riel.Models.Settings
         public bool TraceSoundDiagnostics { get; set; }
         public bool TraceLightDiagnostics { get; set; }
         public bool TraceLoadMarkers { get; set; }
+        public bool TraceParticleDiagnostics { get; set; }
         public bool SuppressMissingPlatformWarnings { get; set; }
 
         [MemoryPackOnDeserialized]
