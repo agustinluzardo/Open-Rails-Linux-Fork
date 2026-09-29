@@ -45,16 +45,18 @@ namespace Riel.Launcher.Gui
 
         public static Process Start(RielEditorTool tool, RouteItem route)
         {
-            string executable = FindExecutable()
+            string executable = FindExecutable(out bool shellWrapper)
                 ?? throw new LauncherException(
                     "Riel editor tools are not installed in this build. Update Riel or set RIEL_ROUTE_EDITOR to a native editor executable.");
 
             ProcessStartInfo start = new ProcessStartInfo
             {
-                FileName = executable,
+                FileName = shellWrapper ? "/bin/sh" : executable,
                 UseShellExecute = false,
                 WorkingDirectory = Path.GetDirectoryName(executable) ?? AppContext.BaseDirectory,
             };
+            if (shellWrapper)
+                start.ArgumentList.Add(executable);
 
             if (tool.RequiresContent())
             {
@@ -100,8 +102,9 @@ namespace Riel.Launcher.Gui
                 ?? throw new LauncherException(tool.DisplayName() + " could not be started");
         }
 
-        private static string FindExecutable()
+        private static string FindExecutable(out bool shellWrapper)
         {
+            shellWrapper = false;
             string overridePath = Environment.GetEnvironmentVariable(OverrideEnvironmentVariable);
             if (!string.IsNullOrWhiteSpace(overridePath))
             {
@@ -113,7 +116,10 @@ namespace Riel.Launcher.Gui
             foreach (string candidate in PackagedCandidates())
             {
                 if (File.Exists(candidate))
+                {
+                    shellWrapper = OperatingSystem.IsLinux();
                     return candidate;
+                }
             }
 
             string path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
