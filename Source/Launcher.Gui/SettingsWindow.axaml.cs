@@ -159,7 +159,7 @@ namespace Riel.Launcher.Gui
             });
             AddOptions(AdvancedPanel, "TraceAiStops", "TraceAiProgress", "TraceAiTrainNumbers",
                 "TraceSignalDiagnostics", "TraceRoadCrossings", "TraceAiRouteResolution",
-                "TraceSoundDiagnostics", "TraceLightDiagnostics", "TraceLoadMarkers");
+                "TraceSoundDiagnostics", "TraceLightDiagnostics", "TraceLoadMarkers", "TraceParticleDiagnostics");
             AddOptions(AdvancedPanel, "SuppressMissingPlatformWarnings");
         }
 
