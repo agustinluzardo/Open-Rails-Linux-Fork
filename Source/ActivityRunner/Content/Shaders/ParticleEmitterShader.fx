@@ -33,8 +33,10 @@ float emitSize;
 float2 cameraTileXY;
 float currentTime;
 
-static float2 texCoords[4] = { float2(0, 0), float2(0.25f, 0), float2(0.25f, 0.25f), float2(0, 0.25f) };
-static float3 offsets[4] = { float3(-0.5f, 0.5f, 0), float3(0.5f, 0.5f, 0), float3(0.5f, -0.5f, 0), float3(-0.5f, -0.5f, 0) };
+// Do not use static arrays for the billboard corners here. MonoGame DesktopGL can
+// cross-compile them into an internal uniform array which is left at zero on some
+// OpenGL drivers. That collapses every particle billboard to zero area. Keep the
+// four constants as literals, matching the precipitation shader's native-Linux fix.
 
 float4 Fog;
 
@@ -109,20 +111,41 @@ VERTEX_OUTPUT VSParticles(in VERTEX_INPUT In)
 	
 	float particleSize = (emitSize * 2) * (1 + age * 4);  // Start off at emitSize and increases in size.
 	
-	int vertIdx = (int)In.TileXY_Vertex_ID.z;
+	float vertex = In.TileXY_Vertex_ID.z;
+	float2 cornerOffset;
+	float2 texCoord;
+	if (vertex < 0.5f)
+	{
+		cornerOffset = float2(-0.5f, 0.5f);
+		texCoord = float2(0, 0);
+	}
+	else if (vertex < 1.5f)
+	{
+		cornerOffset = float2(0.5f, 0.5f);
+		texCoord = float2(0.25f, 0);
+	}
+	else if (vertex < 2.5f)
+	{
+		cornerOffset = float2(0.5f, -0.5f);
+		texCoord = float2(0.25f, 0.25f);
+	}
+	else
+	{
+		cornerOffset = float2(-0.5f, -0.5f);
+		texCoord = float2(0, 0.25f);
+	}
 	
 	float3 right = invView[0].xyz;
 	float3 up = invView[1].xyz;
 	
-	float2x2 rotMatrix = GetRotationMatrix(age, In.Color_Random.a);	
-	float3 vertOffset = offsets[vertIdx] * particleSize;
-	vertOffset.xy = mul(vertOffset.xy, rotMatrix);
-	In.StartPosition_StartTime.xyz += right * vertOffset.x;
-	In.StartPosition_StartTime.xyz += up * vertOffset.y;
+	float2x2 rotMatrix = GetRotationMatrix(age, In.Color_Random.a);
+	cornerOffset = mul(cornerOffset, rotMatrix) * particleSize;
+	In.StartPosition_StartTime.xyz += right * cornerOffset.x;
+	In.StartPosition_StartTime.xyz += up * cornerOffset.y;
 	
 	Out.Position = mul(float4(In.StartPosition_StartTime.xyz, 1), worldViewProjection);
 
-	Out.TexCoord = texCoords[vertIdx];
+	Out.TexCoord = texCoord;
 	float texAtlasPosition = In.TileXY_Vertex_ID.w;
     float atlasY = (int) (texAtlasPosition / 4.0f);
     float atlasX = (int) (texAtlasPosition - (atlasY * 4.0f));
