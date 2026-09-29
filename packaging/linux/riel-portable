@@ -70,19 +70,19 @@ fi
 case "${1:-}" in
     route-editor)
         shift
-        exec "$app_dir/route-editor/riel-route-editor" --appdata-profile "$@"
+        exec /bin/sh "$app_dir/route-editor/riel-route-editor" --appdata-profile "$@"
         ;;
     consist-editor)
         shift
-        exec "$app_dir/route-editor/riel-route-editor" --conedit --appdata-profile "$@"
+        exec /bin/sh "$app_dir/route-editor/riel-route-editor" --conedit --appdata-profile "$@"
         ;;
     shape-viewer)
         shift
-        exec "$app_dir/route-editor/riel-route-editor" --shapeview --appdata-profile "$@"
+        exec /bin/sh "$app_dir/route-editor/riel-route-editor" --shapeview --appdata-profile "$@"
         ;;
     ace-converter)
         shift
-        exec "$app_dir/route-editor/riel-route-editor" --aceconv --appdata-profile "$@"
+        exec /bin/sh "$app_dir/route-editor/riel-route-editor" --aceconv --appdata-profile "$@"
         ;;
 esac
 
