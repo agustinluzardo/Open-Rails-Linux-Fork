@@ -733,6 +733,91 @@ AceConverterWindow::AceConverterWindow(const QColor &mainLabelColor, QWidget *pa
     )
 
 
+    # Large MSTS routes can start hundreds of ACE/DDS QThreads at once. Those workers
+    # publish into Texture instances which the Qt/OpenGL widgets consume, and the
+    # upstream ACE/DDS/Image branches also leak their QThread wrapper objects.
+    # Riel favors deterministic/stable editor loading: serialize disk texture decode
+    # by default, while RIEL_EDITOR_ASYNC_TEXTURES=1 remains an opt-in for testing.
+    ace_worker = source / "src" / "tsre" / "texture" / "AceLib.cpp"
+    dds_worker = source / "src" / "tsre" / "texture" / "DdsLib.cpp"
+    replace_once(
+        ace_worker,
+        'bool AceLib::IsThread = true;',
+        'bool AceLib::IsThread = qEnvironmentVariableIntValue("RIEL_EDITOR_ASYNC_TEXTURES") != 0;',
+    )
+    replace_once(
+        dds_worker,
+        'bool DdsLib::IsThread = true;',
+        'bool DdsLib::IsThread = qEnvironmentVariableIntValue("RIEL_EDITOR_ASYNC_TEXTURES") != 0;',
+    )
+    replace_once(
+        texlib,
+        '''    if(tType == "ace"){
+        AceLib* t = new AceLib();
+        t->texture = newFile;
+        if(AceLib::IsThread && !reload)
+            t->start();
+        else
+            t->run();
+    } else if(tType == "dds"){
+        DdsLib* t = new DdsLib();
+        t->texture = newFile;
+        if(DdsLib::IsThread && !reload)
+            t->start();
+        else
+            t->run();
+    } else if(tType == "png"||tType == "bmp"||tType == "jpg"/*||tType == "dds"*/||tType == "tga"){
+        ImageLib* t = new ImageLib();
+        t->texture = newFile;
+        if(ImageLib::IsThread && !reload)
+            t->start();
+        else
+            t->run();
+    } else if(tType == ":painttex"){
+        PaintTexLib* t = new PaintTexLib();
+        t->texture = newFile;
+        //t->start();
+        t->run();
+''',
+        '''    if(tType == "ace"){
+        AceLib* t = new AceLib();
+        t->texture = newFile;
+        if(AceLib::IsThread && !reload) {
+            QObject::connect(t, &QThread::finished, t, &QObject::deleteLater);
+            t->start();
+        } else {
+            t->run();
+            delete t;
+        }
+    } else if(tType == "dds"){
+        DdsLib* t = new DdsLib();
+        t->texture = newFile;
+        if(DdsLib::IsThread && !reload) {
+            QObject::connect(t, &QThread::finished, t, &QObject::deleteLater);
+            t->start();
+        } else {
+            t->run();
+            delete t;
+        }
+    } else if(tType == "png"||tType == "bmp"||tType == "jpg"/*||tType == "dds"*/||tType == "tga"){
+        ImageLib* t = new ImageLib();
+        t->texture = newFile;
+        if(ImageLib::IsThread && !reload) {
+            QObject::connect(t, &QThread::finished, t, &QObject::deleteLater);
+            t->start();
+        } else {
+            t->run();
+            delete t;
+        }
+    } else if(tType == ":painttex"){
+        PaintTexLib* t = new PaintTexLib();
+        t->texture = newFile;
+        t->run();
+        delete t;
+''',
+    )
+
+
     ace_lib = source / "src" / "tsre" / "texture" / "AceLib.cpp"
     replace_once(
         ace_lib,
