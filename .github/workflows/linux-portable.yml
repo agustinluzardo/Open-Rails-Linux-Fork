@@ -115,3 +115,29 @@ jobs:
               "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
               --prerelease --latest=false --title "$title" --notes "$notes"
           fi
+      - name: Publish stable release for tested version
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(python3 -c 'import json; print(json.load(open("Source/version.json"))["version"])')"
+          if [[ "$version" == *-* || "$version" == *'{'* ]]; then
+            echo "Development version $version; no stable release"
+            exit 0
+          fi
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Stable release $tag already exists; leave its tested commit and assets unchanged"
+            exit 0
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag $tag exists without a release; refusing to move it" >&2
+            exit 1
+          fi
+          title="Riel $version"
+          notes="Stable portable Linux build of ${GITHUB_SHA}, with bundled .NET runtime. Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red. External DLLs compiled against FreeTrainSimulator.* need rebuilding; older saves have not been verified."
+          gh release create "$tag" \
+            "${RUNNER_TEMP}/riel-linux-x64.zip" \
+            "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
+            --target "$GITHUB_SHA" --latest --title "$title" --notes "$notes"

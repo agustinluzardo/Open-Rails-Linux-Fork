@@ -187,7 +187,9 @@ namespace Riel.Launcher.Gui
                     {
                         item.Result = T("Failed");
                         item.Errors = error.Message;
-                        break;
+                        Progress.Value = ++done;
+                        ActivityList.ScrollIntoView(item);
+                        continue;
                     }
                     item.Result = tested.Passed ? T("Passed") : T("Failed");
                     item.Errors = tested.Errors ?? string.Empty;
@@ -267,6 +269,21 @@ namespace Riel.Launcher.Gui
             string errors = string.Empty;
             string load = string.Empty;
             string fps = string.Empty;
+
+            // The simulator may exit before it can append a summary (for example,
+            // if content fails during startup). Treat that as a failed activity
+            // while allowing Test all to continue with the next one.
+            if (!File.Exists(summaryFilePath))
+                return activity with
+                {
+                    Tested = true,
+                    Passed = false,
+                    Errors = string.IsNullOrWhiteSpace(processError)
+                        ? T("The simulator did not write a test summary. Check the test log.")
+                        : processError,
+                    Load = load,
+                    FPS = fps,
+                };
 
             using (FileStream stream = new FileStream(summaryFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {

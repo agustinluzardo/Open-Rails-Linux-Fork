@@ -444,9 +444,10 @@ namespace Orts.ActivityRunner.Processes
                 exitGameState.Passed = true;
             }
 #pragma warning disable CA1031 // Do not catch general exception types
-            catch
+            catch (Exception error)
 #pragma warning restore CA1031 // Do not catch general exception types
             {
+                Trace.TraceError($"Activity test failed during startup: {error}");
                 Game.ReplaceState(exitGameState);
             }
         }

@@ -51,8 +51,8 @@ namespace Orts.ActivityRunner.Processes
                         (traceListener?.EventCount(TraceEventType.Error) ?? 0);
                     writer.WriteLine(string.Format(CultureInfo.InvariantCulture,
                         "{0},{1},{2},{3},{4},{5},{6:F1},{7:F1}",
-                        Simulator.Instance.RouteModel?.Name?.Replace(',', ';'),
-                        Simulator.Instance.ActivityModel?.Name?.Replace(',', ';'),
+                        Simulator.Instance?.RouteModel?.Name?.Replace(',', ';'),
+                        Simulator.Instance?.ActivityModel?.Name?.Replace(',', ';'),
                         passed ? "Yes" : "No", errors,
                         traceListener?.EventCount(TraceEventType.Warning) ?? 0,
                         traceListener?.EventCount(TraceEventType.Information) ?? 0,

@@ -4565,7 +4565,10 @@ namespace Orts.Simulation.Physics
 
                         if (signalState == SignalAspectState.Stop && NextSignalObjects[direction].OverridePermission == SignalPermission.Denied)
                         {
-                            Trace.TraceWarning($"Train {Name} ({Number}) passing signal {NextSignalObjects[direction].Index} at {DistanceTravelledM:###0.0} at danger at {SpeedMpS:##0.00}");
+                            Signal passedSignal = NextSignalObjects[direction];
+                            Trace.TraceWarning($"Train {Name} ({Number}) passing signal {passedSignal.Index} at {DistanceTravelledM:###0.0} at danger at {SpeedMpS:##0.00}; " +
+                                $"trackNode={passedSignal.TrackNode} tdbHeads=[{string.Join(",", passedSignal.SignalHeads.Select(head => head.TDBIndex))}] " +
+                                $"shape={passedSignal.WorldObject?.ShapeFileName ?? "unknown"} location={passedSignal.TrackTraveller.Location}");
                             SetTrainOutOfControl(OutOfControlReason.PassedAtDanger);
                             break;
                         }

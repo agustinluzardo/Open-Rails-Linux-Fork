@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 
 using Riel.Common;
@@ -48,33 +47,30 @@ namespace Tests.Riel.Common.Info
         [TestMethod()]
         public void AvailableVersionCompareCurrentTest()
         {
-            NuGetVersion currentVersion = new NuGetVersion(
-                VersionInfo.CurrentVersion.Major,
-                VersionInfo.CurrentVersion.Minor,
-                VersionInfo.CurrentVersion.Patch,
-                VersionInfo.CurrentVersion.Revision,
-#pragma warning disable CS0436 // Type conflicts with imported type
-                ThisAssembly.IsPublicRelease ? VersionInfo.CurrentVersion.ReleaseLabels :
-#pragma warning restore CS0436 // Type conflicts with imported type
-                VersionInfo.CurrentVersion.ReleaseLabels.Concat(new string[] { "g" + VersionInfo.CurrentVersion.Metadata }), string.Empty);
-            Assert.IsNull(VersionInfo.GetBestAvailableVersion(new NuGetVersion[] { currentVersion }, UpdateMode.PreRelease));
+            Assert.IsNull(VersionInfo.GetBestAvailableVersion(new[] { PackageVersion() }, UpdateMode.PreRelease));
         }
 
         [TestMethod()]
         public void AvailableVersionCompareNextTest()
         {
-            NuGetVersion currentVersion = new NuGetVersion(
-                VersionInfo.CurrentVersion.Major,
-                VersionInfo.CurrentVersion.Minor,
-                VersionInfo.CurrentVersion.Patch,
-                VersionInfo.CurrentVersion.Revision + 1,
-#pragma warning disable CS0436 // Type conflicts with imported type
-                ThisAssembly.IsPublicRelease ? VersionInfo.CurrentVersion.ReleaseLabels :
-#pragma warning restore CS0436 // Type conflicts with imported type
-                VersionInfo.CurrentVersion.ReleaseLabels.Concat(new string[] { "g" + VersionInfo.CurrentVersion.Metadata }), string.Empty);
-            NuGetVersion available = VersionInfo.GetBestAvailableVersion(new NuGetVersion[] { currentVersion }, UpdateMode.PreRelease);
+            NuGetVersion current = PackageVersion();
+            NuGetVersion next = new NuGetVersion(current.Major, current.Minor, current.Patch + 1);
+            NuGetVersion available = VersionInfo.GetBestAvailableVersion(new[] { next }, UpdateMode.PreRelease);
             Assert.IsNotNull(available);
             Assert.AreEqual(-1, VersionInfo.Compare(available.ToFullString()));
+        }
+
+        [TestMethod]
+        public void AvailableVersionRejectsOlderTest()
+        {
+            Assert.IsNull(VersionInfo.GetBestAvailableVersion(new[] { new NuGetVersion(0, 0, 0) }, UpdateMode.PreRelease));
+        }
+
+        private static NuGetVersion PackageVersion()
+        {
+#pragma warning disable CS0436 // Type conflicts with imported type
+            return NuGetVersion.Parse(ThisAssembly.NuGetPackageVersion);
+#pragma warning restore CS0436 // Type conflicts with imported type
         }
 
         private static NuGetVersion MinVersion()
