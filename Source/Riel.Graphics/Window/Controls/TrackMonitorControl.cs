@@ -462,7 +462,12 @@ namespace Riel.Graphics.Window.Controls
             {
                 if (distance < nearestItem)
                     nearestItem = (int)distance;
-                if (aspect != TrackMonitorSignalAspect.Stop && speedLimit > 0)
+                // Keep the signal's speed-limit label inside the same visible range as
+                // the signal itself. Previously limits for signals beyond the 5 km monitor
+                // horizon were still drawn; their projected Y position became negative and,
+                // because child controls are not clipped here, the text leaked upward over the
+                // Speed/Projected/Limit summary at the top of the window.
+                if (distance < maxDistance && aspect != TrackMonitorSignalAspect.Stop && speedLimit > 0)
                 {
                     int distanceOffset = (int)(distance * distanceFactor);
                     Texture2D limitTexture = textRenderer.PrepareResource(FormatStrings.FormatSpeedLimitNoUoM(speedLimit, metric), Window.Owner.TextFontSmall);
