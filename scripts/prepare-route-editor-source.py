@@ -29,6 +29,8 @@ def main() -> int:
     game = source / "src" / "tsre" / "Game.cpp"
     replace_once(game, 'QString Game::AppName = "TSRE5";', 'QString Game::AppName = "Riel";')
     replace_once(game, 'QString Game::AppVersion = "v" TSRE5_VERSION;', 'QString Game::AppVersion = TSRE5_VERSION;')
+    replace_once(game, 'QString Game::root = "C:/tsdata/Train Simulator/";', 'QString Game::root = "";')
+    replace_once(game, 'QString Game::route = "bbb1";', 'QString Game::route = "";')
 
     settings = source / "src" / "settings" / "SettingsProfile.cpp"
     replace_once(
@@ -38,6 +40,11 @@ def main() -> int:
     )
 
     main = source / "src" / "main.cpp"
+    replace_once(
+        main,
+        'const QCommandLineOption AppDataProfileOption("appdata-profile", "Use the TSRE profile stored in user application data.");',
+        'const QCommandLineOption AppDataProfileOption("appdata-profile", "Use the Riel editor profile stored in user application data.");',
+    )
     replace_once(
         main,
         "    QApplication app(argc, argv);\n    TranslationManager translationManager;",
