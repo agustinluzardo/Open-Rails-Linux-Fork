@@ -127,16 +127,21 @@ jobs:
             exit 0
           fi
           tag="v$version"
+          title="Riel $version"
           if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Stable release $tag already exists; leave its tested commit and assets unchanged"
+            # Keep the already-tested tag and assets immutable, but allow release-note
+            # corrections without publishing a new binary.
+            target_sha="$(git rev-list -n 1 "$tag")"
+            notes="Stable portable Linux build of ${target_sha}, with bundled .NET runtime. Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red. Bundled Riel assemblies already use the Riel.* names; only third-party add-on DLLs built against legacy FreeTrainSimulator.* assemblies require rebuilding. Older saves have not been verified."
+            gh release edit "$tag" --latest --title "$title" --notes "$notes"
+            echo "Stable release $tag already exists; updated notes only, leaving tested commit and assets unchanged"
             exit 0
           fi
           if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
             echo "Tag $tag exists without a release; refusing to move it" >&2
             exit 1
           fi
-          title="Riel $version"
-          notes="Stable portable Linux build of ${GITHUB_SHA}, with bundled .NET runtime. Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red. External DLLs compiled against FreeTrainSimulator.* need rebuilding; older saves have not been verified."
+          notes="Stable portable Linux build of ${GITHUB_SHA}, with bundled .NET runtime. Known route-content issue: the signal between Quilmes and Ezpeleta can display green while the route treats it as red. Bundled Riel assemblies already use the Riel.* names; only third-party add-on DLLs built against legacy FreeTrainSimulator.* assemblies require rebuilding. Older saves have not been verified."
           gh release create "$tag" \
             "${RUNNER_TEMP}/riel-linux-x64.zip" \
             "${RUNNER_TEMP}/riel-linux-x64.zip.sha256" \
