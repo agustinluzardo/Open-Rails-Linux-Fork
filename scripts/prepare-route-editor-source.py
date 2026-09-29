@@ -54,6 +54,68 @@ def main() -> int:
         "    TranslationManager translationManager;",
     )
 
+    # Qt 6 on Linux can otherwise negotiate a compatibility context while TSRE's
+    # renderer uses a mixture of modern VAOs/VBOs and legacy GLSL 1.40 shaders.
+    # Request a deterministic 3.3 core context so every editor window uses the
+    # same shader ABI and the native driver cannot silently choose a legacy path.
+    replace_once(
+        main,
+        "    QSurfaceFormat format;\n"
+        "//#ifdef __APPLE__\n"
+        "//    format.setVersion(3, 3);\n"
+        "//    format.setProfile(QSurfaceFormat::CoreProfile);\n"
+        "//#endif",
+        "    QSurfaceFormat format;\n"
+        "#if defined(Q_OS_LINUX) || defined(__APPLE__)\n"
+        "    format.setVersion(3, 3);\n"
+        "    format.setProfile(QSurfaceFormat::CoreProfile);\n"
+        "#endif",
+    )
+
+    # Use the GLSL 3.30 shader set whenever the negotiated context is modern.
+    # Previously Linux always loaded the 1.40 shaders; on Qt 6/NVIDIA that can
+    # produce valid geometry with corrupted red/white/black material output.
+    gluu = source / "src" / "tsre" / "ogl" / "GLUU.cpp"
+    replace_once(
+        gluu,
+        '#ifdef __APPLE__\n'
+        '    QFile* shaderData = new QFile(QString("appdata/")+Game::AppDataVersion+"/shaders330/"+shaderScript+"."+type);\n'
+        '#else\n'
+        '    QFile* shaderData = new QFile(QString("appdata/")+Game::AppDataVersion+"/shaders/"+shaderScript+"."+type);\n'
+        '#endif',
+        '    QString shaderDirectory = "shaders";\n'
+        '    if (QOpenGLContext *context = QOpenGLContext::currentContext()) {\n'
+        '        const QSurfaceFormat format = context->format();\n'
+        '        if (format.profile() == QSurfaceFormat::CoreProfile\n'
+        '                || format.majorVersion() > 3\n'
+        '                || (format.majorVersion() == 3 && format.minorVersion() >= 3))\n'
+        '            shaderDirectory = "shaders330";\n'
+        '    }\n'
+        '    QFile* shaderData = new QFile(QString("appdata/")+Game::AppDataVersion+"/"+shaderDirectory+"/"+shaderScript+"."+type);',
+    )
+    replace_once(
+        gluu,
+        '            qDebug() << "Loading shader .vs file failed.";',
+        '            qCritical() << "Vertex shader compile failed:" << definition.name << shaders[definition.name]->log();',
+    )
+    replace_once(
+        gluu,
+        '            qDebug() << "Loading shader .fs file failed.";',
+        '            qCritical() << "Fragment shader compile failed:" << definition.name << shaders[definition.name]->log();',
+    )
+    replace_once(
+        gluu,
+        '            qDebug() << "Shader link failed.";',
+        '            qCritical() << "Shader link failed:" << definition.name << currentShader->log();',
+    )
+    replace_once(
+        gluu,
+        '    //currentShader = shaders["StandardFog"];\n'
+        '    currentShader = shaders["StandardBloom"];',
+        '    // Keep the initial shader deterministic across all editor widgets.\n'
+        '    currentShader = shaders["StandardFog"];',
+    )
+
     about = source / "src" / "routeEditor" / "AboutWindow.cpp"
     replace_once(
         about,
