@@ -635,60 +635,84 @@ AceConverterWindow::AceConverterWindow(const QColor &mainLabelColor, QWidget *pa
         '    }',
     )
 
-    # MSTS content was authored for a case-insensitive filesystem. Riel runs
-    # natively on Linux, so resolve a differently-cased path only when every
-    # component has exactly one case-insensitive match. Exact spelling always
-    # wins; ambiguous siblings such as foo.ace/Foo.ace are never guessed.
+    # MSTS content was authored for a case-insensitive filesystem. On Linux an
+    # add-on unpacked separately can leave case-only sibling trees side by side
+    # (for example GLOBAL/SHAPES plus Global/Shapes). Windows would have merged
+    # those directories. Resolve the complete requested path, backtracking across
+    # case-only directory siblings when an exact-looking branch exists but does
+    # not contain the requested leaf. Exact spelling still wins and genuinely
+    # ambiguous final files are never guessed.
     content_path = source / "src" / "tsre" / "fileFunctions" / "ContentPath.h"
     replace_once(
         content_path,
         'inline QString join(const QString &base,const QString &name) {\n'
         '    return normalize(base+"/"+name);\n'
         '}',
-        'inline QString join(const QString &base,const QString &name) {\n'
-        '    return normalize(base+"/"+name);\n'
-        '}\n'
-        'inline QString resolveExistingCaseInsensitive(const QString &path) {\n'
-        '    if (synthetic(path)) return path;\n'
-        '    const QString normalized = normalize(path);\n'
-        '    if (QFileInfo(normalized).exists()) return normalized;\n'
-        '#ifdef Q_OS_LINUX\n'
-        '    const QString absolute = QFileInfo(normalized).absoluteFilePath();\n'
-        '    const QStringList parts = QDir::cleanPath(absolute).split(\'/\', Qt::SkipEmptyParts);\n'
-        '    QString current = absolute.startsWith(\'/\') ? QString("/") : QString();\n'
-        '    for (const QString &part : parts) {\n'
-        '        QDir dir(current.isEmpty() ? QDir::currentPath() : current);\n'
-        '        QString exact;\n'
-        '        QStringList foldedMatches;\n'
-        '        const QStringList entries = dir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);\n'
-        '        for (const QString &entry : entries) {\n'
-        '            if (entry == part) { exact = entry; break; }\n'
-        '            if (entry.compare(part, Qt::CaseInsensitive) == 0)\n'
-        '                foldedMatches.push_back(entry);\n'
-        '        }\n'
-        '        QString selected;\n'
-        '        if (!exact.isEmpty()) {\n'
-        '            selected = exact;\n'
-        '        } else if (foldedMatches.size() == 1) {\n'
-        '            selected = foldedMatches.front();\n'
-        '        } else if (foldedMatches.size() > 1) {\n'
-        '            qWarning() << "Riel ambiguous case-insensitive content path:"\n'
-        '                       << normalized << "component" << part\n'
-        '                       << "matches" << foldedMatches;\n'
-        '            return normalized;\n'
-        '        } else {\n'
-        '            return normalized;\n'
-        '        }\n'
-        '        current = QDir(current.isEmpty() ? QDir::currentPath() : current).filePath(selected);\n'
-        '    }\n'
-        '    if (QFileInfo(current).exists()) {\n'
-        '        if (current != normalized)\n'
-        '            qDebug() << "Riel content case fallback:" << normalized << "->" << current;\n'
-        '        return current;\n'
-        '    }\n'
-        '#endif\n'
-        '    return normalized;\n'
-        '}',
+        r'''inline QString join(const QString &base,const QString &name) {
+    return normalize(base+"/"+name);
+}
+#ifdef Q_OS_LINUX
+inline QString resolveCaseInsensitiveSegments(const QString &current,
+        const QStringList &parts, int index) {
+    if(index >= parts.size())
+        return QFileInfo(current).exists() ? current : QString();
+
+    QDir dir(current);
+    if(!dir.exists()) return QString();
+
+    const QString wanted = parts[index];
+    QString exact;
+    QStringList folded;
+    const QStringList entries = dir.entryList(
+        QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
+    for(const QString &entry : entries) {
+        if(entry == wanted) exact = entry;
+        else if(entry.compare(wanted, Qt::CaseInsensitive) == 0)
+            folded.push_back(entry);
+    }
+    folded.sort(Qt::CaseSensitive);
+
+    QStringList candidates;
+    if(!exact.isEmpty()) candidates.push_back(exact);
+    for(const QString &entry : folded)
+        if(entry != exact) candidates.push_back(entry);
+
+    QStringList resolved;
+    for(const QString &entry : candidates) {
+        const QString candidate = dir.filePath(entry);
+        if(index + 1 < parts.size() && !QFileInfo(candidate).isDir())
+            continue;
+        const QString match = resolveCaseInsensitiveSegments(candidate, parts, index + 1);
+        if(!match.isEmpty() && !resolved.contains(match))
+            resolved.push_back(match);
+    }
+
+    if(resolved.size() == 1) return resolved.front();
+    if(resolved.size() > 1) {
+        qWarning() << "Riel ambiguous case-insensitive content path:"
+                   << parts.mid(index).join("/") << "matches" << resolved;
+    }
+    return QString();
+}
+#endif
+inline QString resolveExistingCaseInsensitive(const QString &path) {
+    if (synthetic(path)) return path;
+    const QString normalized = normalize(path);
+    if (QFileInfo(normalized).exists()) return normalized;
+#ifdef Q_OS_LINUX
+    const QString absolute = QFileInfo(normalized).absoluteFilePath();
+    const QString clean = QDir::cleanPath(absolute);
+    const QStringList parts = clean.split('/', Qt::SkipEmptyParts);
+    const QString root = clean.startsWith('/') ? QString("/") : QDir::currentPath();
+    const QString resolved = resolveCaseInsensitiveSegments(root, parts, 0);
+    if(!resolved.isEmpty()) {
+        if(resolved != normalized)
+            qDebug() << "Riel content case/overlay fallback:" << normalized << "->" << resolved;
+        return resolved;
+    }
+#endif
+    return normalized;
+}''',
     )
     replace_once(
         content_path,
@@ -714,6 +738,82 @@ AceConverterWindow::AceConverterWindow(const QColor &mainLabelColor, QWidget *pa
         '    return source;\n'
         '}',
     )
+
+    # Apply the resolver to physical MSTS files, not only textures. This is
+    # required for XTracks/YTracks installed into a case-only sibling GLOBAL tree.
+    shape_lib = source / "src" / "tsre" / "shape" / "ShapeLib.cpp"
+    replace_once(
+        shape_lib,
+        '    pathid = ContentPath::normalize(pathid);\n'
+        '    texPath = ContentPath::normalize(texPath);',
+        '    pathid = ContentPath::resolveExistingCaseInsensitive(pathid);\n'
+        '    texPath = ContentPath::resolveExistingCaseInsensitive(texPath);',
+    )
+
+    tsection_cpp = source / "src" / "tsre" / "tdb" / "TSectionDAT.cpp"
+    replace_once(
+        tsection_cpp,
+        '    path = ContentPath::normalize(path);\n'
+        '    orpath = ContentPath::normalize(orpath);',
+        '    path = ContentPath::resolveExistingCaseInsensitive(path);\n'
+        '    orpath = ContentPath::resolveExistingCaseInsensitive(orpath);',
+    )
+
+    file_buffer_cpp = source / "src" / "tsre" / "fileFunctions" / "FileBuffer.cpp"
+    replace_once(
+        file_buffer_cpp,
+        '    incPath = ContentPath::normalize(incPath);\n'
+        '    alternativePath.replace("\\\\","/");\n'
+        '    alternativePath = ContentPath::normalize(alternativePath);',
+        '    incPath = ContentPath::resolveExistingCaseInsensitive(incPath);\n'
+        '    alternativePath.replace("\\\\","/");\n'
+        '    alternativePath = ContentPath::resolveExistingCaseInsensitive(alternativePath);',
+    )
+
+    for shape_source_name, class_name in (
+        ("SFile.cpp", "SFile"),
+        ("SFileLegacy.cpp", "SFileLegacy"),
+    ):
+        shape_source = source / "src" / "tsre" / "shape" / shape_source_name
+        replace_once(
+            shape_source,
+            f'''void {class_name}::loadSd() {{
+    if(loadedSd == true)
+        return;
+    QFile file(ContentPath::withExtension(pathid, "sd"));
+    if (!file.open(QIODevice::ReadOnly)){{
+        qDebug() << "Sd Shape: not exist "<<ContentPath::withExtension(pathid, "sd");''',
+            f'''void {class_name}::loadSd() {{
+    if(loadedSd == true)
+        return;
+    const QString sdPath = ContentPath::resolveExistingCaseInsensitive(
+            ContentPath::withExtension(pathid, "sd"));
+    QFile file(sdPath);
+    if (!file.open(QIODevice::ReadOnly)){{
+        qDebug() << "Sd Shape: not exist "<<sdPath;''',
+        )
+
+    # Regression: emulate a Linux extraction which created Global/Shapes next
+    # to an existing GLOBAL/SHAPES instead of merging them as Windows would.
+    content_path_tests = source / "src" / "tsre" / "tests" / "ContentPathTestSuite.cpp"
+    replace_once(
+        content_path_tests,
+        '    if(caseSensitive) {\n'
+        '        test.check(shapes.addShape(root+"/GLOBAL/SHAPES/tree.s",a+"/TEXTURES")==sa,"shape cache matches filename case variants");',
+        '    if(caseSensitive) {\n'
+        '        QDir().mkpath(root+"/Global/Shapes");\n'
+        '        put(root+"/Global/Shapes/XTrackOnly.S","SIMISA@@@@@@@@@@JINX0s1t______\\r\\nshape ( )");\n'
+        '        const QString overlayResolved = ContentPath::resolveExistingCaseInsensitive(\n'
+        '                root+"/GLOBAL/SHAPES/XTrackOnly.S");\n'
+        '        test.check(overlayResolved==root+"/Global/Shapes/XTrackOnly.S",\n'
+        '                "case-only sibling content trees are searched like a Windows directory merge");\n'
+        '        ShapeLib overlayShapes;\n'
+        '        const int overlayId=overlayShapes.addShape(root+"/GLOBAL/SHAPES/XTrackOnly.S",a+"/TEXTURES");\n'
+        '        test.check(overlayShapes.shape[overlayId]->getPathId()==root+"/Global/Shapes/XTrackOnly.S",\n'
+        '                "shape loader uses the resolved case-only sibling tree");\n'
+        '        test.check(shapes.addShape(root+"/GLOBAL/SHAPES/tree.s",a+"/TEXTURES")==sa,"shape cache matches filename case variants");',
+    )
+
 
     texlib = source / "src" / "tsre" / "texture" / "TexLib.cpp"
     replace_once(
