@@ -46,7 +46,6 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public const float MaxParticlesPerSecond = 50f;
         public const float MaxParticleDuration = 50f;
-        internal static readonly bool TraceParticles = string.Equals(Environment.GetEnvironmentVariable("RIEL_TRACE_PARTICLES"), "1", StringComparison.OrdinalIgnoreCase);
         private static int nextTraceId;
 
         private readonly Viewer Viewer;
@@ -78,7 +77,7 @@ namespace Orts.ActivityRunner.Viewer3D
         public void Initialize(string textureName)
         {
             Material = (ParticleEmitterMaterial)Viewer.MaterialManager.Load("ParticleEmitter", textureName);
-            if (TraceParticles)
+            if (Viewer.UserSettings.TraceParticleDiagnostics)
                 Trace.TraceInformation("[ParticleDiag] emitter={0} initialized texture='{1}' nozzle={2:F4}m area={3:F6}m2 stride={4}", traceId, textureName, Emitter.EmitterData.NozzleWidth, EmissionHoleM2, ParticleEmitterPrimitive.ParticleVertexStride);
         }
 
@@ -149,7 +148,7 @@ namespace Orts.ActivityRunner.Viewer3D
             if (hasParticles)
                 frame.AddPrimitive(Material, Emitter, RenderPrimitiveGroup.Particles, ref XNAWorldLocation);
 
-            if (TraceParticles && gameTime >= nextTraceTime)
+            if (Viewer.UserSettings.TraceParticleDiagnostics && gameTime >= nextTraceTime)
             {
                 nextTraceTime = gameTime + 1;
                 Trace.TraceInformation("[ParticleDiag] emitter={0} pps={1:F3} duration={2:F3}s active={3} material={4} emitSize={5:F4}", traceId, Emitter.ParticlesPerSecond, Emitter.ParticleDuration, hasParticles, Material != null, Emitter.EmitSize);
@@ -434,7 +433,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         public override void Draw()
         {
-            if (ParticleEmitterViewer.TraceParticles && HasParticlesToRender() && !traceDrawObserved)
+            if (viewer.UserSettings.TraceParticleDiagnostics && HasParticlesToRender() && !traceDrawObserved)
             {
                 traceDrawObserved = true;
                 Trace.TraceInformation("[ParticleDiag] draw reached active={0} new={1} free={2} retired={3} stride={4}", FirstActiveParticle, FirstNewParticle, FirstFreeParticle, FirstRetiredParticle, ParticleVertex.VertexStride);
