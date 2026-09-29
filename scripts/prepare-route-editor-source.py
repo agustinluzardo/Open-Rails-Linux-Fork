@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Apply the small Riel integration patch to a pinned TSRE5vc checkout.
+"""Apply Riel integration patches to a pinned TSRE5vc checkout.
 
-The route editor remains GPL-3.0-or-later software by Piotr Gadecki/GokuMK.
-Keeping the patch here makes the exact corresponding source reproducible from
-the upstream commit recorded by the Linux workflow.
+The editor remains GPL-3.0-or-later software by Piotr Gadecki/GokuMK. This
+script changes product integration/branding only; original copyright/license
+headers stay intact.
 """
 
 from __future__ import annotations
@@ -24,13 +24,37 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("source", type=Path)
     args = parser.parse_args()
-
     source = args.source.resolve()
+
+    game = source / "src" / "tsre" / "Game.cpp"
+    replace_once(game, 'QString Game::AppName = "TSRE5";', 'QString Game::AppName = "Riel";')
+    replace_once(game, 'QString Game::AppVersion = "v" TSRE5_VERSION;', 'QString Game::AppVersion = TSRE5_VERSION;')
+
+    settings = source / "src" / "settings" / "SettingsProfile.cpp"
     replace_once(
-        source / "src" / "tsre" / "Game.cpp",
-        'QString Game::AppName = "TSRE5";',
-        'QString Game::AppName = "Riel Route Editor";',
+        settings,
+        'return QDir(base).filePath("TSRE");',
+        'return QDir(base).filePath("Riel/RouteEditor");',
     )
+
+    main = source / "src" / "main.cpp"
+    replace_once(
+        main,
+        "    QApplication app(argc, argv);\n    TranslationManager translationManager;",
+        '    QApplication app(argc, argv);\n'
+        '    QGuiApplication::setDesktopFileName("riel-route-editor");\n'
+        '    app.setWindowIcon(QIcon(QDir::current().filePath("riel-route-editor.png")));\n'
+        "    TranslationManager translationManager;",
+    )
+
+    splash = 'myImage->load(QString("appdata/")+Game::AppDataVersion+"/load.png");'
+    for relative in (
+        "src/routeEditor/LoadWindow.cpp",
+        "src/routeEditor/AboutWindow.cpp",
+        "src/conEditor/CELoadWindow.cpp",
+    ):
+        replace_once(source / relative, splash, 'myImage->load("riel-route-editor.png");')
+
     return 0
 
 
