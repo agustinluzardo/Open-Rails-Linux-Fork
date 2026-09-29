@@ -34,8 +34,6 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
 {
     public class MSTSDieselLocomotiveViewer : MSTSLocomotiveViewer
     {
-        private static readonly bool TraceParticles = string.Equals(Environment.GetEnvironmentVariable("RIEL_TRACE_PARTICLES"), "1", StringComparison.OrdinalIgnoreCase);
-
         private MSTSDieselLocomotive dieselLocomotive;
         private double nextParticleTraceTime;
 
@@ -60,7 +58,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             foreach (var drawer in Exhaust)
                 drawer.Initialize(dieselTexture);
 
-            if (TraceParticles)
+            if (Viewer.UserSettings.TraceParticleDiagnostics)
                 Trace.TraceInformation("[ParticleDiag] diesel viewer car='{0}' effectKeys=[{1}] exhaustDrawers={2} texture='{3}'", car.CarID, string.Join(",", ParticleDrawers.Keys), Exhaust.Count, dieselTexture);
 
             if (dieselLocomotive.Train != null && (dieselLocomotive.Train.TrainType == TrainType.Ai ||
@@ -227,7 +225,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
                 drawer.SetOutput((float)exhaustParticles, (float)car.ExhaustMagnitude.SmoothedValue, new Color((byte)car.ExhaustColorR.SmoothedValue, (byte)car.ExhaustColorG.SmoothedValue, (byte)car.ExhaustColorB.SmoothedValue));
             }
 
-            if (TraceParticles && Viewer.Simulator.GameTime >= nextParticleTraceTime)
+            if (Viewer.UserSettings.TraceParticleDiagnostics && Viewer.Simulator.GameTime >= nextParticleTraceTime)
             {
                 nextParticleTraceTime = Viewer.Simulator.GameTime + 1;
                 var engine = car.DieselEngines[0];
