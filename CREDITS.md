@@ -1,71 +1,71 @@
-# Créditos de Riel Linux
+# Riel Linux credits
 
-Riel reúne trabajo propio de integración Linux con un motor y herramientas desarrollados por
-otros proyectos. Los cambios de nombre y presentación conservan la autoría de ese trabajo.
+Riel combines its own Linux integration with an engine and tools developed by other projects.
+Product names and presentation changes preserve the authorship of that work.
 
-## TSRE5 y TSRE5vc — Piotr Gadecki (GokuMK)
+## TSRE5 and TSRE5vc — Piotr Gadecki (GokuMK)
 
-**Piotr Gadecki, conocido como GokuMK, es el creador de TSRE5 y TSRE5vc.** Sus herramientas son
-la base de Riel Route Editor, Riel Consist Editor, Riel Shape Viewer y Riel ACE Converter.
-Agradecemos a Piotr y a los colaboradores de TSRE por esos editores.
+**Piotr Gadecki, known as GokuMK, is the creator of TSRE5 and TSRE5vc.** His tools are the
+basis of Riel Route Editor, Riel Consist Editor, Riel Shape Viewer and Riel ACE Converter.
+We thank Piotr and the TSRE contributors for these editors.
 
-- [TSRE5vc: código y colaboradores](https://github.com/GokuMK/TSRE5vc).
-- [TSRE5: proyecto original](https://github.com/GokuMK/TSRE5).
-- [Web, manual y descargas](http://koniec.org/tsre5/).
-- Commit upstream fijado por Riel:
+- [TSRE5vc: source and contributors](https://github.com/GokuMK/TSRE5vc).
+- [TSRE5: the original project](https://github.com/GokuMK/TSRE5).
+- [Website, manual and downloads](http://koniec.org/tsre5/).
+- Upstream commit pinned by Riel:
   [`15a5d148a15ad305e14a9e602961210ad18ada74`](https://github.com/GokuMK/TSRE5vc/tree/15a5d148a15ad305e14a9e602961210ad18ada74).
 
-TSRE5vc conserva el copyright de Piotr Gadecki y su licencia GNU GPL 3.0 o posterior.
-Riel conserva las cabeceras originales, aplica la integración mediante
-[`scripts/prepare-route-editor-source.py`](scripts/prepare-route-editor-source.py) y los helpers
-de `scripts/route-editor/`, y adjunta el código exacto utilizado en cada release como
-`riel-route-editor-source.tar.gz`. Ver [docs/route-editor.md](docs/route-editor.md).
+TSRE5vc retains Piotr Gadecki's copyright and its GNU GPL 3.0-or-later license.
+Riel preserves the original headers, applies its integration through
+[`scripts/prepare-route-editor-source.py`](scripts/prepare-route-editor-source.py) and the
+helpers in `scripts/route-editor/`, and attaches the exact source used for each release as
+`riel-route-editor-source.tar.gz`. See [docs/route-editor.md](docs/route-editor.md).
 
-## Free Train Simulator y Open Rails
+## Free Train Simulator and Open Rails
 
-El motor de Riel procede de [Free Train Simulator](https://github.com/perpetualKid/FreeTrainSimulator),
-mantenido por **perpetualKid y sus colaboradores**, que a su vez deriva de
-[Open Rails](https://github.com/openrails/openrails), desarrollado por su equipo y comunidad.
+Riel's engine comes from [Free Train Simulator](https://github.com/perpetualKid/FreeTrainSimulator),
+maintained by **perpetualKid and its contributors**, which in turn descends from
+[Open Rails](https://github.com/openrails/openrails), developed by its team and community.
 
-Se reconoce su trabajo en simulación, física, formatos MSTS, señales, tráfico AI, horarios,
-material rodante, gráficos, sonidos y herramientas. Se mantienen los avisos de copyright del
-código. El [README histórico](docs/UPSTREAM-README.md) se conserva como referencia; las
-funciones de Riel se describen en su [README](README.md).
+We recognize their work on simulation, physics, MSTS formats, signaling, AI traffic, timetables,
+rolling stock, graphics, sound and tools. Copyright notices in the source are retained.
+The [historical README](docs/UPSTREAM-README.md) records that provenance; Riel's features
+are documented in its own [README](README.md).
 
-## Integración y mantenimiento de Riel
+## Riel integration and maintenance
 
-**Agustín Luzardo y los colaboradores de Riel** mantienen este repositorio, la integración
-Linux, el launcher, la CLI, la adaptación de contenido, las correcciones, las pruebas y los paquetes.
+**Agustín Luzardo and the Riel contributors** maintain this repository, its Linux integration,
+launcher, CLI, content adaptation, fixes, tests and packages.
 
-Los autores de cambios individuales se registran en el historial Git y en los avisos de los
-archivos. Ver [CONTRIBUTING.md](CONTRIBUTING.md).
+Individual authors are recorded in Git history and file notices. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Bibliotecas y herramientas
+## Libraries and tools
 
-Riel agradece también a los autores de estos componentes principales:
+Riel also thanks the authors of these main components:
 
-| Proyecto | Uso en Riel |
+| Project | Use in Riel |
 | --- | --- |
-| [.NET](https://github.com/dotnet/runtime) | Runtime, bibliotecas y compilación. |
-| [MonoGame](https://github.com/MonoGame/MonoGame) | Framework de juego y renderizado DesktopGL. |
-| [SDL](https://github.com/libsdl-org/SDL) | Ventanas, eventos y sesión gráfica. |
-| [OpenAL Soft](https://github.com/kcat/openal-soft) | Audio del simulador y los editores. |
-| [Avalonia](https://github.com/AvaloniaUI/Avalonia) | Interfaz del launcher Linux. |
-| [SkiaSharp / Skia](https://github.com/mono/SkiaSharp) | Dibujo y rasterizado de texto. |
-| [Qt](https://www.qt.io/) | Interfaz y widgets OpenGL de TSRE5vc. |
-| [Mesa / Zink](https://www.mesa3d.org/) | Controladores OpenGL y ejecución experimental sobre Vulkan. |
+| [.NET](https://github.com/dotnet/runtime) | Runtime, libraries and build tools. |
+| [MonoGame](https://github.com/MonoGame/MonoGame) | Game framework and DesktopGL rendering. |
+| [SDL](https://github.com/libsdl-org/SDL) | Windows, events and the display session. |
+| [OpenAL Soft](https://github.com/kcat/openal-soft) | Simulator and editor audio. |
+| [Avalonia](https://github.com/AvaloniaUI/Avalonia) | Linux launcher interface. |
+| [SkiaSharp / Skia](https://github.com/mono/SkiaSharp) | Drawing and text rasterization. |
+| [Qt](https://www.qt.io/) | TSRE5vc interface and OpenGL widgets. |
+| [Mesa / Zink](https://www.mesa3d.org/) | OpenGL drivers and experimental execution over Vulkan. |
 
-Cada dependencia conserva su propia licencia. Este reconocimiento no reemplaza sus avisos
-ni las licencias distribuidas con ella.
+Each dependency retains its own license. This acknowledgment does not replace its notices
+or the licenses distributed with it.
 
-## Autores del contenido
+## Content authors
 
-Las rutas, trenes, cabinas, señales, sonidos y texturas MSTS/OR pertenecen a sus respectivos
-autores. Riel carga el contenido aportado por el usuario; el programa no incluye una colección
-de rutas y trenes de terceros. El repositorio contiene contenido sintético de pruebas.
+MSTS/OR routes, trains, cabs, signals, sounds and textures belong to their respective authors.
+Riel loads user-provided content; the program does not include a collection of third-party
+routes and trains. The repository contains synthetic test content.
 
-## Licencia
+## License
 
-Riel y la integración de TSRE5vc se distribuyen bajo **GNU GPL 3.0 o posterior**. Ver
-[LICENSE](LICENSE). Los avisos originales y las licencias de dependencias y contenido
-permanecen vigentes.
+Riel and its TSRE5vc integration are distributed under **GNU GPL 3.0 or later**. See
+[LICENSE](LICENSE). Original notices and the licenses of dependencies and content remain
+in effect.

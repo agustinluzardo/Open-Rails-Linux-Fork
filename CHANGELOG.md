@@ -1,61 +1,60 @@
-# Cambios de Riel Linux
+# Riel Linux changelog
 
-Las versiones stable y sus archivos están en
-[Releases](https://github.com/agustinluzardo/Riel-Linux/releases). Las builds `main-<commit>`
-son prereleases que superaron las pruebas y el empaquetado automático.
+Stable versions and their assets are available in
+[Releases](https://github.com/agustinluzardo/Riel-Linux/releases). `main-<commit>` builds are
+prereleases that passed automated tests and packaging.
 
 ## 0.1.3
 
-### Suite de edición
+### Editor suite
 
-- Integra Route Editor, Consist Editor, Shape Viewer y ACE Converter nativos, basados en
-  TSRE5vc de **Piotr Gadecki (GokuMK)**, con runtime, iconos y código fuente correspondiente.
-- Abre la ruta y carpeta de contenido seleccionadas en el launcher y utiliza un perfil propio.
-- Corrige la corrupción de memoria causada por escrituras concurrentes al log del editor.
-- Valida dimensiones y datos DDS antes de decodificar; los archivos truncados se rechazan.
-- Resuelve referencias con mayúsculas mezcladas, `GLOBAL`/`Global` separados, X/Y Tracks,
-  modelos y texturas de la ruta.
-- Limita caché de directorios y trabajadores de texturas, preservando la identidad de modelos
-  y su contexto de texturas.
-- Corrige arranque OpenGL, recursos, selección de formaciones y zoom de previsualización ACE.
-- Prueba ventanas principales reales, modelos y texturas subidas a GPU; verifica decoders y
-  logging concurrente con sanitizers.
+- Integrates native Route Editor, Consist Editor, Shape Viewer and ACE Converter, based on
+  **TSRE5vc by Piotr Gadecki (GokuMK)**, with their runtime, icons and corresponding source.
+- Opens the route and content folder selected in the launcher and uses its own settings profile.
+- Fixes memory corruption caused by concurrent writes to the editor log.
+- Validates DDS dimensions and pixel data before decoding; truncated files are rejected.
+- Resolves mixed-case references, split `GLOBAL`/`Global` directories, X/Y Tracks, route models
+  and textures.
+- Bounds directory caching and texture workers while preserving model identity and texture context.
+- Fixes OpenGL startup, resources, consist selection and ACE preview zoom.
+- Checks real main windows, models and GPU-uploaded textures; verifies decoders and concurrent
+  logging with sanitizers.
 
-### Simulador y launcher
+### Simulator and launcher
 
-- Activa el Vulkan experimental de Configuración en el entorno nativo antes de crear el
-  contexto; el renderizador OpenGL se ejecuta mediante Mesa Zink.
-- F3 informa el renderizador activo y temperaturas disponibles de CPU/GPU.
-- Amplía ajustes y diagnósticos e incorpora accesos a la suite de edición.
-- Reescanea contenido al iniciar el launcher y evita repetir el escaneo al volver de una partida.
-- Ajusta señales y límites del monitor de vía al rango visible.
+- Activates experimental Vulkan from Settings in the native environment before context creation;
+  the OpenGL renderer runs through Mesa Zink.
+- F3 reports the active renderer and available CPU/GPU temperatures.
+- Expands settings and diagnostics and adds access to the editor suite.
+- Rescans content at launcher startup and avoids repeating the scan after a session.
+- Keeps track-monitor signals and limits within the visible range.
 
-### Estado conocido
+### Known status
 
-- Zink sigue siendo experimental y no cambia el renderizador de los editores.
-- Multiplayer no tiene un flujo validado desde el launcher Linux.
-- Los pantallazos negros durante la partida siguen en investigación.
-- En FCGR, la señal entre Quilmes y Ezpeleta puede mostrarse verde aunque se trate como roja.
-- Los add-ons compilados contra `FreeTrainSimulator.*` requieren adaptación a `Riel.*`.
-  La compatibilidad de guardados antiguos no está completamente verificada.
+- Zink remains experimental and does not change the editors' renderer.
+- Multiplayer has no validated flow from the Linux launcher.
+- Black flashes during gameplay remain under investigation.
+- In FCGR, the signal between Quilmes and Ezpeleta can appear green while being treated as red.
+- Add-ons built against `FreeTrainSimulator.*` require adaptation to `Riel.*`.
+  Older-save compatibility has not been fully verified.
 
 ## 0.1.2
 
-- Corrige el índice circular de emisores y restaura el stride de 80 bytes de los vértices.
-- Recupera buffers dinámicos de partículas invalidados por DesktopGL.
-- Corrige el shader billboard de DesktopGL para que humo, vapor y otros emisores no colapsen
-  a polígonos de área cero.
-- Agrega diagnósticos de partículas y escape diésel en Configuración.
+- Fixes emitter ring-buffer indexing and restores the 80-byte particle vertex stride.
+- Recovers dynamic particle buffers invalidated by DesktopGL.
+- Fixes the DesktopGL billboard shader so smoke, steam and other emitters do not collapse
+  into zero-area polygons.
+- Adds particle and diesel exhaust diagnostics in Settings.
 
 ## 0.1.1
 
-- Aplica una corrección intermedia al layout de vértices de partículas para OpenGL.
-- La corrección completa del billboard llega en 0.1.2.
+- Applies an intermediate OpenGL particle vertex-layout fix.
+- The complete billboard correction follows in 0.1.2.
 
 ## 0.1.0
 
-- Primera stable Linux de Riel, con runtime .NET incluido.
-- Renombra las bibliotecas públicas a `Riel.*` y adapta launcher y actualizaciones.
-- Endurece las pruebas de actividades para registrar fallos y continuar el lote.
-- Mejora la carga visual de trenes AI cercanos y agrega diagnósticos.
-- Incorpora información del sistema con F3 y lectura de temperaturas en Linux.
+- First stable Riel Linux release, with the .NET runtime included.
+- Renames public libraries to `Riel.*` and adapts the launcher and updates.
+- Hardens activity testing to record startup failures and continue the batch.
+- Improves nearby AI train visual loading and adds diagnostics.
+- Adds F3 system information and Linux temperature reporting.

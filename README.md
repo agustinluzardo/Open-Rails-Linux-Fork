@@ -1,185 +1,178 @@
-<p align="center"><img src="docs/linux/riel-linux-social.png" width="960" alt="Riel Linux — simulación ferroviaria nativa para Linux"></p>
+<p align="center"><img src="docs/linux/riel-linux-social.png" width="960" alt="Riel Linux — native railway simulation for Linux"></p>
 
 # Riel Linux
 
-**Simulador ferroviario y suite de edición para usar contenido de Microsoft Train Simulator en Linux.**
+**A native Linux train simulator and editor suite for Microsoft Train Simulator content.**
 
-Riel permite conducir rutas, jugar actividades, explorar con el tren que elijas y operar servicios
-por horario. Incluye un launcher gráfico, comandos de terminal, mapa del despachador y editores
-nativos de rutas, formaciones, modelos y texturas. El simulador y los editores funcionan sin Wine.
+Riel lets you drive routes, play activities, explore with your chosen train and operate timetable
+services. It includes a graphical launcher, terminal commands, a dispatcher map and native tools
+for editing routes, consists, models and textures. The simulator and editors run without Wine.
 
-El motor deriva de [Free Train Simulator](https://github.com/perpetualKid/FreeTrainSimulator) y
-[Open Rails](https://github.com/openrails/openrails). La suite de edición deriva de
-[TSRE5vc](https://github.com/GokuMK/TSRE5vc), creado por **Piotr Gadecki (GokuMK)**. Su trabajo y
-el de todos los colaboradores de esos proyectos hacen posible Riel; ver [créditos](CREDITS.md).
-Riel mantiene su integración Linux, interfaz, correcciones y releases en este repositorio.
+The engine descends from [Free Train Simulator](https://github.com/perpetualKid/FreeTrainSimulator)
+and [Open Rails](https://github.com/openrails/openrails). The editor suite is based on
+[TSRE5vc](https://github.com/GokuMK/TSRE5vc), created by **Piotr Gadecki (GokuMK)**. Their work
+and their contributors make Riel possible; see [the credits](CREDITS.md). This repository maintains
+Riel's Linux integration, interface, fixes and releases.
 
-[Descargar stable](https://github.com/agustinluzardo/Riel-Linux/releases/latest) ·
-[Todas las releases](https://github.com/agustinluzardo/Riel-Linux/releases) ·
-[Instalación](docs/linux/INSTALL.md) · [Cambios](CHANGELOG.md) ·
-[Reportar un problema](https://github.com/agustinluzardo/Riel-Linux/issues)
+[Download stable](https://github.com/agustinluzardo/Riel-Linux/releases/latest) ·
+[All releases](https://github.com/agustinluzardo/Riel-Linux/releases) ·
+[Installation](docs/linux/INSTALL.md) · [Changelog](CHANGELOG.md) ·
+[Report a problem](https://github.com/agustinluzardo/Riel-Linux/issues)
 
-## Descargar y empezar
+## Download and get started
 
-La stable **0.1.3** reúne la suite de edición nativa, las correcciones de carga del editor y la
-activación de Vulkan mediante Zink. Descargá `riel-linux-x64.zip` de la
-[release stable](https://github.com/agustinluzardo/Riel-Linux/releases/latest), extraelo completo
-y ejecutá:
+Stable **0.1.3** brings together the native editor suite, editor loading fixes and Vulkan activation
+through Zink. Download `riel-linux-x64.zip` from the
+[stable release](https://github.com/agustinluzardo/Riel-Linux/releases/latest), extract the complete
+archive and run:
 
 ```sh
 cd riel-linux-x64
 ./riel gui
 ```
 
-El ZIP incluye el runtime de .NET y el runtime de los editores. Para jugar no hace falta instalar
-el SDK de .NET ni descargar paquetes NuGet. Se necesita Linux x86-64, un controlador OpenGL 3.3,
-SDL 2, OpenAL, fontconfig, zlib y las bibliotecas del escritorio; los detalles por distribución
-están en [INSTALL.md](docs/linux/INSTALL.md). En Wayland se usa XWayland para el launcher.
+The ZIP includes the .NET runtime and the editors' runtime. Playing does not require the .NET SDK
+or a NuGet download. You need Linux x86-64, an OpenGL 3.3 driver, SDL 2, OpenAL, fontconfig, zlib
+and the desktop libraries listed in [INSTALL.md](docs/linux/INSTALL.md). On Wayland, the launcher
+uses XWayland.
 
-Agregá la carpeta de contenido que contiene `ROUTES` y `GLOBAL`, elegí una ruta y una actividad,
-o pasá a **Explorar** para seleccionar recorrido y formación. Riel puede leer contenido de
-otro disco y de carpetas de Wine o Proton; el contenido se usa desde esa ubicación.
-Las rutas y los trenes se obtienen por separado y conservan las licencias de sus autores.
+Add the content folder containing `ROUTES` and `GLOBAL`, choose a route and activity, or switch
+to **Explore** to select a path and consist. Content can live on another disk or inside a Wine
+or Proton prefix; Riel reads it from that location. Routes and trains are obtained separately
+and retain their authors' licenses.
 
-![Ilustración del launcher de Riel con ruta, actividad y detalles del tren](docs/linux/launcher-preview.svg)
+![Illustration of the Riel launcher showing route, activity and train details](docs/linux/launcher-preview.svg)
 
-La ilustración usa la ruta sintética de pruebas del repositorio. Al agregar tu contenido aparecen
-tus rutas, actividades y trenes.
+The illustration uses the repository's synthetic test route. Your routes, activities and trains
+appear after you add a content folder.
 
-## Qué hace Riel
+## What Riel does
 
-### Simulación y conducción
+### Simulation and driving
 
-| Función | Qué permite hacer |
+| Feature | What it provides |
 | --- | --- |
-| Actividades | Cargar actividades MSTS, conducir el tren del jugador, atender paradas y compartir la ruta con tráfico AI. |
-| Exploración | Elegir ruta, recorrido, locomotora y formación, con hora, estación del año y clima configurables. |
-| Horarios | Seleccionar un conjunto de horarios, un servicio y el día de operación desde el launcher. |
-| Material rodante | Usar locomotoras diésel, eléctricas y de vapor, vagones y coches definidos por el contenido. |
-| Física | Simular tracción, adherencia, patinaje, frenos, acoples, resistencia, pendientes y curvas según el vehículo y los ajustes. |
-| Operaciones | Acoplar y desacoplar vehículos, operar desvíos, revisar coches, controlar puertas y usar potencia distribuida cuando el tren la admite. |
-| Señalización | Interpretar bases de vía, señales y scripts, límites de velocidad, autorizaciones y rutas de los trenes AI. |
-| Cabinas y cámaras | Utilizar cabinas 2D y 3D disponibles en el material, vistas exteriores, cámaras de seguimiento y cámara libre. |
-| Ambiente | Representar día y noche, cielo, niebla, lluvia, nieve, agua, vegetación y montañas lejanas según la ruta y la configuración. |
-| Efectos | Mostrar humo, vapor, escape diésel, luces y otros emisores de partículas definidos por los vehículos. |
-| Sonido | Reproducir sonidos de cabina, motor, vía y ambiente mediante OpenAL, con volumen y detalle configurables. |
-| Guardado | Guardar partidas, reanudarlas desde el launcher y usar las funciones de replay del motor. La compatibilidad de partidas antiguas depende de la versión. |
-| Evaluación | Registrar velocidad y paradas para evaluar el viaje, y exportar registros de física, rendimiento y conducción. |
-| Controles | Configurar teclas y combinaciones con Ctrl, Shift y Alt; usar un escritorio RailDriver mediante hidraw en Linux. |
-| Ayudas y scripts | Configurar alerter, control de velocidad, piloto automático y scripts TCS según la locomotora; cambiar de cabina y gestionar trenes en modo horario. |
-| Servidor web | Habilitar el servidor web del motor y configurar su puerto desde los ajustes avanzados. |
+| Activities | Load MSTS activities, drive the player's train, serve station stops and share the route with AI traffic. |
+| Exploration | Choose a route, path, locomotive and consist, with configurable time, season and weather. |
+| Timetables | Select a timetable set, service and operating day in the launcher. |
+| Rolling stock | Use diesel, electric and steam locomotives, wagons and coaches defined by your content. |
+| Physics | Simulate traction, adhesion, wheel slip, brakes, couplers, resistance, gradients and curves according to vehicle data and settings. |
+| Operations | Couple and uncouple vehicles, operate switches, inspect cars, control doors and use distributed power where the train supports it. |
+| Signaling | Read track databases, signals and scripts, speed limits, authorities and AI train routes. |
+| Cabs and cameras | Use the stock's available 2D/3D cabs, exterior views, tracking cameras and free camera. |
+| Environment | Display day/night, sky, fog, rain, snow, water, vegetation and distant mountains according to route content and settings. |
+| Effects | Render smoke, steam, diesel exhaust, lights and other particle emitters defined by vehicles. |
+| Sound | Play cab, engine, track and ambient sounds through OpenAL, with configurable volume and detail. |
+| Saves and replay | Save sessions, resume them from the launcher and use the engine's replay functions. Older-save compatibility depends on the version. |
+| Evaluation | Record speed and station stops for trip evaluation, and export physics, performance and driving data. |
+| Controls | Configure keys and Ctrl/Shift/Alt combinations; use a RailDriver desk through Linux hidraw. |
+| Driving aids and scripts | Configure the alerter, speed control, autopilot and TCS scripts supported by the locomotive; change cabs and manage trains in timetable mode. |
+| Web server | Enable the engine's web server and configure its port in advanced settings. |
 
-La compatibilidad depende de los archivos de cada ruta y vehículo. Las prestaciones que
-requieren equipo o scripts específicos sólo aparecen cuando ese contenido los ofrece.
+Compatibility depends on each route and vehicle's files. Functions requiring particular equipment
+or scripts are available when that content supports them.
 
-### Launcher y gestión del contenido
+### Launcher and content management
 
-- Listado y búsqueda de rutas, actividades, recorridos, locomotoras y formaciones.
-- Pestañas de **Actividad**, **Explorar** y **Horario**, con información del recorrido y del tren.
-- Horas sugeridas a partir de las salidas de actividades de la ruta.
-- Varias carpetas de contenido, detección de instalaciones MSTS y lectura de ubicaciones
-  configuradas en Wine o Proton.
-- Escaneo del contenido al iniciar el launcher, caché de índices y reapertura tras una partida
-  sin repetir un escaneo completo. También se puede forzar un reescaneo.
-- Resolución de referencias sin distinguir mayúsculas y minúsculas, para usar contenido
-  procedente de Windows en sistemas de archivos Linux.
-- Lista de archivos o rutas que no pudieron leerse, con el motivo; el resto del contenido
-  sigue disponible.
-- Selección de partidas guardadas, prueba de actividades y acceso al manual y a contenido.
-- Ajustes de conducción, audio, video, física, teclado, registro de datos, evaluación y opciones
-  avanzadas, guardados en el perfil.
-- Interfaz traducida al español, idioma según el sistema y tema claro u oscuro.
-- Comprobación del equipo, mensajes de error con detalles y acceso a logs e informes de crash.
-- Comprobación e instalación de actualizaciones de `main` que hayan superado el empaquetado y
-  las pruebas automáticas. La descarga **stable** se publica por separado en Releases.
+- Browse and search routes, activities, paths, locomotives and consists.
+- **Activity**, **Explore** and **Timetable** tabs with path and train information.
+- Suggested departure times from the selected route's activities.
+- Multiple content folders, MSTS installation discovery and locations configured in Wine/Proton.
+- Content scanning at launcher startup, cached indexes and reopening after a run without repeating
+  the full scan. A manual refresh is also available.
+- Case-insensitive content references so files authored on Windows can be read on Linux file systems.
+- A list of files or routes that could not be read, with the reason; other content remains available.
+- Saved-game selection, activity testing, and access to the manual and content downloads.
+- Profile settings for driving, audio, video, physics, keyboard, data logging, evaluation and
+  advanced options.
+- A Spanish translation, language selection through the system locale, and light/dark themes.
+- Computer checks, detailed error messages, logs and native crash reports.
+- Checks and installation of `main` updates that passed automated tests and packaging.
+  **Stable** downloads are published separately in Releases.
 
-### Mapa y paneles durante la partida
+### Dispatcher map and in-game panels
 
-El mapa del despachador muestra vías, trenes, estaciones, andenes, señales y desvíos. Permite
-mover y ampliar la vista, centrar el mapa o seguir al tren del jugador. Al seleccionar un tren
-se muestran velocidad, dirección, modo de control, formación y próxima parada; las señales
-muestran su estado y las estaciones sus andenes.
+The dispatcher map shows tracks, trains, stations, platforms, signals and switches. Pan and zoom,
+fit the whole route or follow the player's train. Selecting a train shows its speed, direction,
+control mode, consist and next stop; signals show their state and stations show their platforms.
 
-En una partida local se pueden solicitar cambios de señal y desvío. El simulador rechaza cambios
-de desvíos ocupados o reservados; los controles locales del despachador están deshabilitados
-en multiplayer.
+In a local session, you can request signal and switch changes. The simulator rejects changes to
+occupied or reserved switches. Local dispatcher controls are disabled in multiplayer.
 
-Los paneles incluyen ayuda, actividad, monitor de vía, conducción, operaciones del tren y de
-coches, próxima estación, brújula, fuerzas, potencia distribuida y diagnóstico de señales.
-Su disponibilidad depende de la partida y del vehículo.
+In-game panels include help, activity information, track monitor, driving, train/car operations,
+next station, compass, train forces, distributed power and signaling diagnostics. Availability
+depends on the session and vehicle.
 
-| Tecla predeterminada | Acción |
+| Default key | Action |
 | --- | --- |
-| F1 | Ayuda y controles. |
-| F2 | Guardar la partida. |
-| F3 | Información del sistema y renderizador activo. |
-| F4 | Monitor de vía. |
-| F5 | Panel de conducción. |
-| F9 | Operaciones de coches. |
-| Ctrl + Alt + F9 | Operaciones del tren. |
-| Ctrl + 9 | Mapa del despachador. |
-| Escape | Menú de pausa. |
-| Alt + F4 | Salir. |
+| F1 | Help and controls. |
+| F2 | Save the session. |
+| F3 | System information and the active renderer. |
+| F4 | Track monitor. |
+| F5 | Driving panel. |
+| F9 | Car operations. |
+| Ctrl + Alt + F9 | Train operations. |
+| Ctrl + 9 | Dispatcher map. |
+| Escape | Pause menu. |
+| Alt + F4 | Quit. |
 
-Los atajos se pueden cambiar en **Configuración → Teclado**.
+Bindings can be changed in **Settings → Keyboard**.
 
-### Suite de edición nativa: TSRE5vc
+### Native editor suite: TSRE5vc
 
-Los cuatro programas están integrados en **Herramientas** y utilizan **TSRE5vc de Piotr Gadecki
-(GokuMK)**, la evolución de su proyecto [TSRE5](https://github.com/GokuMK/TSRE5). Riel aporta
-integración con el launcher, empaquetado Linux, perfil de ajustes, adaptación de rutas de archivos
-y correcciones de estabilidad. Conserva los créditos y las cabeceras originales de copyright
-y licencia.
+All four tools are integrated into **Tools** and use **TSRE5vc by Piotr Gadecki (GokuMK)**,
+the evolution of his original [TSRE5](https://github.com/GokuMK/TSRE5) project. Riel adds launcher
+integration, Linux packaging, a settings profile, content-path adaptation and stability fixes.
+It retains the original credits, copyright headers and license notices.
 
-| Herramienta | Función |
+| Tool | Purpose |
 | --- | --- |
-| Riel Route Editor | Crear y editar rutas MSTS/OR, terreno, vías y objetos con las herramientas de TSRE5vc. Abre la ruta seleccionada en el launcher. |
-| Riel Consist Editor | Crear, inspeccionar y modificar formaciones usando el material de la carpeta seleccionada. |
-| Riel Shape Viewer | Inspeccionar modelos `.s`, materiales y texturas. |
-| Riel ACE Converter | Previsualizar y convertir texturas ACE con la herramienta de TSRE5vc; puede abrirse sin elegir una ruta. |
+| Riel Route Editor | Create and edit MSTS/OR routes, terrain, tracks and objects using TSRE5vc's tools. Opens the route selected in the launcher. |
+| Riel Consist Editor | Create, inspect and modify consists using rolling stock from the selected content folder. |
+| Riel Shape Viewer | Inspect `.s` models, materials and textures. |
+| Riel ACE Converter | Preview and convert ACE textures using TSRE5vc's tool; opens without selecting a route. |
 
-Los editores usan OpenGL 3.3 y un perfil propio. La integración contempla referencias con
-mayúsculas mezcladas, carpetas `GLOBAL`/`Global` separadas, X/Y Tracks y texturas ACE/DDS.
-La carga de texturas usa un número limitado de trabajadores; se sincroniza el log y se rechazan
-los DDS truncados antes de decodificarlos. Los editores escriben el contenido cuando guardás cambios.
+The editors use OpenGL 3.3 and their own profile. Integration handles mixed-case references,
+split `GLOBAL`/`Global` directories, X/Y Tracks and ACE/DDS textures. Texture loading uses a
+bounded worker pool; logging is synchronized and truncated DDS files are rejected before decoding.
+The editors write content files when you save changes.
 
-Cada release adjunta `riel-route-editor-source.tar.gz` con el código TSRE5vc exacto, incluidos
-los cambios aplicados para construir esos binarios. Ver [route-editor.md](docs/route-editor.md).
+Each release attaches `riel-route-editor-source.tar.gz` with the exact TSRE5vc source and patches
+used to build its binaries. See [route-editor.md](docs/route-editor.md).
 
-### Gráficos, rendimiento y diagnóstico
+### Graphics, performance and diagnostics
 
-- Renderizador MonoGame DesktopGL: monitor y resolución configurables, ventana, pantalla
-  completa y ventana sin bordes.
-- VSync, antialiasing compatible con el equipo, distancia de visión, detalle de modelos,
-  instancing, brillo ambiente y sombras dinámicas con cascadas, resolución y suavizado ajustables.
-- Cargas gráficas en el hilo propietario de OpenGL, servicio de la cola de recursos y
-  priorización visual de trenes AI cercanos.
-- **Vulkan experimental mediante Mesa Zink**, activable en Configuración y con reinicio del
-  simulador. El motor emite OpenGL y Zink ejecuta esas órdenes sobre Vulkan.
-- F3 identifica el renderizador real: **OpenGL over Vulkan (Zink)** cuando está activo.
-  Solicitar Vulkan no garantiza que el controlador lo haya seleccionado.
-- Información de sistema, rendimiento y temperaturas disponibles de CPU/GPU; sensores no
-  disponibles o ambiguos aparecen como `n/a`.
-- `riel doctor` comprueba binarios, shaders, bibliotecas de sonido y ventana, sesión gráfica y
-  contenido; RailDriver se informa como hardware opcional.
-- Logs, etapas de inicio e informes de crashes nativos, accesibles desde el launcher.
-- Trazas de trenes AI, señales, pasos a nivel, resolución de rutas AI, sonido, luces, carga y
-  partículas; diagnóstico de renderizado del editor.
-- Pruebas automáticas del motor y de Riel, verificación de shaders, ventanas reales de ambos
-  editores y comprobaciones de memoria del decoder DDS y del log concurrente.
+- MonoGame DesktopGL rendering with configurable display/resolution, windowed, fullscreen and
+  borderless modes.
+- VSync, supported antialiasing, viewing distance, model detail, instancing, ambient brightness
+  and dynamic shadows with configurable cascades, resolution and blur.
+- Graphics uploads on the OpenGL-owning thread, resource queue servicing and visual prioritization
+  of nearby AI trains.
+- **Experimental Vulkan through Mesa Zink**, enabled in Settings and applied after restarting
+  the simulator. The engine emits OpenGL, which Zink executes over Vulkan.
+- F3 identifies the real renderer: **OpenGL over Vulkan (Zink)** when active. Requesting Vulkan
+  does not prove that the driver selected it.
+- System/performance information and available CPU/GPU temperatures; unavailable or ambiguous
+  sensors show `n/a`.
+- `riel doctor` checks binaries, shaders, sound/window libraries, the display session and content.
+  RailDriver is reported as optional hardware.
+- Logs, startup stages and native crash reports accessible from the launcher.
+- Traces for AI trains, signals, road crossings, AI route resolution, sound, lights, loading and
+  particles, plus editor rendering diagnostics.
+- Engine and Riel tests, shader verification, real main-window checks for both editors, and
+  memory checks for DDS decoding and concurrent logging.
 
-El Vulkan experimental corresponde al simulador. Los editores conservan su OpenGL.
-Ver [ARCHITECTURE.md](docs/linux/ARCHITECTURE.md) y [QA.md](docs/linux/QA.md).
+Experimental Vulkan applies to the simulator. The editors keep their normal OpenGL path.
+See [ARCHITECTURE.md](docs/linux/ARCHITECTURE.md) and [QA.md](docs/linux/QA.md).
 
-## Comandos de terminal
+## Terminal commands
 
-En la descarga portable reemplazá `riel` por `./riel`. Los nombres de rutas, actividades,
-recorridos y formaciones aceptan un prefijo único sin distinguir mayúsculas; usá comillas
-si contienen espacios.
+For the portable download, replace `riel` with `./riel`. Route, activity, path and consist names
+accept a unique case-insensitive prefix. Quote names containing spaces.
 
 ```sh
 riel gui
-riel content add "MSTS" "/mnt/datos/games/Train Simulator"
+riel content add "MSTS" "/mnt/data/games/Train Simulator"
 riel routes
 riel activities "Marias Pass"
 riel play "Marias Pass" "Coal Train"
@@ -188,34 +181,34 @@ riel consists
 riel explore "Marias Pass" "Shelby-Essex" "Freight" --time 08:30 --season autumn --weather rain
 ```
 
-| Comando | Función |
+| Command | Purpose |
 | --- | --- |
-| `riel content` | Listar carpetas de contenido. |
-| `riel content add <nombre> <ruta>` | Agregar y escanear una carpeta. |
-| `riel content remove <nombre>` | Quitar una carpeta de la configuración. |
-| `riel content refresh` | Reescanear todas las carpetas. |
-| `riel routes [carpeta]` | Listar rutas. |
-| `riel activities <ruta>` | Listar actividades. |
-| `riel paths <ruta>` | Listar recorridos del jugador. |
-| `riel consists [carpeta]` | Listar formaciones. |
-| `riel play <ruta> <actividad>` | Iniciar una actividad. |
-| `riel explore <ruta> <recorrido> <formación>` | Explorar; admite hora, estación y clima. |
-| `riel start` | Repetir la última selección. |
-| `riel resume` | Reanudar la última partida guardada. |
-| `riel run -- <argumentos>` | Pasar argumentos directamente al simulador. |
-| `riel route-editor` | Abrir el editor de rutas; admite `--game-root` y `--route`. |
-| `riel consist-editor` | Abrir el editor de formaciones. |
-| `riel shape-viewer` | Abrir el visor de modelos. |
-| `riel ace-converter` | Abrir el conversor ACE. |
-| `riel doctor` | Comprobar equipo y contenido. |
-| `riel update --check` | Consultar la última build probada de `main`. |
-| `riel update` | Instalar esa build en una instalación actualizable. |
-| `riel version` / `riel help` | Ver versión / ayuda. |
+| `riel content` | List content folders. |
+| `riel content add <name> <path>` | Add and scan a folder. |
+| `riel content remove <name>` | Remove a folder from the configuration. |
+| `riel content refresh` | Rescan all folders. |
+| `riel routes [folder]` | List routes. |
+| `riel activities <route>` | List activities. |
+| `riel paths <route>` | List player paths. |
+| `riel consists [folder]` | List consists. |
+| `riel play <route> <activity>` | Start an activity. |
+| `riel explore <route> <path> <consist>` | Explore; accepts time, season and weather. |
+| `riel start` | Repeat the last selection. |
+| `riel resume` | Resume the last saved session. |
+| `riel run -- <arguments>` | Pass arguments directly to the simulator. |
+| `riel route-editor` | Open the route editor; accepts `--game-root` and `--route`. |
+| `riel consist-editor` | Open the consist editor. |
+| `riel shape-viewer` | Open the model viewer. |
+| `riel ace-converter` | Open the ACE converter. |
+| `riel doctor` | Check the computer and content. |
+| `riel update --check` | Check the newest tested main build. |
+| `riel update` | Install that build in an updatable installation. |
+| `riel version` / `riel help` | Show the version / help. |
 
-El modo por horario se selecciona en el launcher o mediante argumentos del motor;
-la CLI no incorpora un comando abreviado `timetable`.
+Timetable mode is selected in the launcher or through engine arguments; the CLI does not provide
+a shorthand `timetable` command.
 
-## Instalar en Arch o compilar
+## Install on Arch or build from source
 
 ```sh
 git clone https://github.com/agustinluzardo/Riel-Linux.git
@@ -223,53 +216,53 @@ cd Riel-Linux/packaging/arch
 makepkg -si
 ```
 
-El PKGBUILD compila e instala simulador, launcher y suite TSRE5vc, accesos del escritorio,
-iconos, manual y regla udev de RailDriver. Sigue `main`; para una versión fija usá la descarga
-stable. Ver dependencias y compilación manual en [INSTALL.md](docs/linux/INSTALL.md).
+The PKGBUILD builds and installs the simulator, launcher and TSRE5vc suite, desktop entries,
+icons, manual and RailDriver udev rule. It follows `main`; use the stable download for a fixed
+release. See [INSTALL.md](docs/linux/INSTALL.md) for dependencies and manual build instructions.
 
-## Archivos y diagnóstico
+## Files and troubleshooting
 
-| Ubicación predeterminada | Contenido |
+| Default location | Contents |
 | --- | --- |
-| `~/.config/riel` | Ajustes y perfiles. |
-| `~/.local/share/riel` | Guardados y datos del usuario. |
-| `~/.local/state/riel/Logs` | Logs, `Startup.log` e informes en `Crashes`. |
-| `~/.cache/riel` | Índices de contenido. |
-| `~/.local/share/Riel/RouteEditor` | Ajustes y assets del editor. |
-| `~/.local/state/riel/Logs/Riel Route Editor Log.txt` | Log de la suite de edición. |
+| `~/.config/riel` | Settings and profiles. |
+| `~/.local/share/riel` | Saves and user data. |
+| `~/.local/state/riel/Logs` | Logs, `Startup.log` and reports under `Crashes`. |
+| `~/.cache/riel` | Content indexes. |
+| `~/.local/share/Riel/RouteEditor` | Editor settings and assets. |
+| `~/.local/state/riel/Logs/Riel Route Editor Log.txt` | Editor-suite log. |
 
-Las rutas respetan las variables XDG correspondientes. Para informar un fallo, adjuntá
-`riel doctor`, versión, log y ruta/actividad afectada en
-[Issues](https://github.com/agustinluzardo/Riel-Linux/issues). Para problemas visuales, indicá
-el renderizador que muestra F3 y si afecta toda la pantalla, el paisaje o el mapa del despachador.
+Locations follow their corresponding XDG variables. To report a failure, attach `riel doctor`,
+the version, log and affected route/activity to an
+[issue](https://github.com/agustinluzardo/Riel-Linux/issues). For visual problems, include the
+renderer shown by F3 and whether the whole screen, scenery or dispatcher map is affected.
 
-## Estado y compatibilidad
+## Status and compatibility
 
-- La distribución apunta a **Linux x86-64**. El portable incluye .NET; el paquete de Arch
-  usa el runtime instalado por la distribución.
-- WPF Toolbox y TrackViewer permanecen como herramientas Windows en el código histórico y
-  no forman parte del paquete Linux. La suite TSRE5vc ofrece los editores distribuidos aquí.
-- El servidor multiplayer se compila y se incluye, pero el flujo multiplayer no está validado
-  en Linux ni expuesto como modo de juego en el launcher.
-- Algunas rutas mantienen diferencias de tráfico AI, señales y pasos a nivel frente a Open Rails.
-  La señal entre Quilmes y Ezpeleta en FCGR puede verse verde mientras la ruta la trata como roja.
-- Los pantallazos negros comunicados durante la partida están en investigación; la 0.1.3 no
-  se presenta como una corrección confirmada de ese problema.
-- Las bibliotecas públicas renombradas usan `Riel.*`. Los add-ons compilados contra
-  `FreeTrainSimulator.*` deben recompilarse y los scripts que importen esos espacios de nombres
-  deben adaptarse. Las partidas anteriores al cambio no están completamente verificadas.
+- Releases target **Linux x86-64**. The portable includes .NET; the Arch package uses the
+  distribution's installed runtime.
+- WPF Toolbox and TrackViewer remain Windows tools in the historical source and are not part
+  of the Linux package. TSRE5vc supplies the editors distributed here.
+- The multiplayer server is built and included, but the multiplayer flow is not validated on
+  Linux or exposed as a game mode in the launcher.
+- Some routes still have AI traffic, signal and crossing differences from Open Rails. In FCGR,
+  the signal between Quilmes and Ezpeleta can appear green while the route treats it as red.
+- Reported black flashes during gameplay remain under investigation. Version 0.1.3 is not
+  presented as a confirmed fix for that issue.
+- Renamed public libraries use `Riel.*`. Add-ons built against `FreeTrainSimulator.*` require
+  rebuilding, and scripts importing those namespaces need adapting. Saves made before that
+  change have not been fully verified.
 
-## Créditos y licencia
+## Credits and license
 
-**Piotr Gadecki (GokuMK)** creó TSRE5 y TSRE5vc, base del Route Editor, Consist Editor,
-Shape Viewer y ACE Converter. [TSRE5vc](https://github.com/GokuMK/TSRE5vc) ·
-[TSRE5 original](https://github.com/GokuMK/TSRE5) · [Web y manual de TSRE](http://koniec.org/tsre5/).
+**Piotr Gadecki (GokuMK)** created TSRE5 and TSRE5vc, the basis of the Route Editor, Consist Editor,
+Shape Viewer and ACE Converter. [TSRE5vc](https://github.com/GokuMK/TSRE5vc) ·
+[Original TSRE5](https://github.com/GokuMK/TSRE5) · [TSRE website and manual](http://koniec.org/tsre5/).
 
-Gracias también a **perpetualKid y los colaboradores de Free Train Simulator**, al **equipo y
-colaboradores de Open Rails**, y a los autores de rutas, trenes, sonidos y texturas de la comunidad
-MSTS/OR. [CREDITS.md](CREDITS.md) detalla procedencia y bibliotecas.
+Thanks also to **perpetualKid and the Free Train Simulator contributors**, the **Open Rails team
+and contributors**, and the MSTS/OR community's route, rolling-stock, sound and texture authors.
+[CREDITS.md](CREDITS.md) records provenance and the main libraries used.
 
-Riel se distribuye bajo **GPL-3.0-or-later**. Conserva las cabeceras originales y sus avisos de
-copyright; las dependencias y el contenido tienen sus licencias correspondientes.
-Ver [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md) y el
-[README histórico de Free Train Simulator](docs/UPSTREAM-README.md).
+Riel is distributed under **GPL-3.0-or-later**. Original headers and copyright notices are
+preserved; dependencies and content retain their own licenses. See [LICENSE](LICENSE),
+[CONTRIBUTING.md](CONTRIBUTING.md) and the
+[historical Free Train Simulator README](docs/UPSTREAM-README.md).
