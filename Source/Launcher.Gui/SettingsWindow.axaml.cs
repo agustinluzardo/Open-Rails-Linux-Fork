@@ -134,7 +134,7 @@ namespace Riel.Launcher.Gui
             AddGroup(VideoPanel, "Experimental graphics");
             VideoPanel.Children.Add(new TextBlock
             {
-                Text = Translation.T("Runs Riel's OpenGL renderer through Vulkan using Mesa Zink on Linux. Experimental; restart the simulator or editor after changing it."),
+                Text = Translation.T("Runs Riel's OpenGL renderer through Vulkan using Mesa Zink on Linux. Experimental; restart the simulator after changing it."),
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap, Opacity = 0.7
             });
             AddOptions(VideoPanel, "ExperimentalVulkan");

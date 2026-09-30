@@ -96,6 +96,12 @@ jobs:
             -DTSRE_BUILD_CONTENT_CASE_TESTS=OFF \
             -DTSRE_BUILD_GEO_TESTS=OFF
           cmake --build "$editor_build" --parallel
+          "$editor_build/riel_content_index_tests"
+          ASAN_OPTIONS=detect_leaks=0:abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
+            "$editor_build/riel_loader_safety_tests"
+          python3 scripts/make-editor-test-content.py "${RUNNER_TEMP}/riel-editor-content"
+          python3 scripts/test-editor-window-watchdog.py "$editor_src" "$editor_build" \
+            "${RUNNER_TEMP}/riel-editor-content/Train Simulator"
 
           scripts/bundle-route-editor-linux.sh "$editor_build/TSRE5vc" "$editor_out"
           cp -a "$editor_src/appdata" "$editor_out/appdata"
@@ -123,15 +129,19 @@ jobs:
           grep -F "workingDir \"$editor_out\"" "$XDG_STATE_HOME/riel/Logs/Riel Route Editor Log.txt"
           xvfb-run -a "$editor_out/riel-route-editor" --graphics-check
           timeout 15s xvfb-run -a "$editor_out/riel-route-editor" --route-action-check
-          python3 Source/Tools/TestRoute/make_test_route.py "${RUNNER_TEMP}/riel-editor-content"
           for extra in "" "--set core.startup.useTilePosition=true --set core.startup.tileX=-6 --set core.startup.tileZ=12"; do
             timeout 40s xvfb-run -a env \
               RIEL_EDITOR_RENDER_DIAGNOSTICS=1 \
               RIEL_EDITOR_ASYNC_TEXTURES=1 \
               RIEL_EDITOR_TEXTURE_WORKERS=2 \
+              'RIEL_EDITOR_CHECK_SHAPES=XTrackOnly.S;YTrackOnly.S;RouteOnly.S' \
+              RIEL_EDITOR_CHECK_TEXTURES=EditorFixture.ACE \
               "$editor_out/riel-route-editor" \
               --game-root "${RUNNER_TEMP}/riel-editor-content/Train Simulator" \
-              --route RIELTEST --route-session-check $extra
+              --route RIELTEST --route-full-window-check $extra
+            for marker in navi-created main-created main-shown first-frame event-loop-responsive; do
+              grep -F "RIEL_EDITOR_WINDOW $marker" "$XDG_STATE_HOME/riel/Logs/Riel Route Editor Log.txt"
+            done
           done
           grep -F "RIEL_TEXTURE_POOL workers=2" "$XDG_STATE_HOME/riel/Logs/Riel Route Editor Log.txt"
           timeout 45s xvfb-run -a "$editor_out/riel-route-editor" --ace-preview-check

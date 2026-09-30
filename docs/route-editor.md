@@ -62,6 +62,14 @@ when possible). `RIEL_EDITOR_TEXTURE_WORKERS=N` can override the limit for
 diagnostics, and `RIEL_EDITOR_ASYNC_TEXTURES=0` forces fully synchronous
 loading as a troubleshooting fallback.
 
+The Qt message handler serializes writes to the shared log, including messages
+from texture workers. Concurrent writes to the same QTextStream previously
+caused a reproducible double-free during loading. DDS imports also validate
+dimensions and pixel payload sizes before allocation or decoding; truncated
+images are rejected with an error instead of reading past the file's pixels.
+CI exercises concurrent logging and valid/truncated DDS files with AddressSanitizer
+and UndefinedBehaviorSanitizer in a separate CPU-only test executable.
+
 ## Native Linux build
 
 CI checks out a pinned TSRE5vc commit, applies
@@ -69,6 +77,31 @@ CI checks out a pinned TSRE5vc commit, applies
 6.10.1, then packages the resulting native ELF editor suite beside Riel.
 
 Upstream project: https://github.com/GokuMK/TSRE5vc
+
+`--route-full-window-check` opens the real Route Editor, checks that both the
+Navi Window and main window are visible, waits for a presented OpenGL frame,
+and checks three subsequent event-loop timer turns before exiting. CI runs it
+under Xvfb with a process timeout. Logs include `RIEL_EDITOR_WINDOW` milestones
+for window creation, main-window visibility, first frame and responsiveness.
+The older `--route-session-check` remains available for compatibility.
+CI also temporarily suppresses the main window in its disposable source
+checkout and verifies that the check rejects an editor showing only Navi.
+It restores the source and rebuilds the production binary before packaging.
+
+Startup logs report `RIEL_STARTUP_BEGIN`/`RIEL_STARTUP_STAGE` for TRK, tsection,
+TDB, RDB, REF, services, traffic, paths, activities, consists and OpenGL, plus
+elapsed time to `main-shown` and `first-frame`. `RIEL_STARTUP_WORK` summarizes
+WORLD loading, shape parsing, texture decoding and texture GPU upload at the
+first frame and five seconds later. Work times are inclusive and decoder times
+can overlap across workers; they should not be added to obtain wall time.
+`RIEL_EDITOR_STARTUP_TIMINGS=0` disables these timing logs.
+
+Case-only split MSTS directories such as `GLOBAL/SHAPES` and `Global/Shapes`
+are read through directory indexes. The editor builds each view once, retains
+up to 128 views, and refreshes a view when a directory's timestamp or inode
+changes. Exact physical filenames take precedence; ambiguous fallback files
+are reported rather than selected arbitrarily. No files are moved or renamed.
+ShapeLib's shape identity and route/season texture context remain unchanged.
 
 ## Portable runtime and source
 

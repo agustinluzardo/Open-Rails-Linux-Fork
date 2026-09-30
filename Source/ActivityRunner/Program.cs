@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 
 using Riel.Common;
+using Riel.Common.Display;
 using Riel.Common.Info;
 using Riel.Common.Native;
 using Riel.Models.Settings;
@@ -107,13 +108,10 @@ namespace Orts.ActivityRunner
 
         private static void ApplyExperimentalGraphics(ProfileUserSettingsModel userSettings)
         {
-            if (!OperatingSystem.IsLinux() || !userSettings.ExperimentalVulkan)
-                return;
-
             // Riel still uses MonoGame DesktopGL. Zink translates that OpenGL stream to Vulkan,
             // giving an experimental Vulkan path without pretending a native Vulkan renderer exists.
-            Environment.SetEnvironmentVariable("RIEL_VULKAN", "1");
-            Environment.SetEnvironmentVariable("MESA_LOADER_DRIVER_OVERRIDE", "zink");
+            ExperimentalGraphics.Apply(userSettings.ExperimentalVulkan ||
+                Environment.GetEnvironmentVariable("RIEL_VULKAN") == "1");
         }
 
         private static string ParseCommandLineOption(List<string> arguments, string argumentName)

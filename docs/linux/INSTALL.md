@@ -312,12 +312,19 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 ### Running the renderer on Vulkan
 
+Enable **Experimental Vulkan (Zink)** in Settings and restart the simulator,
+or request it for a single run:
+
 ```sh
 RIEL_VULKAN=1 riel start
 ```
 
-This runs the same OpenGL renderer on top of Vulkan through Mesa's zink driver. Worth trying on
-recent AMD and Intel hardware. It is not a Vulkan renderer - see
+This runs the same OpenGL renderer on top of Vulkan through Mesa's Zink driver.
+F3 reports **OpenGL over Vulkan (Zink)** only when the active renderer identifies
+itself as Zink. If it reports **OpenGL**, the request did not activate Zink.
+The simulator sets the native Mesa/GLVND environment before creating its graphics
+context, including vendor selection on NVIDIA. The native editor suite retains
+its ordinary OpenGL path. See
 [ARCHITECTURE.md](ARCHITECTURE.md#graphics-backends) for what that would take.
 
 ### Antialiasing looks turned off

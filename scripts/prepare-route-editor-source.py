@@ -10,6 +10,10 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from route_editor_window_check import patch_window_check
+from route_editor_startup import patch_startup_timings
+from route_editor_content_index import patch_content_index
+from route_editor_loader_safety import patch_loader_safety
 
 
 def replace_once(path: Path, old: str, new: str) -> None:
@@ -1159,6 +1163,10 @@ void TexLib::reset() {''',
     ):
         replace_once(source / relative, splash, 'myImage->load("riel-route-editor.png");')
 
+    patch_window_check(source, replace_once)
+    patch_startup_timings(source, replace_once)
+    patch_content_index(source, replace_once)
+    patch_loader_safety(source, replace_once)
     return 0
 
 
