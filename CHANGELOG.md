@@ -4,6 +4,17 @@ Stable versions and their assets are available in
 [Releases](https://github.com/agustinluzardo/Riel-Linux/releases). `main-<commit>` builds are
 prereleases that passed automated tests and packaging.
 
+## 0.1.8
+
+- Keeps the complete player train loaded when switching cameras between the ends of a
+  long consist. Previously, the opposite end could be unloaded on a curve and nearby
+  vehicles then disappeared while their models were loaded again.
+- Reproduces the USA2/autotrnsetout loader failure with positions captured by the 0.1.7
+  visibility trace, and checks repeated camera changes through the production loader.
+- Detached cars and other trains continue to stream by distance. Normal shape culling,
+  detail selection, camera snapshots and MSTS track placement are preserved.
+- Confirmation with the original route on the user's NVIDIA GPU remains pending.
+
 ## 0.1.7
 
 - Uses the prepared frame's camera position for scenery-shader fog, specular lighting

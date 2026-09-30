@@ -117,6 +117,17 @@ selection, culling and mesh submission, including invalid animation matrices, an
 that enabling diagnostics preserves the submitted geometry. Local Release builds of the
 simulator and launcher passed, along with 679 Riel and 223 Orts test cases.
 
+The 0.1.8 loader correction follows the USA2/autotrnsetout visibility trace: after a
+camera change, cars 20, 48 and 77 metres away had no loaded viewer. The opposite end of
+the long player consist exceeded the loader's Manhattan-distance cutoff on a curve,
+so it had been removed from the loaded snapshot. `TrainDrawerLoadingTests` uses those
+recorded positions to exercise both `LoadPrep` and `Load`, with already-loaded recording
+viewers and repeated front/rear camera changes across a tile boundary. The previous
+selection policy fails this regression; the corrected policy retains the same model
+snapshot throughout. Separate cases verify that detached cars and other trains still
+unload by distance. Rendering still applies the existing range, FOV and LOD checks.
+Local 0.1.8 validation passed all 682 Riel tests with the standard MSTest runner.
+
 To investigate vehicles that disappear, enable **Settings → Advanced → Train visibility
 diagnostics** (or launch with `RIEL_TRACE_TRAIN_VISUALS=1`). Reproduce the original route and
 activity with the same exterior camera and attach the simulator log. The `[TrainVisual]` entries

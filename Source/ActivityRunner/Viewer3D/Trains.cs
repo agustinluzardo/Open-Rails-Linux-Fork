@@ -167,11 +167,16 @@ namespace Orts.ActivityRunner.Viewer3D
             var visibleCars = new List<TrainCar>();
             var removeDistance = Viewer.UserSettings.ViewingDistance * 1.5f;
             var playerCar = Viewer.PlayerLocomotive;
+            var playerTrain = playerCar?.Train;
             var cameraLocation = Viewer.Camera.CameraWorldLocation;
             visibleCars.Add(playerCar);
             foreach (var train in Viewer.Simulator.Trains)
                 foreach (var car in train.Cars)
-                    if (car != playerCar && WorldLocation.ApproximateDistance(cameraLocation, car.WorldPosition.WorldLocation) < removeDistance)
+                    // Switching between the ends of a long consist must not unload the
+                    // player's models and leave nearby cars waiting for the loader again.
+                    // Shape preparation still applies the normal viewing-distance/LOD tests.
+                    if (car != playerCar && (train == playerTrain ||
+                        WorldLocation.ApproximateDistance(cameraLocation, car.WorldPosition.WorldLocation) < removeDistance))
                     {
                         visibleCars.Add(car);
                         TraceVisual(car, "selected", selectedTrainTraces);
