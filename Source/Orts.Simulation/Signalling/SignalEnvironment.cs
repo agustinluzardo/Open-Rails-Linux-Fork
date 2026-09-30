@@ -1127,7 +1127,9 @@ namespace Orts.Simulation.Signalling
         {
             foreach (Signal signal in Signals)
                 foreach (SignalHead head in signal.SignalHeads)
-                    if (trackDatabase.TrackItemSelectors[signal.TrackNode].TrackItems[head.TrackItemIndex] == trackItem)
+                    // TDBIndex is the global item identity. The local reference
+                    // index can change when references are reordered or heads merge.
+                    if (head.TDBIndex == trackItem)
                         return new KeyValuePair<Signal, SignalHead>(signal, head);
             return null;
         }//FindByTrItem

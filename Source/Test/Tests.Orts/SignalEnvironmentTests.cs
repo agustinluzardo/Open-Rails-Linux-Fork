@@ -100,6 +100,35 @@ namespace Tests.Orts
             Assert.AreEqual(-1, environment.TrackItemSignalIndex[unplaced.TrackItemIndex]);
         }
 
+        [TestMethod]
+        public void SignalShapeLookupKeepsGlobalHeadIdentityAfterLocalReferencesAreReordered()
+        {
+            SignalEnvironment environment = BuildEnvironment(true, SignalItem(0, 20), SignalItem(1, 20));
+            TrackDatabase database = TrackWorld.Instance.TrackDatabase;
+            typeof(TrackItemIndex).GetProperty(nameof(TrackItemIndex.TrackItems)).SetValue(
+                database.TrackItemSelectors[1], ImmutableArray.Create(1, 0));
+
+            KeyValuePair<Signal, SignalHead>? found = environment.FindByTrackItem(0);
+
+            Assert.IsTrue(found.HasValue);
+            Assert.AreEqual(0, found.Value.Value.TDBIndex, "A shape must get the head for its own global TDB item.");
+        }
+
+        [TestMethod]
+        public void SignalShapeLookupDoesNotIndexRemovedLocalReferences()
+        {
+            SignalEnvironment environment = BuildEnvironment(true, SignalItem(0, 20), SignalItem(1, 20));
+            TrackDatabase database = TrackWorld.Instance.TrackDatabase;
+            typeof(TrackItemIndex).GetProperty(nameof(TrackItemIndex.TrackItems)).SetValue(
+                database.TrackItemSelectors[1], ImmutableArray<int>.Empty);
+
+            KeyValuePair<Signal, SignalHead>? found = environment.FindByTrackItem(1);
+
+            Assert.IsTrue(found.HasValue);
+            Assert.AreEqual(1, found.Value.Value.TDBIndex);
+            Assert.IsNull(environment.FindByTrackItem(99), "An unknown world-file signal must remain unmatched.");
+        }
+
         private static SignalTrackItem SignalItem(int index, float distance) =>
             new SignalTrackItem(new WorldLocation(1, 0, 0, 0, distance))
             {

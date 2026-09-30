@@ -21,9 +21,11 @@ Riel's Linux integration, interface, fixes and releases.
 
 ## Download and get started
 
-Stable **0.1.5** fixes a rendering race that let the next camera update change a frame already
-being drawn. It also includes the missing-sun and unplaced-speedpost startup fixes, native
-editor suite, editor loading fixes and Vulkan activation through Zink. Download `riel-linux-x64.zip` from the
+Stable **0.1.6** preserves MSTS track gradients and roll in straight and curved sections,
+fixing flattened track geometry that raised or steeply tilted cars at section joins. It also
+fixes signal-shape lookup after local track references change and includes the camera-frame
+rendering fix, startup fixes, native editor suite and Vulkan activation through Zink.
+Download `riel-linux-x64.zip` from the
 [stable release](https://github.com/agustinluzardo/Riel-Linux/releases/latest), extract the complete
 archive and run:
 
@@ -247,6 +249,9 @@ renderer shown by F3 and whether the whole screen, scenery or dispatcher map is 
   Linux or exposed as a game mode in the launcher.
 - Some routes still have AI traffic, signal and crossing differences from Open Rails. In FCGR,
   the signal between Quilmes and Ezpeleta can appear green while the route treats it as red.
+- Version 0.1.6 restores full MSTS track placement using the Open Rails displacement convention.
+  Tests cover actual car placement on grades; confirmation on the reported original MSTS route
+  remains pending.
 - Version 0.1.5 fixes a verified camera-matrix rendering race. Confirmation that it resolves
   the reported black flashes on the affected route and GPU remains pending.
 - Renamed public libraries use `Riel.*`. Add-ons built against `FreeTrainSimulator.*` require

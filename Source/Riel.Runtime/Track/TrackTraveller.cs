@@ -1158,8 +1158,8 @@ namespace Riel.Runtime.Track
         private static (WorldLocation snapped, double offset) SnapToSection(in WorldLocation query, VectorSectionNode section, SectionGeometry sectionGeometry)
         {
             return sectionGeometry.Curved
-                ? SnapToCurvedSection(section, sectionGeometry, query)
-                : SnapToStraightSection(section.Location, section.EndLocation, query);
+                ? SnapToCurvedSection(sectionGeometry, query)
+                : SnapToStraightSection(section.Location, sectionGeometry.EndLocation, query);
         }
 
         /// <summary>
@@ -1193,19 +1193,11 @@ namespace Riel.Runtime.Track
             return (WorldLocation.PointAlongDirection(start, end, offset), offset);
         }
 
-        private static (WorldLocation snapped, double offset) SnapToCurvedSection(VectorSectionNode section, SectionGeometry geom, in WorldLocation query)
+        private static (WorldLocation snapped, double offset) SnapToCurvedSection(SectionGeometry geom, in WorldLocation query)
         {
-            Vector3 qFromCenter = WorldLocation.GetDistanceVector(geom.ArcCenter, query);
-            double dotU = (double)qFromCenter.X * geom.U.X + (double)qFromCenter.Z * geom.U.Z;
-            double dotV = (double)qFromCenter.X * geom.V.X + (double)qFromCenter.Z * geom.V.Z;
-            if (query.Location.Y != 0)
-            {
-                dotU += (double)qFromCenter.Y * geom.U.Y;
-                dotV += (double)qFromCenter.Y * geom.V.Y;
-            }
-            double angular = Math.Clamp(Math.Atan2(dotV, dotU), 0.0, Math.Abs(geom.ArcAngle));
+            double angular = Math.Clamp(geom.AngleAt(query, query.Location.Y == 0), 0.0, Math.Abs(geom.ArcAngle));
             double arcLengthMetres = angular * geom.Radius;
-            return (WorldLocation.PointAlongArc(section.Location, section.EndLocation, geom.ArcAngle, geom.Radius, arcLengthMetres), arcLengthMetres);
+            return (geom.LocationAt(arcLengthMetres), arcLengthMetres);
         }
 
     }

@@ -350,12 +350,7 @@ namespace Riel.Runtime.Track
 
             if (!SectionGeometry.TryGetValue(section, out SectionGeometry sectionGeometry) || !sectionGeometry.HasGeometry)
                 return section.Location;
-            if (sectionGeometry.Curved)
-            {
-                double clampedOffset = Math.Clamp(sectionOffset, 0.0, sectionGeometry.Length);
-                return WorldLocation.PointAlongArc(section.Location, section.EndLocation, sectionGeometry.ArcAngle, sectionGeometry.Radius, clampedOffset);
-            }
-            return WorldLocation.PointAlongDirection(section.Location, section.EndLocation, sectionOffset);
+            return sectionGeometry.LocationAt(sectionOffset);
         }
 
         /// <summary>

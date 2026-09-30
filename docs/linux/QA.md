@@ -72,6 +72,36 @@ checks repeated lookup work, and the loader-safety executable exercises concurre
 logging and valid/truncated DDS imports under AddressSanitizer/UndefinedBehaviorSanitizer.
 See [the editor guide](../route-editor.md) for flags and log markers.
 
+## MSTS gradients and signal-shape lookup
+
+`MstsTrackPositionTests` compares imported TDB endpoints and runtime travellers with the
+displacement-matrix algorithm in [Open Rails Traveller.SetLocation](https://github.com/openrails/openrails/blob/6c231916ab8861d22f4f5e35c4274aa148696398/Source/Orts.Simulation/Simulation/Traveller.cs).
+It covers rising/falling grades, both curve signs, roll, tile boundaries and flattened
+endpoints left by older route-model imports. Curve snapping and distance diagnostics use
+the same placed geometry, including PAT points whose elevation is deliberately zero.
+
+The wheel-placement regressions call the production `MSTSWagon.ComputePosition` while
+both axles cross a section join, in both travel directions. They check rail-relative
+height and fitted pitch; they do not replace the fit with a fixed height or pitch clamp.
+Suspension effects are skipped through their existing elapsed-time cutoff.
+
+`SignalEnvironmentTests` exercises scanning and multi-head merging before reordering or
+removing local track references. Shape lookup must return the head with the requested
+global TDB item identity and return no match for unknown items without indexing the
+removed references.
+
+On a real MSTS route, drive the same location in both directions with an exterior camera
+and record the node/section, F3 version and gradient. Compare wheel contact and car pitch
+before, during and after the join. Include curves and a tile boundary. The fixtures prove
+the production-code regression, but do not substitute for the user's licensed route and GPU.
+
+The 0.1.6 local validation also ran the full simulator under Xvfb/software OpenGL on a
+synthetic route with fifteen 100-metre sections at 0.04 radians pitch. One locomotive
+and eleven wagons produced 2,640 checked placements over 220 gameplay frames, with
+maximum height error below 0.00001 metres and pitch error below 0.000002. Shadows,
+20-kilometre distant mountains and 4× antialiasing were enabled; camera/FOV and map
+changes completed without black frames. This is fixture evidence, not a NVIDIA check.
+
 ## Visual flicker reports
 
 `RenderFrameCameraTests` checks that opaque, blended and distant-mountain passes retain

@@ -4,6 +4,24 @@ Stable versions and their assets are available in
 [Releases](https://github.com/agustinluzardo/Riel-Linux/releases). `main-<commit>` builds are
 prereleases that passed automated tests and packaging.
 
+## 0.1.6
+
+- Applies all three MSTS placement angles (yaw, pitch and roll) to imported endpoints and
+  runtime positions, matching Open Rails' three-dimensional track displacement.
+- Fixes track sections being flattened at their starting height, which made wheels jump
+  between elevations and raised or steeply tilted cars at section joins.
+- Uses a cached section orientation for traversal and a placed three-dimensional curve
+  basis for snapping, including zero-height PAT points and horizontal diagnostics.
+- Repairs positions of track items reconstructed from section distances with the same geometry.
+- Computes runtime endpoints from placement angles even when an older route model contains
+  flattened endpoints; the version update also refreshes available source-backed content.
+- Finds signal shapes by each head's global TDB identity, avoiding wrong-head selection and
+  out-of-range local reference lookups after reference changes or multi-head merging.
+- Adds regressions for import, traveller movement, graded curves, tile boundaries, cached
+  endpoints and real wheel-based car placement in both directions, plus signal-shape lookup.
+- Includes the previous rendering and startup fixes. Native editor code is unchanged.
+- The reported original MSTS route and NVIDIA hardware still need a user-side confirmation.
+
 ## 0.1.5
 
 - Keeps each prepared frame's camera view and projection matrices instead of reading a

@@ -1,6 +1,7 @@
 using System;
 
 using Riel.Common.Position;
+using Riel.Models.Shim;
 using Riel.Models.Track;
 
 using Microsoft.Xna.Framework;
@@ -17,6 +18,13 @@ namespace Riel.Runtime.Track
     /// </summary>
     public sealed class SectionGeometry
     {
+        private readonly TrackSection trackSection;
+        private readonly Matrix orientation;
+        private readonly double planarUU;
+        private readonly double planarUV;
+        private readonly double planarVV;
+        private readonly double planarDeterminant;
+
         /// <summary>The <see cref="VectorNode"/> that owns this section.</summary>
         public VectorNode Node { get; }
 
@@ -31,6 +39,9 @@ namespace Riel.Runtime.Track
 
         /// <summary><see langword="true"/> for an arc (curved) section; <see langword="false"/> for a straight section.</summary>
         public bool Curved { get; }
+
+        /// <summary>Endpoint computed from the full placement, including for models cached by older versions.</summary>
+        public WorldLocation EndLocation { get; }
 
         // ── Curved-section data (valid only when Curved is true) ───────────────────────
 
@@ -86,21 +97,48 @@ namespace Riel.Runtime.Track
                 return;
 
             HasGeometry = true;
+            this.trackSection = trackSection;
+            orientation = Matrix.CreateFromYawPitchRoll(section.Direction.Y, section.Direction.X, section.Direction.Z);
             Length = trackSection.Length;
             Curved = trackSection.Curved;
+            EndLocation = trackSection.LocationAt(section.Location, orientation, Length);
 
             if (!Curved)
                 return;
 
             Radius = trackSection.Radius;
             ArcAngle = MathHelper.ToRadians(trackSection.Angle);
-            ArcCenter = WorldLocation.ArcCenterPoint(section.Location, section.EndLocation, ArcAngle, Radius);
+            int sign = Math.Sign(ArcAngle);
+            Vector3 startToCenter = Vector3.Transform(Vector3.Right * (float)Radius * sign, orientation);
+            ArcCenter = new WorldLocation(section.Location.Tile, section.Location.Location + startToCenter, true);
+            U = Vector3.Transform(Vector3.Left * sign, orientation);
+            V = Vector3.Transform(Vector3.UnitZ, orientation);
+            // A sloping curve projects to an ellipse on a map. Its projected
+            // basis is no longer orthonormal; cache the Gram matrix for PAT
+            // locations and horizontal diagnostics instead of treating it as a circle.
+            planarUU = (double)U.X * U.X + (double)U.Z * U.Z;
+            planarUV = (double)U.X * V.X + (double)U.Z * V.Z;
+            planarVV = (double)V.X * V.X + (double)V.Z * V.Z;
+            planarDeterminant = planarUU * planarVV - planarUV * planarUV;
+        }
 
-            Vector3 centerToStart = WorldLocation.GetDistanceVector(ArcCenter, section.Location);
-            Vector3 k = Vector3.Normalize(Vector3.Cross(centerToStart,
-                WorldLocation.GetDistanceVector(ArcCenter, section.EndLocation)));
-            U = Vector3.Normalize(centerToStart);
-            V = Vector3.Cross(k, U);
+        internal double AngleAt(in WorldLocation location, bool planar)
+        {
+            Vector3 q = WorldLocation.GetDistanceVector(ArcCenter, location);
+            double dotU = (double)q.X * U.X + (double)q.Z * U.Z;
+            double dotV = (double)q.X * V.X + (double)q.Z * V.Z;
+            if (planar)
+            {
+                if (planarDeterminant > 1e-12)
+                    return Math.Atan2((dotV * planarUU - dotU * planarUV) / planarDeterminant,
+                        (dotU * planarVV - dotV * planarUV) / planarDeterminant);
+            }
+            else
+            {
+                dotU += (double)q.Y * U.Y;
+                dotV += (double)q.Y * V.Y;
+            }
+            return Math.Atan2(dotV, dotU);
         }
 
         /// <summary>
@@ -117,38 +155,25 @@ namespace Riel.Runtime.Track
 
             if (Curved)
             {
-                Vector3 centerToPoint = WorldLocation.GetDistanceVector(ArcCenter, location);
-                centerToPoint.Y = 0; // horizontal-only: callers may pass elevation=0 (from PointD)
-                double distFromCenter = centerToPoint.Length();
-                double radialError = distFromCenter - Radius;
-
-                // Check angular bounds: the point's angle from centre must fall within the arc span.
-                // Project onto the U/V basis to get the parametric angle.
-                double dotU = Vector3.Dot(centerToPoint, U);
-                double dotV = Vector3.Dot(centerToPoint, V);
-                double pointAngle = Math.Atan2(dotV, dotU); // angle from start direction
-
-                // The U/V basis is built so the arc always sweeps from 0 to +|ArcAngle| (the end always
-                // projects to +absArc via the right-handed cross product), independent of the stored
-                // ArcAngle sign. So on-arc points always fall in [0, absArc].
+                double pointAngle = AngleAt(location, true);
                 double absArc = Math.Abs(ArcAngle);
-                double angleTolerance = WorldLocation.ProximityTolerance / Radius;
+                double angleTolerance = Radius > 0 ? WorldLocation.ProximityTolerance / Radius : 0;
                 bool inArc = pointAngle >= -angleTolerance && pointAngle <= absArc + angleTolerance;
 
                 if (inArc)
-                    return radialError * radialError;
+                    return WorldLocation.GetDistanceSquared2D(LocationAt(pointAngle * Radius), location);
 
                 // Outside arc span — check endpoint proximity
                 double startDist = WorldLocation.GetDistanceSquared2D(section.Location, location);
                 if (startDist <= WorldLocation.ProximityTolerance)
                     return startDist;
-                double endDist = WorldLocation.GetDistanceSquared2D(section.EndLocation, location);
+                double endDist = WorldLocation.GetDistanceSquared2D(EndLocation, location);
                 return endDist <= WorldLocation.ProximityTolerance ? endDist : double.NaN;
             }
             else
             {
                 // Straight section: project point onto the line segment start→end (horizontal plane only)
-                Vector3 segVec = WorldLocation.GetDistanceVector(section.Location, section.EndLocation);
+                Vector3 segVec = WorldLocation.GetDistanceVector(section.Location, EndLocation);
                 Vector3 toPoint = WorldLocation.GetDistanceVector(section.Location, location);
                 segVec.Y = 0;
                 toPoint.Y = 0;
@@ -166,7 +191,7 @@ namespace Riel.Runtime.Track
                 }
                 if (t > 1)
                 {
-                    double d = WorldLocation.GetDistanceSquared2D(section.EndLocation, location);
+                    double d = WorldLocation.GetDistanceSquared2D(EndLocation, location);
                     return d <= WorldLocation.ProximityTolerance ? d : double.NaN;
                 }
 
@@ -192,31 +217,19 @@ namespace Riel.Runtime.Track
 
             if (Curved)
             {
-                Vector3 centerToPoint = WorldLocation.GetDistanceVector(ArcCenter, location);
-                centerToPoint.Y = 0;
-                double distFromCenter = centerToPoint.Length();
-                double radialError = distFromCenter - Radius;
-
-                double dotU = Vector3.Dot(centerToPoint, U);
-                double dotV = Vector3.Dot(centerToPoint, V);
-                double pointAngle = Math.Atan2(dotV, dotU);
-
-                // The arc always sweeps from 0 to +|ArcAngle| in the U/V basis (see DistanceSquared),
-                // so on-arc points fall in [0, absArc] regardless of the stored ArcAngle sign.
-                // No tolerance padding is needed here (unlike DistanceSquared): points just past an
-                // endpoint already fall through to the endpoint-distance branch below.
+                double pointAngle = AngleAt(location, true);
                 double absArc = Math.Abs(ArcAngle);
                 bool inArc = pointAngle >= 0 && pointAngle <= absArc;
 
                 if (inArc)
-                    return radialError * radialError;
+                    return WorldLocation.GetDistanceSquared2D(LocationAt(pointAngle * Radius), location);
 
                 return Math.Min(
                     WorldLocation.GetDistanceSquared2D(section.Location, location),
-                    WorldLocation.GetDistanceSquared2D(section.EndLocation, location));
+                    WorldLocation.GetDistanceSquared2D(EndLocation, location));
             }
 
-            Vector3 segVec = WorldLocation.GetDistanceVector(section.Location, section.EndLocation);
+            Vector3 segVec = WorldLocation.GetDistanceVector(section.Location, EndLocation);
             Vector3 toPoint = WorldLocation.GetDistanceVector(section.Location, location);
             segVec.Y = 0;
             toPoint.Y = 0;
@@ -251,36 +264,7 @@ namespace Riel.Runtime.Track
         {
             if (!HasGeometry)
                 return location;
-
-            VectorSectionNode section = Node.VectorSections[SectionIndex];
-
-            if (Curved)
-            {
-                Vector3 centerToPoint = WorldLocation.GetDistanceVector(ArcCenter, location);
-                double dotU = Vector3.Dot(centerToPoint, U);
-                double dotV = Vector3.Dot(centerToPoint, V);
-                double pointAngle = Math.Atan2(dotV, dotU);
-
-                // The arc always sweeps from 0 to +|ArcAngle| in the U/V basis (see DistanceSquared),
-                // so clamp the parametric angle into [0, absArc] regardless of the stored ArcAngle sign.
-                double absArc = Math.Abs(ArcAngle);
-                pointAngle = Math.Clamp(pointAngle, 0, absArc);
-
-                double distance = pointAngle * Radius;
-                return WorldLocation.PointAlongArc(section.Location, section.EndLocation, ArcAngle, Radius, distance);
-            }
-            else
-            {
-                Vector3 segVec = WorldLocation.GetDistanceVector(section.Location, section.EndLocation);
-                Vector3 toPoint = WorldLocation.GetDistanceVector(section.Location, location);
-                double segLenSq = segVec.LengthSquared();
-
-                if (segLenSq < 1e-12)
-                    return section.Location;
-
-                double t = Math.Clamp(Vector3.Dot(toPoint, segVec) / segLenSq, 0, 1);
-                return WorldLocation.PointAlongDirection(section.Location, section.EndLocation, t * Length);
-            }
+            return LocationAt(ProjectedOffset(location));
         }
 
         /// <summary>
@@ -292,28 +276,24 @@ namespace Riel.Runtime.Track
             if (!HasGeometry || !SectionAt(location))
                 return double.NaN;
 
-            VectorSectionNode section = Node.VectorSections[SectionIndex];
+            return ProjectedOffset(location);
+        }
 
+        private double ProjectedOffset(in WorldLocation location)
+        {
+            VectorSectionNode section = Node.VectorSections[SectionIndex];
             if (Curved)
+                return Math.Clamp(AngleAt(location, location.Location.Y == 0), 0, Math.Abs(ArcAngle)) * Radius;
+
+            Vector3 segVec = WorldLocation.GetDistanceVector(section.Location, EndLocation);
+            Vector3 toPoint = WorldLocation.GetDistanceVector(section.Location, location);
+            if (location.Location.Y == 0)
             {
-                Vector3 centerToPoint = WorldLocation.GetDistanceVector(ArcCenter, location);
-                double dotU = Vector3.Dot(centerToPoint, U);
-                double dotV = Vector3.Dot(centerToPoint, V);
-                double pointAngle = Math.Atan2(dotV, dotU);
-                // pointAngle is unclamped here; Math.Abs covers the tolerance band where a near-start
-                // on-section point (admitted by SectionAt) can project to a slightly negative angle.
-                return Math.Abs(pointAngle) * Radius;
+                segVec.Y = 0;
+                toPoint.Y = 0;
             }
-            else
-            {
-                Vector3 segVec = WorldLocation.GetDistanceVector(section.Location, section.EndLocation);
-                Vector3 toPoint = WorldLocation.GetDistanceVector(section.Location, location);
-                double segLenSq = segVec.LengthSquared();
-                if (segLenSq < 1e-12)
-                    return 0;
-                double t = Math.Clamp(Vector3.Dot(toPoint, segVec) / segLenSq, 0, 1);
-                return t * Length;
-            }
+            double segLenSq = segVec.LengthSquared();
+            return segLenSq < 1e-12 ? 0 : Math.Clamp(Vector3.Dot(toPoint, segVec) / segLenSq, 0, 1) * Length;
         }
 
         /// <summary>
@@ -373,9 +353,7 @@ namespace Riel.Runtime.Track
             VectorSectionNode section = Node.VectorSections[SectionIndex];
             double clampedDistance = Math.Clamp(distance, 0, Length);
 
-            return Curved
-                ? WorldLocation.PointAlongArc(section.Location, section.EndLocation, ArcAngle, Radius, clampedDistance)
-                : WorldLocation.PointAlongDirection(section.Location, section.EndLocation, clampedDistance);
+            return trackSection.LocationAt(section.Location, orientation, clampedDistance);
         }
     }
 }

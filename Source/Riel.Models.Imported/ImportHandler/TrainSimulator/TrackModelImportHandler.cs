@@ -311,12 +311,7 @@ namespace Riel.Models.Imported.ImportHandler.TrainSimulator
                             }
                             else
                             {
-                                ref readonly WorldLocation endLocation = ref (i + 1 < vectorNode.VectorSections.Length) ? ref vectorNode.VectorSections[i + 1].Location :
-                                    ref trackDatabase.TrackNodes[trackDatabase.TrackNodeConnectors[vectorNode.NodeIndex].TrackNodeConnectors[1].Link].Location;
-
-                                itemLocation = trackSection.Curved
-                                    ? WorldLocation.PointAlongArc(sectionNode.Location, endLocation, MathHelper.ToRadians(trackSection.Angle), trackSection.Radius, distance)
-                                    : WorldLocation.PointAlongDirection(sectionNode.Location, endLocation, distance);
+                                itemLocation = trackSection.LocationAt(sectionNode.Location, sectionNode.Direction, distance);
                                 break;
                             }
                         }
@@ -663,9 +658,9 @@ namespace Riel.Models.Imported.ImportHandler.TrainSimulator
 
         /// <summary>
         /// Computes the 3D world location of the far end of a track vector section from the section's own
-        /// start position, heading (<see cref="TrackVectorSection.Direction"/>), and geometry template
+        /// start position, orientation (<see cref="TrackVectorSection.Direction"/>), and geometry template
         /// (<see cref="Track.TrackSection"/>). This tangent-based end is the authoritative geometry: it matches
-        /// the renderer (<c>TrackSegmentBase</c>), <c>SectionGeometry</c>, and the physics traveller, and is
+        /// <c>SectionGeometry</c> and the physics traveller, and is
         /// independent of the next section's stored start (which can be inconsistent or, for the last section,
         /// resolve through a pin link to a far/wrong node). Falls back to the section start when the section
         /// index is not found in <paramref name="trackSections"/>.
@@ -678,35 +673,12 @@ namespace Riel.Models.Imported.ImportHandler.TrainSimulator
         }
 
         /// <summary>
-        /// Computes the end location of a track vector section using only its start position, heading direction, and section geometry.
-        /// Assumes the section lies in a horizontal plane — elevation (Y) is preserved from the start location.
-        /// Mirrors the endpoint formulas used in <see cref="Riel.Runtime.Track.TrackSegmentBase"/>.
+        /// Computes the end location using the full MSTS yaw, pitch and roll,
+        /// matching the three-dimensional displacement in Open Rails Traveller.SetLocation.
         /// </summary>
         private static WorldLocation ComputeEndLocationFromDirection(TrackVectorSection section, Track.TrackSection trackSection)
         {
-            double cosA = Math.Cos(section.Direction.Y);
-            double sinA = Math.Sin(section.Direction.Y);
-            ref readonly WorldLocation start = ref section.Location;
-            float endX, endZ;
-
-            if (trackSection.Curved)
-            {
-                float arcAngle = MathHelper.ToRadians(trackSection.Angle);
-                int sign = -Math.Sign(trackSection.Angle);
-                double cosArotated = Math.Cos(section.Direction.Y + arcAngle);
-                double sinArotated = Math.Sin(section.Direction.Y + arcAngle);
-                double deltaX = sign * trackSection.Radius * (cosA - cosArotated);
-                double deltaZ = sign * trackSection.Radius * (sinA - sinArotated);
-                endX = start.Location.X - (float)deltaX;
-                endZ = start.Location.Z + (float)deltaZ;
-            }
-            else
-            {
-                endX = start.Location.X + (float)(sinA * trackSection.Length);
-                endZ = start.Location.Z + (float)(cosA * trackSection.Length);
-            }
-
-            return new WorldLocation(start.Tile, new Vector3(endX, start.Location.Y, endZ), true);
+            return trackSection.LocationAt(section.Location, section.Direction, trackSection.Length);
         }
 
         private static SpeedpostType GetSpeedpostType(SpeedPostItem speedPostItem)
