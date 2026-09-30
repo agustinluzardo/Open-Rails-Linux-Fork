@@ -4,6 +4,21 @@ Stable versions and their assets are available in
 [Releases](https://github.com/agustinluzardo/Riel-Linux/releases). `main-<commit>` builds are
 prereleases that passed automated tests and packaging.
 
+## 0.1.4
+
+- Fixes `SunMoonPos.SolarAngle` startup crashes when an ENV file has no recognized sun,
+  including an empty satellite light/type block. Uses the existing astronomical fallback
+  and preserves configured sunrise/sunset times.
+- Fixes `SignalEnvironment.InsertNode` startup crashes when an unplaced speedpost keeps
+  a signal index that becomes invalid after multi-head signals are merged.
+- Prevents unplaced speedposts from reusing another signal's speed restriction; records
+  unsuccessful placement in the log while retaining correctly placed signals and posts.
+- Adds regression tests using the production sky calculation, ENV parser, signal scanner,
+  head merging and track-circuit insertion.
+- Includes the editor and Vulkan updates from 0.1.3, with expanded English documentation
+  and explicit TSRE5vc credits to Piotr Gadecki (GokuMK).
+- Reported black flashes during gameplay remain under investigation.
+
 ## 0.1.3
 
 ### Editor suite

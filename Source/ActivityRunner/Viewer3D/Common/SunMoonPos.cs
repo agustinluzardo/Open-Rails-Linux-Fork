@@ -67,7 +67,10 @@ namespace Orts.ActivityRunner.Viewer3D.Common
                 -(Math.Sin(latitude) * Math.Sin(solarDeclination)) /
                 (Math.Cos(latitude) * Math.Cos(solarDeclination)));
 
-            if (sun?.RiseTime != 0 && sun?.SetTime != 0 &&
+            // Nullable != treats a missing value as different from zero. Check
+            // the satellite itself before reading its rise/set times so routes
+            // without a recognized ENV sun use the astronomical fallback.
+            if (sun != null && sun.RiseTime != 0 && sun.SetTime != 0 &&
                 sun.RiseTime < sun.SetTime && !double.IsNaN(horizonSolarHourAngle))
             {
                 float noonTimeD = (float)(sun.RiseTime + sun.SetTime) / 2 / 86400;

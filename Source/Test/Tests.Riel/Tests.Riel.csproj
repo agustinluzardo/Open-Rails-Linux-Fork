@@ -19,6 +19,7 @@
     <PackageReference Include="NuGet.Versioning" Version="7.9.0" />
   </ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\..\ActivityRunner\ActivityRunner.csproj" />
 		<ProjectReference Include="..\..\Riel.Models.Imported\Riel.Models.Imported.csproj" />
 		<ProjectReference Include="..\..\Riel.Models\Riel.Models.csproj" />
 		<ProjectReference Include="..\..\Riel.Updater\Riel.Updater.csproj" />
@@ -32,4 +33,4 @@
 	<ItemGroup Condition="'$(RielPlatform)' != 'windows'">
 		<Compile Remove="Toolbox\**\*.cs" />
 	</ItemGroup>
-</Project>	
+</Project>

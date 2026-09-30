@@ -795,8 +795,10 @@ namespace Orts.Simulation.Signalling
 
                         // Track Item is speedpost
                         case SpeedpostTrackItem speedItem:
-                            AddSpeed(index, i, speedItem, tdbRef);
-                            TrackItemSignalIndex[tdbRef] = Signals.Count - 1;
+                            // An unplaced post must not inherit the previous signal's
+                            // index, which can also become invalid after head merging.
+                            TrackItemSignalIndex[tdbRef] = AddSpeed(index, i, speedItem, tdbRef)
+                                ? Signals.Count - 1 : -1;
                             break;
 
                         // Track Item is milepost
@@ -950,15 +952,18 @@ namespace Orts.Simulation.Signalling
         /// <summary>
         /// Adds a new Speedpost to the list.
         /// </summary>
-        private void AddSpeed(int trackNode, int nodeIndex, SpeedpostTrackItem speedItem, int tdbRef)
+        private bool AddSpeed(int trackNode, int nodeIndex, SpeedpostTrackItem speedItem, int tdbRef)
         {
             VectorNode vectorNode = trackDatabase.TrackNodes[trackNode] as VectorNode;
             if (vectorNode == null)
-                return;
+                return false;
 
             TrackTraveller? traveller = TrackTraveller.InitializeTraveller(speedItem.Location, vectorNode, TrackDirection.Reverse);
             if (!traveller.HasValue)
-                return;
+            {
+                Trace.TraceInformation("Cannot place traveller for Speedpost {0} at track node {1}\n", tdbRef, trackNode);
+                return false;
+            }
 
             TrackTraveller t = traveller.Value;
 
@@ -975,6 +980,7 @@ namespace Orts.Simulation.Signalling
             };
             signal.AddHead(nodeIndex, tdbRef, speedItem);
             Signals.Add(signal);
+            return true;
         }
 
         /// <summary>
