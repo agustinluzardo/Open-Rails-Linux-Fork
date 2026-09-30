@@ -4,6 +4,19 @@ Stable versions and their assets are available in
 [Releases](https://github.com/agustinluzardo/Riel-Linux/releases). `main-<commit>` builds are
 prereleases that passed automated tests and packaging.
 
+## 0.1.9
+
+- Extends the 0.1.8 loading fix to complete nearby trains. A train stays loaded while
+  any of its cars is within the streaming radius of the camera or any player car,
+  so switching between the ends of the player consist does not discard adjacent models.
+- Uses tiled horizontal squared distance for selection. Trains outside both the camera
+  and player-consist vicinity continue to unload; nearby uncoupled cars remain available.
+- Adds production-loader regressions for adjacent trains across tiles, traffic near the
+  player's rear, free cameras, complete-consist retention and eventual model unloading.
+- Extends opt-in train visibility diagnostics to other vehicles near the camera.
+- Nearby trains can retain more models in memory. Normal rendering range and model
+  detail selection are preserved. Confirmation on the user's original route remains pending.
+
 ## 0.1.8
 
 - Keeps the complete player train loaded when switching cameras between the ends of a

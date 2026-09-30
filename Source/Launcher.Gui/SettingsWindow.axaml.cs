@@ -213,7 +213,7 @@ namespace Riel.Launcher.Gui
                     else if (name == "TraceRouteEditorRendering")
                         ToolTip.SetTip(control, Translation.T("Logs the editor's OpenGL context, texture requests, ACE decode results, GPU texture uploads and magenta fallback draws."));
                     else if (name == "TraceTrainVisualDiagnostics")
-                        ToolTip.SetTip(control, Translation.T("Logs vehicle positions, model detail levels, visibility decisions and submitted meshes for the player train. Use this when locomotives or wagons disappear."));
+                        ToolTip.SetTip(control, Translation.T("Logs vehicle positions, model detail levels, visibility decisions and submitted meshes for the player train and other vehicles near the camera. Use this when locomotives or wagons disappear."));
                     panel.Children.Add(control);
                 }
                 else

@@ -10,6 +10,7 @@ using Riel.Common.Position;
 using Riel.Models.Settings;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Xna.Framework;
 
 using Orts.ActivityRunner.Processes;
 using Orts.ActivityRunner.Viewer3D;
@@ -57,7 +58,80 @@ namespace Tests.Riel.Runtime
         }
 
         [TestMethod]
-        public void CarsDetachedFromPlayerTrainReturnToDistanceStreaming()
+        public void SwitchingEndsKeepsAdjacentTrainModelsAvailableAcrossTiles()
+        {
+            using Fixture fixture = new Fixture();
+            TrainCar[] adjacentCars = fixture.PlayerTrain.Cars.Select(car => Fixture.Car(
+                new WorldLocation(car.WorldPosition.WorldLocation.Tile,
+                    car.WorldPosition.WorldLocation.Location + Vector3.UnitX * 30))).ToArray();
+            fixture.AddTrain(adjacentCars);
+            foreach (TrainCar car in adjacentCars)
+                fixture.AddLoadedModel(car);
+            Dictionary<TrainCar, TrainCarViewer> originalModels = fixture.Drawer.Cars;
+
+            foreach (WorldLocation camera in new[] { FrontCamera, RearCamera, FrontCamera, RearCamera })
+            {
+                fixture.SetCamera(camera);
+                fixture.Drawer.LoadPrep();
+                fixture.Drawer.Load();
+                Assert.AreSame(originalModels, fixture.Drawer.Cars,
+                    "Changing camera ends must preserve every model of the adjacent train.");
+                foreach (RecordingCarViewer model in originalModels.Values)
+                    Assert.AreEqual(0, model.UnloadCount);
+            }
+        }
+
+        [TestMethod]
+        public void TrainNearPlayerRearStaysLoadedWhenCameraIsFartherAway()
+        {
+            using Fixture fixture = new Fixture();
+            // This train is close to the rear of the player consist, but beyond
+            // the camera's streaming radius when looking from the front.
+            TrainCar nearbyRear = Fixture.Car(new WorldLocation(RearCamera.Tile,
+                RearCamera.Location + new Vector3(500, 0, -625)));
+            fixture.AddTrain(nearbyRear);
+            RecordingCarViewer model = fixture.AddLoadedModel(nearbyRear);
+            Assert.IsTrue(WorldLocation.GetDistanceSquared2D(FrontCamera,
+                nearbyRear.WorldPosition.WorldLocation) > 1500 * 1500);
+            Assert.IsTrue(WorldLocation.GetDistanceSquared2D(RearCamera,
+                nearbyRear.WorldPosition.WorldLocation) < 1500 * 1500);
+
+            foreach (WorldLocation camera in new[] { RearCamera, FrontCamera, RearCamera, FrontCamera })
+            {
+                fixture.SetCamera(camera);
+                fixture.Drawer.LoadPrep();
+                fixture.Drawer.Load();
+                Assert.AreSame(model, fixture.Drawer.Cars[nearbyRear]);
+                Assert.AreEqual(0, model.UnloadCount);
+            }
+        }
+
+        [TestMethod]
+        public void FreeCameraKeepsNearbyTrainsLoadedAwayFromPlayer()
+        {
+            using Fixture fixture = new Fixture();
+            WorldLocation remoteCamera = new WorldLocation(FrontCamera.Tile,
+                FrontCamera.Location + Vector3.UnitX * 6000);
+            TrainCar nearbyCamera = Fixture.Car(new WorldLocation(remoteCamera.Tile,
+                remoteCamera.Location + Vector3.UnitX * 100));
+            fixture.AddTrain(nearbyCamera);
+            RecordingCarViewer model = fixture.AddLoadedModel(nearbyCamera);
+            fixture.SetCamera(remoteCamera);
+
+            fixture.Drawer.LoadPrep();
+            fixture.Drawer.Load();
+            Assert.AreSame(model, fixture.Drawer.Cars[nearbyCamera]);
+            Assert.AreEqual(0, model.UnloadCount);
+
+            fixture.SetCamera(FrontCamera);
+            fixture.Drawer.LoadPrep();
+            fixture.Drawer.Load();
+            Assert.IsFalse(fixture.Drawer.Cars.ContainsKey(nearbyCamera));
+            Assert.AreEqual(1, model.UnloadCount);
+        }
+
+        [TestMethod]
+        public void DetachedCarsUnloadAfterLeavingPlayerAndCameraVicinity()
         {
             using Fixture fixture = new Fixture();
             fixture.SetCamera(FrontCamera);
@@ -70,6 +144,11 @@ namespace Tests.Riel.Runtime
             Assert.AreSame(detachedTrain, detached.Train);
 
             fixture.Drawer.LoadPrep();
+            fixture.Drawer.Load();
+            Assert.AreSame(model, fixture.Drawer.Cars[detached], "Uncoupling a nearby car must keep its model loaded.");
+            Fixture.SetPosition(detached, new WorldLocation(FrontCamera.Tile,
+                FrontCamera.Location + Vector3.UnitX * 5000));
+            fixture.Drawer.LoadPrep();
             Assert.IsFalse(fixture.SelectedCars.Contains(detached));
             fixture.Drawer.Load();
             Assert.IsFalse(fixture.Drawer.Cars.ContainsKey(detached));
@@ -79,24 +158,39 @@ namespace Tests.Riel.Runtime
         }
 
         [TestMethod]
-        public void OtherTrainsStillUnloadOutsideCameraStreamingDistance()
+        public void NearbyConsistsStayTogetherAndDistantTrainsUnload()
         {
             using Fixture fixture = new Fixture();
             fixture.SetCamera(FrontCamera);
-            TrainCar nearby = Fixture.Car(new WorldLocation(FrontCamera.Tile, FrontCamera.Location + Microsoft.Xna.Framework.Vector3.UnitX * 100));
-            TrainCar distant = Fixture.Car(new WorldLocation(FrontCamera.Tile, FrontCamera.Location + Microsoft.Xna.Framework.Vector3.UnitX * 2000));
-            fixture.AddTrain(nearby, distant);
+            TrainCar nearby = Fixture.Car(new WorldLocation(FrontCamera.Tile, FrontCamera.Location + Vector3.UnitX * 100));
+            TrainCar tail = Fixture.Car(new WorldLocation(FrontCamera.Tile, FrontCamera.Location + Vector3.UnitX * 2000));
+            TrainCar distant = Fixture.Car(new WorldLocation(FrontCamera.Tile, FrontCamera.Location + Vector3.UnitX * 6000));
+            fixture.AddTrain(nearby, tail);
+            fixture.AddTrain(distant);
             RecordingCarViewer nearbyModel = fixture.AddLoadedModel(nearby);
+            RecordingCarViewer tailModel = fixture.AddLoadedModel(tail);
             RecordingCarViewer distantModel = fixture.AddLoadedModel(distant);
 
             fixture.Drawer.LoadPrep();
             Assert.IsTrue(fixture.SelectedCars.Contains(nearby));
+            Assert.IsTrue(fixture.SelectedCars.Contains(tail), "A nearby consist must not be streamed car by car.");
             Assert.IsFalse(fixture.SelectedCars.Contains(distant));
             fixture.Drawer.Load();
             Assert.AreSame(nearbyModel, fixture.Drawer.Cars[nearby]);
+            Assert.AreSame(tailModel, fixture.Drawer.Cars[tail]);
             Assert.IsFalse(fixture.Drawer.Cars.ContainsKey(distant));
             Assert.AreEqual(0, nearbyModel.UnloadCount);
+            Assert.AreEqual(0, tailModel.UnloadCount);
             Assert.AreEqual(1, distantModel.UnloadCount);
+
+            Fixture.SetPosition(nearby, new WorldLocation(FrontCamera.Tile, FrontCamera.Location + Vector3.UnitX * 6000));
+            Fixture.SetPosition(tail, new WorldLocation(FrontCamera.Tile, FrontCamera.Location + Vector3.UnitX * 8000));
+            fixture.Drawer.LoadPrep();
+            fixture.Drawer.Load();
+            Assert.IsFalse(fixture.Drawer.Cars.ContainsKey(nearby));
+            Assert.IsFalse(fixture.Drawer.Cars.ContainsKey(tail));
+            Assert.AreEqual(1, nearbyModel.UnloadCount);
+            Assert.AreEqual(1, tailModel.UnloadCount);
         }
 
         private sealed class Fixture : IDisposable
@@ -167,9 +261,12 @@ namespace Tests.Riel.Runtime
             internal static TrainCar Car(WorldLocation location)
             {
                 MSTSWagon car = Uninitialized<MSTSWagon>();
-                SetField(typeof(TrainCar), car, "worldPosition", new WorldPosition(location));
+                SetPosition(car, location);
                 return car;
             }
+
+            internal static void SetPosition(TrainCar car, WorldLocation location) =>
+                SetField(typeof(TrainCar), car, "worldPosition", new WorldPosition(location));
 
             public void Dispose()
             {

@@ -19,6 +19,7 @@
 
 using Orts.Simulation;
 using Orts.Simulation.AIs;
+using Orts.Simulation.Physics;
 using Orts.Simulation.RollingStocks;
 using Orts.ActivityRunner.Viewer3D.RollingStock;
 using System;
@@ -169,14 +170,19 @@ namespace Orts.ActivityRunner.Viewer3D
             var playerCar = Viewer.PlayerLocomotive;
             var playerTrain = playerCar?.Train;
             var cameraLocation = Viewer.Camera.CameraWorldLocation;
-            visibleCars.Add(playerCar);
+            var removeDistanceSquared = (double)removeDistance * removeDistance;
+            if (playerCar != null)
+                visibleCars.Add(playerCar);
             foreach (var train in Viewer.Simulator.Trains)
+            {
+                // Keep a nearby consist together, using the complete player train as
+                // a stable reference when the camera moves between its ends. Shape
+                // preparation still applies the normal viewing-distance/LOD tests.
+                if (train != playerTrain && !IsTrainInRange(train, playerTrain, cameraLocation, removeDistanceSquared))
+                    continue;
+
                 foreach (var car in train.Cars)
-                    // Switching between the ends of a long consist must not unload the
-                    // player's models and leave nearby cars waiting for the loader again.
-                    // Shape preparation still applies the normal viewing-distance/LOD tests.
-                    if (car != playerCar && (train == playerTrain ||
-                        WorldLocation.ApproximateDistance(cameraLocation, car.WorldPosition.WorldLocation) < removeDistance))
+                    if (car != playerCar)
                     {
                         visibleCars.Add(car);
                         TraceVisual(car, "selected", selectedTrainTraces);
@@ -185,20 +191,43 @@ namespace Orts.ActivityRunner.Viewer3D
                         if (Math.Abs(car.WorldPosition.WorldLocation.Location.Y - cameraLocation.Location.Y) < 150)
                             TraceVisual(car, "scene-height", sceneHeightTrainTraces);
                     }
+            }
             VisibleCars = visibleCars;
             PlayerCar = playerCar;
 
-            if (DiagnosticTrace.TrainVisuals && playerCar?.Train != null && Viewer.RealTime >= nextTrainVisualLoadTime)
+            if (DiagnosticTrace.TrainVisuals && Viewer.RealTime >= nextTrainVisualLoadTime)
             {
                 var loadedCars = Cars;
-                foreach (TrainCar car in playerCar.Train.Cars)
-                    Trace.TraceInformation("[TrainVisualLoad] wallUtc={0:O} simTime={1:F1} train={2} car={3} selected={4} loaded={5} position={6} camera={7} distanceM={8:F1} removeDistanceM={9:F1}",
-                        DateTime.UtcNow, Viewer.Simulator.ClockTime, playerCar.Train.Number, car.CarID,
-                        visibleCars.Contains(car), loadedCars.TryGetValue(car, out TrainCarViewer loaded) && loaded != null,
-                        car.WorldPosition.WorldLocation, cameraLocation,
-                        Math.Sqrt(WorldLocation.GetDistanceSquared(cameraLocation, car.WorldPosition.WorldLocation)), removeDistance);
+                var selectedCars = new HashSet<TrainCar>(visibleCars);
+                foreach (Train train in Viewer.Simulator.Trains)
+                    foreach (TrainCar car in train.Cars)
+                        if (train == playerTrain || WorldLocation.GetDistanceSquared2D(cameraLocation,
+                            car.WorldPosition.WorldLocation) < removeDistanceSquared)
+                            Trace.TraceInformation("[TrainVisualLoad] wallUtc={0:O} simTime={1:F1} train={2} car={3} selected={4} loaded={5} position={6} camera={7} distanceM={8:F1} removeDistanceM={9:F1}",
+                                DateTime.UtcNow, Viewer.Simulator.ClockTime, train.Number, car.CarID,
+                                selectedCars.Contains(car), loadedCars.TryGetValue(car, out TrainCarViewer loaded) && loaded != null,
+                                car.WorldPosition.WorldLocation, cameraLocation,
+                                Math.Sqrt(WorldLocation.GetDistanceSquared(cameraLocation, car.WorldPosition.WorldLocation)), removeDistance);
                 nextTrainVisualLoadTime = Viewer.RealTime + 5;
             }
+        }
+
+        private static bool IsTrainInRange(Train train, Train playerTrain, in WorldLocation cameraLocation, double distanceSquared)
+        {
+            foreach (TrainCar car in train.Cars)
+            {
+                WorldLocation location = car.WorldPosition.WorldLocation;
+                if (WorldLocation.GetDistanceSquared2D(cameraLocation, location) < distanceSquared)
+                    return true;
+
+                if (playerTrain == null)
+                    continue;
+
+                foreach (TrainCar playerCar in playerTrain.Cars)
+                    if (WorldLocation.GetDistanceSquared2D(playerCar.WorldPosition.WorldLocation, location) < distanceSquared)
+                        return true;
+            }
+            return false;
         }
 
         public void PrepareFrame(RenderFrame frame, in ElapsedTime elapsedTime)

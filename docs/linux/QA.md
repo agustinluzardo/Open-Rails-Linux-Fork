@@ -128,10 +128,21 @@ snapshot throughout. Separate cases verify that detached cars and other trains s
 unload by distance. Rendering still applies the existing range, FOV and LOD checks.
 Local 0.1.8 validation passed all 682 Riel tests with the standard MSTest runner.
 
+The 0.1.9 extension covers the reported disappearance of an adjacent train while switching
+player cameras. Two new regressions fail with the 0.1.8 loader: a parallel consist at the
+recorded USA2 tile boundary loses its rear models, and a train near the player's rear
+is discarded when the camera moves to the front. Selection now keeps whole consists
+within 1.5 times viewing distance of the camera or any player car, using squared horizontal
+distance across tiles. The six production-loader cases also check free cameras, nearby
+uncoupled cars and unloading after entire trains leave both reference areas. Tests use
+already-loaded recording viewers; GPU drawing and the user's content still need confirmation.
+Local 0.1.9 validation passed all 685 Riel tests with the standard MSTest runner.
+
 To investigate vehicles that disappear, enable **Settings → Advanced → Train visibility
 diagnostics** (or launch with `RIEL_TRACE_TRAIN_VISUALS=1`). Reproduce the original route and
 activity with the same exterior camera and attach the simulator log. The `[TrainVisual]` entries
-report actual shape preparation results and vehicle transforms; they do not change culling,
+report actual shape preparation results and vehicle transforms for the player train and
+other vehicles within the camera's streaming radius; they do not change culling,
 model detail, track placement or materials. The synthetic placement checks did not reproduce
 the reported disappearance, so confirmation with the original MSTS content is still needed.
 

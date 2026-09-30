@@ -1053,7 +1053,7 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
 
         private void PrepareTrainCarFrame(RenderFrame frame, in ElapsedTime elapsedTime)
         {
-            if (!DiagnosticTrace.TrainVisuals || Car.Train == null || Car.Train != Viewer.PlayerLocomotive?.Train)
+            if (!ShouldTraceTrainVisual())
             {
                 trainCarShape.PrepareFrame(frame, elapsedTime);
                 return;
@@ -1065,9 +1065,20 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             TraceTrainVisual(result, "prepared");
         }
 
+        private bool ShouldTraceTrainVisual()
+        {
+            if (!DiagnosticTrace.TrainVisuals || Car.Train == null)
+                return false;
+
+            double distance = Viewer.UserSettings.ViewingDistance * 1.5;
+            return Car.Train == Viewer.PlayerLocomotive?.Train ||
+                WorldLocation.GetDistanceSquared2D(Viewer.Camera.CameraWorldLocation,
+                    Car.WorldPosition.WorldLocation) < distance * distance;
+        }
+
         private void TraceTrainVisual(in ShapeFrameResult result, string preparation)
         {
-            if (!DiagnosticTrace.TrainVisuals || Car.Train == null || Car.Train != Viewer.PlayerLocomotive?.Train)
+            if (!ShouldTraceTrainVisual())
                 return;
 
             if (previousTrainVisualVisible.HasValue && previousTrainVisualVisible != result.Visible)
