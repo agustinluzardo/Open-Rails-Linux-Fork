@@ -39,11 +39,11 @@ Worth having, none required:
   your desktop's own folder picker. Without either, paste the path instead.
 - `mesa-utils` / `mesa-demos`: the `glxinfo` used further down to check the driver.
 
-## Arch Linux: download without compiling
+## Download without compiling
 
-Open the latest successful [Portable Linux package](https://github.com/agustinluzardo/Riel-Linux/actions/workflows/linux-portable.yml)
-run, download the `riel-linux-x64` artifact and extract its ZIP. Then extract the
-`riel-linux-x64.tar.gz` inside it. In a terminal:
+Open the [latest stable release](https://github.com/agustinluzardo/Riel-Linux/releases/latest),
+download `riel-linux-x64.zip` and extract the complete archive. The portable folder
+contains the simulator, launcher and native TSRE5vc-based editor suite. In a terminal:
 
 ```sh
 cd riel-linux-x64
@@ -55,7 +55,11 @@ the .NET runtime package, or a NuGet cache to play. Your system still needs SDL 
 OpenAL Soft, fontconfig, zlib, and the desktop libraries listed in the **run** column above
 (except `dotnet-runtime-10.0`). Keep the extracted `riel-linux-x64` folder together;
 `./riel` can also run the commands such as `./riel doctor` and `./riel content add`.
-The Actions artifact is generated from `main` and may expire; use a successful recent run.
+For a newer development build, choose a `main-<commit>` prerelease from
+[Releases](https://github.com/agustinluzardo/Riel-Linux/releases). These are published only
+after build, tests and packaging succeed. `riel update` also follows tested main builds,
+so it can install a build newer than the latest stable tag. Actions artifacts can expire;
+releases are the normal download location.
 This is self-contained rather than Native AOT: the simulator compiles C# scripts and loads
 custom rolling-stock DLLs at runtime, which Native AOT cannot do. Neither mode needs NuGet
 on the computer that runs the downloaded archive.
@@ -77,7 +81,9 @@ makepkg -si
 
 That builds, runs the tests and installs `riel`. It takes a few minutes and several gigabytes of
 scratch space in the build directory. The build needs `dotnet-sdk-10.0`; the installed package
-needs only `dotnet-runtime-10.0`.
+needs only `dotnet-runtime-10.0`. The package also builds the editor suite with CMake/Ninja
+and Qt 6, using the pinned TSRE5vc source from Piotr Gadecki (GokuMK). The PKGBUILD lists
+the additional Qt and native build dependencies.
 
 Before publishing to the AUR, take the `source=()` line off the working branch and point it at a
 tag, and set `sha256sums` accordingly.
@@ -153,7 +159,8 @@ Simulator"` - or the shell splits it, and fish reads the brackets as a command.
 
 Any path works, on any disk. A train simulator install is tens of gigabytes, so keeping it on a
 second drive - `/mnt/datos/games`, `/media/games`, wherever it is mounted - is the normal case,
-not a special one. Riel only ever reads that folder, so a drive mounted read only is fine.
+not a special one. The simulator reads that folder, so read-only access works for playing.
+The editors need write access when saving routes, consists or textures.
 
 Riel also looks for an installation by itself, in `~/.local/share`, the home directory, every disk
 mounted under `/mnt` or `/media` and a `games` folder inside each, and any Wine or Proton prefix.
@@ -290,7 +297,7 @@ the "mount at startup" checkbox in your desktop's disk utility.
 
 If the drive is shared with Windows and formatted NTFS, mount it with `ntfs3` and make sure your
 user can read it; the usual symptom of the wrong ownership is a route that lists but will not
-load. Riel never writes to the content folder, so read only is enough.
+load. Read access is enough for the simulator; editor saves also need write access.
 
 ### The RailDriver desk is not detected
 
@@ -324,7 +331,8 @@ F3 reports **OpenGL over Vulkan (Zink)** only when the active renderer identifie
 itself as Zink. If it reports **OpenGL**, the request did not activate Zink.
 The simulator sets the native Mesa/GLVND environment before creating its graphics
 context, including vendor selection on NVIDIA. The native editor suite retains
-its ordinary OpenGL path. See
+its ordinary OpenGL path. Zink needs Mesa with Zink support and a working Vulkan driver
+for the selected GPU. The portable package does not replace system graphics drivers. See
 [ARCHITECTURE.md](ARCHITECTURE.md#graphics-backends) for what that would take.
 
 ### Antialiasing looks turned off
@@ -350,6 +358,8 @@ than failing to start.
 | `~/.local/share/riel` | saves |
 | `~/.local/state/riel/Logs` | logs, the startup trail, and crash reports under `Crashes` |
 | `~/.cache/riel` | scanned content, safe to delete |
+| `~/.local/share/Riel/RouteEditor` | native editor settings and user assets |
+| `~/.local/state/riel/Logs/Riel Route Editor Log.txt` | log shared by the native editor tools |
 
 These follow the XDG base directory specification and move with the corresponding `XDG_*_HOME`
 variables.
@@ -362,4 +372,22 @@ rm -rf ~/.config/riel ~/.local/share/riel \
        ~/.local/state/riel ~/.cache/riel
 ```
 
-Your MSTS content is untouched - Riel only ever reads it.
+Uninstalling Riel does not remove MSTS content. Changes previously saved with an editor
+remain in that content folder. Editor settings are separate under
+`~/.local/share/Riel/RouteEditor`.
+
+## Editors and attribution
+
+**Tools** exposes Route Editor, Consist Editor, Shape Viewer and ACE Converter, based on
+**TSRE5vc by Piotr Gadecki (GokuMK)**. The route tools use the selected route's content root;
+ACE Converter can open without a route. The same tools are available from a terminal:
+
+```sh
+riel route-editor
+riel consist-editor
+riel shape-viewer
+riel ace-converter
+```
+
+See [the editor guide](../route-editor.md) and [credits](../../CREDITS.md).
+Each release includes the matching patched editor source as `riel-route-editor-source.tar.gz`.

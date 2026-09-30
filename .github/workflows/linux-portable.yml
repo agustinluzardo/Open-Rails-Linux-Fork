@@ -110,9 +110,11 @@ jobs:
           cp packaging/linux/riel-route-editor.desktop "$editor_out/share/applications/"
           cp packaging/linux/riel-route-editor.png "$editor_out/share/icons/hicolor/256x256/apps/"
           cp LICENSE "$editor_out/LICENSE-GPL-3.0.txt"
+          cp CREDITS.md "$editor_out/CREDITS.md"
           cp docs/route-editor.md "$editor_out/README.md"
           cat > "$editor_out/SOURCE.txt" <<EOF
           Riel Route Editor is built from TSRE5vc.
+          Creator: Piotr Gadecki (GokuMK), creator of TSRE5 and TSRE5vc.
           Upstream: https://github.com/GokuMK/TSRE5vc
           Commit: $TSRE5VC_COMMIT
           Riel integration patch: scripts/prepare-route-editor-source.py
@@ -164,6 +166,8 @@ jobs:
           set -euo pipefail
           bundle="${RUNNER_TEMP}/riel-linux-x64"
           mkdir -p "$bundle/app"
+          cp README.md CREDITS.md CHANGELOG.md CONTRIBUTING.md LICENSE "$bundle/"
+          cp -a docs "$bundle/docs"
           cp -a "${RUNNER_TEMP}/riel-publish/." "$bundle/app/"
           mkdir -p "$bundle/app/route-editor"
           cp -a "${RUNNER_TEMP}/riel-route-editor/." "$bundle/app/route-editor/"
@@ -182,6 +186,8 @@ jobs:
           PATH="${RUNNER_TEMP}/riel-path:$PATH" riel version
           test -x "$bundle/app/route-editor/riel-route-editor"
           test -f "$bundle/app/route-editor/LICENSE-GPL-3.0.txt"
+          test -f "$bundle/app/route-editor/CREDITS.md"
+          grep -F 'Piotr Gadecki (GokuMK)' "$bundle/CREDITS.md"
           QT_QPA_PLATFORM=offscreen "$bundle/app/route-editor/riel-route-editor" --version
           QT_QPA_PLATFORM=offscreen "$bundle/app/route-editor/riel-route-editor" --test-list
           QT_QPA_PLATFORM=offscreen "$bundle/riel" route-editor --version

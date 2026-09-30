@@ -54,6 +54,32 @@ For terminal-only runs, the same diagnostics are available with `RIEL_TRACE_AI_S
 `RIEL_TRACE_ROAD_CROSSINGS=1` as environment variables. These overrides keep logging even
 when the corresponding GUI checkbox is off.
 
-The default F1 Help, F4 Track Monitor, Escape Pause Menu and Alt+F4 Quit bindings match
-Open Rails. Some bindings inherited from Free Train Simulator differ: Driving is
-Ctrl+F5 here rather than F5, and Train Operations is F9 here rather than Ctrl+Alt+F9.
+The default bindings in `ProfileKeyboardSettingsModel` are F1 Help, F4 Track Monitor,
+F5 Driving, F9 Car Operations, Ctrl+Alt+F9 Train Operations, Ctrl+9 Dispatcher,
+Escape Pause Menu and Alt+F4 Quit. Existing customized profiles can differ; verify
+the bindings in launcher Settings rather than inferring them from an older profile.
+
+## Native editor checks
+
+The portable workflow builds the pinned TSRE5vc source with the Riel patches and
+retains the credits of creator Piotr Gadecki (GokuMK). It checks Route Editor main-window
+visibility, a presented OpenGL frame, responsive event-loop turns, real shapes and
+textures uploaded to the GPU. Its negative watchdog check hides the main window and
+verifies that Navi alone does not pass, then restores and rebuilds the production binary.
+
+Consist selection and ACE preview have separate checks. The content-index benchmark
+checks repeated lookup work, and the loader-safety executable exercises concurrent
+logging and valid/truncated DDS imports under AddressSanitizer/UndefinedBehaviorSanitizer.
+See [the editor guide](../route-editor.md) for flags and log markers.
+
+## Visual flicker reports
+
+Record whether black appears over the entire game window, only terrain/objects, or the
+dispatcher map. Include the F3 renderer, route/activity, camera, simulation time and
+location, weather, shadow configuration and a short recording when possible.
+Compare a run with dynamic shadows disabled and one with the same camera/settings;
+do not treat a changed setting alone as proof of a cause.
+
+Synthetic-route smoke tests exercise the render pipeline but cannot establish that
+a content-specific or hardware-specific flicker is fixed on a user's route/GPU.
+Use a reproducible recording/location for that final check.

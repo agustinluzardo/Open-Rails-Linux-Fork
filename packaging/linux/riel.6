@@ -83,6 +83,10 @@ Open the native Riel ACE Converter.
 .B riel doctor
 Check that this machine can run the simulator and report what is missing.
 .TP
+.B riel update [--check]
+Install, or only check for, the newest tested main build. Stable releases are downloaded from
+the repository's Releases page; this command can install a newer main prerelease.
+.TP
 .B riel version
 Print the version.
 .PP
@@ -101,6 +105,8 @@ and a games folder inside each, and the Program Files folder of any Wine or Prot
 .TP
 .B RIEL_VULKAN
 Set to 1 to run the OpenGL renderer on Vulkan through Mesa's zink driver.
+The experimental Settings option makes the same request on the next simulator run.
+F3 reports the renderer actually selected. The native editors retain normal OpenGL.
 .TP
 .B RIEL_SIMULATOR
 Path to the simulator binary, for running this command against a build directory.
@@ -154,6 +160,11 @@ group; add yourself to that group and log back in.
 .SH SEE ALSO
 The documentation installed under
 .IR /usr/share/doc/riel .
+.SH CREDITS
+The native Route Editor, Consist Editor, Shape Viewer and ACE Converter are based on TSRE5vc,
+created by Piotr Gadecki (GokuMK), also the creator of TSRE5.
+The simulator derives from Free Train Simulator and Open Rails.
+See CREDITS.md and the copyright/license notices distributed with Riel.
 .SH BUGS
 Report at
 .UR https://github.com/agustinluzardo/Riel-Linux/issues

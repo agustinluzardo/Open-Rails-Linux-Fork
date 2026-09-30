@@ -1,8 +1,16 @@
 # Riel editor suite
 
-Riel ships a native Linux editor/tool suite based on **TSRE5vc**, by Piotr
-Gadecki (GokuMK). Upstream source identifies the project as GNU GPL 3.0 or
-later. Riel keeps the original copyright/license headers intact.
+Riel ships a native Linux editor/tool suite based on **TSRE5vc**, created by
+**Piotr Gadecki (GokuMK)**, also the creator of the original TSRE5 project.
+The Route Editor, Consist Editor, Shape Viewer and ACE Converter all derive
+from his tools. Riel's integration retains the original copyright/license
+headers and GNU GPL 3.0-or-later terms. See [the full credits](../CREDITS.md),
+[TSRE5vc](https://github.com/GokuMK/TSRE5vc) and
+[TSRE5](https://github.com/GokuMK/TSRE5).
+
+The simulator reads existing route content. The editors save modifications to
+that content when the user saves their work; editing therefore needs write
+access to the selected content folder.
 
 ## Launcher integration
 

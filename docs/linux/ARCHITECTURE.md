@@ -181,24 +181,24 @@ of having to be added again.
 
 ## Graphics backends
 
-The renderer is OpenGL. The reasoning, since Vulkan was the obvious thing to ask for:
+The distributed Linux build uses MonoGame DesktopGL and its OpenGL effects.
+A separate Vulkan backend would require a suitable runtime, shader conversion and
+validation of this engine's render states and resources. Its effects still contain
+legacy `POSITION`/`COLOR0` semantics; enabling a different driver does not convert
+the effects or replace the engine's rendering backend.
 
-**MonoGame has a Vulkan backend, but no usable runtime yet.** `MonoGame.Framework.Native` 3.8.5.1
-exists on NuGet and its effect compiler accepts a `Vulkan` profile, but the package ships only the
-managed assembly - the native library it needs is not published, so the backend cannot be used
-without building MonoGame from source with the Vulkan SDK.
+The experimental **Vulkan (Zink)** setting, or `RIEL_VULKAN=1 riel start`, requests
+Mesa Zink before creating the simulator's graphics context. The renderer still emits
+OpenGL, which Zink runs over Vulkan. `ExperimentalGraphics` sets both managed and
+native libc environment values: .NET's environment setter alone does not update
+the native environment observed by Mesa/SDL on Linux. The configuration includes
+`MESA_LOADER_DRIVER_OVERRIDE=zink`, `GALLIUM_DRIVER=zink`, Mesa's GLX vendor and,
+when available, its EGL vendor manifest so the request can also select Mesa on NVIDIA.
 
-**The shaders would need modernizing first.** The effects still use DX9 era semantics - `POSITION`,
-`COLOR0` - which shader model 6 rejects. Worth recording: `mgfxc`'s Vulkan profile compiles
-natively on Linux through the DXC it bundles, with no Wine involved. Fixing the semantics is a
-mechanical change, and it is what unblocks a fully native, Wine-free shader toolchain as well.
-
-**OpenGL is not the bottleneck.** The engine's draw call patterns come from the XNA era; the
-limits it hits are CPU-side content loading and single-threaded update work, not the graphics API.
-
-**Vulkan is available today anyway, without a new renderer.** Mesa's zink driver runs OpenGL on top
-of Vulkan. `RIEL_VULKAN=1 riel start` sets `MESA_LOADER_DRIVER_OVERRIDE=zink`, and on modern
-AMD and Intel hardware the result is competitive.
+This needs Mesa with Zink support and a Vulkan driver for the GPU. Performance and
+compatibility depend on route content and hardware; the package does not ship a new
+system graphics driver. The setting takes effect on the next simulator process.
+The Qt editor suite retains its normal OpenGL path.
 
 The F3 overlay reports `OpenGL over Vulkan (Zink)` only when the active OpenGL renderer
 identifies itself as Zink. The environment variable requests a driver but does not prove it was
@@ -209,6 +209,23 @@ sensor or the GPU matched by name through `nvidia-smi`; ambiguous or unavailable
 
 The backend is a build-time switch - `-p:RielGraphicsBackend=DesktopGL` - so adding one later means
 a new value and a shader profile, not a rewrite.
+
+## Native editor suite
+
+Riel packages the Route Editor, Consist Editor, Shape Viewer and ACE Converter from
+**TSRE5vc, created by Piotr Gadecki (GokuMK)**. The source commit is pinned in the
+portable workflow and Arch package. `scripts/prepare-route-editor-source.py` applies
+the Riel integration and its helpers before the Qt/CMake build; the release includes
+the resulting source archive and preserves upstream copyright and GPL notices.
+
+The shared logging handler serializes access to QFile/QTextStream. Texture decoders
+run in a bounded pool with private data, then publish through Qt's application thread.
+DDS payloads and dimensions are validated before allocation/decoding. Directory views
+are indexed and bounded, including case-only split `GLOBAL`/`Global` layouts.
+These changes preserve ShapeLib identity and the route/season texture context.
+
+See [the editor guide](../route-editor.md) for commands, settings and verification,
+and [CREDITS.md](../../CREDITS.md) for source provenance.
 
 ## Shaders
 
