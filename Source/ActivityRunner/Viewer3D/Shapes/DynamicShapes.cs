@@ -88,6 +88,11 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
             SharedShape.PrepareFrame(frame, WorldPosition, XNAMatrices, Flags);
         }
 
+        internal ShapeFrameResult PrepareFrameWithDiagnostics(RenderFrame frame, in ElapsedTime elapsedTime)
+        {
+            return SharedShape.PrepareFrameWithDiagnostics(frame, WorldPosition, XNAMatrices, Flags);
+        }
+
         public void ConditionallyPrepareFrame(RenderFrame frame, ElapsedTime elapsedTime, bool[] matrixVisible = null)
         {
             SharedShape.PrepareFrame(frame, WorldPosition, XNAMatrices, Flags, matrixVisible);

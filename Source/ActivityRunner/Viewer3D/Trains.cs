@@ -50,6 +50,7 @@ namespace Orts.ActivityRunner.Viewer3D
         private readonly ConcurrentDictionary<int, byte> publishedTrainTraces = new();
         private readonly ConcurrentDictionary<int, byte> preparedTrainTraces = new();
         private readonly ConcurrentDictionary<int, bool> tracedAiTrainNumbers = new();
+        private double nextTrainVisualLoadTime;
 
         public TrainDrawer(Viewer viewer)
         {
@@ -181,6 +182,18 @@ namespace Orts.ActivityRunner.Viewer3D
                     }
             VisibleCars = visibleCars;
             PlayerCar = playerCar;
+
+            if (DiagnosticTrace.TrainVisuals && playerCar?.Train != null && Viewer.RealTime >= nextTrainVisualLoadTime)
+            {
+                var loadedCars = Cars;
+                foreach (TrainCar car in playerCar.Train.Cars)
+                    Trace.TraceInformation("[TrainVisualLoad] wallUtc={0:O} simTime={1:F1} train={2} car={3} selected={4} loaded={5} position={6} camera={7} distanceM={8:F1} removeDistanceM={9:F1}",
+                        DateTime.UtcNow, Viewer.Simulator.ClockTime, playerCar.Train.Number, car.CarID,
+                        visibleCars.Contains(car), loadedCars.TryGetValue(car, out TrainCarViewer loaded) && loaded != null,
+                        car.WorldPosition.WorldLocation, cameraLocation,
+                        Math.Sqrt(WorldLocation.GetDistanceSquared(cameraLocation, car.WorldPosition.WorldLocation)), removeDistance);
+                nextTrainVisualLoadTime = Viewer.RealTime + 5;
+            }
         }
 
         public void PrepareFrame(RenderFrame frame, in ElapsedTime elapsedTime)

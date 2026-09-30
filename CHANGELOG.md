@@ -4,6 +4,17 @@ Stable versions and their assets are available in
 [Releases](https://github.com/agustinluzardo/Riel-Linux/releases). `main-<commit>` builds are
 prereleases that passed automated tests and packaging.
 
+## 0.1.7
+
+- Uses the prepared frame's camera position for scenery-shader fog, specular lighting
+  and distance fading, completing the camera snapshot introduced in 0.1.5.
+- Prevents blended materials from fading out when the updater moves the live camera
+  across a tile while the previous frame is being drawn.
+- Adds opt-in **Train visibility diagnostics** in Settings → Advanced. It records actual
+  model detail selection, culling, mesh submission and vehicle transforms in the simulator log.
+- Preserves the three-dimensional MSTS track placement from 0.1.6. Confirmation that this
+  fixes all reported intermittent vehicle disappearances on the original MSTS route is pending.
+
 ## 0.1.6
 
 - Applies all three MSTS placement angles (yaw, pitch and roll) to imported endpoints and

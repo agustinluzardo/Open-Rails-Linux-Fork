@@ -272,6 +272,9 @@ namespace Riel.Models.Settings
         public bool TraceRouteEditorRendering { get; set; }
         public bool ExperimentalVulkan { get; set; }
 
+        // Append-only: captures rendered/cull outcomes for the player's rolling stock.
+        public bool TraceTrainVisualDiagnostics { get; set; }
+
         [MemoryPackOnDeserialized]
         private void ApplyCompatibilityDefaults()
         {

@@ -166,7 +166,7 @@ namespace Riel.Launcher.Gui
             });
             AddOptions(AdvancedPanel, "TraceAiStops", "TraceAiProgress", "TraceAiTrainNumbers",
                 "TraceSignalDiagnostics", "TraceRoadCrossings", "TraceAiRouteResolution",
-                "TraceSoundDiagnostics", "TraceLightDiagnostics", "TraceLoadMarkers", "TraceParticleDiagnostics");
+                "TraceSoundDiagnostics", "TraceLightDiagnostics", "TraceLoadMarkers", "TraceParticleDiagnostics", "TraceTrainVisualDiagnostics");
             AddOptions(AdvancedPanel, "SuppressMissingPlatformWarnings");
             AddGroup(AdvancedPanel, "Editor diagnostics");
             AdvancedPanel.Children.Add(new TextBlock
@@ -199,6 +199,8 @@ namespace Riel.Launcher.Gui
                     ? Translation.T("Experimental Vulkan (Zink)")
                     : name == "TraceRouteEditorRendering"
                     ? Translation.T("Route editor rendering diagnostics")
+                    : name == "TraceTrainVisualDiagnostics"
+                    ? Translation.T("Train visibility diagnostics")
                     : Translation.T(System.Text.RegularExpressions.Regex.Replace(name, "(?<=[a-z0-9])(?=[A-Z])", " "));
                 Control control;
                 if (property.PropertyType == typeof(bool))
@@ -210,6 +212,8 @@ namespace Riel.Launcher.Gui
                         ToolTip.SetTip(control, Translation.T("Linux only. Uses Mesa Zink: the renderer stays OpenGL, but OpenGL commands run over Vulkan. This is experimental and may not work with every driver."));
                     else if (name == "TraceRouteEditorRendering")
                         ToolTip.SetTip(control, Translation.T("Logs the editor's OpenGL context, texture requests, ACE decode results, GPU texture uploads and magenta fallback draws."));
+                    else if (name == "TraceTrainVisualDiagnostics")
+                        ToolTip.SetTip(control, Translation.T("Logs vehicle positions, model detail levels, visibility decisions and submitted meshes for the player train. Use this when locomotives or wagons disappear."));
                     panel.Children.Add(control);
                 }
                 else

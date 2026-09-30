@@ -17,6 +17,7 @@ namespace Orts.Simulation
         private static readonly bool EnvironmentSoundDiagnostics = Environment.GetEnvironmentVariable("RIEL_TRACE_SOUND") == "1";
         private static readonly bool EnvironmentLightDiagnostics = Environment.GetEnvironmentVariable("RIEL_TRACE_LIGHTS") == "1";
         private static readonly bool EnvironmentLoadMarkers = Environment.GetEnvironmentVariable("RIEL_TRACE_LOAD_MARKERS") == "1";
+        private static readonly bool EnvironmentTrainVisuals = Environment.GetEnvironmentVariable("RIEL_TRACE_TRAIN_VISUALS") == "1";
         private static readonly bool EnvironmentSuppressMissingPlatforms = Environment.GetEnvironmentVariable("RIEL_SUPPRESS_MISSING_PLATFORMS") == "1";
         private static readonly string EnvironmentAiTrains = Environment.GetEnvironmentVariable("RIEL_TRACE_AI_TRAINS");
 
@@ -28,6 +29,7 @@ namespace Orts.Simulation
         public static bool SoundDiagnostics => EnvironmentSoundDiagnostics || Simulator.Instance?.UserSettings.TraceSoundDiagnostics == true;
         public static bool LightDiagnostics => EnvironmentLightDiagnostics || Simulator.Instance?.UserSettings.TraceLightDiagnostics == true;
         public static bool LoadMarkers => EnvironmentLoadMarkers || Simulator.Instance?.UserSettings.TraceLoadMarkers == true;
+        public static bool TrainVisuals => EnvironmentTrainVisuals || Simulator.Instance?.UserSettings.TraceTrainVisualDiagnostics == true;
         internal static bool SuppressMissingPlatformWarnings => EnvironmentSuppressMissingPlatforms || Simulator.Instance?.UserSettings.SuppressMissingPlatformWarnings == true;
 
         public static bool AiTrain(int number) =>

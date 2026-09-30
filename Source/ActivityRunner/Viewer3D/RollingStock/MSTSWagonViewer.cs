@@ -38,6 +38,7 @@ using Orts.ActivityRunner.Viewer3D.RollingStock.SubSystems;
 using Orts.ActivityRunner.Viewer3D.Shapes;
 using Orts.ActivityRunner.Viewer3D.Sound;
 using Orts.Formats.Msts;
+using Orts.Simulation;
 using Orts.Simulation.Commanding;
 using Orts.Simulation.Multiplayer;
 using Orts.Simulation.Multiplayer.Messaging;
@@ -109,6 +110,18 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
         private readonly int numBogie1, numBogie2, bogie1Axles, bogie2Axles;
         private readonly int bogieMatrix1, bogieMatrix2;
         private readonly FreightAnimationsViewer freightAnimations;
+
+        private double trainVisualSampleTime = double.NegativeInfinity;
+        private bool? previousTrainVisualVisible;
+        private int trainVisualChanges;
+        private int trainVisualVisibleFrames;
+        private int trainVisualHiddenFrames;
+        private int trainVisualInvalidMatrixFrames;
+        private int trainVisualNonFiniteMatrixFrames;
+        private int trainVisualWorldInvalidFrames;
+        private WorldLocation trainVisualLastInvalidWorldPosition;
+        private float trainVisualLastInvalidWorldDeterminant;
+        private double trainVisualLastInvalidWorldTime = double.NegativeInfinity;
 
         public MSTSWagonViewer(Viewer viewer, MSTSWagon car)
             : base(viewer, car)
@@ -1015,21 +1028,95 @@ namespace Orts.ActivityRunner.Viewer3D.RollingStock
             {
                 // We are in the passenger cabin
                 if (interiorShape != null)
+                {
                     interiorShape.PrepareFrame(frame, elapsedTime);
+                    TraceTrainVisual(default, "passenger-interior");
+                }
                 else
-                    trainCarShape.PrepareFrame(frame, elapsedTime);
+                    PrepareTrainCarFrame(frame, elapsedTime);
             }
             else
             {
                 // Skip drawing if 2D or 3D Cab view - Cab view already drawn - by GeorgeS changed by DennisAT
                 if (Viewer.Camera.AttachedCar == this.MSTSWagon &&
                     (Viewer.Camera.Style == CameraStyle.Cab || Viewer.Camera.Style == CameraStyle.Cab3D))
+                {
+                    TraceTrainVisual(default, "cab");
                     return;
+                }
 
                 // We are outside the passenger cabin
-                trainCarShape.PrepareFrame(frame, elapsedTime);
+                PrepareTrainCarFrame(frame, elapsedTime);
             }
 
+        }
+
+        private void PrepareTrainCarFrame(RenderFrame frame, in ElapsedTime elapsedTime)
+        {
+            if (!DiagnosticTrace.TrainVisuals || Car.Train == null || Car.Train != Viewer.PlayerLocomotive?.Train)
+            {
+                trainCarShape.PrepareFrame(frame, elapsedTime);
+                return;
+            }
+
+            // Capture the real submission pass, including its selected LODs and culling results.
+            // Diagnostic validation observes invalid matrices but never changes submission.
+            ShapeFrameResult result = trainCarShape.PrepareFrameWithDiagnostics(frame, elapsedTime);
+            TraceTrainVisual(result, "prepared");
+        }
+
+        private void TraceTrainVisual(in ShapeFrameResult result, string preparation)
+        {
+            if (!DiagnosticTrace.TrainVisuals || Car.Train == null || Car.Train != Viewer.PlayerLocomotive?.Train)
+                return;
+
+            if (previousTrainVisualVisible.HasValue && previousTrainVisualVisible != result.Visible)
+                trainVisualChanges++;
+            previousTrainVisualVisible = result.Visible;
+            if (result.Visible)
+                trainVisualVisibleFrames++;
+            else
+                trainVisualHiddenFrames++;
+            if (result.InvalidPrimitiveMatrices > 0)
+                trainVisualInvalidMatrixFrames++;
+            if (result.NonFinitePrimitiveMatrices > 0)
+                trainVisualNonFiniteMatrixFrames++;
+
+            WorldLocation location = Car.WorldPosition.WorldLocation;
+            Matrix matrix = Car.WorldPosition.XNAMatrix;
+            bool worldFinite = SharedShape.IsFinite(matrix);
+            float worldDeterminant = matrix.Determinant();
+            if (!worldFinite || !float.IsFinite(worldDeterminant) || Math.Abs(worldDeterminant) < 1e-8f)
+            {
+                trainVisualWorldInvalidFrames++;
+                trainVisualLastInvalidWorldPosition = location;
+                trainVisualLastInvalidWorldDeterminant = worldDeterminant;
+                trainVisualLastInvalidWorldTime = Viewer.RealTime;
+            }
+
+            // One line per car per second, even if it flickers every frame. Interval counts
+            // retain that evidence when the current sample happens to be visible again.
+            if (Viewer.RealTime - trainVisualSampleTime < 1)
+                return;
+
+            WorldLocation camera = Viewer.Camera.CameraWorldLocation;
+            string lods = result.Lods == null ? "-" : string.Join(";", result.Lods.Select((lod, index) =>
+                $"{index}:level={lod.SelectedLevel},fov={lod.InFov},range={(lod.InRange.HasValue ? lod.InRange.Value.ToString() : "untested")},viewM={lod.ViewingDistance:F1},radiusM={lod.Radius:F1},primitives={lod.VisiblePrimitives},shadowMask={lod.ShadowMask}"));
+            string lastInvalidWorld = double.IsNegativeInfinity(trainVisualLastInvalidWorldTime) ? "none" :
+                $"realTime={trainVisualLastInvalidWorldTime:F3},position={trainVisualLastInvalidWorldPosition},determinant={trainVisualLastInvalidWorldDeterminant:G9}";
+            Trace.TraceInformation("[TrainVisual] wallUtc={0:O} simTime={1:F1} realTime={2:F1} train={3} car={4} model={5} preparation={6} visible={7} changes={8} visibleFrames={9} hiddenFrames={10} position={11} camera={12} cameraStyle={13} distanceM={14:F1} terrainY={15:F2} heightAboveTerrainM={16:F2} finite={17} determinant={18:G9} wheelsLoaded={19} frontNode={20} frontSection={21} visiblePrimitives={22} shadowMask={23} invalidMatrices={24} nonFiniteMatrices={25} lods=[{26}] invalidMatrixFrames={27} nonFiniteMatrixFrames={28} worldInvalidFrames={29} lastInvalidWorld=[{30}]",
+                DateTime.UtcNow, Viewer.Simulator.ClockTime, Viewer.RealTime, Car.Train.Number, Car.CarID,
+                Path.GetFileName(trainCarShape.SharedShape.FilePath), preparation, result.Visible, trainVisualChanges,
+                trainVisualVisibleFrames, trainVisualHiddenFrames, location, camera, Viewer.Camera.Style,
+                Math.Sqrt(WorldLocation.GetDistanceSquared(camera, location)), Car.CarHeightAboveSeaLevel,
+                location.Location.Y - Car.CarHeightAboveSeaLevel, worldFinite, worldDeterminant,
+                Car.WheelAxlesLoaded, Car.Train.FrontTrackTraveller.TrackNodeIndex, Car.Train.FrontTrackTraveller.SectionIndex,
+                result.VisiblePrimitives, result.ShadowMask, result.InvalidPrimitiveMatrices,
+                result.NonFinitePrimitiveMatrices, lods, trainVisualInvalidMatrixFrames,
+                trainVisualNonFiniteMatrixFrames, trainVisualWorldInvalidFrames, lastInvalidWorld);
+            trainVisualSampleTime = Viewer.RealTime;
+            trainVisualChanges = trainVisualVisibleFrames = trainVisualHiddenFrames = 0;
+            trainVisualInvalidMatrixFrames = trainVisualNonFiniteMatrixFrames = trainVisualWorldInvalidFrames = 0;
         }
 
         /// <summary>

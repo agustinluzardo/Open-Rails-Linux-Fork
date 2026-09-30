@@ -433,7 +433,7 @@ namespace Orts.ActivityRunner.Viewer3D
         private float fadeDuration = -1;
         private float clampValue = 1;
         private float distance = 1000;
-        internal void UpdateShaders()
+        internal void UpdateShaders(RenderFrame frame)
         {
             if (!Viewer.UserSettings.MstsEnvironment)
                 sunDirection = Viewer.World.Sky.SolarDirection;
@@ -501,15 +501,17 @@ namespace Orts.ActivityRunner.Viewer3D
                 SceneryShader.Overcast = Viewer.Simulator.Weather.OvercastFactor;
                 SceneryShader.SetFog(Viewer.Simulator.Weather.FogVisibilityDistance, ref SharedMaterialManager.FogColor);
                 ParticleEmitterShader.SetFog(Viewer.Simulator.Weather.FogVisibilityDistance, ref SharedMaterialManager.FogColor);
-                SceneryShader.ViewerPos = Viewer.Camera.XnaLocation(Viewer.Camera.CameraWorldLocation);
             }
             else
             {
                 SceneryShader.Overcast = Viewer.World.MSTSSky.mstsskyovercastFactor;
                 SceneryShader.SetFog(Viewer.World.MSTSSky.mstsskyfogDistance, ref SharedMaterialManager.FogColor);
                 ParticleEmitterShader.SetFog(Viewer.Simulator.Weather.FogVisibilityDistance, ref SharedMaterialManager.FogColor);
-                SceneryShader.ViewerPos = Viewer.Camera.XnaLocation(Viewer.Camera.CameraWorldLocation);
             }
+            // Meshes and their view/projection matrices were prepared together.
+            // The updater can already be moving the live camera on another tile;
+            // distance fading must use this frame's captured camera position too.
+            SceneryShader.ViewerPos = frame.CameraLocation;
         }
     }
 

@@ -18,6 +18,39 @@ using Orts.Simulation;
 
 namespace Orts.ActivityRunner.Viewer3D.Shapes
 {
+    // Captured by the normal preparation pass when train visibility diagnostics are enabled.
+    // An unevaluated range test remains null, rather than being recomputed for the log.
+    internal struct ShapeLodFrameResult
+    {
+        internal int SelectedLevel;
+        internal bool InFov;
+        internal bool? InRange;
+        internal float ViewingDistance;
+        internal float Radius;
+        internal int VisiblePrimitives;
+        internal int ShadowMask;
+    }
+
+    internal readonly struct ShapeFrameResult
+    {
+        internal ShapeLodFrameResult[] Lods { get; }
+        internal int VisiblePrimitives { get; }
+        internal int ShadowMask { get; }
+        internal int InvalidPrimitiveMatrices { get; }
+        internal int NonFinitePrimitiveMatrices { get; }
+        internal bool Visible => VisiblePrimitives > 0;
+
+        internal ShapeFrameResult(ShapeLodFrameResult[] lods, int visiblePrimitives, int shadowMask,
+            int invalidPrimitiveMatrices, int nonFinitePrimitiveMatrices)
+        {
+            Lods = lods;
+            VisiblePrimitives = visiblePrimitives;
+            ShadowMask = shadowMask;
+            InvalidPrimitiveMatrices = invalidPrimitiveMatrices;
+            NonFinitePrimitiveMatrices = nonFinitePrimitiveMatrices;
+        }
+    }
+
     public class SharedShape: IDisposable
     {
         private static readonly HashSet<string> shapeWarnings = new HashSet<string>();
@@ -603,7 +636,24 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
 
         public void PrepareFrame(RenderFrame frame, in WorldPosition location, Matrix[] animatedXNAMatrices, bool[] subObjVisible, ShapeOptions flags, bool[] matrixVisible = null)
         {
+            PrepareFrameCore(frame, location, animatedXNAMatrices, subObjVisible, flags, matrixVisible, false);
+        }
+
+        internal ShapeFrameResult PrepareFrameWithDiagnostics(RenderFrame frame, in WorldPosition location,
+            Matrix[] animatedXNAMatrices, ShapeOptions flags)
+        {
+            return PrepareFrameCore(frame, location, animatedXNAMatrices, null, flags, null, true);
+        }
+
+        private ShapeFrameResult PrepareFrameCore(RenderFrame frame, in WorldPosition location,
+            Matrix[] animatedXNAMatrices, bool[] subObjVisible, ShapeOptions flags, bool[] matrixVisible, bool diagnostics)
+        {
             var lodBias = ((float)viewer.UserSettings.DetailLevelBias / 100 + 1);
+            ShapeLodFrameResult[] lodResults = diagnostics ? new ShapeLodFrameResult[LodControls.Length] : null;
+            int visiblePrimitives = 0;
+            int combinedShadowMask = 0;
+            int invalidPrimitiveMatrices = 0;
+            int nonFinitePrimitiveMatrices = 0;
 
             // Locate relative to the camera
             Tile delta = location.Tile - viewer.Camera.Tile;
@@ -614,14 +664,24 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
             xnaDTileTranslation.M41 += delta.X * 2048;
             xnaDTileTranslation.M43 -= delta.Z * 2048;
 
-            foreach (var lodControl in LodControls)
+            for (int controlIndex = 0; controlIndex < LodControls.Length; controlIndex++)
             {
+                var lodControl = LodControls[controlIndex];
                 // Start with the furthest away distance, then look for a nearer one in range of the camera.
                 var displayDetailLevel = lodControl.DistanceLevels.Length - 1;
 
                 // If this LOD group is not in the FOV, skip the whole LOD group.
                 // TODO: This might imair some shadows.
-                if (!viewer.Camera.InFov(mstsLocation, lodControl.DistanceLevels[displayDetailLevel].ViewSphereRadius))
+                bool inFov = viewer.Camera.InFov(mstsLocation, lodControl.DistanceLevels[displayDetailLevel].ViewSphereRadius);
+                if (diagnostics)
+                    lodResults[controlIndex] = new ShapeLodFrameResult
+                    {
+                        SelectedLevel = displayDetailLevel,
+                        InFov = inFov,
+                        Radius = lodControl.DistanceLevels[displayDetailLevel].ViewSphereRadius,
+                        ViewingDistance = lodControl.DistanceLevels[displayDetailLevel].ViewingDistance * lodBias,
+                    };
+                if (!inFov)
                     continue;
 
                 // We choose the distance level (LOD) to display first:
@@ -660,8 +720,23 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
                     displayDetailLevel == lodControl.DistanceLevels.Length - 1)
                     objectViewingDistance = float.MaxValue;
 
-                frame.GetAutoPrimitiveVisibility(mstsLocation, distanceDetail.ViewSphereRadius,
-                    objectViewingDistance * lodBias, flags, out bool visible, out int shadowMask);
+                bool visible;
+                int shadowMask;
+                if (diagnostics)
+                {
+                    frame.GetAutoPrimitiveVisibility(mstsLocation, distanceDetail.ViewSphereRadius,
+                        objectViewingDistance * lodBias, flags, out visible, out shadowMask, out bool inRange, out inFov);
+                    lodResults[controlIndex].SelectedLevel = displayDetailLevel;
+                    lodResults[controlIndex].InRange = inRange;
+                    lodResults[controlIndex].InFov = inFov;
+                    lodResults[controlIndex].ViewingDistance = objectViewingDistance * lodBias;
+                    lodResults[controlIndex].Radius = distanceDetail.ViewSphereRadius;
+                    lodResults[controlIndex].ShadowMask = shadowMask;
+                    combinedShadowMask |= shadowMask;
+                }
+                else
+                    frame.GetAutoPrimitiveVisibility(mstsLocation, distanceDetail.ViewSphereRadius,
+                        objectViewingDistance * lodBias, flags, out visible, out shadowMask);
                 if (!visible && shadowMask == 0)
                     continue;
 
@@ -686,6 +761,21 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
                         }
                         MatrixExtension.Multiply(in startingPoint, in xnaDTileTranslation, out Matrix xnaMatrix);
 
+                        if (diagnostics)
+                        {
+                            if (visible)
+                            {
+                                visiblePrimitives++;
+                                lodResults[controlIndex].VisiblePrimitives++;
+                            }
+                            bool finite = IsFinite(xnaMatrix);
+                            if (!finite)
+                                nonFinitePrimitiveMatrices++;
+                            float determinant = finite ? xnaMatrix.Determinant() : float.NaN;
+                            if (!finite || !float.IsFinite(determinant) || Math.Abs(determinant) < 1e-8f)
+                                invalidPrimitiveMatrices++;
+                        }
+
                         // TODO make shadows depend on shape overrides
 
                         var interior = (flags & ShapeOptions.Interior) != 0;
@@ -695,6 +785,19 @@ namespace Orts.ActivityRunner.Viewer3D.Shapes
                     }
                 }
             }
+
+            return diagnostics
+                ? new ShapeFrameResult(lodResults, visiblePrimitives, combinedShadowMask,
+                    invalidPrimitiveMatrices, nonFinitePrimitiveMatrices)
+                : default;
+        }
+
+        internal static bool IsFinite(in Matrix matrix)
+        {
+            return float.IsFinite(matrix.M11) && float.IsFinite(matrix.M12) && float.IsFinite(matrix.M13) && float.IsFinite(matrix.M14)
+                && float.IsFinite(matrix.M21) && float.IsFinite(matrix.M22) && float.IsFinite(matrix.M23) && float.IsFinite(matrix.M24)
+                && float.IsFinite(matrix.M31) && float.IsFinite(matrix.M32) && float.IsFinite(matrix.M33) && float.IsFinite(matrix.M34)
+                && float.IsFinite(matrix.M41) && float.IsFinite(matrix.M42) && float.IsFinite(matrix.M43) && float.IsFinite(matrix.M44);
         }
 
         public Matrix GetMatrixProduct(int iNode)

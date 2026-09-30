@@ -104,6 +104,26 @@ changes completed without black frames. This is fixture evidence, not a NVIDIA c
 
 ## Visual flicker reports
 
+The 0.1.7 scenery shader uses the camera position captured by `RenderFrame.SetCamera`,
+matching the prepared meshes and view/projection matrices. Reading the next updater's camera
+position could introduce a tile-sized error in the shader's distance calculation and fade
+blended rolling-stock materials to zero alpha.
+
+`RenderFrameShaderTests` executes the production shader setters and reads back real
+MonoGame parameters for both sky modes at X/Z tile boundaries. All four cases failed
+against the previous shader-update body with a 2,046-metre coordinate error and pass
+with the frame snapshot. Seven `ShapeFrameDiagnosticsTests` cases exercise actual LOD
+selection, culling and mesh submission, including invalid animation matrices, and check
+that enabling diagnostics preserves the submitted geometry. Local Release builds of the
+simulator and launcher passed, along with 679 Riel and 223 Orts test cases.
+
+To investigate vehicles that disappear, enable **Settings → Advanced → Train visibility
+diagnostics** (or launch with `RIEL_TRACE_TRAIN_VISUALS=1`). Reproduce the original route and
+activity with the same exterior camera and attach the simulator log. The `[TrainVisual]` entries
+report actual shape preparation results and vehicle transforms; they do not change culling,
+model detail, track placement or materials. The synthetic placement checks did not reproduce
+the reported disappearance, so confirmation with the original MSTS content is still needed.
+
 `RenderFrameCameraTests` checks that opaque, blended and distant-mountain passes retain
 the camera used to prepare their frame after a subsequent update changes the view by
 one 2,048-metre tile and changes the projection. It also checks that the next frame gets

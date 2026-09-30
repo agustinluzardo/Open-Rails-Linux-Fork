@@ -246,6 +246,8 @@ namespace Orts.ActivityRunner.Viewer3D
         private Vector3 solarDirection;
         private Camera camera;
         private Vector3 cameraLocation;
+        /// <summary>XNA camera position in the same tile coordinates as this frame's prepared meshes.</summary>
+        public Vector3 CameraLocation => cameraLocation;
         private RenderItem.Comparer renderItemComparer;
 
         private Matrix cameraViewProjection;
@@ -464,12 +466,28 @@ namespace Orts.ActivityRunner.Viewer3D
             visible = (float.IsPositiveInfinity(objectViewingDistance) ||
                 (camera != null && camera.InRange(mstsLocation, objectRadius, objectViewingDistance))) &&
                 camera != null && camera.InFov(mstsLocation, objectRadius);
+            shadowMask = GetShadowMask(mstsLocation, objectRadius, objectViewingDistance, flags);
+        }
 
-            shadowMask = 0;
+        public void GetAutoPrimitiveVisibility(Vector3 mstsLocation, float objectRadius, float objectViewingDistance, ShapeOptions flags,
+            out bool visible, out int shadowMask, out bool inRange, out bool inFov)
+        {
+            inRange = float.IsPositiveInfinity(objectViewingDistance) ||
+                (camera != null && camera.InRange(mstsLocation, objectRadius, objectViewingDistance));
+            inFov = camera != null && camera.InFov(mstsLocation, objectRadius);
+            visible = inRange && inFov;
+
+            shadowMask = GetShadowMask(mstsLocation, objectRadius, objectViewingDistance, flags);
+        }
+
+        private int GetShadowMask(Vector3 mstsLocation, float objectRadius, float objectViewingDistance, ShapeOptions flags)
+        {
+            int shadowMask = 0;
             if (dynamicShadows && (flags & ShapeOptions.ShadowCaster) != 0)
                 for (int index = 0; index < shadowMapCount; index++)
                     if (IsInShadowMap(index, mstsLocation, objectRadius, objectViewingDistance))
                         shadowMask |= 1 << index;
+            return shadowMask;
         }
 
         public void AddPreculledPrimitive(Material material, RenderPrimitive primitive, RenderPrimitiveGroup group, ref Matrix xnaMatrix, ShapeOptions flags, bool visible, int shadowMask)
