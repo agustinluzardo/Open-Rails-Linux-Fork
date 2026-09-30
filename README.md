@@ -21,9 +21,9 @@ Riel's Linux integration, interface, fixes and releases.
 
 ## Download and get started
 
-Stable **0.1.4** fixes startup crashes when a route's environment has no recognized sun or a
-speedpost cannot be placed on its track node. It includes the native editor suite, editor loading
-fixes and Vulkan activation through Zink. Download `riel-linux-x64.zip` from the
+Stable **0.1.5** fixes a rendering race that let the next camera update change a frame already
+being drawn. It also includes the missing-sun and unplaced-speedpost startup fixes, native
+editor suite, editor loading fixes and Vulkan activation through Zink. Download `riel-linux-x64.zip` from the
 [stable release](https://github.com/agustinluzardo/Riel-Linux/releases/latest), extract the complete
 archive and run:
 
@@ -247,8 +247,8 @@ renderer shown by F3 and whether the whole screen, scenery or dispatcher map is 
   Linux or exposed as a game mode in the launcher.
 - Some routes still have AI traffic, signal and crossing differences from Open Rails. In FCGR,
   the signal between Quilmes and Ezpeleta can appear green while the route treats it as red.
-- Reported black flashes during gameplay remain under investigation. Version 0.1.4 is not
-  presented as a confirmed fix for that issue.
+- Version 0.1.5 fixes a verified camera-matrix rendering race. Confirmation that it resolves
+  the reported black flashes on the affected route and GPU remains pending.
 - Renamed public libraries use `Riel.*`. Add-ons built against `FreeTrainSimulator.*` require
   rebuilding, and scripts importing those namespaces need adapting. Saves made before that
   change have not been fully verified.

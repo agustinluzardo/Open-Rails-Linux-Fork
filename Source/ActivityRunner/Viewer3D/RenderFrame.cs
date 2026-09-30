@@ -249,8 +249,12 @@ namespace Orts.ActivityRunner.Viewer3D
         private RenderItem.Comparer renderItemComparer;
 
         private Matrix cameraViewProjection;
-        private Matrix identity;
-        private Matrix projection;
+        // The updater prepares another frame while this one is being drawn.
+        // Keep camera matrices with the frame, rather than reading the live
+        // camera on the render thread after it has moved or changed projection.
+        private Matrix cameraView;
+        private Matrix cameraProjection;
+        private Matrix cameraDistantMountainProjection;
 
         private readonly int shadowMapCount;
         private readonly bool dynamicShadows;
@@ -316,9 +320,10 @@ namespace Orts.ActivityRunner.Viewer3D
                 }
             }
 
-            identity = Matrix.Identity;
-            projection = Matrix.CreateOrthographic(game.RenderProcess.DisplaySize.X, game.RenderProcess.DisplaySize.Y, 1, 100);
-            MatrixExtension.Multiply(in identity, in projection, out cameraViewProjection);
+            cameraView = Matrix.Identity;
+            cameraProjection = Matrix.CreateOrthographic(game.RenderProcess.DisplaySize.X, game.RenderProcess.DisplaySize.Y, 1, 100);
+            cameraDistantMountainProjection = Camera.XnaDistantMountainProjection;
+            MatrixExtension.Multiply(in cameraView, in cameraProjection, out cameraViewProjection);
 
             renderItemComparer = new RenderItem.Comparer(Vector3.Zero);
         }
@@ -372,10 +377,10 @@ namespace Orts.ActivityRunner.Viewer3D
             cameraLocation = camera.Location;
             cameraLocation.Z *= -1;
 
-            //viewMatrices[(int)ViewMatrixSequence.View] = camera.XnaView;
-            //viewMatrices[(int)ViewMatrixSequence.Projection] = camera.XnaProjection;
-            //MatrixExtension.Multiply(in viewMatrices[0], in viewMatrices[1], out viewMatrices[2]);
-            MatrixExtension.Multiply(in camera.XnaView, in camera.XnaProjection, out cameraViewProjection);
+            cameraView = camera.XnaView;
+            cameraProjection = camera.XnaProjection;
+            cameraDistantMountainProjection = Camera.XnaDistantMountainProjection;
+            MatrixExtension.Multiply(in cameraView, in cameraProjection, out cameraViewProjection);
 
             renderItemComparer.Update(cameraLocation);
         }
@@ -391,10 +396,7 @@ namespace Orts.ActivityRunner.Viewer3D
                 if (Vector3.Dot(steppedSolarDirection, normalizedSolarDirection) < 0.99999)
                     steppedSolarDirection = normalizedSolarDirection;
 
-                //                var cameraDirection = new Vector3(-cameraView.M13, -cameraView.M23, -cameraView.M33);
-                //                var cameraDirection = new Vector3(-viewMatrices[(int)ViewMatrixSequence.View].M13, -viewMatrices[(int)ViewMatrixSequence.View].M23, -viewMatrices[(int)ViewMatrixSequence.View].M33);
-                Vector3 cameraDirection = new Vector3(-(camera?.XnaView.M13 ?? 0), -(camera?.XnaView.M23 ?? 0), -(camera?.XnaView.M33 ?? 1));
-                // viewMatrices[(int)ViewMatrixSequence.View].M13, -viewMatrices[(int)ViewMatrixSequence.View].M23, -viewMatrices[(int)ViewMatrixSequence.View].M33);
+                Vector3 cameraDirection = new Vector3(-cameraView.M13, -cameraView.M23, -cameraView.M33);
                 cameraDirection.Normalize();
 
                 var shadowMapAlignAxisX = Vector3.Cross(steppedSolarDirection, Vector3.UnitY);
@@ -707,9 +709,6 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private void DrawSequences(bool logging)
         {
-            ref Matrix viewRef = ref (camera != null ? ref camera.XnaView : ref identity);
-            ref Matrix projectionRef = ref (camera != null ? ref camera.XnaProjection : ref projection);
-
             if (dynamicShadows && (shadowMapCount > 0) && sceneryShader != null)
                 sceneryShader.SetShadowMap(shadowMapLightViewProjectionShadowProjection, shadowMap, RenderProcess.ShadowMapLimit);
 
@@ -735,7 +734,7 @@ namespace Orts.ActivityRunner.Viewer3D
                                 {
                                     if (logging)
                                         Trace.WriteLine($"      {renderItemsSequence.Count,-5} * {lastMaterial}");
-                                    lastMaterial.Render(renderItemsSequence, ref viewRef, ref projectionRef, ref cameraViewProjection);
+                                    lastMaterial.Render(renderItemsSequence, ref cameraView, ref cameraProjection, ref cameraViewProjection);
                                     renderItemsSequence.Clear();
                                 }
 
@@ -750,7 +749,7 @@ namespace Orts.ActivityRunner.Viewer3D
                         {
                             if (logging)
                                 Trace.WriteLine($"      {renderItemsSequence.Count,-5} * {lastMaterial}");
-                            lastMaterial.Render(renderItemsSequence, ref viewRef, ref projectionRef, ref cameraViewProjection);
+                            lastMaterial.Render(renderItemsSequence, ref cameraView, ref cameraProjection, ref cameraViewProjection);
                             renderItemsSequence.Clear();
                         }
 
@@ -766,7 +765,7 @@ namespace Orts.ActivityRunner.Viewer3D
                         sequenceMaterial.Key.SetState(null);
                         if (logging)
                             Trace.WriteLine($"      {sequenceMaterial.Value.Count,-5} * {sequenceMaterial.Key}");
-                        sequenceMaterial.Key.Render(sequenceMaterial.Value, ref viewRef, ref projectionRef, ref cameraViewProjection);
+                        sequenceMaterial.Key.Render(sequenceMaterial.Value, ref cameraView, ref cameraProjection, ref cameraViewProjection);
                         sequenceMaterial.Key.ResetState();
                     }
                 }
@@ -780,11 +779,7 @@ namespace Orts.ActivityRunner.Viewer3D
 
         private void DrawSequencesDistantMountains(bool logging)
         {
-            Matrix mountainViewProjection;
-            if (camera == null)
-                MatrixExtension.Multiply(in identity, in Camera.XnaDistantMountainProjection, out mountainViewProjection);
-            else
-                MatrixExtension.Multiply(in camera.XnaView, in Camera.XnaDistantMountainProjection, out mountainViewProjection);
+            MatrixExtension.Multiply(in cameraView, in cameraDistantMountainProjection, out Matrix mountainViewProjection);
 
             for (var i = 0; i < EnumExtension.GetLength<RenderPrimitiveSequence>(); i++)
             {
@@ -801,7 +796,7 @@ namespace Orts.ActivityRunner.Viewer3D
                         sequenceMaterial.Key.SetState(null);
                         if (logging)
                             Trace.WriteLine($"      {sequenceMaterial.Value.Count,-5} * {sequenceMaterial.Key}");
-                        sequenceMaterial.Key.Render(sequenceMaterial.Value, ref camera.XnaView, ref Camera.XnaDistantMountainProjection, ref mountainViewProjection);
+                        sequenceMaterial.Key.Render(sequenceMaterial.Value, ref cameraView, ref cameraDistantMountainProjection, ref mountainViewProjection);
                         sequenceMaterial.Key.ResetState();
                     }
                 }

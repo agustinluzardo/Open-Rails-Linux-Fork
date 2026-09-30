@@ -74,6 +74,17 @@ See [the editor guide](../route-editor.md) for flags and log markers.
 
 ## Visual flicker reports
 
+`RenderFrameCameraTests` checks that opaque, blended and distant-mountain passes retain
+the camera used to prepare their frame after a subsequent update changes the view by
+one 2,048-metre tile and changes the projection. It also checks that the next frame gets
+the new camera and that the loading screen keeps its orthographic projection.
+
+For a graphics check, load visible terrain and scenery, switch between cab and exterior
+cameras, rotate the view, change zoom and open/close the dispatcher map. Repeat with
+dynamic shadows disabled and enabled, distant mountains enabled and 4× antialiasing.
+Check the scene outside overlays as well as the full window; an interface element can
+remain visible during a scene-rendering failure.
+
 Record whether black appears over the entire game window, only terrain/objects, or the
 dispatcher map. Include the F3 renderer, route/activity, camera, simulation time and
 location, weather, shadow configuration and a short recording when possible.

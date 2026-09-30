@@ -4,6 +4,18 @@ Stable versions and their assets are available in
 [Releases](https://github.com/agustinluzardo/Riel-Linux/releases). `main-<commit>` builds are
 prereleases that passed automated tests and packaging.
 
+## 0.1.5
+
+- Keeps each prepared frame's camera view and projection matrices instead of reading a
+  camera that the updater may already be moving for the next frame.
+- Uses the same captured camera for opaque and blended render passes, shadow direction
+  and distant mountains, including changes of field of view or projection.
+- Adds regression tests for concurrent frame preparation, tile-sized camera movement,
+  projection changes, distant mountains and the loading screen.
+- Includes the startup crash fixes from 0.1.4. The native editors are unchanged.
+- Fixes a verified rendering race; confirmation that it resolves the reported black
+  flashes on the user's route and GPU remains pending.
+
 ## 0.1.4
 
 - Fixes `SunMoonPos.SolarAngle` startup crashes when an ENV file has no recognized sun,
