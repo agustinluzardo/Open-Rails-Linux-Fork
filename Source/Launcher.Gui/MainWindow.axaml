@@ -25,17 +25,11 @@
       <Setter Property="Margin" Value="20" />
       <Setter Property="IsHitTestVisible" Value="False" />
     </Style>
-    <Style Selector="Grid#MainArea">
-      <Setter Property="ColumnDefinitions" Value="240,*,270" />
-      <Setter Property="RowDefinitions" Value="*" />
-    </Style>
     <Style Selector="Border#SelectionDetailsPanel">
       <Setter Property="Grid.Column" Value="2" />
       <Setter Property="Padding" Value="16" />
     </Style>
     <Style Selector="Grid#InformationColumns">
-      <Setter Property="ColumnDefinitions" Value="*" />
-      <Setter Property="RowDefinitions" Value="Auto,*" />
       <Setter Property="RowSpacing" Value="16" />
     </Style>
     <Style Selector="ScrollViewer#SessionInformationScroll">
@@ -48,8 +42,6 @@
     </Style>
     <!-- Preserve information at smaller window sizes, without shrinking the form to three narrow columns. -->
     <Style Selector="Window.compact Grid#MainArea">
-      <Setter Property="ColumnDefinitions" Value="240,*" />
-      <Setter Property="RowDefinitions" Value="*,Auto" />
       <Setter Property="RowSpacing" Value="14" />
     </Style>
     <Style Selector="Window.compact Border#SelectionDetailsPanel">
@@ -58,8 +50,6 @@
       <Setter Property="Padding" Value="14,10" />
     </Style>
     <Style Selector="Window.compact Grid#InformationColumns">
-      <Setter Property="ColumnDefinitions" Value="*,*" />
-      <Setter Property="RowDefinitions" Value="*" />
       <Setter Property="ColumnSpacing" Value="14" />
       <Setter Property="RowSpacing" Value="0" />
     </Style>

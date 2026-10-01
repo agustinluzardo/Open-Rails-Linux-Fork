@@ -82,8 +82,8 @@ namespace Riel.Launcher.Gui
         {
             InitializeComponent();
 
-            Classes.Set("compact", Width < 1120);
-            SizeChanged += (_, args) => Classes.Set("compact", args.NewSize.Width < 1120);
+            UpdateResponsiveLayout(Width);
+            SizeChanged += (_, args) => UpdateResponsiveLayout(args.NewSize.Width);
 
             SeasonBox.ItemsSource = Enum.GetValues<SeasonType>().Select(season => new Choice<SeasonType>(season, Names.Season(season))).ToList();
             WeatherBox.ItemsSource = Enum.GetValues<WeatherType>().Select(weather => new Choice<WeatherType>(weather, Names.Weather(weather))).ToList();
@@ -198,6 +198,21 @@ namespace Riel.Launcher.Gui
             };
 
             UpdateButtons();
+        }
+
+        private void UpdateResponsiveLayout(double width)
+        {
+            bool compact = width < 1120;
+            if (Classes.Contains("compact") == compact && MainArea.ColumnDefinitions.Count == (compact ? 2 : 3))
+                return;
+
+            Classes.Set("compact", compact);
+            // Grid definition collections are ordinary CLR properties in Avalonia;
+            // update them only when crossing the breakpoint, rather than on every resize.
+            MainArea.ColumnDefinitions = new ColumnDefinitions(compact ? "240,*" : "240,*,270");
+            MainArea.RowDefinitions = new RowDefinitions(compact ? "*,Auto" : "*");
+            InformationColumns.ColumnDefinitions = new ColumnDefinitions(compact ? "*,*" : "*");
+            InformationColumns.RowDefinitions = new RowDefinitions(compact ? "*" : "Auto,*");
         }
 
         private async Task ShowSettings()
