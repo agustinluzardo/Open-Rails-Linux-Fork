@@ -8,12 +8,13 @@
         WindowStartupLocation="CenterScreen">
   <Window.Styles>
     <Style Selector="TabControl.mode-tabs TabItem">
+      <Setter Property="FontSize" Value="15" />
       <Setter Property="MinHeight" Value="42" />
       <Setter Property="Padding" Value="16,10" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="TextBlock.route-title">
-      <Setter Property="FontSize" Value="23" />
+      <Setter Property="FontSize" Value="21" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="TextBlock.empty-message">
@@ -25,25 +26,66 @@
       <Setter Property="Margin" Value="20" />
       <Setter Property="IsHitTestVisible" Value="False" />
     </Style>
+    <Style Selector="Border#SelectionDetailsPanel">
+      <Setter Property="Grid.Column" Value="2" />
+      <Setter Property="Padding" Value="16" />
+    </Style>
+    <Style Selector="Grid#InformationColumns">
+      <Setter Property="RowSpacing" Value="16" />
+    </Style>
+    <Style Selector="ScrollViewer#SessionInformationScroll">
+      <Setter Property="MaxHeight" Value="180" />
+    </Style>
+    <Style Selector="Border#TrainInformation">
+      <Setter Property="Grid.Row" Value="1" />
+      <Setter Property="BorderThickness" Value="0,1,0,0" />
+      <Setter Property="Padding" Value="0,14,0,0" />
+    </Style>
+    <!-- Preserve information at smaller window sizes, without shrinking the form to three narrow columns. -->
+    <Style Selector="Window.compact Grid#MainArea">
+      <Setter Property="RowSpacing" Value="14" />
+    </Style>
+    <Style Selector="Window.compact Border#SelectionDetailsPanel">
+      <Setter Property="Grid.Column" Value="1" />
+      <Setter Property="Grid.Row" Value="1" />
+      <Setter Property="Padding" Value="14,10" />
+    </Style>
+    <Style Selector="Window.compact Grid#InformationColumns">
+      <Setter Property="ColumnSpacing" Value="14" />
+      <Setter Property="RowSpacing" Value="0" />
+    </Style>
+    <Style Selector="Window.compact ScrollViewer#SessionInformationScroll">
+      <Setter Property="MaxHeight" Value="82" />
+    </Style>
+    <Style Selector="Window.compact Border#TrainInformation">
+      <Setter Property="Grid.Row" Value="0" />
+      <Setter Property="Grid.Column" Value="1" />
+      <Setter Property="BorderThickness" Value="1,0,0,0" />
+      <Setter Property="Padding" Value="14,0,0,0" />
+    </Style>
+    <Style Selector="Window.compact ScrollViewer#TrainInformationScroll">
+      <Setter Property="MaxHeight" Value="62" />
+    </Style>
   </Window.Styles>
   <Grid RowDefinitions="Auto,*,Auto">
 
-    <!-- A railway identity, with a full-width tagline that survives translation. -->
-    <Border Grid.Row="0" Classes="bar" BorderThickness="0,0,0,1" Padding="24,16">
-      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="6">
+    <!-- Compact application chrome leaves more room for route and train information. -->
+    <Border Grid.Row="0" Classes="bar" BorderThickness="0,0,0,1" Padding="24,14">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-          <Border Background="{DynamicResource RielRaised}" CornerRadius="12" Padding="7">
-            <Image Source="/Assets/riel.png" Width="36" Height="36" />
-          </Border>
-          <TextBlock Classes="title" Text="Riel" VerticalAlignment="Center" />
+          <Image Source="/Assets/riel.png" Width="38" Height="38" />
+          <StackPanel Spacing="1">
+            <TextBlock Classes="title" Text="Riel" />
+            <TextBlock Classes="secondary small" Text="{l:T 'Train simulator'}" />
+          </StackPanel>
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
           <ToggleSwitch x:Name="DarkSwitch" OnContent="{l:T 'Dark'}" OffContent="{l:T 'Dark'}"
                         AutomationProperties.Name="{l:T 'Dark'}" VerticalAlignment="Center" Margin="0,0,8,0" />
           <Button x:Name="ContentButton" Content="{l:T 'Content folders'}" />
-          <Button x:Name="ToolsButton" Content="{l:T 'Tools'}">
+          <Button x:Name="ToolsButton" Content="{l:T 'Tools ▾'}" AutomationProperties.Name="{l:T 'Tools'}">
             <Button.ContextMenu>
-              <ContextMenu>
+              <ContextMenu Placement="Bottom">
                 <MenuItem x:Name="GetContentButton" Header="{l:T 'Get content'}" />
                 <MenuItem x:Name="ManualButton" Header="{l:T 'Manual'}" />
                 <Separator />
@@ -60,25 +102,19 @@
           </Button>
           <Button x:Name="SettingsButton" Content="{l:T 'Settings'}" />
         </StackPanel>
-        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="secondary small" Margin="62,0,0,0"
-                   Text="{l:T 'Microsoft Train Simulator routes, natively on Linux'}" TextWrapping="Wrap" />
       </Grid>
     </Border>
 
     <Grid Grid.Row="1" Margin="20,18">
-      <Grid x:Name="MainArea" ColumnDefinitions="280,*" ColumnSpacing="16">
+      <Grid x:Name="MainArea" ColumnSpacing="18">
 
-        <!-- Step 1: a persistent, searchable route library. -->
-        <Border Grid.Column="0" Classes="card" Padding="16">
-          <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
-            <StackPanel Orientation="Horizontal" Spacing="9">
-              <Border Classes="step"><TextBlock Text="1" /></Border>
-              <TextBlock Classes="heading" Text="{l:T 'Choose a route'}" VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Grid.Row="1" Classes="secondary small" Text="{l:T 'Route library'}" />
-            <TextBox Grid.Row="2" x:Name="RouteFilter" PlaceholderText="{l:T 'Search routes'}"
+        <!-- Route information stays visible alongside the searchable library. -->
+        <Border Grid.Column="0" Grid.RowSpan="2" Classes="card" Padding="16">
+          <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+            <TextBlock Classes="heading" Text="{l:T 'Routes'}" />
+            <TextBox Grid.Row="1" x:Name="RouteFilter" PlaceholderText="{l:T 'Search routes'}"
                      AutomationProperties.Name="{l:T 'Search routes'}" />
-            <Grid Grid.Row="3">
+            <Grid Grid.Row="2">
               <ListBox x:Name="RouteList" Classes="catalog" AutomationProperties.Name="{l:T 'Routes'}"
                        ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemTemplate>
@@ -94,43 +130,22 @@
               </ListBox>
               <TextBlock x:Name="NoRoutes" IsVisible="False" Classes="empty-message" />
             </Grid>
+            <Border Grid.Row="3" x:Name="RouteInformationPanel" Classes="panel" Padding="12" IsVisible="False">
+              <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                <TextBlock Text="{l:T 'Route information'}" FontWeight="SemiBold" />
+                <ScrollViewer Grid.Row="1" MaxHeight="110" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                  <TextBlock x:Name="RouteDescription" Classes="secondary small" TextWrapping="Wrap" />
+                </ScrollViewer>
+              </Grid>
+            </Border>
           </Grid>
         </Border>
 
-        <!-- Step 2: the selected route and the three driving modes. -->
-        <Border Grid.Column="1" Classes="card" Padding="20,16">
+        <!-- The session form scrolls independently of its persistent information panel. -->
+        <Border Grid.Column="1" Classes="card" Padding="20,12">
           <DockPanel>
-            <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,14">
-              <StackPanel Orientation="Horizontal" Spacing="9">
-                <Border Classes="step"><TextBlock Text="2" /></Border>
-                <TextBlock Classes="heading" Text="{l:T 'Choose a mode'}" VerticalAlignment="Center" />
-              </StackPanel>
-              <Border Background="{DynamicResource RielRaised}" CornerRadius="9" Padding="14,12">
-                <Grid ColumnDefinitions="3,*" ColumnSpacing="12">
-                  <Border Background="{DynamicResource RielAccent}" CornerRadius="2" />
-                  <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock x:Name="RouteTitle" Classes="route-title" TextWrapping="Wrap" MaxLines="2" TextTrimming="WordEllipsis" />
-                    <TextBlock x:Name="RouteDescription" Classes="secondary small" TextWrapping="Wrap" MaxLines="2" TextTrimming="WordEllipsis" />
-                  </StackPanel>
-                </Grid>
-              </Border>
-            </StackPanel>
-
-            <Border x:Name="SelectionDetailsPanel" DockPanel.Dock="Bottom" Classes="panel" Margin="0,12,0,0" Padding="10,4" MaxHeight="190" IsVisible="False">
-              <Expander IsExpanded="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                <Expander.Header>
-                  <TextBlock x:Name="DetailsTitle" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                </Expander.Header>
-                <ScrollViewer MaxHeight="130" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                  <StackPanel Spacing="5" Margin="4,6,4,10">
-                    <TextBlock x:Name="DetailsSummary" TextWrapping="Wrap" />
-                    <TextBlock x:Name="DetailsRoute" Classes="secondary small" TextWrapping="Wrap" />
-                    <TextBlock x:Name="DetailsDescription" Classes="secondary small" TextWrapping="Wrap" />
-                    <TextBlock x:Name="DetailsCars" Classes="secondary small" TextWrapping="Wrap" />
-                  </StackPanel>
-                </ScrollViewer>
-              </Expander>
-            </Border>
+            <TextBlock DockPanel.Dock="Top" x:Name="RouteTitle" Classes="route-title" Margin="0,0,0,12"
+                       TextWrapping="Wrap" MaxLines="2" TextTrimming="WordEllipsis" />
 
             <TabControl x:Name="ModeTabs" Classes="mode-tabs" AutomationProperties.Name="{l:T 'Choose a mode'}">
               <TabItem Header="{l:T 'Activity'}">
@@ -155,7 +170,7 @@
               <TabItem Header="{l:T 'Explore'}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                   <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-                        ColumnSpacing="14" RowSpacing="12" Margin="0,14,8,4">
+                        ColumnSpacing="14" RowSpacing="8" Margin="0,10,8,0">
                     <TextBlock Grid.Row="0" Text="{l:T 'Path'}" VerticalAlignment="Center" />
                     <ComboBox Grid.Row="0" Grid.Column="1" x:Name="PathBox" HorizontalAlignment="Stretch" MaxDropDownHeight="320"
                               AutomationProperties.Name="{l:T 'Path'}">
@@ -180,7 +195,7 @@
                     <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="8">
                       <TextBox x:Name="ConsistFilter" PlaceholderText="{l:T 'Search trains'}" AutomationProperties.Name="{l:T 'Search trains'}" />
                       <Grid Grid.Row="1">
-                        <ListBox x:Name="ConsistList" Classes="catalog" Height="148" AutomationProperties.Name="{l:T 'Train'}"
+                        <ListBox x:Name="ConsistList" Classes="catalog" Height="124" AutomationProperties.Name="{l:T 'Train'}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                           <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="l:ConsistItem">
@@ -258,6 +273,32 @@
             </TabControl>
           </DockPanel>
         </Border>
+
+            <Border x:Name="SelectionDetailsPanel" Classes="card inspector" IsVisible="False">
+              <Grid RowDefinitions="Auto,Auto,*" RowSpacing="6">
+                <TextBlock Text="{l:T 'Session details'}" Classes="secondary small" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" x:Name="DetailsTitle" FontWeight="SemiBold" TextWrapping="Wrap"
+                           MaxLines="2" TextTrimming="WordEllipsis" />
+                <Grid Grid.Row="2" x:Name="InformationColumns" Margin="0,4,0,0">
+                  <ScrollViewer x:Name="SessionInformationScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="5">
+                      <TextBlock x:Name="DetailsSummary" TextWrapping="Wrap" />
+                      <TextBlock x:Name="DetailsRoute" Classes="secondary small" TextWrapping="Wrap" />
+                      <TextBlock x:Name="DetailsDescription" Classes="secondary small" TextWrapping="Wrap" />
+                    </StackPanel>
+                  </ScrollViewer>
+                  <Border x:Name="TrainInformation" BorderBrush="{DynamicResource RielBorder}">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="5">
+                      <TextBlock Text="{l:T 'Train information'}" Classes="secondary small" FontWeight="SemiBold" />
+                      <ScrollViewer x:Name="TrainInformationScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <TextBlock x:Name="DetailsCars" Classes="secondary small" TextWrapping="Wrap" />
+                      </ScrollViewer>
+                    </Grid>
+                  </Border>
+                </Grid>
+              </Grid>
+            </Border>
+
       </Grid>
 
       <!-- The first-use screen explains exactly which folder Riel needs. -->
@@ -289,24 +330,23 @@
       </Border>
     </Grid>
 
-    <!-- Step 3: visible selection feedback beside the single primary action. -->
-    <Border Grid.Row="2" Classes="bar" BorderThickness="0,1,0,0" Padding="24,14">
-      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="18" RowSpacing="8">
-        <StackPanel Orientation="Horizontal" Spacing="9">
-          <Border Classes="step"><TextBlock Text="3" /></Border>
-          <TextBlock Classes="heading" Text="{l:T 'Start your journey'}" VerticalAlignment="Center" />
-        </StackPanel>
-        <TextBlock x:Name="SelectionHint" Grid.Row="1" Classes="secondary" TextWrapping="Wrap" MaxLines="2" TextTrimming="WordEllipsis" />
+    <!-- One clear primary action, with readable availability and status feedback. -->
+    <Border Grid.Row="2" Classes="bar" BorderThickness="0,1,0,0" Padding="24,12">
+      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="18" RowSpacing="6">
+        <TextBlock x:Name="SelectionHint" Classes="secondary" TextWrapping="Wrap" MaxLines="2"
+                   TextTrimming="WordEllipsis" VerticalAlignment="Center" />
         <StackPanel Grid.Column="1" Grid.RowSpan="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <Button x:Name="ResumeButton" Content="{l:T 'Continue saved game'}" />
-          <Button x:Name="PlayButton" Classes="accent" MinWidth="150" MinHeight="44" HorizontalContentAlignment="Center">
+          <Button x:Name="PlayButton" Classes="accent" MinWidth="144" MinHeight="46" HorizontalContentAlignment="Center"
+                  AutomationProperties.Name="{l:T 'Play'}">
             <StackPanel Orientation="Horizontal" Spacing="14">
-              <TextBlock Text="{l:T 'Play'}" VerticalAlignment="Center" />
+              <TextBlock Text="{l:T 'Play'}" VerticalAlignment="Center"
+                         Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" x:CompileBindings="False" />
               <Path Width="14" Height="14" Data="M 4,2 L 12,8 L 4,14 Z" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" x:CompileBindings="False" Stretch="Uniform" />
             </StackPanel>
           </Button>
         </StackPanel>
-        <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="10">
           <Button x:Name="ProblemsButton" IsVisible="False" MinHeight="28" Padding="10,4" />
           <TextBlock x:Name="StatusText" Grid.Column="1" Classes="secondary small" VerticalAlignment="Center"
                      TextTrimming="CharacterEllipsis" />

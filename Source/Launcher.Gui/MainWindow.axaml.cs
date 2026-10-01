@@ -82,6 +82,9 @@ namespace Riel.Launcher.Gui
         {
             InitializeComponent();
 
+            UpdateResponsiveLayout(Width);
+            SizeChanged += (_, args) => UpdateResponsiveLayout(args.NewSize.Width);
+
             SeasonBox.ItemsSource = Enum.GetValues<SeasonType>().Select(season => new Choice<SeasonType>(season, Names.Season(season))).ToList();
             WeatherBox.ItemsSource = Enum.GetValues<WeatherType>().Select(weather => new Choice<WeatherType>(weather, Names.Weather(weather))).ToList();
             SelectChoice(SeasonBox, SeasonType.Summer);
@@ -195,6 +198,21 @@ namespace Riel.Launcher.Gui
             };
 
             UpdateButtons();
+        }
+
+        private void UpdateResponsiveLayout(double width)
+        {
+            bool compact = width < 1120;
+            if (Classes.Contains("compact") == compact && MainArea.ColumnDefinitions.Count == (compact ? 2 : 3))
+                return;
+
+            Classes.Set("compact", compact);
+            // Grid definition collections are ordinary CLR properties in Avalonia;
+            // update them only when crossing the breakpoint, rather than on every resize.
+            MainArea.ColumnDefinitions = new ColumnDefinitions(compact ? "240,*" : "240,*,270");
+            MainArea.RowDefinitions = new RowDefinitions(compact ? "*,Auto" : "*");
+            InformationColumns.ColumnDefinitions = new ColumnDefinitions(compact ? "*,*" : "*");
+            InformationColumns.RowDefinitions = new RowDefinitions(compact ? "*" : "Auto,*");
         }
 
         private async Task ShowSettings()
@@ -481,7 +499,9 @@ namespace Riel.Launcher.Gui
         {
 
             RouteTitle.Text = item.Name;
-            RouteDescription.Text = item.Route.Description?.Trim() ?? string.Empty;
+            string routeDescription = item.Route.Description?.Trim();
+            RouteDescription.Text = string.IsNullOrWhiteSpace(routeDescription)
+                ? T("No description is available for this route.") : routeDescription;
             routePaths = Array.Empty<PathModelHeader>();
             ActivityList.ItemsSource = null;
             PathBox.ItemsSource = null;
@@ -776,23 +796,44 @@ namespace Riel.Launcher.Gui
         {
             if (RouteList.SelectedItem is not RouteItem route)
             {
+                RouteInformationPanel.IsVisible = false;
                 SelectionDetailsPanel.IsVisible = false;
+                RouteDescription.Text = string.Empty;
+                DetailsTitle.Text = string.Empty;
+                DetailsSummary.Text = string.Empty;
+                DetailsRoute.Text = string.Empty;
+                DetailsDescription.Text = string.Empty;
+                DetailsCars.Text = string.Empty;
                 return;
             }
 
+            RouteInformationPanel.IsVisible = true;
             SelectionDetailsPanel.IsVisible = true;
+            RouteTitle.Text = route.Name;
+            string routeDescription = route.Route.Description?.Trim();
+            RouteDescription.Text = string.IsNullOrWhiteSpace(routeDescription)
+                ? T("No description is available for this route.") : routeDescription;
             DetailsTitle.Text = route.Name;
             DetailsSummary.Text = F("Content folder: {0}", route.Folder.Name);
             DetailsRoute.Text = string.Empty;
-            DetailsDescription.Text = route.Route.Description?.Trim() ?? string.Empty;
+            DetailsDescription.Text = string.Empty;
             DetailsCars.Text = string.Empty;
+
+            // A route can retain its folder's train list during loading. Those selections
+            // belong to the previous route until its new paths and activities are ready.
+            if (routeLoading)
+            {
+                DetailsSummary.Text = T("Reading route…");
+                return;
+            }
 
             if (ModeTabs.SelectedIndex == ActivityTab && ActivityList.SelectedItem is ActivityItem activity)
             {
                 DetailsTitle.Text = activity.Name;
                 DetailsSummary.Text = activity.Summary;
                 DetailsRoute.Text = DescribePath(activity.Activity.PathId);
-                DetailsDescription.Text = activity.Description;
+                DetailsDescription.Text = string.IsNullOrWhiteSpace(activity.Description)
+                    ? T("No description is available for this activity.") : activity.Description;
                 DetailsCars.Text = DescribeTrain(activity.Activity.ConsistId);
             }
             else if (ModeTabs.SelectedIndex == ExploreTab)
@@ -813,7 +854,8 @@ namespace Riel.Launcher.Gui
                 DetailsTitle.Text = train.Name;
                 DetailsSummary.Text = train.Summary;
                 DetailsRoute.Text = DescribePath(train.Model.Path);
-                DetailsDescription.Text = train.Model.Briefing?.Trim() ?? string.Empty;
+                DetailsDescription.Text = string.IsNullOrWhiteSpace(train.Model.Briefing)
+                    ? T("No briefing is available for this timetable train.") : train.Model.Briefing.Trim();
                 DetailsCars.Text = DescribeTrain(train.Model.WagonSet);
             }
         }
@@ -841,6 +883,11 @@ namespace Riel.Launcher.Gui
             string heading = string.IsNullOrWhiteSpace(train.LocomotiveName)
                 ? F("Train: {0}", train.Name)
                 : F("Train: {0} · Locomotive: {1}", train.Name, train.LocomotiveName);
+            if (train.Consist.Locomotive != null)
+            {
+                string locomotiveDescription = train.Consist.Locomotive.Description?.Trim();
+                heading += $"\n{(string.IsNullOrWhiteSpace(locomotiveDescription) ? T("No description is available for this locomotive.") : locomotiveDescription)}";
+            }
             string cars = string.Join(" · ", train.Consist.TrainCars.Select((car, index) =>
                 $"{index + 1}. {(!string.IsNullOrWhiteSpace(car?.Name) ? car.Name : car?.Reference)}"));
             description = cars.Length == 0 ? heading : $"{heading}\n{train.Detail}: {cars}";
