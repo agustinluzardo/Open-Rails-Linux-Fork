@@ -50,6 +50,10 @@ and retain their authors' licenses.
 This image is rendered from the actual launcher interface with sample route and train data.
 Your routes, activities and trains appear after you add a content folder.
 
+In **Settings → General → Launcher appearance**, choose Amber, Blue, Teal, Green,
+Violet, Rose or Orange as the accent color. Preview the change immediately, then
+press **Save** to remember it for both light and dark themes.
+
 ## What Riel does
 
 ### Simulation and driving

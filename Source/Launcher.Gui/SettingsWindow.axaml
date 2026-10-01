@@ -7,11 +7,24 @@
   <Grid RowDefinitions="Auto,*,Auto" Margin="20">
     <StackPanel Grid.Row="0" Spacing="4">
       <TextBlock Text="{l:T 'Settings'}" FontSize="24" FontWeight="SemiBold"/>
-      <TextBlock Text="{l:T 'These settings are used by the simulator when you press Play.'}" Opacity="0.7"/>
+      <TextBlock Text="{l:T 'Customize the launcher and simulator settings.'}" Classes="secondary"/>
       <TextBlock x:Name="StatusText" TextWrapping="Wrap" Foreground="OrangeRed"/>
     </StackPanel>
     <TabControl x:Name="SettingsTabs" Grid.Row="1" Margin="0,16">
-      <TabItem Header="{l:T 'General'}"><ScrollViewer><StackPanel x:Name="GeneralPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
+      <TabItem Header="{l:T 'General'}">
+        <ScrollViewer>
+          <StackPanel x:Name="GeneralPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left">
+            <TextBlock Text="{l:T 'Launcher appearance'}" FontSize="18" FontWeight="SemiBold" Margin="0,12,0,2"/>
+            <Grid ColumnDefinitions="230,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Accent color'}" VerticalAlignment="Center"/>
+              <ComboBox x:Name="AccentColorBox" Grid.Column="1" MinWidth="260"
+                        AutomationProperties.Name="{l:T 'Accent color'}"/>
+            </Grid>
+            <TextBlock Text="{l:T 'Preview the color of buttons, selections and highlights. Save keeps your choice; Cancel restores the previous color.'}"
+                       Classes="secondary" TextWrapping="Wrap"/>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
       <TabItem Header="{l:T 'Audio'}"><ScrollViewer><StackPanel x:Name="AudioPanel" Margin="14" Spacing="10" MaxWidth="740" HorizontalAlignment="Left"/></ScrollViewer></TabItem>
       <TabItem Header="{l:T 'Video'}">
         <ScrollViewer>
