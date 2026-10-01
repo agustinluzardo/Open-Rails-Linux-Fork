@@ -1,5 +1,6 @@
 // COPYRIGHT 2026 by the Riel project. GPL-3.0-or-later.
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -20,6 +21,30 @@ namespace Riel.Launcher
         private const string ArchiveName = "riel-linux-x64.zip";
 
         internal static async Task<int> Run(bool checkOnly, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return await RunUpdate(checkOnly, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw new LauncherException("The update server did not respond in time. Try again later.", ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new LauncherException($"Could not download the update: {ex.Message}", ex);
+            }
+            catch (InvalidDataException ex)
+            {
+                throw new LauncherException("The downloaded update archive is invalid. Try downloading it again.", ex);
+            }
+            catch (Exception ex) when (ex is JsonException || ex is KeyNotFoundException || ex is InvalidOperationException)
+            {
+                throw new LauncherException("The update server returned invalid release information. Try again later.", ex);
+            }
+        }
+
+        private static async Task<int> RunUpdate(bool checkOnly, CancellationToken cancellationToken)
         {
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, ".."));
             if (!File.Exists(Path.Combine(root, "riel")) || !File.Exists(Path.Combine(root, "app", "riel")))
@@ -70,7 +95,9 @@ namespace Riel.Launcher
             JsonElement assets = release.GetProperty("assets");
             string archiveUrl = AssetUrl(assets, ArchiveName);
             string checksumUrl = AssetUrl(assets, ArchiveName + ".sha256");
-            string checksum = (await client.GetStringAsync(checksumUrl, cancellationToken).ConfigureAwait(false)).Split(' ', '\n')[0];
+            string[] checksumFields = (await client.GetStringAsync(checksumUrl, cancellationToken).ConfigureAwait(false))
+                .Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+            string checksum = checksumFields.FirstOrDefault() ?? string.Empty;
             if (checksum.Length != 64 || !checksum.All(Uri.IsHexDigit))
                 throw new LauncherException("Invalid SHA-256 checksum in release.");
 
@@ -144,8 +171,15 @@ namespace Riel.Launcher
         private static string AssetUrl(JsonElement assets, string name)
         {
             foreach (JsonElement asset in assets.EnumerateArray())
+            {
                 if (asset.GetProperty("name").GetString() == name)
-                    return asset.GetProperty("browser_download_url").GetString();
+                {
+                    string url = asset.GetProperty("browser_download_url").GetString();
+                    if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri) || uri.Scheme != Uri.UriSchemeHttps)
+                        throw new LauncherException("Release has an invalid download URL for " + name + ".");
+                    return url;
+                }
+            }
             throw new LauncherException("Release is missing " + name + ".");
         }
     }

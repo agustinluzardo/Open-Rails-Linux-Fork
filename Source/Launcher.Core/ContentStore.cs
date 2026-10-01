@@ -152,6 +152,8 @@ namespace Riel.Launcher
         /// </summary>
         public static async Task<(FolderModel Folder, RouteModelHeader Route)> MatchRoute(string name, IProgress<int> progress, CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new LauncherException("no route was given");
             ContentModel content = await Load(progress, cancellationToken).ConfigureAwait(false);
 
             List<(FolderModel Folder, RouteModelHeader Route)> candidates = new List<(FolderModel, RouteModelHeader)>();
@@ -179,6 +181,8 @@ namespace Riel.Launcher
         /// </summary>
         public static T Match<T>(ImmutableArray<T> models, string name, string what) where T : ModelBase
         {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new LauncherException($"no {what} was given");
             List<T> matches = Narrow(models.ToList(), model => model, name);
             return matches.Count switch
             {

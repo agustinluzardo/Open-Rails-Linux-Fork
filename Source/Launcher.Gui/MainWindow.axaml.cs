@@ -26,6 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 
 using Riel.Common;
@@ -63,9 +64,13 @@ namespace Riel.Launcher.Gui
         private IReadOnlyList<SkippedFile> problems = Array.Empty<SkippedFile>();
 
         private bool running;
+        private bool launching;
+        private bool routeLoading;
+        private int busyDepth;
         private bool hasSave;
         private bool suppressRouteChanged;
         private bool applyingTimePreset;
+        private readonly Dictionary<ConsistItem, string> trainDescriptions = new Dictionary<ConsistItem, string>();
 
         /// <summary>
         /// Counts route changes, so the answer to an earlier one that arrives late - its lists read
@@ -160,6 +165,34 @@ namespace Riel.Launcher.Gui
 
             DarkSwitch.IsChecked = Appearance.Dark;
             DarkSwitch.IsCheckedChanged += (_, _) => Appearance.Set(DarkSwitch.IsChecked == true);
+
+            KeyDown += (_, args) =>
+            {
+                if (args.Key == Key.F && args.KeyModifiers == KeyModifiers.Control && MainArea.IsEnabled)
+                {
+                    RouteFilter.Focus();
+                    RouteFilter.SelectAll();
+                    args.Handled = true;
+                }
+                else if (args.Key == Key.Enter && args.KeyModifiers == KeyModifiers.Control && PlayButton.IsEnabled)
+                {
+                    Guarded(Play);
+                    args.Handled = true;
+                }
+                else if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None)
+                {
+                    if (RouteFilter.IsFocused)
+                    {
+                        RouteFilter.Text = string.Empty;
+                        args.Handled = true;
+                    }
+                    else if (ConsistFilter.IsFocused)
+                    {
+                        ConsistFilter.Text = string.Empty;
+                        args.Handled = true;
+                    }
+                }
+            };
 
             UpdateButtons();
         }
@@ -263,21 +296,21 @@ namespace Riel.Launcher.Gui
         {
             RouteItem previous = RouteList.SelectedItem as RouteItem;
 
-            using (Busy(forceRescan ? T("Scanning every folder…") : T("Reading content…")))
-            {
-                content = forceRescan
-                    ? await ContentStore.Refresh(ScanProgress(), closing.Token)
-                    : await ContentStore.Load(ScanProgress(), closing.Token);
+            // Keep actions blocked until the restored route and train are ready too.
+            using IDisposable busy = Busy(forceRescan ? T("Scanning every folder…") : T("Reading content…"));
+            content = forceRescan
+                ? await ContentStore.Refresh(ScanProgress(), closing.Token)
+                : await ContentStore.Load(ScanProgress(), closing.Token);
 
-                List<RouteItem> found = new List<RouteItem>();
-                foreach (FolderModel folder in content.ContentFolders)
-                {
-                    foreach (RouteModelHeader route in await folder.GetRoutes(closing.Token))
-                        found.Add(new RouteItem(folder, route));
-                }
-                routes = found.OrderBy(route => route.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
-                consistsFolder = null;
+            List<RouteItem> found = new List<RouteItem>();
+            foreach (FolderModel folder in content.ContentFolders)
+            {
+                foreach (RouteModelHeader route in await folder.GetRoutes(closing.Token))
+                    found.Add(new RouteItem(folder, route));
             }
+            routes = found.OrderBy(route => route.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+            consistsFolder = null;
+            trainDescriptions.Clear();
 
             bool empty = content.ContentFolders.Length == 0;
             EmptyState.IsVisible = empty;
@@ -374,6 +407,11 @@ namespace Riel.Launcher.Gui
                 suppressRouteChanged = false;
             }
 
+            NoRoutes.Text = routes.Count == 0
+                ? T("No routes were found in the content folders. Check that each one is the folder holding ROUTES and GLOBAL.")
+                : T("No routes match your search. Clear the search to see all routes.");
+            NoRoutes.IsVisible = shown.Count == 0;
+
             // Filtering the selection away leaves nothing to play, and the panel must say so.
             if (selected != null && RouteList.SelectedItem == null)
                 Guarded(RouteChanged);
@@ -381,6 +419,9 @@ namespace Riel.Launcher.Gui
 
         private async Task SelectRoute(RouteItem route)
         {
+            // A content refresh can leave a search active. Only select a visible result.
+            if (RouteList.ItemsSource is IEnumerable<RouteItem> shown && (route == null || !shown.Contains(route)))
+                route = shown.FirstOrDefault();
             suppressRouteChanged = true;
             try
             {
@@ -402,18 +443,42 @@ namespace Riel.Launcher.Gui
 
             if (item == null)
             {
+                routeLoading = false;
                 routePaths = Array.Empty<PathModelHeader>();
+                consists = new List<ConsistItem>();
+                consistsFolder = null;
+                trainDescriptions.Clear();
                 RouteTitle.Text = routes.Count == 0 ? string.Empty : T("Choose a route");
                 RouteDescription.Text = string.Empty;
                 ActivityList.ItemsSource = null;
                 PathBox.ItemsSource = null;
                 LocomotiveBox.ItemsSource = null;
+                ConsistList.ItemsSource = null;
                 TimetableBox.ItemsSource = null;
                 TimetableTrainList.ItemsSource = null;
+                TimetableWeatherFileBox.ItemsSource = null;
                 NoActivities.IsVisible = false;
                 UpdateButtons();
                 return;
             }
+
+            routeLoading = true;
+            try
+            {
+                await LoadRoute(item, generation);
+            }
+            finally
+            {
+                if (generation == routeGeneration)
+                {
+                    routeLoading = false;
+                    UpdateButtons();
+                }
+            }
+        }
+
+        private async Task LoadRoute(RouteItem item, int generation)
+        {
 
             RouteTitle.Text = item.Name;
             RouteDescription.Text = item.Route.Description?.Trim() ?? string.Empty;
@@ -422,6 +487,8 @@ namespace Riel.Launcher.Gui
             PathBox.ItemsSource = null;
             TimetableBox.ItemsSource = null;
             TimetableTrainList.ItemsSource = null;
+            TimetableWeatherFileBox.ItemsSource = null;
+            NoActivities.IsVisible = false;
             if (item.Folder != consistsFolder)
             {
                 consists = new List<ConsistItem>();
@@ -435,19 +502,26 @@ namespace Riel.Launcher.Gui
             Task<ImmutableArray<PathModelHeader>> pathsTask = item.Route.GetPaths(closing.Token);
             Task<ImmutableArray<TimetableModel>> timetablesTask = item.Route.GetTimetables(closing.Token);
             Task<ImmutableArray<WeatherModelHeader>> weatherFilesTask = item.Route.GetWeatherFiles(closing.Token);
+            bool loadConsists = item.Folder != consistsFolder;
+            Task<ImmutableArray<WagonSetModel>> wagonSetsTask = loadConsists
+                ? item.Folder.GetWagonSets(closing.Token)
+                : Task.FromResult(ImmutableArray<WagonSetModel>.Empty);
+            // Observe every task, and overlap train loading with route loading.
+            await Task.WhenAll(activitiesTask, pathsTask, timetablesTask, weatherFilesTask, wagonSetsTask);
+            if (generation != routeGeneration)
+                return;
             ImmutableArray<ActivityModelHeader> activities = await activitiesTask;
             ImmutableArray<PathModelHeader> paths = await pathsTask;
             ImmutableArray<TimetableModel> timetables = await timetablesTask;
             ImmutableArray<WeatherModelHeader> weatherFiles = await weatherFilesTask;
 
-            if (item.Folder != consistsFolder)
+            if (loadConsists)
             {
-                ImmutableArray<WagonSetModel> wagonSets = await item.Folder.GetWagonSets(closing.Token);
-                if (generation != routeGeneration)
-                    return;
+                ImmutableArray<WagonSetModel> wagonSets = await wagonSetsTask;
                 consists = wagonSets.Select(wagonSet => new ConsistItem(wagonSet))
                     .OrderBy(consist => consist.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
                 consistsFolder = item.Folder;
+                trainDescriptions.Clear();
 
                 List<Choice<string>> locomotives = new List<Choice<string>>
                 {
@@ -532,6 +606,10 @@ namespace Riel.Launcher.Gui
             List<ConsistItem> shown = filtered.ToList();
             ConsistList.ItemsSource = shown;
             ConsistList.SelectedItem = selected != null && shown.Contains(selected) ? selected : shown.FirstOrDefault();
+            NoConsists.Text = consists.Count == 0
+                ? T("No trains were found in this content folder. Add trains in Content folders.")
+                : T("No trains match your filters. Clear the search or choose All locomotives.");
+            NoConsists.IsVisible = shown.Count == 0;
             UpdateButtons();
         }
 
@@ -546,7 +624,7 @@ namespace Riel.Launcher.Gui
                 string.Equals(item.Route.Id, saved.RouteId, StringComparison.OrdinalIgnoreCase));
 
             await SelectRoute(route ?? routes.FirstOrDefault());
-            if (route == null)
+            if (route == null || RouteList.SelectedItem is not RouteItem selectedRoute || !Same(route, selectedRoute))
                 return;
 
             if (saved.ActivityType == ActivityType.TimeTable)
@@ -609,6 +687,8 @@ namespace Riel.Launcher.Gui
         {
             if (RouteList.SelectedItem is not RouteItem route)
                 return (null, null, T("Choose a route."));
+            if (routeLoading)
+                return (null, null, T("Reading route…"));
 
             if (ModeTabs.SelectedIndex == ActivityTab)
             {
@@ -648,14 +728,30 @@ namespace Riel.Launcher.Gui
         private void UpdateButtons()
         {
             (ProfileSelectionsModel selections, _, string missing) = Selected();
-            PlayButton.IsEnabled = !running && selections != null;
-            ResumeButton.IsEnabled = !running && hasSave;
+            bool idle = !running && !launching && busyDepth == 0;
+            PlayButton.IsEnabled = idle && selections != null;
+            ResumeButton.IsEnabled = idle && hasSave;
+            MainArea.IsEnabled = idle;
+            ContentButton.IsEnabled = idle;
+            SettingsButton.IsEnabled = idle;
+            ToolsButton.IsEnabled = idle;
+            AddFirstFolderButton.IsEnabled = idle;
+            UseDetectedButton.IsEnabled = idle;
+            SelectionHint.Text = running ? T("The simulator is running.")
+                : launching ? T("Preparing your journey…")
+                : busyDepth > 0 ? BusyText.Text
+                : missing ?? T("Ready to depart.");
+            NoTimetableTrains.Text = TimetableBox.SelectedItem == null
+                ? T("This route has no timetables. Choose Activity or Explore instead.")
+                : T("This timetable has no playable trains. Choose another timetable set.");
+            NoTimetableTrains.IsVisible = !routeLoading && TimetableTrainList.SelectedItem == null;
+            NoConsists.IsVisible = !routeLoading && ConsistList.ItemsSource is IList<ConsistItem> trains && trains.Count == 0;
 
             bool hasRoute = RouteList.SelectedItem is RouteItem;
-            RouteEditorButton.IsEnabled = !running && hasRoute;
-            ConsistEditorButton.IsEnabled = !running && hasRoute;
-            ShapeViewerButton.IsEnabled = !running && hasRoute;
-            AceConverterButton.IsEnabled = !running;
+            RouteEditorButton.IsEnabled = idle && hasRoute && !routeLoading;
+            ConsistEditorButton.IsEnabled = idle && hasRoute && !routeLoading;
+            ShapeViewerButton.IsEnabled = idle && hasRoute && !routeLoading;
+            AceConverterButton.IsEnabled = idle;
 
             ToolTip.SetTip(PlayButton, missing);
             string chooseRoute = hasRoute ? null : T("Choose a route first.");
@@ -738,14 +834,18 @@ namespace Riel.Launcher.Gui
             return train == null ? string.IsNullOrWhiteSpace(id) ? string.Empty : F("Train: {0}", id) : DescribeTrain(train);
         }
 
-        private static string DescribeTrain(ConsistItem train)
+        private string DescribeTrain(ConsistItem train)
         {
+            if (trainDescriptions.TryGetValue(train, out string description))
+                return description;
             string heading = string.IsNullOrWhiteSpace(train.LocomotiveName)
                 ? F("Train: {0}", train.Name)
                 : F("Train: {0} · Locomotive: {1}", train.Name, train.LocomotiveName);
             string cars = string.Join(" · ", train.Consist.TrainCars.Select((car, index) =>
                 $"{index + 1}. {(!string.IsNullOrWhiteSpace(car?.Name) ? car.Name : car?.Reference)}"));
-            return cars.Length == 0 ? heading : $"{heading}\n{train.Detail}: {cars}";
+            description = cars.Length == 0 ? heading : $"{heading}\n{train.Detail}: {cars}";
+            trainDescriptions[train] = description;
+            return description;
         }
 
         // ------------------------------------------------------------------------------ tools
@@ -770,7 +870,7 @@ namespace Riel.Launcher.Gui
 
         private async Task Play()
         {
-            if (running)
+            if (running || launching || busyDepth > 0)
                 return;
 
             (ProfileSelectionsModel selections, string title, string missing) = Selected();
@@ -780,20 +880,40 @@ namespace Riel.Launcher.Gui
                 return;
             }
 
-            await Selections.Save(selections, closing.Token);
-            await Run(Selections.Arguments(selections), title, RouteList.SelectedItem as RouteItem);
+            RouteItem route = RouteList.SelectedItem as RouteItem;
+            launching = true;
+            UpdateButtons();
+            try
+            {
+                await Selections.Save(selections, closing.Token);
+                await Run(Selections.Arguments(selections), title, route);
+            }
+            finally
+            {
+                launching = false;
+                UpdateButtons();
+            }
         }
 
         private async Task Resume()
         {
-            if (running)
+            if (running || launching || busyDepth > 0)
                 return;
-            SavedGameChoice choice = await new SavedGamesWindow(routes).ShowDialog<SavedGameChoice>(this);
-            hasSave = Selections.HasSavesOrDeletedSaves();
+            launching = true;
             UpdateButtons();
-            if (choice != null)
-                await Run(Selections.SavedGameArguments(choice.File, choice.Action),
-                    System.IO.Path.GetFileNameWithoutExtension(choice.File), null);
+            try
+            {
+                SavedGameChoice choice = await new SavedGamesWindow(routes).ShowDialog<SavedGameChoice>(this);
+                hasSave = Selections.HasSavesOrDeletedSaves();
+                if (choice != null)
+                    await Run(Selections.SavedGameArguments(choice.File, choice.Action),
+                        System.IO.Path.GetFileNameWithoutExtension(choice.File), null);
+            }
+            finally
+            {
+                launching = false;
+                UpdateButtons();
+            }
         }
 
         /// <summary>
@@ -806,7 +926,7 @@ namespace Riel.Launcher.Gui
         {
             ProfileModel profile = await ((ProfileModel)null).Current(closing.Token);
             ProfileUserSettingsModel settings = await profile.LoadSettingsModel<ProfileUserSettingsModel>(closing.Token);
-            if (settings.CloseLauncherWhilePlaying)
+            if (settings?.CloseLauncherWhilePlaying == true)
             {
                 LaunchSession.Start(arguments, title, route?.Route.Id, route?.Folder.Name, safeMode);
                 Close();
@@ -877,7 +997,19 @@ namespace Riel.Launcher.Gui
             SafeMode? retry = await new ErrorWindow(outcome, report.CommandLine,
                 routeProblem, report.Request.SafeMode).ShowDialog<SafeMode?>(this);
             if (retry != null)
-                await Run(report.Request.Arguments, report.Request.Title, route, retry.Value);
+            {
+                launching = true;
+                UpdateButtons();
+                try
+                {
+                    await Run(report.Request.Arguments, report.Request.Title, route, retry.Value);
+                }
+                finally
+                {
+                    launching = false;
+                    UpdateButtons();
+                }
+            }
         }
 
         // ------------------------------------------------------------------------------ helpers
@@ -898,8 +1030,15 @@ namespace Riel.Launcher.Gui
         {
             BusyText.Text = text;
             BusyProgress.IsIndeterminate = true;
+            busyDepth++;
             BusyOverlay.IsVisible = true;
-            return new Release(() => BusyOverlay.IsVisible = false);
+            UpdateButtons();
+            return new Release(() =>
+            {
+                busyDepth--;
+                BusyOverlay.IsVisible = busyDepth > 0;
+                UpdateButtons();
+            });
         }
 
         private IProgress<int> ScanProgress()

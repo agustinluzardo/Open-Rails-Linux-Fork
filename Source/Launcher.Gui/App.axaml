@@ -2,20 +2,66 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Riel.Launcher.Gui.App"
              RequestedThemeVariant="Dark">
-  <!-- Dark unless the user switched it off; see Appearance.cs. -->
+  <!-- Appearance.cs restores the user's choice; both palettes use the same hierarchy. -->
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="RielBackground" Color="#101B26" />
+          <SolidColorBrush x:Key="RielSurface" Color="#172633" />
+          <SolidColorBrush x:Key="RielRaised" Color="#1F3241" />
+          <SolidColorBrush x:Key="RielInset" Color="#111E29" />
+          <SolidColorBrush x:Key="RielForeground" Color="#EAF1F4" />
+          <SolidColorBrush x:Key="RielSecondary" Color="#BBC9D0" />
+          <SolidColorBrush x:Key="RielBorder" Color="#344D5D" />
+          <SolidColorBrush x:Key="RielAccent" Color="#78D5BF" />
+          <SolidColorBrush x:Key="RielAccentHover" Color="#91E3CE" />
+          <SolidColorBrush x:Key="RielAccentForeground" Color="#112C26" />
+          <SolidColorBrush x:Key="RielSelected" Color="#284F50" />
+          <SolidColorBrush x:Key="RielSelectedForeground" Color="#EAFBFA" />
+          <SolidColorBrush x:Key="RielOverlay" Color="#E8101B26" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="RielBackground" Color="#EDF2F2" />
+          <SolidColorBrush x:Key="RielSurface" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="RielRaised" Color="#F3F7F7" />
+          <SolidColorBrush x:Key="RielInset" Color="#F7FAFA" />
+          <SolidColorBrush x:Key="RielForeground" Color="#172C37" />
+          <SolidColorBrush x:Key="RielSecondary" Color="#4E6571" />
+          <SolidColorBrush x:Key="RielBorder" Color="#CCD8DE" />
+          <SolidColorBrush x:Key="RielAccent" Color="#136A58" />
+          <SolidColorBrush x:Key="RielAccentHover" Color="#0E5849" />
+          <SolidColorBrush x:Key="RielAccentForeground" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="RielSelected" Color="#E1F2EE" />
+          <SolidColorBrush x:Key="RielSelectedForeground" Color="#173D35" />
+          <SolidColorBrush x:Key="RielOverlay" Color="#E8EDF2F2" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
   <Application.Styles>
-    <FluentTheme />
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Dark" Accent="#78D5BF" />
+        <ColorPaletteResources x:Key="Light" Accent="#136A58" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
 
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{DynamicResource RielBackground}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="FontSize" Value="14" />
+    </Style>
     <Style Selector="TextBlock.title">
-      <Setter Property="FontSize" Value="22" />
-      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="25" />
+      <Setter Property="FontWeight" Value="Bold" />
     </Style>
     <Style Selector="TextBlock.heading">
-      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontSize" Value="18" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="TextBlock.secondary">
-      <Setter Property="Opacity" Value="0.72" />
+      <Setter Property="Foreground" Value="{DynamicResource RielSecondary}" />
     </Style>
     <Style Selector="TextBlock.small">
       <Setter Property="FontSize" Value="12" />
@@ -28,13 +74,97 @@
       <Setter Property="FontFamily" Value="monospace" />
       <Setter Property="FontSize" Value="12" />
     </Style>
+    <Style Selector="Button">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="Button.accent">
+      <Setter Property="Background" Value="{DynamicResource RielAccent}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielAccentForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielAccentHover}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielAccentForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccentHover}" />
+    </Style>
+    <Style Selector="Button.accent:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielSelected}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+    </Style>
     <Style Selector="Border.bar">
-      <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+      <Setter Property="Background" Value="{DynamicResource RielSurface}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
     </Style>
     <Style Selector="Border.panel">
-      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="Padding" Value="12" />
+      <Setter Property="Background" Value="{DynamicResource RielRaised}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="14" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource RielSurface}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="14" />
+    </Style>
+    <Style Selector="Border.step">
+      <Setter Property="Width" Value="26" />
+      <Setter Property="Height" Value="26" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Background" Value="{DynamicResource RielSelected}" />
+    </Style>
+    <Style Selector="Border.step TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ListBox.catalog">
+      <Setter Property="Background" Value="{DynamicResource RielInset}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="5" />
+    </Style>
+    <Style Selector="ListBox.catalog ListBoxItem">
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="Margin" Value="0,2" />
+      <Setter Property="MinHeight" Value="42" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="BorderThickness" Value="2,0,0,0" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.catalog ListBoxItem:selected">
+      <Setter Property="Background" Value="{DynamicResource RielSelected}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+    </Style>
+    <Style Selector="ListBox.catalog ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielSelected}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+      <Setter Property="BorderThickness" Value="2,0,0,0" />
+      <Setter Property="CornerRadius" Value="7" />
+    </Style>
+    <Style Selector="ListBox.catalog ListBoxItem:selected TextBlock.secondary">
+      <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
+    </Style>
+    <Style Selector="ListBox.catalog ListBoxItem:focus-visible">
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
     </Style>
   </Application.Styles>
 </Application>

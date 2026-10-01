@@ -63,10 +63,8 @@ namespace Riel.Launcher
                 }
                 else if (line.StartsWith("msgid ", StringComparison.Ordinal))
                 {
-                    bool keepFuzzy = fuzzy;
                     if (id != null)
                         Commit();
-                    fuzzy = keepFuzzy;
                     id = current = new StringBuilder(Unquote(line[6..]));
                 }
                 else if (line.StartsWith("msgstr ", StringComparison.Ordinal))
@@ -98,6 +96,7 @@ namespace Riel.Launcher
                     result.Append(next switch
                     {
                         'n' => '\n',
+                        'r' => '\r',
                         't' => '\t',
                         '"' => '"',
                         '\\' => '\\',

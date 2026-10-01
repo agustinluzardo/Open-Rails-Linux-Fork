@@ -64,6 +64,29 @@ namespace Tests.Riel.Launcher
         }
 
         [TestMethod]
+        public void FuzzyDoesNotCarryOverToTheNextEntryWithoutABlankLine()
+        {
+            Dictionary<string, string> catalog = PoCatalog.Parse("#, fuzzy\nmsgid \"Play\"\nmsgstr \"Jugar\"\nmsgid \"Close\"\nmsgstr \"Cerrar\"\n");
+            Assert.IsFalse(catalog.ContainsKey("Play"));
+            Assert.AreEqual("Cerrar", catalog["Close"]);
+        }
+
+        [TestMethod]
+        public void FuzzyFlagsAfterAnEntryBelongToTheNextEntry()
+        {
+            Dictionary<string, string> catalog = PoCatalog.Parse("msgid \"Close\"\nmsgstr \"Cerrar\"\n#, fuzzy\nmsgid \"Play\"\nmsgstr \"Jugar\"\n");
+            Assert.AreEqual("Cerrar", catalog["Close"]);
+            Assert.IsFalse(catalog.ContainsKey("Play"));
+        }
+
+        [TestMethod]
+        public void PreservesEscapedCarriageReturns()
+        {
+            Dictionary<string, string> catalog = PoCatalog.Parse("msgid \"Line\\r\\n\"\nmsgstr \"Línea\\r\\n\"\n");
+            Assert.AreEqual("Línea\r\n", catalog["Line\r\n"]);
+        }
+
+        [TestMethod]
         public void SkipsTheHeaderAndUntranslatedEntries()
         {
             Dictionary<string, string> catalog = PoCatalog.Parse("msgid \"\"\nmsgstr \"Language: es\\n\"\n\nmsgid \"Play\"\nmsgstr \"\"\n");

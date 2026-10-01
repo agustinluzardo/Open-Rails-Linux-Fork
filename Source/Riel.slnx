@@ -23,6 +23,7 @@
     <File Path="global.json" />
   </Folder>
   <Folder Name="/Test/">
+    <Project Path="Test/Tests.Launcher.Gui/Tests.Launcher.Gui.csproj" />
     <Project Path="Test/Tests.Riel/Tests.Riel.csproj" />
     <Project Path="Test/Tests.Orts/Tests.Orts.csproj" />
   </Folder>

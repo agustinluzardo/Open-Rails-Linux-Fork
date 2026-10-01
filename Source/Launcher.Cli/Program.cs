@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,6 +58,11 @@ namespace Riel.Launcher
                 Console.Error.WriteLine($"riel: {ex.Message}");
                 return 1;
             }
+            catch (Win32Exception ex)
+            {
+                Console.Error.WriteLine($"riel: could not start the requested program: {ex.Message}");
+                return 1;
+            }
             // Scanning walks tens of thousands of files on a disk this program does not own: one
             // of them being unreadable, renamed mid scan or on a drive that went away is a thing
             // to report, not a stack trace and an abort.
@@ -75,6 +81,9 @@ namespace Riel.Launcher
             if (arguments.Count > 0)
                 arguments.RemoveAt(0);
 
+            if (command == "update" && (arguments.Count > 1 || arguments.Count == 1 && arguments[0] != "--check"))
+                throw new LauncherException("usage: riel update [--check]");
+
             return command switch
             {
                 "content" => await Commands.Content(arguments, cancellationToken).ConfigureAwait(false),
@@ -83,11 +92,11 @@ namespace Riel.Launcher
                 "paths" => await Commands.Paths(arguments, cancellationToken).ConfigureAwait(false),
                 "consists" => await Commands.Consists(arguments, cancellationToken).ConfigureAwait(false),
                 "start" => await Commands.Start(cancellationToken).ConfigureAwait(false),
-                "gui" => Commands.Gui(arguments),
+                "gui" => await Commands.Gui(arguments, cancellationToken).ConfigureAwait(false),
                 "play" => await Commands.Play(arguments, cancellationToken).ConfigureAwait(false),
                 "explore" => await Commands.Explore(arguments, cancellationToken).ConfigureAwait(false),
-                "resume" => Commands.Resume(),
-                "run" => Commands.RunRaw(arguments),
+                "resume" => await Commands.Resume(cancellationToken).ConfigureAwait(false),
+                "run" => await Commands.RunRaw(arguments, cancellationToken).ConfigureAwait(false),
                 "doctor" => await Commands.Doctor(cancellationToken).ConfigureAwait(false),
                 "update" => await Updates.Run(arguments.Contains("--check"), cancellationToken).ConfigureAwait(false),
                 "version" or "--version" or "-v" => Commands.Version(),
