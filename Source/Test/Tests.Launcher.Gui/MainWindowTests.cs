@@ -320,7 +320,7 @@ namespace Tests.Launcher.Gui
                     tools.ContextMenu.Open(tools);
                     Capture(window, name + "-tools");
                     Assert.True(tools.ContextMenu.IsOpen);
-                    Capture(Assert.IsAssignableFrom<TopLevel>(tools.ContextMenu.GetVisualRoot()), name + "-menu");
+                    Capture(Assert.IsAssignableFrom<TopLevel>(TopLevel.GetTopLevel(tools.ContextMenu)), name + "-menu");
                     tools.ContextMenu.Close();
                 }
             }
