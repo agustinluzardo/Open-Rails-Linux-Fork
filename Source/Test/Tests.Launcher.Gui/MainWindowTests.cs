@@ -502,7 +502,7 @@ namespace Tests.Launcher.Gui
                 new ActivityItem(morning.Activity with { Id = "evening-passenger", Name = "Evening coastal passenger", StartTime = new TimeOnly(18, 15) }),
             };
             Control<ListBox>(window, "ActivityList").SelectedIndex = 0;
-            Call(window, "SetTimePresets", new[] { morning });
+            Call(window, "SetTimePresets", (object)new[] { morning });
 
             TimetableTrainModel service = new TimetableTrainModel
             {
