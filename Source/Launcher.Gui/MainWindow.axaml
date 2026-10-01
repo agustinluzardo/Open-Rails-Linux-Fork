@@ -8,6 +8,7 @@
         WindowStartupLocation="CenterScreen">
   <Window.Styles>
     <Style Selector="TabControl.mode-tabs TabItem">
+      <Setter Property="FontSize" Value="15" />
       <Setter Property="MinHeight" Value="42" />
       <Setter Property="Padding" Value="16,10" />
       <Setter Property="FontWeight" Value="SemiBold" />
@@ -141,7 +142,7 @@
         </Border>
 
         <!-- The session form scrolls independently of its persistent information panel. -->
-        <Border Grid.Column="1" Classes="card" Padding="20,16">
+        <Border Grid.Column="1" Classes="card" Padding="20,12">
           <DockPanel>
             <TextBlock DockPanel.Dock="Top" x:Name="RouteTitle" Classes="route-title" Margin="0,0,0,12"
                        TextWrapping="Wrap" MaxLines="2" TextTrimming="WordEllipsis" />
@@ -169,7 +170,7 @@
               <TabItem Header="{l:T 'Explore'}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                   <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-                        ColumnSpacing="14" RowSpacing="12" Margin="0,14,8,4">
+                        ColumnSpacing="14" RowSpacing="8" Margin="0,10,8,0">
                     <TextBlock Grid.Row="0" Text="{l:T 'Path'}" VerticalAlignment="Center" />
                     <ComboBox Grid.Row="0" Grid.Column="1" x:Name="PathBox" HorizontalAlignment="Stretch" MaxDropDownHeight="320"
                               AutomationProperties.Name="{l:T 'Path'}">
@@ -194,7 +195,7 @@
                     <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="8">
                       <TextBox x:Name="ConsistFilter" PlaceholderText="{l:T 'Search trains'}" AutomationProperties.Name="{l:T 'Search trains'}" />
                       <Grid Grid.Row="1">
-                        <ListBox x:Name="ConsistList" Classes="catalog" Height="148" AutomationProperties.Name="{l:T 'Train'}"
+                        <ListBox x:Name="ConsistList" Classes="catalog" Height="124" AutomationProperties.Name="{l:T 'Train'}"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                           <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="l:ConsistItem">

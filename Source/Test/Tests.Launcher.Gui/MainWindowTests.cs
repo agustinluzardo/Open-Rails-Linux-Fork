@@ -302,6 +302,11 @@ namespace Tests.Launcher.Gui
 
                 if (mode == 1)
                 {
+                    if (!minimum)
+                    {
+                        AssertFullyVisibleInScrollViewport(Control<ComboBox>(window, "WeatherBox"));
+                        AssertFullyVisibleInScrollViewport(Control<CheckBox>(window, "ExploreActivityModeBox"));
+                    }
                     // On small displays the weather controls can require scrolling. They must
                     // remain reachable rather than being clipped outside a fixed panel.
                     ComboBox weather = Control<ComboBox>(window, "WeatherBox");
@@ -315,6 +320,7 @@ namespace Tests.Launcher.Gui
                     tools.ContextMenu.Open(tools);
                     Capture(window, name + "-tools");
                     Assert.True(tools.ContextMenu.IsOpen);
+                    Capture(Assert.IsAssignableFrom<TopLevel>(tools.ContextMenu.GetVisualRoot()), name + "-menu");
                     tools.ContextMenu.Close();
                 }
             }
@@ -414,7 +420,50 @@ namespace Tests.Launcher.Gui
             }
         }
 
-        private static void Capture(MainWindow window, string name)
+        private static void AssertFullyVisibleInScrollViewport(Control control)
+        {
+            foreach (ScrollViewer scroll in control.GetVisualAncestors().OfType<ScrollViewer>())
+            {
+                Point origin = control.TranslatePoint(default, scroll).Value;
+                Assert.True(new Rect(scroll.Bounds.Size).Contains(new Rect(origin, control.Bounds.Size)),
+                    $"{control.Name} must fit fully inside the default form viewport.");
+            }
+        }
+
+        [AvaloniaTheory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void SearchAndTimePlaceholdersRemainReadable(bool light)
+        {
+            RenderFixtureWindow window = new RenderFixtureWindow
+            {
+                RequestedThemeVariant = light ? ThemeVariant.Light : ThemeVariant.Dark,
+            };
+            SeedVisualFixture(window, 1, false);
+            window.Show();
+            try
+            {
+                Capture(window, $"launcher-{(light ? "light" : "dark")}-placeholders");
+                foreach (string name in new[] { "RouteFilter", "ConsistFilter", "TimePresetBox" })
+                {
+                    Control input = Control<Control>(window, name);
+                    TextBlock placeholder = input.GetVisualDescendants().OfType<TextBlock>()
+                        .Single(text => text.Name == "PART_Placeholder" || text.Name == "PlaceholderTextBlock");
+                    Assert.Equal(1, placeholder.Opacity);
+                    Color foreground = Assert.IsAssignableFrom<ISolidColorBrush>(placeholder.Foreground).Color;
+                    Color background = Assert.IsAssignableFrom<ISolidColorBrush>(input is TextBox textBox
+                        ? textBox.Background : ((ComboBox)input).Background).Color;
+                    Assert.True(Contrast(foreground, background) >= 4.5,
+                        $"{name} must have readable placeholder guidance in each theme.");
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
+        }
+
+        private static void Capture(TopLevel window, string name)
         {
             using var bitmap = window.CaptureRenderedFrame();
             Assert.NotNull(bitmap);

@@ -6,6 +6,7 @@
        Appearance.cs restores the user's choice; both variants share the same hierarchy. -->
   <Application.Resources>
     <ResourceDictionary>
+      <x:Double x:Key="TextControlPlaceholderOpacity">1</x:Double>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Dark">
           <SolidColorBrush x:Key="RielBackground" Color="#14171B" />
@@ -231,14 +232,6 @@
       <Setter Property="Background" Value="{DynamicResource RielAccentDisabled}" />
       <Setter Property="Foreground" Value="{DynamicResource RielAccentDisabledForeground}" />
       <Setter Property="BorderBrush" Value="{DynamicResource RielControlBorder}" />
-    </Style>
-
-    <!-- Fluent halves placeholder opacity; keep search and suggested-time guidance readable. -->
-    <Style Selector="TextBox /template/ TextBlock#PART_Placeholder">
-      <Setter Property="Opacity" Value="1" />
-    </Style>
-    <Style Selector="ComboBox /template/ TextBlock#PlaceholderTextBlock">
-      <Setter Property="Opacity" Value="1" />
     </Style>
 
     <!-- Inputs retain Fluent validation behavior, with consistent rest, hover, focus and disabled states. -->
