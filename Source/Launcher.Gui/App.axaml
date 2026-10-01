@@ -124,7 +124,11 @@
     <Style Selector="TextBlock.small">
       <Setter Property="FontSize" Value="12" />
     </Style>
-    <Style Selector="TextBlock.mono, TextBox.mono">
+    <Style Selector="TextBlock.mono">
+      <Setter Property="FontFamily" Value="monospace" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="TextBox.mono">
       <Setter Property="FontFamily" Value="monospace" />
       <Setter Property="FontSize" Value="12" />
     </Style>
@@ -304,7 +308,13 @@
       <Setter Property="Background" Value="{DynamicResource RielDisabled}" />
       <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
     </Style>
-    <Style Selector="ComboBox:disabled /template/ ContentControl#ContentPresenter, ComboBox:disabled /template/ TextBlock#PlaceholderTextBlock, ComboBox:disabled /template/ PathIcon#DropDownGlyph">
+    <Style Selector="ComboBox:disabled /template/ ContentControl#ContentPresenter">
+      <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
+    </Style>
+    <Style Selector="ComboBox:disabled /template/ TextBlock#PlaceholderTextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
+    </Style>
+    <Style Selector="ComboBox:disabled /template/ PathIcon#DropDownGlyph">
       <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
     </Style>
     <Style Selector="ComboBox /template/ Border#PopupBorder">
