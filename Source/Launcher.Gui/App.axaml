@@ -2,39 +2,96 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Riel.Launcher.Gui.App"
              RequestedThemeVariant="Dark">
-  <!-- Appearance.cs restores the user's choice; both palettes use the same hierarchy. -->
+  <!-- Neutral railway instrumentation: amber marks actions and the current selection.
+       Appearance.cs restores the user's choice; both variants share the same hierarchy. -->
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="RielBackground" Color="#101B26" />
-          <SolidColorBrush x:Key="RielSurface" Color="#172633" />
-          <SolidColorBrush x:Key="RielRaised" Color="#1F3241" />
-          <SolidColorBrush x:Key="RielInset" Color="#111E29" />
-          <SolidColorBrush x:Key="RielForeground" Color="#EAF1F4" />
-          <SolidColorBrush x:Key="RielSecondary" Color="#BBC9D0" />
-          <SolidColorBrush x:Key="RielBorder" Color="#344D5D" />
-          <SolidColorBrush x:Key="RielAccent" Color="#78D5BF" />
-          <SolidColorBrush x:Key="RielAccentHover" Color="#91E3CE" />
-          <SolidColorBrush x:Key="RielAccentForeground" Color="#112C26" />
-          <SolidColorBrush x:Key="RielSelected" Color="#284F50" />
-          <SolidColorBrush x:Key="RielSelectedForeground" Color="#EAFBFA" />
-          <SolidColorBrush x:Key="RielOverlay" Color="#E8101B26" />
+          <SolidColorBrush x:Key="RielBackground" Color="#14171B" />
+          <SolidColorBrush x:Key="RielSurface" Color="#1C2026" />
+          <SolidColorBrush x:Key="RielRaised" Color="#242A32" />
+          <SolidColorBrush x:Key="RielInset" Color="#171B20" />
+          <SolidColorBrush x:Key="RielForeground" Color="#F4F2ED" />
+          <SolidColorBrush x:Key="RielSecondary" Color="#BABDC3" />
+          <SolidColorBrush x:Key="RielBorder" Color="#454D58" />
+          <SolidColorBrush x:Key="RielControlBorder" Color="#687381" />
+          <SolidColorBrush x:Key="RielHover" Color="#303741" />
+          <SolidColorBrush x:Key="RielPressed" Color="#373E48" />
+          <SolidColorBrush x:Key="RielDisabled" Color="#272C33" />
+          <SolidColorBrush x:Key="RielDisabledForeground" Color="#A5ACB5" />
+          <SolidColorBrush x:Key="RielAccent" Color="#F2B75A" />
+          <SolidColorBrush x:Key="RielAccentHover" Color="#F7C575" />
+          <SolidColorBrush x:Key="RielAccentPressed" Color="#DEA347" />
+          <SolidColorBrush x:Key="RielAccentForeground" Color="#261C0C" />
+          <SolidColorBrush x:Key="RielAccentDisabled" Color="#433B2C" />
+          <SolidColorBrush x:Key="RielAccentDisabledForeground" Color="#D6C3A1" />
+          <SolidColorBrush x:Key="RielSelected" Color="#3B3327" />
+          <SolidColorBrush x:Key="RielSelectedForeground" Color="#F8E4C3" />
+          <SolidColorBrush x:Key="RielOverlay" Color="#ED14171B" />
+          <!-- Submenus and gestures are created inside Fluent's popup templates. -->
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#242A32" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#687381" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackground" Color="Transparent" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="#F4F2ED" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForeground" Color="#BABDC3" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevron" Color="#BABDC3" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#303741" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#F4F2ED" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPointerOver" Color="#F4F2ED" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronPointerOver" Color="#F4F2ED" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#373E48" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPressed" Color="#F4F2ED" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPressed" Color="#F4F2ED" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronPressed" Color="#F4F2ED" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundDisabled" Color="Transparent" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundDisabled" Color="#A5ACB5" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundDisabled" Color="#A5ACB5" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronDisabled" Color="#A5ACB5" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronSubMenuOpened" Color="#F2B75A" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="RielBackground" Color="#EDF2F2" />
+          <SolidColorBrush x:Key="RielBackground" Color="#F2EFE9" />
           <SolidColorBrush x:Key="RielSurface" Color="#FFFFFF" />
-          <SolidColorBrush x:Key="RielRaised" Color="#F3F7F7" />
-          <SolidColorBrush x:Key="RielInset" Color="#F7FAFA" />
-          <SolidColorBrush x:Key="RielForeground" Color="#172C37" />
-          <SolidColorBrush x:Key="RielSecondary" Color="#4E6571" />
-          <SolidColorBrush x:Key="RielBorder" Color="#CCD8DE" />
-          <SolidColorBrush x:Key="RielAccent" Color="#136A58" />
-          <SolidColorBrush x:Key="RielAccentHover" Color="#0E5849" />
+          <SolidColorBrush x:Key="RielRaised" Color="#F7F4EF" />
+          <SolidColorBrush x:Key="RielInset" Color="#FBF9F5" />
+          <SolidColorBrush x:Key="RielForeground" Color="#25282E" />
+          <SolidColorBrush x:Key="RielSecondary" Color="#59606B" />
+          <SolidColorBrush x:Key="RielBorder" Color="#C8C4BC" />
+          <SolidColorBrush x:Key="RielControlBorder" Color="#85837E" />
+          <SolidColorBrush x:Key="RielHover" Color="#EEE9E1" />
+          <SolidColorBrush x:Key="RielPressed" Color="#E6DFD4" />
+          <SolidColorBrush x:Key="RielDisabled" Color="#ECE8E1" />
+          <SolidColorBrush x:Key="RielDisabledForeground" Color="#666C74" />
+          <SolidColorBrush x:Key="RielAccent" Color="#A65B0A" />
+          <SolidColorBrush x:Key="RielAccentHover" Color="#8B4A07" />
+          <SolidColorBrush x:Key="RielAccentPressed" Color="#743C04" />
           <SolidColorBrush x:Key="RielAccentForeground" Color="#FFFFFF" />
-          <SolidColorBrush x:Key="RielSelected" Color="#E1F2EE" />
-          <SolidColorBrush x:Key="RielSelectedForeground" Color="#173D35" />
-          <SolidColorBrush x:Key="RielOverlay" Color="#E8EDF2F2" />
+          <SolidColorBrush x:Key="RielAccentDisabled" Color="#E8DDCD" />
+          <SolidColorBrush x:Key="RielAccentDisabledForeground" Color="#6D573A" />
+          <SolidColorBrush x:Key="RielSelected" Color="#FFF0D9" />
+          <SolidColorBrush x:Key="RielSelectedForeground" Color="#57390D" />
+          <SolidColorBrush x:Key="RielOverlay" Color="#EDF2EFE9" />
+          <!-- Submenus and gestures are created inside Fluent's popup templates. -->
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#F7F4EF" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#85837E" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackground" Color="Transparent" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForeground" Color="#25282E" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForeground" Color="#59606B" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevron" Color="#59606B" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#EEE9E1" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPointerOver" Color="#25282E" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPointerOver" Color="#25282E" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronPointerOver" Color="#25282E" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#E6DFD4" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundPressed" Color="#25282E" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundPressed" Color="#25282E" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronPressed" Color="#25282E" />
+          <SolidColorBrush x:Key="MenuFlyoutItemBackgroundDisabled" Color="Transparent" />
+          <SolidColorBrush x:Key="MenuFlyoutItemForegroundDisabled" Color="#666C74" />
+          <SolidColorBrush x:Key="MenuFlyoutItemKeyboardAcceleratorTextForegroundDisabled" Color="#666C74" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronDisabled" Color="#666C74" />
+          <SolidColorBrush x:Key="MenuFlyoutSubItemChevronSubMenuOpened" Color="#A65B0A" />
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
@@ -42,11 +99,12 @@
   <Application.Styles>
     <FluentTheme>
       <FluentTheme.Palettes>
-        <ColorPaletteResources x:Key="Dark" Accent="#78D5BF" />
-        <ColorPaletteResources x:Key="Light" Accent="#136A58" />
+        <ColorPaletteResources x:Key="Dark" Accent="#F2B75A" />
+        <ColorPaletteResources x:Key="Light" Accent="#A65B0A" />
       </FluentTheme.Palettes>
     </FluentTheme>
 
+    <!-- Typography and surfaces. -->
     <Style Selector="Window">
       <Setter Property="Background" Value="{DynamicResource RielBackground}" />
       <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
@@ -66,42 +124,9 @@
     <Style Selector="TextBlock.small">
       <Setter Property="FontSize" Value="12" />
     </Style>
-    <Style Selector="TextBlock.mono">
+    <Style Selector="TextBlock.mono, TextBox.mono">
       <Setter Property="FontFamily" Value="monospace" />
       <Setter Property="FontSize" Value="12" />
-    </Style>
-    <Style Selector="TextBox.mono">
-      <Setter Property="FontFamily" Value="monospace" />
-      <Setter Property="FontSize" Value="12" />
-    </Style>
-    <Style Selector="Button">
-      <Setter Property="MinHeight" Value="38" />
-      <Setter Property="Padding" Value="14,8" />
-      <Setter Property="CornerRadius" Value="8" />
-    </Style>
-    <Style Selector="TextBox">
-      <Setter Property="MinHeight" Value="38" />
-      <Setter Property="CornerRadius" Value="8" />
-    </Style>
-    <Style Selector="ComboBox">
-      <Setter Property="MinHeight" Value="38" />
-      <Setter Property="CornerRadius" Value="8" />
-    </Style>
-    <Style Selector="Button.accent">
-      <Setter Property="Background" Value="{DynamicResource RielAccent}" />
-      <Setter Property="Foreground" Value="{DynamicResource RielAccentForeground}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-    </Style>
-    <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource RielAccentHover}" />
-      <Setter Property="Foreground" Value="{DynamicResource RielAccentForeground}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource RielAccentHover}" />
-    </Style>
-    <Style Selector="Button.accent:pressed /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource RielSelected}" />
-      <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
     </Style>
     <Style Selector="Border.bar">
       <Setter Property="Background" Value="{DynamicResource RielSurface}" />
@@ -111,19 +136,19 @@
       <Setter Property="Background" Value="{DynamicResource RielRaised}" />
       <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="CornerRadius" Value="8" />
       <Setter Property="Padding" Value="14" />
     </Style>
     <Style Selector="Border.card">
       <Setter Property="Background" Value="{DynamicResource RielSurface}" />
       <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="CornerRadius" Value="10" />
     </Style>
     <Style Selector="Border.step">
       <Setter Property="Width" Value="26" />
       <Setter Property="Height" Value="26" />
-      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="CornerRadius" Value="6" />
       <Setter Property="Background" Value="{DynamicResource RielSelected}" />
     </Style>
     <Style Selector="Border.step TextBlock">
@@ -132,39 +157,317 @@
       <Setter Property="HorizontalAlignment" Value="Center" />
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
+
+    <!-- Use named Fluent parts: Button-only setters do not override accent or disabled templates. -->
+    <Style Selector="Button">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Background" Value="{DynamicResource RielRaised}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielControlBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielRaised}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielControlBorder}" />
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielHover}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielSecondary}" />
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielPressed}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielSecondary}" />
+    </Style>
+    <Style Selector="Button:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="Button:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielDisabled}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
+    </Style>
+    <Style Selector="Button.accent">
+      <Setter Property="Background" Value="{DynamicResource RielAccent}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielAccentForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.accent /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielAccent}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielAccentForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+    </Style>
+    <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielAccentHover}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielAccentForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccentHover}" />
+    </Style>
+    <Style Selector="Button.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielAccentPressed}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielAccentForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccentPressed}" />
+    </Style>
+    <Style Selector="Button.accent:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="Button.accent:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource RielAccentDisabledForeground}" />
+    </Style>
+    <Style Selector="Button.accent:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielAccentDisabled}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielAccentDisabledForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielControlBorder}" />
+    </Style>
+
+    <!-- Fluent halves placeholder opacity; keep search and suggested-time guidance readable. -->
+    <Style Selector="TextBox /template/ TextBlock#PART_Placeholder">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="ComboBox /template/ TextBlock#PlaceholderTextBlock">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <!-- Inputs retain Fluent validation behavior, with consistent rest, hover, focus and disabled states. -->
+    <Style Selector="TextBox">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Background" Value="{DynamicResource RielInset}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielControlBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CaretBrush" Value="{DynamicResource RielForeground}" />
+      <Setter Property="SelectionBrush" Value="{DynamicResource RielSelected}" />
+      <Setter Property="PlaceholderForeground" Value="{DynamicResource RielSecondary}" />
+    </Style>
+    <Style Selector="TextBox:pointerover, TextBox:focus">
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+    </Style>
+    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource RielInset}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielSecondary}" />
+    </Style>
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource RielInset}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="TextBox:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
+      <Setter Property="PlaceholderForeground" Value="{DynamicResource RielDisabledForeground}" />
+    </Style>
+    <Style Selector="TextBox:disabled /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource RielDisabled}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Background" Value="{DynamicResource RielInset}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielControlBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="PlaceholderForeground" Value="{DynamicResource RielSecondary}" />
+    </Style>
+    <Style Selector="ComboBox:pointerover /template/ Border#Background">
+      <Setter Property="Background" Value="{DynamicResource RielHover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielSecondary}" />
+    </Style>
+    <Style Selector="ComboBox:pressed /template/ Border#Background">
+      <Setter Property="Background" Value="{DynamicResource RielPressed}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielSecondary}" />
+    </Style>
+    <Style Selector="ComboBox:focus-visible /template/ Border#HighlightBackground">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="ComboBox /template/ ContentControl#ContentPresenter, ComboBox:focus-visible /template/ ContentControl#ContentPresenter, ComboBox:focus:pressed /template/ ContentControl#ContentPresenter">
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+    </Style>
+    <Style Selector="ComboBox:focus-visible /template/ TextBlock#PlaceholderTextBlock, ComboBox:focus:pressed /template/ TextBlock#PlaceholderTextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource RielSecondary}" />
+    </Style>
+    <Style Selector="ComboBox /template/ PathIcon#DropDownGlyph, ComboBox:focus-visible /template/ PathIcon#DropDownGlyph, ComboBox:focus:pressed /template/ PathIcon#DropDownGlyph">
+      <Setter Property="Foreground" Value="{DynamicResource RielSecondary}" />
+    </Style>
+    <Style Selector="ComboBox:disabled /template/ Border#Background">
+      <Setter Property="Background" Value="{DynamicResource RielDisabled}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
+    </Style>
+    <Style Selector="ComboBox:disabled /template/ ContentControl#ContentPresenter, ComboBox:disabled /template/ TextBlock#PlaceholderTextBlock, ComboBox:disabled /template/ PathIcon#DropDownGlyph">
+      <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
+    </Style>
+    <Style Selector="ComboBox /template/ Border#PopupBorder">
+      <Setter Property="Background" Value="{DynamicResource RielRaised}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielControlBorder}" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="ComboBoxItem">
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="CornerRadius" Value="5" />
+    </Style>
+    <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielHover}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="ComboBoxItem:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielPressed}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="ComboBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ComboBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter, ComboBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielSelected}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+    </Style>
+    <Style Selector="ComboBoxItem:disabled /template/ ContentPresenter#PART_ContentPresenter, ComboBoxItem:selected:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielDisabled}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <!-- Tools menus, text context flyouts and tooltips share an opaque popup surface. -->
+    <Style Selector="ContextMenu, MenuFlyoutPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielRaised}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielControlBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="5" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="Padding" Value="12,9" />
+    </Style>
+    <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot, MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="{DynamicResource RielHover}" />
+    </Style>
+    <Style Selector="MenuItem:selected /template/ ContentPresenter#PART_HeaderPresenter, MenuItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+    </Style>
+    <Style Selector="MenuItem:pressed /template/ Border#PART_LayoutRoot:pointerover">
+      <Setter Property="Background" Value="{DynamicResource RielPressed}" />
+    </Style>
+    <Style Selector="MenuItem:pressed /template/ ContentPresenter#PART_HeaderPresenter">
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+    </Style>
+    <Style Selector="MenuItem:focus-visible /template/ Border#PART_LayoutRoot">
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="MenuItem:disabled /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="MenuItem:disabled /template/ ContentPresenter#PART_HeaderPresenter">
+      <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
+    </Style>
+    <Style Selector="Separator">
+      <Setter Property="Background" Value="{DynamicResource RielBorder}" />
+    </Style>
+    <Style Selector="ToolTip">
+      <Setter Property="Background" Value="{DynamicResource RielRaised}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielControlBorder}" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+
+    <!-- Mode tabs use a restrained selection underline and consistent state colors. -->
+    <Style Selector="TabControl.mode-tabs TabItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource RielSecondary}" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="TabControl.mode-tabs TabItem:selected">
+      <Setter Property="Background" Value="{DynamicResource RielSelected}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
+    </Style>
+    <Style Selector="TabControl.mode-tabs TabItem:pointerover /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="{DynamicResource RielHover}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource RielForeground}" />
+    </Style>
+    <Style Selector="TabControl.mode-tabs TabItem:pressed /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="{DynamicResource RielPressed}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource RielForeground}" />
+    </Style>
+    <Style Selector="TabControl.mode-tabs TabItem:selected:pointerover /template/ Border#PART_LayoutRoot, TabControl.mode-tabs TabItem:selected:pressed /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="{DynamicResource RielSelected}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource RielSelectedForeground}" />
+    </Style>
+    <Style Selector="TabControl.mode-tabs TabItem /template/ Border#PART_SelectedPipe">
+      <Setter Property="Background" Value="{DynamicResource RielAccent}" />
+    </Style>
+    <Style Selector="TabControl.mode-tabs TabItem:focus-visible /template/ Border#PART_LayoutRoot">
+      <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="TabControl.mode-tabs TabItem:disabled /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="{DynamicResource RielDisabled}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource RielDisabledForeground}" />
+    </Style>
+
+    <!-- Catalog selection stays visible when focus moves into the setup form. -->
     <Style Selector="ListBox.catalog">
       <Setter Property="Background" Value="{DynamicResource RielInset}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
       <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="CornerRadius" Value="7" />
       <Setter Property="Padding" Value="5" />
     </Style>
     <Style Selector="ListBox.catalog ListBoxItem">
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
       <Setter Property="Padding" Value="12,9" />
       <Setter Property="Margin" Value="0,2" />
       <Setter Property="MinHeight" Value="42" />
-      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="CornerRadius" Value="5" />
       <Setter Property="BorderThickness" Value="2,0,0,0" />
       <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.catalog ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielHover}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
+    </Style>
+    <Style Selector="ListBox.catalog ListBoxItem:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielPressed}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielForeground}" />
     </Style>
     <Style Selector="ListBox.catalog ListBoxItem:selected">
       <Setter Property="Background" Value="{DynamicResource RielSelected}" />
       <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
       <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
     </Style>
-    <Style Selector="ListBox.catalog ListBoxItem:selected /template/ ContentPresenter">
+    <Style Selector="ListBox.catalog ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBox.catalog ListBoxItem:selected:not(:focus) /template/ ContentPresenter#PART_ContentPresenter, ListBox.catalog ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter, ListBox.catalog ListBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource RielSelected}" />
       <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
       <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
       <Setter Property="BorderThickness" Value="2,0,0,0" />
-      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="CornerRadius" Value="5" />
     </Style>
     <Style Selector="ListBox.catalog ListBoxItem:selected TextBlock.secondary">
       <Setter Property="Foreground" Value="{DynamicResource RielSelectedForeground}" />
     </Style>
-    <Style Selector="ListBox.catalog ListBoxItem:focus-visible">
+    <Style Selector="ListBox.catalog ListBoxItem:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="BorderThickness" Value="2" />
       <Setter Property="BorderBrush" Value="{DynamicResource RielAccent}" />
+    </Style>
+    <Style Selector="ListBox.catalog ListBoxItem:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RielDisabled}" />
+      <Setter Property="Foreground" Value="{DynamicResource RielDisabledForeground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RielBorder}" />
     </Style>
   </Application.Styles>
 </Application>

@@ -841,3 +841,96 @@ msgstr ""
 msgid "This timetable has no playable trains. Choose another timetable set."
 msgstr ""
 
+
+msgid "Train simulator"
+msgstr ""
+
+msgid "Tools ▾"
+msgstr ""
+
+msgid "Route information"
+msgstr ""
+
+msgid "Session details"
+msgstr ""
+
+msgid "Train information"
+msgstr ""
+
+msgid "No description is available for this route."
+msgstr ""
+
+msgid "No description is available for this activity."
+msgstr ""
+
+msgid "No description is available for this locomotive."
+msgstr ""
+
+msgid "No briefing is available for this timetable train."
+msgstr ""
+
+msgid "All locomotives"
+msgstr ""
+
+msgid "Check for updates"
+msgstr ""
+
+msgid "Choose a route first."
+msgstr ""
+
+msgid "Choose a suggested time or enter your own (HH:mm)."
+msgstr ""
+
+msgid "Downloading and installing Riel update…"
+msgstr ""
+
+msgid "Get content"
+msgstr ""
+
+msgid "Installing Riel update…"
+msgstr ""
+
+msgid "Later"
+msgstr ""
+
+msgid "Locomotive"
+msgstr ""
+
+msgid "Manual"
+msgstr ""
+
+msgid "Riel ACE Converter"
+msgstr ""
+
+msgid "Riel Consist Editor"
+msgstr ""
+
+msgid "Riel Route Editor"
+msgstr ""
+
+msgid "Riel Shape Viewer"
+msgstr ""
+
+msgid "Riel is up to date."
+msgstr ""
+
+msgid "Riel update"
+msgstr ""
+
+msgid "Suggested times"
+msgstr ""
+
+msgid "Test activities"
+msgstr ""
+
+msgid "Tools"
+msgstr ""
+
+msgid "Update now"
+msgstr ""
+
+msgid "Updates"
+msgstr ""
+
+msgid "Updates require the extracted portable package."
+msgstr ""

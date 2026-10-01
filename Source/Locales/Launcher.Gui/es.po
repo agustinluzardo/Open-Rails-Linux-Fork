@@ -883,3 +883,90 @@ msgstr "Esta ruta no tiene horarios. Elegí Actividad o Explorar."
 msgid "This timetable has no playable trains. Choose another timetable set."
 msgstr "Este horario no tiene trenes disponibles para conducir. Elegí otro conjunto de horarios."
 
+
+msgid "Train simulator"
+msgstr "Simulador de trenes"
+
+msgid "Tools ▾"
+msgstr "Herramientas ▾"
+
+msgid "Route information"
+msgstr "Información de la ruta"
+
+msgid "Session details"
+msgstr "Detalles de la sesión"
+
+msgid "Train information"
+msgstr "Información del tren"
+
+msgid "No description is available for this route."
+msgstr "No hay una descripción disponible para esta ruta."
+
+msgid "No description is available for this activity."
+msgstr "No hay una descripción disponible para esta actividad."
+
+msgid "No description is available for this locomotive."
+msgstr "No hay una descripción disponible para esta locomotora."
+
+msgid "No briefing is available for this timetable train."
+msgstr "No hay instrucciones disponibles para este servicio de horario."
+
+msgid "All locomotives"
+msgstr "Todas las locomotoras"
+
+msgid "Check for updates"
+msgstr "Buscar actualizaciones"
+
+msgid "Choose a route first."
+msgstr "Primero elegí una ruta."
+
+msgid "Downloading and installing Riel update…"
+msgstr "Descargando e instalando la actualización de Riel…"
+
+msgid "Get content"
+msgstr "Obtener contenido"
+
+msgid "Installing Riel update…"
+msgstr "Instalando la actualización de Riel…"
+
+msgid "Later"
+msgstr "Más tarde"
+
+msgid "Locomotive"
+msgstr "Locomotora"
+
+msgid "Manual"
+msgstr "Manual"
+
+msgid "Riel ACE Converter"
+msgstr "Conversor ACE de Riel"
+
+msgid "Riel Consist Editor"
+msgstr "Editor de formaciones de Riel"
+
+msgid "Riel Route Editor"
+msgstr "Editor de rutas de Riel"
+
+msgid "Riel Shape Viewer"
+msgstr "Visor de modelos de Riel"
+
+msgid "Riel is up to date."
+msgstr "Riel está actualizado."
+
+msgid "Riel update"
+msgstr "Actualización de Riel"
+
+msgid "Test activities"
+msgstr "Probar actividades"
+
+msgid "Tools"
+msgstr "Herramientas"
+
+msgid "Update now"
+msgstr "Actualizar ahora"
+
+msgid "Updates"
+msgstr "Actualizaciones"
+
+msgid "Updates require the extracted portable package."
+msgstr "Las actualizaciones requieren el paquete portable extraído."
