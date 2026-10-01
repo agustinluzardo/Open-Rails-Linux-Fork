@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="784" viewBox="0 0 1180 784" role="img" aria-labelledby="title description">
-  <title id="title">Riel: diseño del launcher</title>
-  <desc id="description">Ilustración del diseño oscuro del launcher, con datos de ejemplo. No es una captura de la aplicación. La biblioteca de rutas, el modo de conducción y el inicio se ordenan en tres pasos.</desc>
+  <title id="title">Riel launcher design</title>
+  <desc id="description">Illustration of the launcher dark theme with sample data. This is not a screenshot of the application. Choose a route, choose a mode, and start your journey in three steps.</desc>
   <defs>
     <clipPath id="window"><rect width="1180" height="740" rx="14"/></clipPath>
     <style>
@@ -26,25 +26,25 @@
     <circle cx="49" cy="28" r="3" fill="#78D5BF"/>
     <path d="M47 33L36 56M51 33L62 56M42 44H56M38 53H60" stroke="#EAF1F4" stroke-width="2" fill="none"/>
     <text x="86" y="50" font-size="25" font-weight="bold">Riel</text>
-    <text x="86" y="86" class="secondary small">Rutas de Microsoft Train Simulator, nativas en Linux</text>
+    <text x="86" y="86" class="secondary small">Microsoft Train Simulator routes, natively on Linux</text>
     <rect x="644" y="29" width="40" height="22" rx="11" fill="#78D5BF"/>
     <circle cx="673" cy="40" r="8" fill="#112C26"/>
-    <text x="693" y="46">Oscuro</text>
+    <text x="693" y="46">Dark</text>
     <rect x="764" y="22" width="169" height="38" rx="8" class="raised"/>
-    <text x="778" y="46">Carpetas de contenido</text>
+    <text x="778" y="46">Content folders</text>
     <rect x="941" y="22" width="109" height="38" rx="8" class="raised"/>
-    <text x="955" y="46">Herramientas</text>
+    <text x="955" y="46">Tools</text>
     <rect x="1058" y="22" width="98" height="38" rx="8" class="raised"/>
-    <text x="1072" y="46">Ajustes</text>
+    <text x="1072" y="46">Settings</text>
 
     <!-- Step 1: route library. -->
     <rect x="20" y="122" width="280" height="496" rx="14" class="surface"/>
     <rect x="36" y="138" width="26" height="26" rx="8" class="selected"/>
     <text x="49" y="156" class="step">1</text>
-    <text x="71" y="157" class="heading">Elegí una ruta</text>
-    <text x="36" y="190" class="secondary small">Biblioteca de rutas</text>
+    <text x="71" y="157" class="heading">Choose a route</text>
+    <text x="36" y="190" class="secondary small">Route library</text>
     <rect x="36" y="205" width="248" height="38" rx="8" class="inset"/>
-    <text x="48" y="230" class="secondary">Buscar rutas</text>
+    <text x="48" y="230" class="secondary">Search routes</text>
     <rect x="36" y="255" width="248" height="347" rx="10" class="inset"/>
     <rect x="42" y="262" width="236" height="65" rx="7" class="selected"/>
     <path d="M43 269V320" stroke="#78D5BF" stroke-width="3"/>
@@ -59,23 +59,23 @@
     <rect x="316" y="122" width="844" height="496" rx="14" class="surface"/>
     <rect x="336" y="138" width="26" height="26" rx="8" class="selected"/>
     <text x="349" y="156" class="step">2</text>
-    <text x="371" y="157" class="heading">Elegí un modo</text>
+    <text x="371" y="157" class="heading">Choose a mode</text>
     <rect x="336" y="174" width="804" height="78" rx="9" class="raised"/>
     <rect x="350" y="186" width="3" height="54" rx="1.5" fill="#78D5BF"/>
     <text x="367" y="208" font-size="23" font-weight="600">Riel Test Line</text>
-    <text x="367" y="231" class="secondary small">Una ruta de ejemplo con dos actividades y dos recorridos para explorar.</text>
-    <text x="352" y="293" class="bold">Actividad</text>
-    <text x="475" y="293" class="secondary bold">Explorar</text>
-    <text x="588" y="293" class="secondary bold">Horario</text>
+    <text x="367" y="231" class="secondary small">A sample route with two activities and two paths to explore.</text>
+    <text x="352" y="293" class="bold">Activity</text>
+    <text x="475" y="293" class="secondary bold">Explore</text>
+    <text x="588" y="293" class="secondary bold">Timetable</text>
     <path d="M336 307.5H1140" stroke="#344D5D"/>
     <path d="M352 307H417" stroke="#78D5BF" stroke-width="3" stroke-linecap="round"/>
     <rect x="336" y="321" width="804" height="222" rx="10" class="inset"/>
     <rect x="342" y="328" width="792" height="65" rx="7" class="selected"/>
     <path d="M343 335V386" stroke="#78D5BF" stroke-width="3"/>
     <text x="355" y="352" class="bold">Morning coal run</text>
-    <text x="355" y="375" class="small">08:30 · Verano · Despejado · Media · 1 h 20 min</text>
+    <text x="355" y="375" class="small">08:30 · Summer · Clear · Medium · 1 h 20 min</text>
     <text x="355" y="422" class="bold">Night freight in the snow</text>
-    <text x="355" y="445" class="secondary small">22:15 · Invierno · Nieve · Difícil · 45 min</text>
+    <text x="355" y="445" class="secondary small">22:15 · Winter · Snow · Hard · 45 min</text>
     <rect x="336" y="555" width="804" height="47" rx="10" fill="#1F3241" stroke="#344D5D"/>
     <text x="351" y="584" class="bold">Morning coal run</text>
     <path d="M1110 575L1116 581L1122 575" fill="none" stroke="#BBC9D0" stroke-width="1.5"/>
@@ -84,15 +84,15 @@
     <rect x="0" y="636" width="1180" height="104" fill="#172633"/>
     <rect x="24" y="650" width="26" height="26" rx="8" class="selected"/>
     <text x="37" y="668" class="step">3</text>
-    <text x="59" y="669" class="heading">Comenzá tu viaje</text>
-    <text x="24" y="702" class="secondary">Todo listo para salir.</text>
-    <text x="24" y="725" class="secondary small">3 rutas en 1 carpeta de contenido.</text>
+    <text x="59" y="669" class="heading">Start your journey</text>
+    <text x="24" y="702" class="secondary">Ready to depart.</text>
+    <text x="24" y="725" class="secondary small">3 routes in 1 content folder.</text>
     <rect x="768" y="657" width="228" height="44" rx="8" class="raised"/>
-    <text x="786" y="684">Continuar partida guardada</text>
+    <text x="786" y="684">Continue saved game</text>
     <rect x="1006" y="657" width="150" height="44" rx="8" fill="#78D5BF"/>
-    <text x="1039" y="684" font-weight="600" style="fill:#112C26">Jugar</text>
+    <text x="1039" y="684" font-weight="600" style="fill:#112C26">Play</text>
     <path d="M1116 673L1125 679L1116 685Z" fill="#112C26"/>
   </g>
   <rect y="748" width="1180" height="36" rx="8" fill="#EDF2F2"/>
-  <text x="16" y="771" class="small" style="fill:#4E6571">Vista ilustrativa del diseño · Datos de ejemplo · No es una captura de la aplicación</text>
+  <text x="16" y="771" class="small" style="fill:#4E6571">Design illustration · Sample data · Not a screenshot of the application</text>
 </svg>

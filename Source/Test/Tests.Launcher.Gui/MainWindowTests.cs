@@ -11,6 +11,7 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 
 using Riel.Common;
+using Riel.Common.Position;
 using Riel.Launcher.Gui;
 using Riel.Models.Content;
 
@@ -203,7 +204,7 @@ namespace Tests.Launcher.Gui
 
         private sealed record FixtureRoute : RouteModelHeader
         {
-            public FixtureRoute(string name, string id) : base(default)
+            public FixtureRoute(string name, string id) : base(default(WorldLocation))
             {
                 Name = name;
                 Id = id;
