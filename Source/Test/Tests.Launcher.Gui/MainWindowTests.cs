@@ -321,6 +321,11 @@ namespace Tests.Launcher.Gui
                     Capture(window, name + "-tools");
                     Assert.True(tools.ContextMenu.IsOpen);
                     Capture(Assert.IsAssignableFrom<TopLevel>(TopLevel.GetTopLevel(tools.ContextMenu)), name + "-menu");
+                    Point menuOrigin = tools.ContextMenu.TranslatePoint(default, window).Value;
+                    Point toolsOrigin = tools.TranslatePoint(default, window).Value;
+                    Assert.True(menuOrigin.Y >= toolsOrigin.Y + tools.Bounds.Height - 1
+                        && menuOrigin.X >= toolsOrigin.X - tools.ContextMenu.Bounds.Width,
+                        "Tools must open beside its button even when the pointer is somewhere else.");
                     tools.ContextMenu.Close();
                 }
             }

@@ -85,7 +85,7 @@
           <Button x:Name="ContentButton" Content="{l:T 'Content folders'}" />
           <Button x:Name="ToolsButton" Content="{l:T 'Tools ▾'}" AutomationProperties.Name="{l:T 'Tools'}">
             <Button.ContextMenu>
-              <ContextMenu>
+              <ContextMenu Placement="Bottom">
                 <MenuItem x:Name="GetContentButton" Header="{l:T 'Get content'}" />
                 <MenuItem x:Name="ManualButton" Header="{l:T 'Manual'}" />
                 <Separator />

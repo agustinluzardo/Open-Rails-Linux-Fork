@@ -45,10 +45,10 @@ to **Explore** to select a path and consist. Content can live on another disk or
 or Proton prefix; Riel reads it from that location. Routes and trains are obtained separately
 and retain their authors' licenses.
 
-![Illustration of the Riel launcher showing route, activity and train details](docs/linux/launcher-preview.svg)
+![Riel launcher with visible route and locomotive information](docs/linux/launcher-preview.png)
 
-The illustration uses the repository's synthetic test route. Your routes, activities and trains
-appear after you add a content folder.
+This image is rendered from the actual launcher interface with sample route and train data.
+Your routes, activities and trains appear after you add a content folder.
 
 ## What Riel does
 
