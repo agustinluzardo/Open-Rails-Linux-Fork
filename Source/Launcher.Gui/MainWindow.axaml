@@ -7,6 +7,13 @@
         Width="1180" Height="740" MinWidth="880" MinHeight="600"
         WindowStartupLocation="CenterScreen">
   <Window.Styles>
+    <Style Selector="Button.launcher-action">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
     <Style Selector="TabControl.mode-tabs TabItem">
       <Setter Property="FontSize" Value="15" />
       <Setter Property="MinHeight" Value="42" />
@@ -82,8 +89,14 @@
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
           <ToggleSwitch x:Name="DarkSwitch" OnContent="{l:T 'Dark'}" OffContent="{l:T 'Dark'}"
                         AutomationProperties.Name="{l:T 'Dark'}" VerticalAlignment="Center" Margin="0,0,8,0" />
-          <Button x:Name="ContentButton" Content="{l:T 'Content folders'}" />
-          <Button x:Name="ToolsButton" Content="{l:T 'Tools ▾'}" AutomationProperties.Name="{l:T 'Tools'}">
+          <Button x:Name="ContentButton" Classes="launcher-action" Content="{l:T 'Content folders'}" />
+          <Button x:Name="ToolsButton" Classes="launcher-action" AutomationProperties.Name="{l:T 'Tools'}">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <TextBlock Text="{l:T 'Tools'}" VerticalAlignment="Center"
+                         Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" x:CompileBindings="False" />
+              <Path Width="8" Height="5" Data="M 0,0 L 4,4 L 8,0" VerticalAlignment="Center"
+                    Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" x:CompileBindings="False" StrokeThickness="1.5" Stretch="Uniform" />
+            </StackPanel>
             <Button.ContextMenu>
               <ContextMenu Placement="Bottom">
                 <MenuItem x:Name="GetContentButton" Header="{l:T 'Get content'}" />
@@ -100,7 +113,7 @@
               </ContextMenu>
             </Button.ContextMenu>
           </Button>
-          <Button x:Name="SettingsButton" Content="{l:T 'Settings'}" />
+          <Button x:Name="SettingsButton" Classes="launcher-action" Content="{l:T 'Settings'}" />
         </StackPanel>
       </Grid>
     </Border>
@@ -336,13 +349,13 @@
         <TextBlock x:Name="SelectionHint" Classes="secondary" TextWrapping="Wrap" MaxLines="2"
                    TextTrimming="WordEllipsis" VerticalAlignment="Center" />
         <StackPanel Grid.Column="1" Grid.RowSpan="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-          <Button x:Name="ResumeButton" Content="{l:T 'Continue saved game'}" />
-          <Button x:Name="PlayButton" Classes="accent" MinWidth="144" MinHeight="46" HorizontalContentAlignment="Center"
+          <Button x:Name="ResumeButton" Classes="launcher-action" Content="{l:T 'Continue saved game'}" />
+          <Button x:Name="PlayButton" Classes="accent launcher-action" MinWidth="96"
                   AutomationProperties.Name="{l:T 'Play'}">
-            <StackPanel Orientation="Horizontal" Spacing="14">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
               <TextBlock Text="{l:T 'Play'}" VerticalAlignment="Center"
                          Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" x:CompileBindings="False" />
-              <Path Width="14" Height="14" Data="M 4,2 L 12,8 L 4,14 Z" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" x:CompileBindings="False" Stretch="Uniform" />
+              <Path Width="12" Height="12" Data="M 4,2 L 12,8 L 4,14 Z" VerticalAlignment="Center" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" x:CompileBindings="False" Stretch="Uniform" />
             </StackPanel>
           </Button>
         </StackPanel>
