@@ -104,8 +104,9 @@ namespace Riel.Launcher
                 : $"only {shaders.Length} of {expected} in {content}; run scripts/build-shaders.sh");
         }
 
-        private static (bool, string) CheckLibrary(IEnumerable<string> candidates, string consequence)
+        internal static (bool, string) CheckLibrary(IEnumerable<string> candidates, string consequence)
         {
+            string unloadable = null;
             foreach (string candidate in candidates)
             {
                 if (NativeLibrary.TryLoad(candidate, out IntPtr handle))
@@ -122,11 +123,19 @@ namespace Riel.Launcher
                     Path.Combine(AppContext.BaseDirectory, "runtimes", "linux-x64", "native", candidate),
                 })
                 {
-                    if (File.Exists(bundled))
+                    if (!File.Exists(bundled))
+                        continue;
+                    if (NativeLibrary.TryLoad(bundled, out handle))
+                    {
+                        NativeLibrary.Free(handle);
                         return (true, $"{bundled} (bundled)");
+                    }
+                    unloadable = bundled;
                 }
             }
-            return (false, $"not found - {consequence}");
+            return (false, unloadable == null
+                ? $"not found - {consequence}"
+                : $"{unloadable} was found but could not be loaded - {consequence}");
         }
 
         private static (bool, string) CheckDisplay()

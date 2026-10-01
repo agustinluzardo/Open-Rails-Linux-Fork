@@ -801,3 +801,43 @@ msgstr ""
 
 msgid "Use Open Rails activity-style exploration. Normal Explore is recommended for most routes."
 msgstr ""
+
+msgid "Choose a mode"
+msgstr ""
+
+msgid "Route library"
+msgstr ""
+
+msgid "Start your journey"
+msgstr ""
+
+msgid "Weather file"
+msgstr ""
+
+msgid "Ready to depart."
+msgstr ""
+
+msgid "Reading route…"
+msgstr ""
+
+msgid "Preparing your journey…"
+msgstr ""
+
+msgid "The simulator is running."
+msgstr ""
+
+msgid "No routes match your search. Clear the search to see all routes."
+msgstr ""
+
+msgid "No trains were found in this content folder. Add trains in Content folders."
+msgstr ""
+
+msgid "No trains match your filters. Clear the search or choose All locomotives."
+msgstr ""
+
+msgid "This route has no timetables. Choose Activity or Explore instead."
+msgstr ""
+
+msgid "This timetable has no playable trains. Choose another timetable set."
+msgstr ""
+

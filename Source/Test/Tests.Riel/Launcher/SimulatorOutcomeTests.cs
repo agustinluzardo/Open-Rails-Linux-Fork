@@ -16,6 +16,7 @@
 // along with Riel.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.IO;
 
 using Riel.Common.Info;
 
@@ -107,6 +108,63 @@ namespace Tests.Riel.Launcher
         {
             Assert.AreEqual((null, null), SimulatorOutcome.FindCause(null, "ALSA lib pcm.c:2721: Unknown PCM default"));
             Assert.AreEqual((null, null), SimulatorOutcome.FindCause(null, null));
+        }
+
+        [TestMethod]
+        public void FatalExcerptIgnoresRecoverableErrorsAndStopsAtFourteenLines()
+        {
+            string log = Path.GetTempFileName();
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(log))
+                {
+                    for (int i = 0; i < 10000; i++)
+                        writer.WriteLine("Error: a missing texture that the simulator skipped");
+                    writer.WriteLine("Critical: System.IO.IOException: disk disappeared");
+                    for (int i = 0; i < 20; i++)
+                        writer.WriteLine($"frame {i}");
+                }
+
+                string excerpt = SimulatorOutcome.FindFatalError(log);
+                Assert.AreEqual(14, excerpt.Split('\n').Length);
+                StringAssert.StartsWith(excerpt, "Critical: System.IO.IOException: disk disappeared");
+                StringAssert.EndsWith(excerpt, "frame 12");
+            }
+            finally
+            {
+                File.Delete(log);
+            }
+        }
+
+        [TestMethod]
+        public void AShortFatalExcerptKeepsItsCauseWithWindowsLineEndings()
+        {
+            string log = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllText(log, LoggedMissingFile.Replace("\n", "\r\n", StringComparison.Ordinal));
+                Assert.AreEqual(LoggedMissingFile, SimulatorOutcome.FindFatalError(log));
+            }
+            finally
+            {
+                File.Delete(log);
+            }
+        }
+
+        [TestMethod]
+        public void RecoverableErrorsAndMissingLogsHaveNoFatalExcerpt()
+        {
+            string log = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllText(log, "Error: System.IO.FileNotFoundException: optional texture is missing\n");
+                Assert.IsNull(SimulatorOutcome.FindFatalError(log));
+            }
+            finally
+            {
+                File.Delete(log);
+            }
+            Assert.IsNull(SimulatorOutcome.FindFatalError(log));
         }
 
         // ------------------------------------------------------------------ native crashes

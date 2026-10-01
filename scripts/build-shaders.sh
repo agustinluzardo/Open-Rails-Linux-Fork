@@ -57,6 +57,18 @@ shader_sources=(
 say() { printf '%s\n' "$*"; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
+# A successful compiler check must actually find the sources. In particular,
+# a sparse/incomplete checkout must not report "0 compiled, 0 failed" as success.
+shader_count=0
+for directory in "${shader_sources[@]}"; do
+    [ -d "$directory" ] || die "shader source directory is missing: $directory"
+    for shader in "$directory"/*.fx; do
+        [ -f "$shader" ] || continue
+        shader_count=$((shader_count + 1))
+    done
+done
+[ "$shader_count" -gt 0 ] || die "no shader sources were found"
+
 # ---------------------------------------------------------------------------- Wine, when needed
 
 prepare_wine() {

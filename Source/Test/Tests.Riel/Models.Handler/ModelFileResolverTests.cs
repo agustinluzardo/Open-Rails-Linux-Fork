@@ -1,9 +1,12 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Riel.Common.Position;
+using Riel.Models.Base;
 using Riel.Models.Content;
 using Riel.Models.Handler;
 using Riel.Models.Settings;
@@ -160,6 +163,51 @@ namespace Tests.Riel.Models.Handler
             string targetPathFolderName = ModelFileResolver<PathModelHeader>.FolderPath(routeModel);
             Assert.AreEqual("..", Path.GetRelativePath(targetPathFolderName, targetRouteFolderName));
             Assert.IsTrue(targetPathFolderName.EndsWith(Path.Combine("Content", content.Name, folder.Name, routeModel.Id, "TrainPaths"), System.StringComparison.OrdinalIgnoreCase));
+        }
+
+        [TestMethod]
+        [DoNotParallelize]
+        public void ConcurrentColdModelAndParentTypesResolveCorrectPaths()
+        {
+            MethodInfo resolve = typeof(ModelFileResolverTests).GetMethod(nameof(AssertConcurrentPaths), BindingFlags.NonPublic | BindingFlags.Static);
+            Type[] seeds = { typeof(int), typeof(string), typeof(bool), typeof(double) };
+
+            // Each closed model and parent type is new to this test, so metadata is resolved
+            // while other threads resolve paths. Warm caches would hide the shared-cache race.
+            Parallel.For(0, seeds.Length * 32, new ParallelOptions { MaxDegreeOfParallelism = 8 }, index =>
+            {
+                Type marker = seeds[index / 32].MakeArrayType(index % 32 + 1);
+                resolve.MakeGenericMethod(marker).Invoke(null, null);
+            });
+        }
+
+        private static void AssertConcurrentPaths<T>()
+        {
+            ConcurrentParent<T> parent = new ConcurrentParent<T> { Id = "parent" };
+            ConcurrentChild<T> child = new ConcurrentChild<T>(parent) { Id = "child" };
+            string folderSuffix = Path.Combine("ConcurrentParents", "parent", "ConcurrentChildren");
+
+            for (int i = 0; i < 8; i++)
+            {
+                string file = ModelFileResolver<ConcurrentChild<T>>.FilePath(child);
+                string folder = ModelFileResolver<ConcurrentChild<T>>.FolderPath(parent);
+                Assert.IsTrue(Path.IsPathFullyQualified(file));
+                Assert.IsTrue(file.EndsWith(Path.Combine(folderSuffix, "child.concurrent"), StringComparison.Ordinal));
+                Assert.IsTrue(folder.EndsWith(folderSuffix, StringComparison.Ordinal));
+                Assert.AreEqual(".parent", ModelFileResolver<ConcurrentParent<T>>.FileExtension);
+            }
+        }
+
+        [ModelResolver("ConcurrentParents", ".parent")]
+        private sealed record ConcurrentParent<T> : ModelBase
+        {
+            public override ModelBase Parent => null;
+        }
+
+        [ModelResolver("ConcurrentChildren", ".concurrent")]
+        private sealed record ConcurrentChild<T>(ModelBase Root) : ModelBase
+        {
+            public override ModelBase Parent => Root;
         }
 
     }

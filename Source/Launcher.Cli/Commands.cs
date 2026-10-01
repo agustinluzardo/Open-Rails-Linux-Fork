@@ -157,12 +157,13 @@ namespace Riel.Launcher
 
         internal static async Task<int> Play(List<string> arguments, CancellationToken cancellationToken)
         {
-            if (arguments.Count < 2)
+            if (arguments.Count != 2)
                 throw new LauncherException("usage: riel play <route> <activity>");
 
             (FolderModel folder, RouteModelHeader route) = await MatchRoute(arguments[0], cancellationToken).ConfigureAwait(false);
             ImmutableArray<ActivityModelHeader> activities = await route.GetActivities(cancellationToken).ConfigureAwait(false);
-            ActivityModelHeader activity = ContentStore.Match(activities, arguments[1], "activity");
+            ActivityModelHeader activity = ContentStore.Match(
+                activities.Where(candidate => candidate.ActivityType == ActivityType.Activity).ToImmutableArray(), arguments[1], "activity");
 
             return await Run(Selections.Activity(folder, route, activity), cancellationToken).ConfigureAwait(false);
         }
@@ -181,11 +182,15 @@ namespace Riel.Launcher
                     case "--time": time = Next(arguments, ref i, "--time"); break;
                     case "--season": season = Next(arguments, ref i, "--season"); break;
                     case "--weather": weather = Next(arguments, ref i, "--weather"); break;
-                    default: positional.Add(arguments[i]); break;
+                    default:
+                        if (arguments[i].StartsWith("--", StringComparison.Ordinal))
+                            throw new LauncherException($"unknown explore option '{arguments[i]}'");
+                        positional.Add(arguments[i]);
+                        break;
                 }
             }
 
-            if (positional.Count < 3)
+            if (positional.Count != 3)
                 throw new LauncherException("usage: riel explore <route> <path> <consist> [--time HH:MM] [--season summer] [--weather clear]");
 
             if (!TimeOnly.TryParse(time, CultureInfo.CurrentCulture, out TimeOnly startTime))
@@ -220,24 +225,27 @@ namespace Riel.Launcher
                     "nothing has been played yet, so there is nothing to start again. Open the launcher with 'riel gui', " +
                     "or pick something with 'riel play' or 'riel explore'.");
             }
-            return Report(Simulator.Start(Selections.Arguments(selections), captureErrors: false));
+            cancellationToken.ThrowIfCancellationRequested();
+            return await Report(Simulator.Start(Selections.Arguments(selections), captureErrors: false), cancellationToken).ConfigureAwait(false);
         }
 
-        internal static int Resume()
+        internal static Task<int> Resume(CancellationToken cancellationToken)
         {
-            return Report(Simulator.Start(Selections.ResumeArguments(), captureErrors: false));
+            cancellationToken.ThrowIfCancellationRequested();
+            return Report(Simulator.Start(Selections.ResumeArguments(), captureErrors: false), cancellationToken);
         }
 
-        internal static int RunRaw(List<string> arguments)
+        internal static Task<int> RunRaw(List<string> arguments, CancellationToken cancellationToken)
         {
             // "--" is the conventional end-of-options marker; drop it if the shell passed it on.
             if (arguments.Count > 0 && arguments[0] == "--")
                 arguments.RemoveAt(0);
-            return Report(Simulator.Start(arguments, captureErrors: false));
+            cancellationToken.ThrowIfCancellationRequested();
+            return Report(Simulator.Start(arguments, captureErrors: false), cancellationToken);
         }
 
         /// <summary>Opens the graphical launcher, which is installed beside this command.</summary>
-        internal static int Gui(List<string> arguments)
+        internal static async Task<int> Gui(List<string> arguments, CancellationToken cancellationToken)
         {
             string gui = Path.Combine(AppContext.BaseDirectory, "riel-gui");
             if (!File.Exists(gui))
@@ -246,27 +254,29 @@ namespace Riel.Launcher
             ProcessStartInfo startInfo = new ProcessStartInfo(gui) { UseShellExecute = false };
             foreach (string argument in arguments)
                 startInfo.ArgumentList.Add(argument);
+            cancellationToken.ThrowIfCancellationRequested();
             using Process process = Process.Start(startInfo) ?? throw new LauncherException($"could not start {gui}");
-            process.WaitForExit();
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             return process.ExitCode;
         }
 
         private static async Task<int> Run(ProfileSelectionsModel selections, CancellationToken cancellationToken)
         {
             await Selections.Save(selections, cancellationToken).ConfigureAwait(false);
-            return Report(Simulator.Start(Selections.Arguments(selections), captureErrors: false));
+            cancellationToken.ThrowIfCancellationRequested();
+            return await Report(Simulator.Start(Selections.Arguments(selections), captureErrors: false), cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Waits for the simulator and, when it failed, says so and where to look. Standard error
         /// already reached the terminal; what the terminal never showed is the log.
         /// </summary>
-        private static int Report(SimulatorRun run)
+        private static async Task<int> Report(SimulatorRun run, CancellationToken cancellationToken)
         {
             using (run)
             {
                 Console.Error.WriteLine($"Starting {run.CommandLine}");
-                SimulatorOutcome outcome = run.Wait();
+                SimulatorOutcome outcome = await run.WaitAsync(cancellationToken).ConfigureAwait(false);
 
                 if (!outcome.Failed)
                     return 0;
@@ -382,7 +392,7 @@ namespace Riel.Launcher
 
         private static string Next(List<string> arguments, ref int index, string option)
         {
-            if (index + 1 >= arguments.Count)
+            if (index + 1 >= arguments.Count || arguments[index + 1].StartsWith("--", StringComparison.Ordinal))
                 throw new LauncherException($"{option} needs a value");
             return arguments[++index];
         }
@@ -395,37 +405,57 @@ namespace Riel.Launcher
     /// </summary>
     internal static class ScanProgress
     {
+        private static readonly object sync = new object();
         private static bool shown;
+        private static bool active;
         private static int scansBefore;
 
         internal static IProgress<int> Create()
         {
-            shown = false;
-            scansBefore = ContentStore.ScanCount;
-            return new Progress<int>(percent =>
+            lock (sync)
             {
-                if (Console.IsErrorRedirected)
-                    return;
-                shown = true;
-                Console.Error.Write($"\rScanning content... {percent,3}%");
-            });
+                shown = false;
+                active = true;
+                scansBefore = ContentStore.ScanCount;
+            }
+            return new Reporter();
         }
 
         internal static void Done()
         {
-            if (shown && !Console.IsErrorRedirected)
-                Console.Error.WriteLine("\rScanning content... done");
-
-            // Only after an actual scan: a load that read the cache skipped nothing new.
-            if (ContentStore.ScanCount != scansBefore && ContentStore.LastScanSkipped.Count > 0)
+            lock (sync)
             {
-                Console.Error.WriteLine();
-                Console.Error.WriteLine("Some content could not be read. Everything else loaded; these will not work until fixed:");
-                foreach (var file in ContentStore.LastScanSkipped.OrderBy(file => file.Kind).ThenBy(file => file.Path))
-                    Console.Error.WriteLine($"  {file.Kind,-13} {file.Path}{Environment.NewLine}  {"",-13} {file.Reason}");
-                Console.Error.WriteLine();
+                active = false;
+                if (shown && !Console.IsErrorRedirected)
+                    Console.Error.WriteLine("\rScanning content... done");
+
+                // Only after an actual scan: a load that read the cache skipped nothing new.
+                if (ContentStore.ScanCount != scansBefore && ContentStore.LastScanSkipped.Count > 0)
+                {
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine("Some content could not be read. Everything else loaded; these will not work until fixed:");
+                    foreach (var file in ContentStore.LastScanSkipped.OrderBy(file => file.Kind).ThenBy(file => file.Path))
+                        Console.Error.WriteLine($"  {file.Kind,-13} {file.Path}{Environment.NewLine}  {"",-13} {file.Reason}");
+                    Console.Error.WriteLine();
+                }
+                shown = false;
             }
-            shown = false;
+        }
+
+        // Progress<T> posts callbacks to the thread pool in a console application. Those
+        // callbacks can arrive after Done and overwrite the completed scan or the next command.
+        private sealed class Reporter : IProgress<int>
+        {
+            public void Report(int percent)
+            {
+                lock (sync)
+                {
+                    if (!active || Console.IsErrorRedirected)
+                        return;
+                    shown = true;
+                    Console.Error.Write($"\rScanning content... {percent,3}%");
+                }
+            }
         }
     }
 }

@@ -843,3 +843,43 @@ msgstr "Explorar en modo actividad"
 
 msgid "Use Open Rails activity-style exploration. Normal Explore is recommended for most routes."
 msgstr "Usa la exploración al estilo actividad de Open Rails. Para la mayoría de las rutas se recomienda Explorar normal."
+
+msgid "Choose a mode"
+msgstr "Elegí cómo jugar"
+
+msgid "Route library"
+msgstr "Biblioteca de rutas"
+
+msgid "Start your journey"
+msgstr "Iniciá tu viaje"
+
+msgid "Weather file"
+msgstr "Archivo de clima"
+
+msgid "Ready to depart."
+msgstr "Todo listo para partir."
+
+msgid "Reading route…"
+msgstr "Leyendo la ruta…"
+
+msgid "Preparing your journey…"
+msgstr "Preparando tu viaje…"
+
+msgid "The simulator is running."
+msgstr "El simulador está en marcha."
+
+msgid "No routes match your search. Clear the search to see all routes."
+msgstr "No hay rutas que coincidan. Borrá la búsqueda para ver todas."
+
+msgid "No trains were found in this content folder. Add trains in Content folders."
+msgstr "No se encontraron trenes en esta carpeta. Agregalos desde Carpetas de contenido."
+
+msgid "No trains match your filters. Clear the search or choose All locomotives."
+msgstr "No hay trenes que coincidan. Borrá la búsqueda o elegí Todas las locomotoras."
+
+msgid "This route has no timetables. Choose Activity or Explore instead."
+msgstr "Esta ruta no tiene horarios. Elegí Actividad o Explorar."
+
+msgid "This timetable has no playable trains. Choose another timetable set."
+msgstr "Este horario no tiene trenes disponibles para conducir. Elegí otro conjunto de horarios."
+

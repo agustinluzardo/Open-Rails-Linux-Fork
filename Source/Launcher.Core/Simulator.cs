@@ -69,7 +69,7 @@ namespace Riel.Launcher
             if (!string.IsNullOrEmpty(configured))
             {
                 return File.Exists(configured)
-                    ? configured
+                    ? Path.GetFullPath(configured)
                     : throw new LauncherException($"RIEL_SIMULATOR points at '{configured}', which does not exist");
             }
 
@@ -132,7 +132,7 @@ namespace Riel.Launcher
                 startInfo.Environment[LaunchContext.BasicGraphicsVariable] = "1";
             CrashReport.Request(startInfo.Environment);
 
-            CommandLine = string.Join(' ', new[] { executable }.Concat(arguments.Select(Quote)));
+            CommandLine = string.Join(' ', new[] { executable }.Concat(arguments).Select(Quote));
 
             process = new Process { StartInfo = startInfo };
             if (captureErrors)
@@ -499,30 +499,36 @@ namespace Riel.Launcher
             return (null, entry);
         }
 
-        private static string FindFatalError(string logFile)
+        internal static string FindFatalError(string logFile)
         {
-            string[] lines;
             try
             {
                 // Shared read: a simulator that is still shutting down may hold the file open.
                 using FileStream stream = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 using StreamReader reader = new StreamReader(stream);
-                lines = reader.ReadToEnd().Split('\n');
+                // A long session can leave a large log. Keep only the fatal excerpt instead
+                // of allocating the whole file and a second copy split into lines.
+                List<string> excerpt = null;
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    bool fatal = (line.StartsWith("Error: ", StringComparison.Ordinal) && line.Contains(FatalMarker, StringComparison.Ordinal))
+                        || line.StartsWith("Critical: ", StringComparison.Ordinal);
+                    if (excerpt == null && fatal)
+                        excerpt = new List<string>(ExcerptLines);
+                    if (excerpt != null)
+                    {
+                        excerpt.Add(line);
+                        if (excerpt.Count == ExcerptLines)
+                            break;
+                    }
+                }
+                return excerpt == null ? null : string.Join('\n', excerpt).Trim();
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
                 return null;
             }
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i];
-                bool fatal = (line.StartsWith("Error: ", StringComparison.Ordinal) && line.Contains(FatalMarker, StringComparison.Ordinal))
-                    || line.StartsWith("Critical: ", StringComparison.Ordinal);
-                if (fatal)
-                    return string.Join('\n', lines.Skip(i).Take(ExcerptLines).Select(l => l.TrimEnd('\r'))).Trim();
-            }
-            return null;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 
@@ -14,7 +14,7 @@ namespace Riel.Models.Handler
     /// </summary>
     internal static class ModelResolverCache
     {
-        public static Dictionary<Type, ModelResolverAttribute> ModelResolvers { get; } = new Dictionary<Type, ModelResolverAttribute>();
+        public static ConcurrentDictionary<Type, ModelResolverAttribute> ModelResolvers { get; } = new ConcurrentDictionary<Type, ModelResolverAttribute>();
     }
 
     /// <summary>
