@@ -970,3 +970,36 @@ msgstr "Actualizaciones"
 
 msgid "Updates require the extracted portable package."
 msgstr "Las actualizaciones requieren el paquete portable extraído."
+
+msgid "Customize the launcher and simulator settings."
+msgstr "Personalizá el launcher y la configuración del simulador."
+
+msgid "Launcher appearance"
+msgstr "Apariencia del launcher"
+
+msgid "Accent color"
+msgstr "Color de acento"
+
+msgid "Preview the color of buttons, selections and highlights. Save keeps your choice; Cancel restores the previous color."
+msgstr "Previsualizá el color de los botones, las selecciones y los destacados. Guardar conserva tu elección; Cancelar restaura el color anterior."
+
+msgid "Amber"
+msgstr "Ámbar"
+
+msgid "Blue"
+msgstr "Azul"
+
+msgid "Teal"
+msgstr "Turquesa"
+
+msgid "Green"
+msgstr "Verde"
+
+msgid "Violet"
+msgstr "Violeta"
+
+msgid "Rose"
+msgstr "Rosa"
+
+msgid "Orange"
+msgstr "Naranja"

@@ -2,8 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Riel.Launcher.Gui.App"
              RequestedThemeVariant="Dark">
-  <!-- Neutral railway instrumentation: amber marks actions and the current selection.
-       Appearance.cs restores the user's choice; both variants share the same hierarchy. -->
+  <!-- Neutral railway instrumentation with an amber default accent.
+       Appearance.cs restores the user's theme and color; both variants share the same hierarchy. -->
   <Application.Resources>
     <ResourceDictionary>
       <x:Double x:Key="TextControlPlaceholderOpacity">1</x:Double>

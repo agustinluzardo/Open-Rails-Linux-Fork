@@ -28,7 +28,7 @@ using Xunit;
 
 namespace Tests.Launcher.Gui
 {
-    public class MainWindowTests
+    public partial class MainWindowTests
     {
         // Construct the actual launcher and load its compiled XAML. Showing the window would
         // fire Opened and rescan the user's content, so these tests leave it unopened.

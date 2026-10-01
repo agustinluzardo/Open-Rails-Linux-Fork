@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
@@ -32,6 +33,9 @@ namespace Riel.Launcher.Gui
         private UserCommand pendingCommand;
         private bool hasPendingCommand;
         private bool settingsLoaded;
+        private readonly string originalAccentId;
+        private bool appearanceCommitted;
+        private bool appearanceClosed;
         private readonly Dictionary<PropertyInfo, Control> optionControls = new();
         private Screen[] availableScreens = Array.Empty<Screen>();
 
@@ -39,6 +43,42 @@ namespace Riel.Launcher.Gui
         {
             this.profile = profile ?? throw new ArgumentNullException(nameof(profile));
             InitializeComponent();
+
+            originalAccentId = Appearance.AccentId;
+            AccentColorBox.ItemTemplate = new FuncDataTemplate<AccentOption>((option, _) =>
+            {
+                StackPanel item = new StackPanel
+                {
+                    Orientation = Avalonia.Layout.Orientation.Horizontal,
+                    Spacing = 10,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                };
+                item.Children.Add(new Border
+                {
+                    Width = 16, Height = 16, CornerRadius = new Avalonia.CornerRadius(4),
+                    Background = new Avalonia.Media.SolidColorBrush(option.PreviewColor),
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                });
+                item.Children.Add(new TextBlock
+                {
+                    Text = Translation.T(option.Name),
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                });
+                return item;
+            });
+            AccentColorBox.ItemsSource = Appearance.AccentOptions;
+            AccentColorBox.SelectedItem = Appearance.AccentOptions.First(option => option.Id == originalAccentId);
+            AccentColorBox.SelectionChanged += (_, _) =>
+            {
+                if (AccentColorBox.SelectedItem is AccentOption option && !appearanceClosed)
+                    Appearance.PreviewAccent(option.Id);
+            };
+            Closed += (_, _) =>
+            {
+                appearanceClosed = true;
+                if (!appearanceCommitted)
+                    Appearance.PreviewAccent(originalAccentId);
+            };
 
             ScreenModeBox.ItemsSource = Enum.GetValues<ScreenMode>();
             BuildOptions();
@@ -454,6 +494,11 @@ namespace Riel.Launcher.Gui
 
                 await profile.UpdateSettingsModel(keyboardSettings, CancellationToken.None);
                 await profile.UpdateSettingsModel(userSettings, CancellationToken.None);
+                if (!appearanceClosed && AccentColorBox.SelectedItem is AccentOption accent)
+                {
+                    Appearance.SetAccent(accent.Id);
+                    appearanceCommitted = true;
+                }
                 Close();
             }
             catch (Exception error)
